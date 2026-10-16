@@ -4,6 +4,7 @@
 // «для жизни», в «Главном рядом» строка пляжа тогда не повторяется.
 // Пояснения к пунктам написаны по-русски, на других языках — только сами
 // значения; остальные языки берут английский.
+import Image from 'next/image'
 import { Waves } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import type { BeachProfile } from '@/lib/beaches'
@@ -31,6 +32,7 @@ const COPY = {
       n.beach_clubs ? `${n.beach_clubs} ${pluralRu(n.beach_clubs, ['бич-клуб', 'бич-клуба', 'бич-клубов'])}` : null,
     ].filter(Boolean).join(', ') + ` в ${n.radius_m} м`,
     nearNone: (r: number) => `заведений в ${r} м нет`,
+    promPhoto: 'Набережная', photoBy: 'Фото',
     notes: true,
   },
   en: {
@@ -54,6 +56,7 @@ const COPY = {
       n.beach_clubs ? `${n.beach_clubs} ${n.beach_clubs === 1 ? 'beach club' : 'beach clubs'}` : null,
     ].filter(Boolean).join(', ') + ` within ${n.radius_m} m`,
     nearNone: (r: number) => `no venues within ${r} m`,
+    promPhoto: 'Promenade', photoBy: 'Photos',
     notes: false,
   },
 }
@@ -89,6 +92,13 @@ export function BeachBlock({ beach: b, km, lang }: { beach: BeachProfile; km: nu
   if (c.notes && b.vibe) rows.push({ k: c.vibeL, v: b.vibe })
   if (c.notes && b.why) rows.push({ k: c.whyL, v: b.why })
 
+  // Не больше трёх: пляж первым, набережная последней, если есть.
+  const all = b.photos ?? []
+  const prom = all.find(p => p.kind === 'promenade')
+  const photos = [...all.filter(p => p.kind === 'beach').slice(0, prom ? 2 : 3), ...(prom ? [prom] : [])]
+  // Подпись авторов — по одному разу на автора.
+  const credits = [...new Map(photos.map(p => [p.author ?? p.page, p])).values()]
+
   return (
     <div className="rounded-[20px] border border-[var(--color-border)] bg-white px-5 md:px-6 pb-2">
       <h3 className="flex items-center gap-2 pt-5 text-[17px] font-semibold text-[var(--color-text)]">
@@ -96,6 +106,27 @@ export function BeachBlock({ beach: b, km, lang }: { beach: BeachProfile; km: nu
         {c.title(name, c.km(km))}
       </h3>
       {head && <p className="mt-1 text-[15px] text-[var(--color-text)]">{head[0].toUpperCase() + head.slice(1)}</p>}
+      {photos.length > 0 && (
+        <div className="mt-4">
+          {/* Телефон — лента вбок, компьютер — до трёх в ряд. */}
+          <div className="-mx-5 flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
+            {photos.map((p, i) => (
+              <a key={p.src} href={p.page} target="_blank" rel="noopener noreferrer"
+                className="relative aspect-[4/3] w-[78%] shrink-0 snap-start overflow-hidden rounded-[12px] bg-[var(--color-search-bg)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] md:w-auto">
+                <Image src={p.src} alt={p.kind === 'promenade' ? `${c.promPhoto} - ${name}` : name} fill sizes="(min-width: 768px) 260px, 78vw" className="object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
+                {p.kind === 'promenade' && (
+                  <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[13px] font-medium text-white">{c.promPhoto}</span>
+                )}
+              </a>
+            ))}
+          </div>
+          <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">
+            {c.photoBy}: {credits.map((cr, i) => (
+              <span key={cr.page}>{i > 0 && ', '}<a href={cr.page} target="_blank" rel="noopener noreferrer" className="underline decoration-[var(--color-border)] underline-offset-2 hover:text-[var(--color-text)]">{cr.author ?? 'Wikimedia Commons'}</a>{cr.license ? ` (${cr.license})` : ''}</span>
+            ))}
+          </p>
+        </div>
+      )}
       <dl className="mt-2 divide-y divide-[var(--color-border)]">
         {rows.map(r => (
           <div key={r.k} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-6">

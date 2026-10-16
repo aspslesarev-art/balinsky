@@ -45,7 +45,30 @@
    "bars": 7,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/00-disus-by-meli-c3-a1-bali-in-nusa-dua.jpg",
+    "kind": "beach",
+    "author": "Paradisus Bali",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Beachfront_of_Paradisus_by_Meli%C3%A1_Bali_in_Nusa_Dua.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/00-pantai-nusa-dua-bali.jpg",
+    "kind": "beach",
+    "author": "Anton Ardyanto",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Nusa_Dua_Bali.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/00-pantai-nusa-dua-bali-di-pagi-hari.jpg",
+    "kind": "beach",
+    "author": "Anton Ardyanto",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:PANTAI_NUSA_DUA_BALI_DI_PAGI_HARI.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -171,7 +194,16 @@
    "bars": 0,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/03-pantai-gunung-payung.jpg",
+    "kind": "beach",
+    "author": "Yosep Sasada",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Gunung_Payung.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -248,7 +280,23 @@
    "bars": 15,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/05-pantai-suluban-blue-point-bali.jpg",
+    "kind": "beach",
+    "author": "I made jon arinata",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_suluban_blue_point_bali.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/05-c-pecatu-2c-bali-indonesia-panoramio.jpg",
+    "kind": "beach",
+    "author": "tigoretagore",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Suluban_Beach,_Pecatu,_Bali_-_Indonesia_-_panoramio.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -326,7 +374,30 @@
    "bars": 24,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/07-canggu-beach-3.jpg",
+    "kind": "beach",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:Canggu_beach_3.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/07-canggu-beach-5.jpg",
+    "kind": "beach",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:Canggu_beach_5.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/07-canggu-beach.jpg",
+    "kind": "beach",
+    "author": "Flickr user: afternoon",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Canggu_Beach.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -449,7 +520,16 @@
    "bars": 7,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/10-thomas-beach-2848976502201-29.jpg",
+    "kind": "beach",
+    "author": "Dan O'Cker from Adelaide, Australia",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Thomas_beach_(48976502201).jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -491,7 +571,30 @@
    "bars": 8,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/11-jimbaran-beach-at-sunset.jpg",
+    "kind": "beach",
+    "author": "Akmaie Ajam",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Jimbaran_beach_at_sunset.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/11-jimbaran-sunset-2.jpg",
+    "kind": "beach",
+    "author": "Akmaie Ajam",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Jimbaran_sunset_2.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/11-jimbaran-beach-2c-bali-sf0001.jpg",
+    "kind": "beach",
+    "author": "Stefan Fussan",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Jimbaran_Beach,_Bali_SF0001.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -570,7 +673,30 @@
    "bars": 1,
    "beach_clubs": 4,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/13-pantai-melasti-2c-bali.jpg",
+    "kind": "beach",
+    "author": "Bayu Stiawan",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Melasti,_Bali.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/13-melasti-beach-side-view.jpg",
+    "kind": "beach",
+    "author": "Dare2Leap",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Melasti_Beach_side_view.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/13-melasti-beach-coast.jpg",
+    "kind": "beach",
+    "author": "Dare2Leap",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Melasti_Beach_coast.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -609,7 +735,16 @@
    "bars": 0,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/14-green-bowl-beach-2815238737765-29.jpg",
+    "kind": "beach",
+    "author": "Vladimir E from Rostov-na-Donu, Russia",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Green_Bowl_Beach_(15238737765).jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -648,7 +783,30 @@
    "bars": 26,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/15-canggu-beach-3.jpg",
+    "kind": "beach",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:Canggu_beach_3.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/15-canggu-beach-5.jpg",
+    "kind": "beach",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:Canggu_beach_5.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/15-canggu-beach-1.jpg",
+    "kind": "beach",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:Canggu_beach_1.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -778,7 +936,30 @@
    "bars": 21,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/18-ach-bali-indonesia-panoramio-2819-29.jpg",
+    "kind": "beach",
+    "author": "Michelle Maria",
+    "license": "CC BY 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Sanur_Beach_Bali_Indonesia_-_panoramio_(19).jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/18-ach-bali-indonesia-panoramio-2820-29.jpg",
+    "kind": "beach",
+    "author": "Michelle Maria",
+    "license": "CC BY 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Sanur_Beach_Bali_Indonesia_-_panoramio_(20).jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/18-pantai-sanur-di-bali.jpg",
+    "kind": "promenade",
+    "author": "Fitri Penyalai",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Sanur_di_Bali.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -823,7 +1004,30 @@
    "bars": 18,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/19-pantai-segera-ayu.jpg",
+    "kind": "beach",
+    "author": "Fitri Penyalai",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Segera_Ayu.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/19-source-conference-day-3-photowalk-20.jpg",
+    "kind": "beach",
+    "author": "Aspere",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:250216_Wikisource_Conference_Day_3_Photowalk_20.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/19-pantai-sanur-di-bali.jpg",
+    "kind": "promenade",
+    "author": "Fitri Penyalai",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Sanur_di_Bali.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -983,7 +1187,30 @@
    "bars": 2,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/23-disus-by-meli-c3-a1-bali-in-nusa-dua.jpg",
+    "kind": "beach",
+    "author": "Paradisus Bali",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Beachfront_of_Paradisus_by_Meli%C3%A1_Bali_in_Nusa_Dua.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/23-pantai-nusa-dua-bali.jpg",
+    "kind": "beach",
+    "author": "Anton Ardyanto",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Nusa_Dua_Bali.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/23-pantai-nusa-dua-bali-2.jpg",
+    "kind": "beach",
+    "author": "Anton Ardyanto",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_nusa_dua_bali_2.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1022,7 +1249,30 @@
    "bars": 7,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/24-padang-padang-beach-bali.jpg",
+    "kind": "beach",
+    "author": "TMFalkner",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Padang_Padang_Beach_Bali.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/24-padang-beach-2c-bali-2c-indonesia-rt.jpg",
+    "kind": "beach",
+    "author": "Rantemario",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Padang_Padang_Beach,_Bali,_Indonesia_RT.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/24-pantai-padang-padang-3-2c-bali.jpg",
+    "kind": "beach",
+    "author": "Felly A",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Padang_Padang_3,_Bali.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1061,7 +1311,30 @@
    "bars": 7,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/25-pantai-seminyak.jpg",
+    "kind": "beach",
+    "author": "Fitri Penyalai",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Seminyak.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/25-seminyak-beach-02.jpg",
+    "kind": "beach",
+    "author": "Christophe95",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Seminyak_Beach_02.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/25-seminyak-beach-01.jpg",
+    "kind": "beach",
+    "author": "Christophe95",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Seminyak_Beach_01.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1144,7 +1417,30 @@
    "bars": 3,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/27-pantai-pandawa-bali.jpg",
+    "kind": "beach",
+    "author": "Riska Diamitri",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Pandawa_Bali.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/27-pantai-pandawa-2c-bali-2c-indonesia.jpg",
+    "kind": "beach",
+    "author": "Arfiana Rahma Shanti",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Pandawa,_Bali,_Indonesia.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/27-pandawa-beach-2c-bali-2c-indonesia.jpg",
+    "kind": "beach",
+    "author": "Michellewinardi",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pandawa_Beach,_Bali,_Indonesia.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1225,7 +1521,23 @@
    "bars": 1,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/29-adung-2c-bali-2c-indonesia-panoramio.jpg",
+    "kind": "beach",
+    "author": "F-GSPY",
+    "license": "CC BY 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Jl._Batu_Nunggalan,_Pecatu,_Kuta_Sel.,_Kabupaten_Badung,_Bali,_Indonesia_-_panoramio.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/29-c-bali-2c-indonesia-panoramio-281-29.jpg",
+    "kind": "beach",
+    "author": "F-GSPY",
+    "license": "CC BY 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Jl._Batu_Nunggalan,_Pecatu,_Kuta_Sel.,_Kabupaten_Badung,_Bali,_Indonesia_-_panoramio_(1).jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1347,7 +1659,23 @@
    "bars": 24,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/32-legian-beach-sf0002.jpg",
+    "kind": "beach",
+    "author": "Stefan Fussan",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Legian_Beach_SF0002.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/32-legian-beach.jpg",
+    "kind": "beach",
+    "author": "Flickr user: Max Grabert https://www.flickr.com/people/maxgr",
+    "license": "CC BY-SA 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Legian_beach.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1433,7 +1761,16 @@
    "bars": 0,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/34-crystal-bay-beach.jpg",
+    "kind": "beach",
+    "author": "Siapus",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Crystal_Bay_Beach.jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1479,7 +1816,23 @@
    "bars": 10,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/35-tanjung-benoa-beach-bali.jpg",
+    "kind": "beach",
+    "author": "Hoedhud",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Tanjung_Benoa_Beach_-_Bali.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/35-anjung-benoa-2c-bali-287188382329-29.jpg",
+    "kind": "beach",
+    "author": "Simon_sees from Australia",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Tanjung_Benoa,_Bali_(7188382329).jpg"
+   }
+  ]
  },
  {
   "ids": [
@@ -1522,7 +1875,30 @@
    "bars": 10,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "photos": [
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/36-ach-bali-indonesia-panoramio-2819-29.jpg",
+    "kind": "beach",
+    "author": "Michelle Maria",
+    "license": "CC BY 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Sanur_Beach_Bali_Indonesia_-_panoramio_(19).jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/36-pemandangan-pantai-sanur.jpg",
+    "kind": "beach",
+    "author": "Arthamade",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pemandangan_Pantai_Sanur.jpg"
+   },
+   {
+    "src": "https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/36-pantai-sanur-di-bali.jpg",
+    "kind": "promenade",
+    "author": "Fitri Penyalai",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pantai_Sanur_di_Bali.jpg"
+   }
+  ]
  },
  {
   "ids": [

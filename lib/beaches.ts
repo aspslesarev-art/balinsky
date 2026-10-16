@@ -28,6 +28,8 @@ export type BeachProfile = {
   why: string | null
   /** Заведения в radius_m от точки пляжа (scripts/build-beach-counts.ts, bali_places). */
   nearby?: { cafes: number; restaurants: number; bars: number; beach_clubs: number; radius_m: number } | null
+  /** Фото пляжа и набережной со свободной лицензией (scripts/upload-beach-photos.mjs). */
+  photos?: { src: string; kind: 'beach' | 'promenade'; author: string | null; license: string | null; page: string }[]
   sources: string[]
 }
 
