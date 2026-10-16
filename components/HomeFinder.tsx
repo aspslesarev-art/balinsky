@@ -35,7 +35,7 @@ const COPY = {
     vibes: { surf: 'Сёрф и тусовка', ocean: 'Океан и виды', calm: 'Тихо и природа', family: 'Семья и пляж', any: 'Не важно' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${plural(n, 'вилла', 'виллы', 'вилл')} под ваш запрос`,
     empty: 'Под такой запрос пока пусто. Ослабьте бюджет или район — или спросите Андрея.',
-    yield: 'дох.',
+    yield: 'в год до налогов',
     ready: 'Готово',
     seeAll: 'Смотреть все в каталоге',
     askBalina: 'Спросить Андрея',
@@ -50,7 +50,7 @@ const COPY = {
     vibes: { surf: 'Surf & buzz', ocean: 'Ocean & views', calm: 'Calm & nature', family: 'Family & beach', any: 'Any' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'villa' : 'villas'} for your brief`,
     empty: 'Nothing fits yet. Loosen the budget or area — or ask Andrei.',
-    yield: 'yield',
+    yield: 'a year before tax',
     ready: 'Ready',
     seeAll: 'See all in the catalog',
     askBalina: 'Ask Andrei',
@@ -65,7 +65,7 @@ const COPY = {
     vibes: { surf: 'Selancar & keramaian', ocean: 'Laut & pemandangan', calm: 'Tenang & alam', family: 'Keluarga & pantai', any: 'Tidak masalah' } as Record<Vibe, string>,
     found: (n: number) => `${n} vila untuk permintaan Anda`,
     empty: 'Belum ada yang cocok. Longgarkan anggaran atau wilayah — atau tanya Andrei.',
-    yield: 'imbal',
+    yield: '/thn sebelum pajak',
     ready: 'Siap',
     seeAll: 'Lihat semua di katalog',
     askBalina: 'Tanya Andrei',
@@ -80,7 +80,7 @@ const COPY = {
     vibes: { surf: 'Surf & animation', ocean: 'Océan & vues', calm: 'Calme & nature', family: 'Famille & plage', any: 'Peu importe' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'villa' : 'villas'} pour votre demande`,
     empty: 'Rien ne correspond encore. Élargissez le budget ou la zone — ou demandez à Andrei.',
-    yield: 'rend.',
+    yield: '/an avant impôts',
     ready: 'Prêt',
     seeAll: 'Tout voir dans le catalogue',
     askBalina: 'Demander à Andrei',
@@ -95,7 +95,7 @@ const COPY = {
     vibes: { surf: 'Surfen & Trubel', ocean: 'Ozean & Ausblick', calm: 'Ruhe & Natur', family: 'Familie & Strand', any: 'Egal' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'Villa' : 'Villen'} für Ihre Anfrage`,
     empty: 'Noch passt nichts. Lockern Sie Budget oder Lage — oder fragen Sie Andrei.',
-    yield: 'Rend.',
+    yield: '/Jahr vor Steuern',
     ready: 'Fertig',
     seeAll: 'Alle im Katalog ansehen',
     askBalina: 'Andrei fragen',
@@ -110,7 +110,7 @@ const COPY = {
     vibes: { surf: '冲浪与热闹', ocean: '海景', calm: '宁静与自然', family: '家庭与海滩', any: '无所谓' } as Record<Vibe, string>,
     found: (n: number) => `为您的需求找到 ${n} 套别墅`,
     empty: '暂时没有匹配的。放宽预算或区域——或询问 Andrei。',
-    yield: '收益',
+    yield: '年·税前',
     ready: '现房',
     seeAll: '在目录中查看全部',
     askBalina: '询问 Andrei',
@@ -125,7 +125,7 @@ const COPY = {
     vibes: { surf: 'Surf & reuring', ocean: 'Oceaan & uitzicht', calm: 'Rust & natuur', family: 'Gezin & strand', any: 'Maakt niet uit' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${n === 1 ? 'villa' : 'villa\'s'} voor uw aanvraag`,
     empty: 'Nog niets passends. Versoepel het budget of gebied — of vraag het Andrei.',
-    yield: 'rend.',
+    yield: '/jaar vóór belasting',
     ready: 'Klaar',
     seeAll: 'Alles in de catalogus bekijken',
     askBalina: 'Vraag het Andrei',
@@ -140,7 +140,7 @@ const COPY = {
     vibes: { surf: 'Selancar & rame', ocean: 'Segara & pemandangan', calm: 'Tenang & alam', family: 'Kulawarga & pasisi', any: 'Nenten dados soal' } as Record<Vibe, string>,
     found: (n: number) => `${n} vila anggen pinunas Ida Dane`,
     empty: 'Durung wenten sane cocok. Lugrayang anggaran utawi wewidangan — utawi takenang ring Andrei.',
-    yield: 'hasil',
+    yield: '/taun sadurung pajak',
     ready: 'Sampun puput',
     seeAll: 'Cingak sami ring katalog',
     askBalina: 'Takenang ring Andrei',
@@ -155,7 +155,7 @@ const COPY = {
     vibes: { surf: 'Surfing i życie', ocean: 'Ocean i widoki', calm: 'Cisza i natura', family: 'Rodzina i plaża', any: 'Bez znaczenia' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${plural(n, 'willa', 'wille', 'willi')} dla Twojego zapytania`,
     empty: 'Na razie nic nie pasuje. Poluzuj budżet lub okolicę — albo zapytaj Andreia.',
-    yield: 'rent.',
+    yield: '/rok przed podatkiem',
     ready: 'Gotowe',
     seeAll: 'Zobacz wszystkie w katalogu',
     askBalina: 'Zapytaj Andreia',
@@ -170,7 +170,7 @@ const COPY = {
     vibes: { surf: 'Серфінг і тусовка', ocean: 'Океан і краєвиди', calm: 'Тиша й природа', family: 'Сім’я і пляж', any: 'Не важливо' } as Record<Vibe, string>,
     found: (n: number) => `${n} ${plural(n, 'віла', 'віли', 'віл')} за вашим запитом`,
     empty: 'Поки що нічого не підходить. Послабте бюджет або район — або запитайте Андрія.',
-    yield: 'дох.',
+    yield: 'на рік до податків',
     ready: 'Готово',
     seeAll: 'Дивитися всі в каталозі',
     askBalina: 'Запитати Андрія',
@@ -298,8 +298,9 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
                     </div>
                   )}
                   {it.yieldPct != null && (
-                    <div className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-[var(--color-primary-pressed)] text-[10.5px] font-semibold backdrop-blur-sm">
-                      <TrendingUp size={11} /> {it.yieldPct.toFixed(it.yieldPct >= 10 ? 0 : 1)}% {c.yield}
+                    <div className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-[var(--color-primary-pressed)] text-[10.5px] font-semibold backdrop-blur-sm whitespace-nowrap">
+                      {/* Та же точность, что на странице объекта: «17,8%», а не «18%». */}
+                      <TrendingUp size={11} /> {lang === 'en' || lang === 'zh' ? it.yieldPct.toFixed(1) : it.yieldPct.toFixed(1).replace('.', ',')}% {c.yield}
                     </div>
                   )}
                 </div>

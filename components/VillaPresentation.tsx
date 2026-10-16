@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import NextImage from 'next/image'
 import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound, FileText } from 'lucide-react'
-import type { Snapshot } from '@/components/InvestmentWidget/types'
+import type { Snapshot as BaseSnapshot } from '@/components/InvestmentWidget/types'
+import type { YieldFacts } from '@/lib/listing-verdict'
+
+// Снимок из /investment-snapshot плюс доходность страницы объекта.
+type Snapshot = BaseSnapshot & { yieldFacts?: YieldFacts | null }
 import { fmtMoney, fmtPct, fmtYears } from '@/components/InvestmentWidget/utils'
 import { formatPrice } from '@/lib/currency'
 import { useCurrency } from '@/components/CurrencyContext'
@@ -536,6 +540,35 @@ function InvestSlide({ snap, data }: { snap: Snapshot | null; data: VillaPresent
   const { currency } = useCurrency()
   const fmtUsd = (n: number | null | undefined) => fmtMoney(n, currency)
   const fmtUsdShort = (n: number | null | undefined) => (n == null ? '—' : formatPrice(n, currency, data.lang ?? 'ru'))
+  // Посуточная доходность — ровно та, что на странице объекта (computeYieldFacts):
+  // три сценария считались для нерезидента без своей загрузки комплекса и
+  // давали другую цифру, чем страница.
+  const yf = snap?.yieldFacts
+  if (snap && yf && yf.mode === 'daily') {
+    const occ = snap.ownBooking?.occupancy ?? snap.region.occupancyByScenario.median
+    return (
+      <div className="absolute inset-0 overflow-auto px-6 md:px-16 py-10 md:py-14">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] mb-2">{c.investTitle}</h2>
+          <p className="text-[15px] text-[var(--color-text-muted)] mb-8">{c.ourCalc}</p>
+          <div className="rounded-2xl border p-5 border-[var(--color-primary)] bg-[var(--color-primary-soft)]">
+            <div className="text-[13px] text-[var(--color-text-muted)] mb-3">{fmtUsd(yf.rateUsd)} {c.perNight} · {c.occShort} {Math.round(occ * 100)}%</div>
+            <div className="text-[26px] md:text-[32px] font-semibold text-[var(--color-text)]">{fmtUsdShort(yf.noiBeforeTaxUsd)}</div>
+            <div className="text-[13px] text-[var(--color-text-muted)] mb-4">{c.perYearBeforeTax}</div>
+            <dl className="space-y-1.5 text-[13px]">
+              <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.yBeforeTax}</dt><dd className="font-medium text-[var(--color-text)]">{fmtPct(yf.pct.beforeTax)}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.yResident}</dt><dd className="font-medium text-[var(--color-text)]">{fmtPct(yf.pct.resident)}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.yNonResident}</dt><dd className="font-medium text-[var(--color-text)]">{fmtPct(yf.pct.nonResident)}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-text-muted)]">{c.payback}</dt><dd className="font-medium text-[var(--color-text)]">{fmtYears(yf.paybackYears, data.lang)}</dd></div>
+            </dl>
+          </div>
+          {priceUsd != null && (
+            <div className="mt-6 text-[13px] text-[var(--color-text-muted)]">{c.calcNote(fmtUsd(priceUsd))}</div>
+          )}
+        </div>
+      </div>
+    )
+  }
   if (!snap?.scenarios) return null
   const sc = snap.scenarios
   const cards: { key: 'bad' | 'median' | 'good'; title: string; tone: string; tint: string }[] = [

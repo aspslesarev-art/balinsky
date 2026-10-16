@@ -1611,10 +1611,19 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // загруженных units/marketStats/access + кэшированной медианы по району.
   const districtMediansMap = await loadDistrictOccupancyMedians().catch(() => null)
   const yearNum = yearRaw != null ? Number(yearRaw) : null
+  // Доходность юнитов — та же, что на их страницах (listing_yields).
+  const unitCaps = new Map<string, number>()
+  if (units.length) {
+    const { data: ly, error: lyErr } = await sb.from('listing_yields')
+      .select('kind, airtable_id, cap_before').eq('mode', 'daily').in('airtable_id', units.map(u => u.id))
+    if (lyErr) console.error('[complex] listing_yields:', lyErr.message)
+    for (const r of ly ?? []) if (r.cap_before != null) unitCaps.set(`${r.kind}:${r.airtable_id}`, Number(r.cap_before))
+  }
   const signals = computeComplexSignals({
     units: units.map((u) => ({
       kind: u.kind,
       priceUsd: u.priceUsd != null && Number.isFinite(Number(u.priceUsd)) ? Number(u.priceUsd) : null,
+      capBefore: unitCaps.get(`${u.kind}:${u.id}`) ?? null,
     })),
     marketStats,
     access,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { isRecordId } from '@/lib/record-id'
 import { buildSnapshot } from '@/lib/investment/snapshot'
+import { computeYieldFacts } from '@/lib/listing-verdict'
 
 // isr-ttl-ok: вызывается только при сборке презентации по юниту, не
 // краулится — путей мало, а редакторские параметры модели (полосы
@@ -18,7 +19,8 @@ export async function GET(
   try {
     const snap = await buildSnapshot(id)
     if (!snap) return NextResponse.json({ error: 'not_found' }, { status: 404 })
-    return NextResponse.json(snap, {
+    // Та же доходность, что на странице объекта, — презентация показывает её.
+    return NextResponse.json({ ...snap, yieldFacts: computeYieldFacts(snap) }, {
       headers: {
         // Short s-maxage so editorial parameter changes (occupancy bands,
         // cap-rate threshold) propagate to the edge within minutes

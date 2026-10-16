@@ -45,12 +45,6 @@ export type ComplexSignals = {
   timing: TimingSignal | null
 }
 
-// A Bali-property USD price band. Guards the yield median against RUB-only
-// prices leaking in (loadUnitsInComplex collapses price_usd ?? price_rub, so a
-// unit priced only in roubles would otherwise poison the median with a
-// billions-sized number). Median is robust; the band is belt-and-suspenders.
-const USD_PRICE_MIN = 30_000
-const USD_PRICE_MAX = 4_000_000
 // Straight-line → walking distance fudge + walking speed. Mirrors
 // lib/investment/zones.ts thresholds so the two surfaces agree.
 const HAVERSINE_TO_WALK = 1.3
@@ -101,7 +95,7 @@ export type DistrictOccupancy = {
 }
 
 export type ComputeInput = {
-  units: { kind: UnitKind; priceUsd: number | null }[]
+  units: { kind: UnitKind; priceUsd: number | null; capBefore?: number | null }[]
   marketStats: MarketStatsLike
   access: AccessLike
   districtMedians: DistrictOccupancy | null
@@ -111,38 +105,20 @@ export type ComputeInput = {
   currentYear: number
 }
 
-// Gross yield for a segment: annual RevPAR ÷ median unit price of that kind.
-// Both sides must be the same segment (villa RevPAR vs villa prices) or the
-// number is meaningless.
-function yieldFor(
-  kind: UnitKind,
-  revpar: number | null,
-  units: ComputeInput['units'],
-): YieldSignal | null {
-  if (revpar == null || revpar <= 0) return null
-  const prices = units
-    .filter((u) => u.kind === kind && u.priceUsd != null)
-    .map((u) => Number(u.priceUsd))
-    .filter((n) => Number.isFinite(n) && n >= USD_PRICE_MIN && n <= USD_PRICE_MAX)
-  const med = median(prices)
-  if (med == null || med <= 0) return null
-  const pct = Math.round(((revpar * 365) / med) * 1000) / 10
-  if (pct < YIELD_MIN_PCT || pct > YIELD_MAX_PCT) return null
-  return { pct, kind }
-}
-
+// Доходность комплекса — середина доходности его юнитов до налогов, той же,
+// что на их страницах (listing_yields). Раньше считали RevPAR соседей ÷ цену,
+// где «загрузка» — доля закрытых дат календаря (~95%): комплекс получал 15%,
+// а его же квартиры на своих страницах — 4%.
 function computeYield(input: ComputeInput): YieldSignal | null {
-  const ms = input.marketStats
-  if (!ms) return null
-  const villa = yieldFor('villa', ms.villa_revpar_usd, input.units)
-  const apt = yieldFor('apartment', ms.apartment_revpar_usd, input.units)
-  if (villa && apt) {
-    // Prefer the segment with more priced units backing the median.
-    const villaN = input.units.filter((u) => u.kind === 'villa' && u.priceUsd != null).length
-    const aptN = input.units.filter((u) => u.kind === 'apartment' && u.priceUsd != null).length
-    return villaN >= aptN ? villa : apt
-  }
-  return villa ?? apt
+  const seg = (kind: UnitKind) => input.units
+    .filter((u) => u.kind === kind && u.capBefore != null && Number.isFinite(u.capBefore))
+    .map((u) => Number(u.capBefore) * 100)
+  const villa = seg('villa'), apt = seg('apartment')
+  const kind: UnitKind | null = villa.length || apt.length ? (villa.length >= apt.length ? 'villa' : 'apartment') : null
+  if (!kind) return null
+  const med = median(kind === 'villa' ? villa : apt)
+  if (med == null || med < YIELD_MIN_PCT || med > YIELD_MAX_PCT) return null
+  return { pct: Math.round(med * 10) / 10, kind }
 }
 
 function computeZone(access: AccessLike): ZoneSignal | null {

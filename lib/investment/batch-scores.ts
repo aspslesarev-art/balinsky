@@ -105,8 +105,8 @@ function detectPool(d: Record<string, unknown>): boolean | null {
 export type VillaScore = {
   villaId: string
   composite: number   // 0..100
-  capRate: number | null      // median scenario (p50 ADR × 65% occupancy)
-  goodCapRate: number | null  // optimistic scenario (p75 ADR × 85% occupancy)
+  capRate: number | null      // до налогов, со страницы объекта (listing_yields)
+  goodCapRate: number | null  // = capRate; оптимистичный сценарий убран, чтобы не было двух цифр
   infra: number       // 0..100
   confidence: 'high' | 'medium' | 'low'
   noi: number | null
@@ -168,25 +168,16 @@ function buildOneScore(
       { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', region },
       region.occupancyByScenario,
     )
-    const { median, bad, good } = scenarios
-    capRate = median.capRate
-    goodCapRate = good.capRate
-    // Доходность со страницы объекта (listing_yields): там загрузка района
-    // или своя на Booking, реальные брони — эта упрощённая формула нужна
-    // только объектам, которых в таблице ещё нет. Оптимистичный сценарий
-    // сдвигаем в той же пропорции.
-    if (pageCapRate != null) {
-      if (goodCapRate != null && capRate != null && capRate > 0) goodCapRate = pageCapRate * (goodCapRate / capRate)
-      else goodCapRate = pageCapRate
-      capRate = pageCapRate
-    }
+    const { median, bad } = scenarios
+    // Доходность — только со страницы объекта (listing_yields, «до налогов»):
+    // одна цифра на странице, в каталоге, на главной и в избранном. Упрощённая
+    // формула выше нужна лишь для риска лизхолда и NOI; своей цифры
+    // доходности у неё нет, иначе карточка и страница расходились.
     noi = median.noi
     leaseholdRisk = median.capitalReturned === false || bad.leaseholdRisk || median.leaseholdRisk
     hasScenarios = true
   }
-
-  // Мало похожих соседей — упрощённой формулы нет, а страница объект посчитала.
-  if (!rentalRestricted && capRate == null && pageCapRate != null) {
+  if (!rentalRestricted && pageCapRate != null) {
     capRate = pageCapRate
     goodCapRate = pageCapRate
     hasScenarios = true
@@ -227,13 +218,13 @@ function buildOneScore(
   }
 }
 
-// Нерезидентская доходность посуточной сдачи, как на странице объекта
+// Доходность посуточной сдачи до налогов — первая цифра на странице объекта
 // (scripts/build-listing-yields.ts, раз в сутки). Не загрузилась — каталог
 // живёт на упрощённой формуле, а не падает.
 async function loadPageCapRates(kind: 'villa' | 'apartment'): Promise<Map<string, number>> {
-  const { data, error } = await sb.from('listing_yields').select('airtable_id, cap_nonres').eq('kind', kind).eq('mode', 'daily').limit(5000)
+  const { data, error } = await sb.from('listing_yields').select('airtable_id, cap_before').eq('kind', kind).eq('mode', 'daily').limit(5000)
   if (error) { console.error('[batch-scores] listing_yields:', error.message); return new Map() }
-  return new Map((data ?? []).filter(r => r.cap_nonres != null).map(r => [String(r.airtable_id), Number(r.cap_nonres)]))
+  return new Map((data ?? []).filter(r => r.cap_before != null).map(r => [String(r.airtable_id), Number(r.cap_before)]))
 }
 
 async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Promise<Map<string, VillaScore>> {
@@ -295,12 +286,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 // instance. Map isn't serializable — entries go through the cache.
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
-  ['villa-scores-v3'],
+  ['villa-scores-v4'],
   { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
-  ['apartment-scores-v3'],
+  ['apartment-scores-v4'],
   { revalidate: 86400, tags: ['content:apartments'] },
 )
 
