@@ -1964,6 +1964,23 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                   : <ApartmentCard key={u.id} a={{ ...u, demand }} lang={lang} />
               })}
             </div>
+            {/* Остальные юниты — под раскрытием, без клиентского кода: раньше
+                страница показывала 12 и молчала про остальные (у Elysium 29). */}
+            {units.length > 12 && (
+              <details className="mt-6 group">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full border border-[var(--color-border)] px-4 py-2 text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] group-open:hidden">
+                  {pickCopy({ ru: `Показать ещё ${units.length - 12}`, en: `Show ${units.length - 12} more`, id: `Tampilkan ${units.length - 12} lagi`, fr: `Afficher ${units.length - 12} de plus`, de: `${units.length - 12} weitere anzeigen`, zh: `再显示 ${units.length - 12} 个`, nl: `Toon ${units.length - 12} meer`, ban: `Tampilang ${units.length - 12} malih`, pl: `Pokaż jeszcze ${units.length - 12}`, uk: `Показати ще ${units.length - 12}` }, lang)}
+                </summary>
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {units.slice(12).map(u => {
+                    const demand = demandByUnit[`${u.kind}|${u.id}`]
+                    return u.kind === 'villa'
+                      ? <VillaCard key={u.id} a={{ ...u, demand }} lang={lang} />
+                      : <ApartmentCard key={u.id} a={{ ...u, demand }} lang={lang} />
+                  })}
+                </div>
+              </details>
+            )}
           </section>
         )}
 
