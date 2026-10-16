@@ -168,32 +168,12 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
     description: (r.notes?.trim() || (lang === 'ru'
       ? `${r.bedrooms ? r.bedrooms + '-комнатная ' : ''}аренда${r.location ? ` в ${r.location}` : ''} на Бали, Индонезия`
       : `${r.bedrooms ? r.bedrooms + '-bedroom ' : ''}rental${r.location ? ` in ${r.location}` : ''}, Bali, Indonesia`)).slice(0, 500),
-    // Brand → generic "Balinsky" so the GTIN/brand validator stops flagging.
-    brand: { '@type': 'Brand', name: 'Balinsky' },
+    // Ни бренда, ни продавца: объявление чужое, Balinsky его не сдаёт.
     offers: {
       '@type': 'Offer',
       price: Math.round(r.priceMonthUsd),
       priceCurrency: 'USD',
-      availability: 'https://schema.org/InStock',
       url: rentalUrl,
-      // Rentals don't ship and don't return — explicit declarations that
-      // say so satisfy Google's Merchant validator without faking
-      // e-commerce semantics.
-      shippingDetails: {
-        '@type': 'OfferShippingDetails',
-        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'USD' },
-        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'ID' },
-        deliveryTime: {
-          '@type': 'ShippingDeliveryTime',
-          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
-          transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
-        },
-      },
-      hasMerchantReturnPolicy: {
-        '@type': 'MerchantReturnPolicy',
-        applicableCountry: 'ID',
-        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-      },
     },
   }
 

@@ -594,7 +594,9 @@ const SLIM_PRICE_SELECT = `
 // arrays (Map results are built per-request downstream — Maps aren't cacheable).
 const _loadComplexCardRows = unstable_cache(
   async (): Promise<Row[]> => {
-    const { data } = await sb.from('raw_complexes').select(CPX_CARD_SELECT).limit(500)
+    const { data, error } = await sb.from('raw_complexes').select(CPX_CARD_SELECT).limit(500)
+    // Сбой — бросаем, чтобы unstable_cache не запомнил пустой список на сутки.
+    if (error) throw new Error(`raw_complexes: ${error.message}`)
     return ((data ?? []) as unknown as Record<string, unknown>[]).map(raw => {
       const d: Record<string, unknown> = {}
       for (const [k, a] of CPX_CARD_FIELDS) d[k] = raw[a]
@@ -611,7 +613,8 @@ const _loadComplexCardRows = unstable_cache(
 )
 const _loadVillaPriceRows = unstable_cache(
   async (): Promise<PriceRow[]> => {
-    const { data } = await sb.from('raw_villas').select(SLIM_PRICE_SELECT).limit(3000)
+    const { data, error } = await sb.from('raw_villas').select(SLIM_PRICE_SELECT).limit(3000)
+    if (error) throw new Error(`raw_villas prices: ${error.message}`)
     return (data ?? []) as unknown as PriceRow[]
   },
   ['zhilye-villa-price-rows-v2'],
@@ -619,7 +622,8 @@ const _loadVillaPriceRows = unstable_cache(
 )
 const _loadAptPriceRows = unstable_cache(
   async (): Promise<PriceRow[]> => {
-    const { data } = await sb.from('raw_apartments').select(SLIM_PRICE_SELECT).limit(3000)
+    const { data, error } = await sb.from('raw_apartments').select(SLIM_PRICE_SELECT).limit(3000)
+    if (error) throw new Error(`raw_apartments prices: ${error.message}`)
     return (data ?? []) as unknown as PriceRow[]
   },
   ['zhilye-apt-price-rows-v2'],

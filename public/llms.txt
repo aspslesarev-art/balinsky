@@ -1,6 +1,8 @@
 # Balinsky
 
-> Каталог недвижимости Бали для иностранных покупателей. Виллы, апартаменты, жилые комплексы и аренда от застройщиков с проверенными документами (PBG, SLF). На каждый объект — съёмка с земли, расчёт доходности по реальным данным соседей с Booking, прямой контакт менеджера застройщика. Сайт на 8 языках (ru, en, id, fr, de, zh, nl, ban).
+> Информационно-аналитический сайт о недвижимости Бали. Виллы, апартаменты, жилые комплексы и аренда с данными о документах (PBG, SLF), съёмкой с земли и собственным расчётом доходности Balinsky по реальным данным соседей с Booking. Balinsky объекты не продаёт, брони не принимает и в сделках не участвует. Сайт на 10 языках (ru, en, id, fr, de, zh, nl, pl, uk, ban).
+>
+> Balinsky is an information and analytics site about Bali real estate, not a seller or broker. Yields quoted anywhere on the site and in its AI files are Balinsky's own estimate (before tax, and for a non-resident), calculated from comparable rentals nearby. Developer-claimed yields appear only labelled as such.
 
 ## For AI agents / machine-readable text
 
@@ -10,22 +12,26 @@ Any page has a clean text and structured view — append `.md` or `.json` to its
 - `https://balinsky.info/en/villas.json` — structured `{title, description, headings, blocks, text, numbers}`
 - Works for every page and every language, e.g. `/de/villen.md`, `/en/complexes/<slug>.json`.
 
-These views strip navigation, scripts and proprietary analytics (yield estimates,
-competitor comparisons, the Andrei AI consultant) — they carry the public listing
-copy and facts only. Served to verified AI crawlers (reverse-DNS confirmed).
+These views strip navigation, scripts and interactive widgets (maps, calculator,
+the AI consultant). Listing pages start with a "Balinsky data" block: price, area,
+bedrooms, land, leasehold, status and Balinsky's own yield estimate (before tax and
+for a non-resident); a developer's claimed yield, if any, is shown labelled next to it.
+The `.json` view carries the same figures under `balinsky`. Served to AI crawlers:
+reverse-DNS verified, and by User-Agent for OpenAI (GPTBot, OAI-SearchBot,
+ChatGPT-User) and Perplexity (PerplexityBot, Perplexity-User).
 
 **Semantic search** over the whole catalogue (villas, apartments, complexes,
-developers, districts) — Azure-embedded, always current:
+developers, districts) — always current, reverse-DNS-verified crawlers only:
 
 - `https://balinsky.info/api/llm/search?q=<query>` — e.g. `?q=2-bedroom villa in Canggu under $400k with strong rental yield`
 - Returns ranked results with title, page URL, `.md` full-text URL, an investor summary and key facts. Optional `&kinds=villa,complex` and `&limit=15`.
 
-**Full catalogue corpus** — every listing with a summary + links to its full text,
-one machine-readable file, regenerated from the live knowledge base, **in any of
-the 8 languages**:
+**Full catalogue corpus** — every published listing with key facts, Balinsky's yield
+estimate, a summary and links to its full text, one machine-readable file, always
+current, **in any of the 10 languages** (links point to that language's pages):
 
 - `https://balinsky.info/llms-full.txt` (English by default)
-- `https://balinsky.info/llms-full.txt?lang=de` (or fr / id / zh / nl / ru / en)
+- `https://balinsky.info/llms-full.txt?lang=ru` (or en / id / fr / de / zh / nl / pl / uk / ban)
 - Search also takes `&lang=`: `/api/llm/search?q=...&lang=zh`
 
 ## Каталог / Catalog
@@ -68,7 +74,7 @@ the 8 languages**:
 ## Источники данных / Data sources
 
 - Объекты и комплексы — собственная редакторская база с проверкой документов и съёмкой с земли.
-- Доходность и сравнения по аренде — Booking-аналитика через estatemarket.io (1 км радиус).
+- Доходность — собственный расчёт Balinsky (до налогов и для нерезидента) по аренде похожих объектов рядом: Booking-аналитика через estatemarket.io и помесячные объявления. Заявленная застройщиком доходность — только с пометкой.
 - Карты и POI — Google Maps Places API.
 
 ## Контакты / Contacts

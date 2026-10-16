@@ -59,13 +59,17 @@ const AI_USER_AGENTS = [
   'xAI',
 ]
 
+// '/llms-full.txt?' — языковые версии AI-корпуса (?lang=ru …). Без явного
+// Allow их закрывало правило '/*?' выше; более длинное правило побеждает.
+const ALLOW = ['/', '/api/llm/', '/llms-full.txt?']
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       // Allow '/api/llm/' (the AI semantic-search + text endpoints) explicitly —
       // the more specific Allow overrides the '/api/' Disallow below.
-      { userAgent: '*',          allow: ['/', '/api/llm/'], disallow: DISALLOW },
-      { userAgent: AI_USER_AGENTS, allow: ['/', '/api/llm/'], disallow: DISALLOW },
+      { userAgent: '*',          allow: ALLOW, disallow: DISALLOW },
+      { userAgent: AI_USER_AGENTS, allow: ALLOW, disallow: DISALLOW },
     ],
     // Points at the /sitemap/ twin, not /sitemap.xml: Google left the
     // root index unread in GSC while fetching everything under /sitemap/.

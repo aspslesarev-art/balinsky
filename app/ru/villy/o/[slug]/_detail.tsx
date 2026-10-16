@@ -665,10 +665,13 @@ async function _loadVillaById(id: string): Promise<Row | null> {
   const rev = await contentRev('villas')
   const cached = _byIdCache.get(id)
   if (cached && cached.rev === rev && Date.now() - cached.ts < BY_ID_TTL_MS) return cached.row
-  const [{ data }, enCache] = await Promise.all([
+  const [{ data, error }, enCache] = await Promise.all([
     sb.from('raw_villas').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
     loadAllTranslations('villas'),
   ])
+  // Сбой базы — не «виллы нет»: бросаем (5xx, ISR оставит прошлую версию),
+  // иначе живая вилла отдавала 404 и это ещё и кэшировалось.
+  if (error) throw new Error(`raw_villas ${id}: ${error.message}`)
   const raw = (data as Row | null) ?? null
   // Merge cached EN translations into the row's data so tField('SEO Text', 'en')
   // sees the translated value instead of the Airtable AI-error placeholder.
@@ -696,9 +699,10 @@ async function _loadManifest(): Promise<Record<string, string[]>> {
 }
 
 async function resolveVilla(urlSlug: string): Promise<{ row: Row; canonicalSlug: string } | null> {
+  // Индекс не загрузился (и прошлой копии нет) — это сбой, а не 404.
   const idx = await _loadVillaIndex().catch((e: unknown) => {
     console.error('[villa]', e instanceof Error ? e.message : e)
-    return [] as IndexEntry[]
+    throw e
   })
   let entry = idx.find(e => e.slug === urlSlug)
   if (!entry) {
@@ -1169,37 +1173,19 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   // field is never empty.
   productJsonLd.description = seoText?.slice(0, 500)
     ?? pickCopy(VILLA_PRODUCT_DESC, lang)(bedrooms, district)
-  // Brand → developer name when known, otherwise generic "Balinsky"
-  // so the GTIN/brand validator stops flagging this row.
-  productJsonLd.brand = { '@type': 'Brand', name: developerName ?? 'Balinsky' }
+  // Бренд — застройщик, и только когда он известен. Подставлять «Balinsky»
+  // нельзя: сайт информационный и объекты не продаёт. brand для сниппета
+  // товара не обязателен (обязательны name + offers.price).
+  if (developerName) productJsonLd.brand = { '@type': 'Brand', name: developerName }
   if (priceNum != null) {
     productJsonLd.offers = {
       '@type': 'Offer',
       price: Math.round(priceNum),
       priceCurrency: 'USD',
-      availability: 'https://schema.org/InStock',
       url: `${SITE_URL}${switchLangPath(`/ru/villy/o/${slug}`, lang)}`,
-      // Real-estate sales don't ship and don't return — explicit
-      // declarations that say so satisfy Google Merchant validator
-      // without faking e-commerce semantics.
-      shippingDetails: {
-        '@type': 'OfferShippingDetails',
-        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'USD' },
-        shippingDestination: {
-          '@type': 'DefinedRegion',
-          addressCountry: 'ID',
-        },
-        deliveryTime: {
-          '@type': 'ShippingDeliveryTime',
-          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
-          transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
-        },
-      },
-      hasMerchantReturnPolicy: {
-        '@type': 'MerchantReturnPolicy',
-        applicableCountry: 'ID',
-        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-      },
+      // Продавец — застройщик, если известен. Balinsky объекты не продаёт:
+      // ни бренда, ни продавца «Balinsky», ни доставки с возвратом.
+      ...(developerName ? { seller: { '@type': 'Organization', name: developerName } } : {}),
     }
   }
 

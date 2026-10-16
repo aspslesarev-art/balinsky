@@ -133,8 +133,51 @@ function walk(el: HTMLElement, out: LlmBlock[], seen: Set<string>): void {
       if (rows.length) out.push({ type: 'table', rows })
       continue
     }
+    // Контейнер без блочной разметки внутри (сетка «Характеристики» из
+    // div/span, текст описания в div): раньше обход спускался в него и не
+    // находил ни одного h/p/ul — раздел в .md выходил пустым. Такой лист
+    // отдаём целиком: несколько дочерних элементов — списком, один — абзацем.
+    if (!c.querySelector(BLOCKY_SELECTOR)) {
+      emitLeafContainer(c, out, seen)
+      continue
+    }
     // Container element — recurse.
     walk(c, out, seen)
+  }
+}
+
+const BLOCKY_SELECTOR = 'h1,h2,h3,h4,h5,h6,p,ul,ol,li,table,dl'
+
+function elementChildren(el: HTMLElement): HTMLElement[] {
+  return el.childNodes.filter(n => (n as unknown as { nodeType: number }).nodeType === 1 && !shouldSkip(n as HTMLElement)) as HTMLElement[]
+}
+
+// Текст элемента с границами между дочерними блоками: карточка
+// «подпись + значение» → «Цена: $425,000», а не слипшееся «Цена$425,000».
+function partsText(el: HTMLElement): string {
+  const kids = elementChildren(el).filter(k => collapse(inlineText(k)))
+  const ownText = el.childNodes.some(n => (n as unknown as { nodeType: number }).nodeType === 3 && collapse((n as unknown as { rawText?: string }).rawText ?? ''))
+  if (kids.length >= 2 && !ownText) {
+    const parts = kids.map(partsText).filter(Boolean)
+    if (parts.length === 2) return /[:：]$/.test(parts[0]) ? `${parts[0]} ${parts[1]}` : `${parts[0]}: ${parts[1]}`
+    return parts.join(' · ')
+  }
+  return collapse(inlineText(el))
+}
+
+function emitLeafContainer(c: HTMLElement, out: LlmBlock[], seen: Set<string>): void {
+  const kids = elementChildren(c).filter(k => collapse(inlineText(k)))
+  if (kids.length >= 2) {
+    const items = kids.map(partsText).filter(Boolean)
+    if (items.length) out.push({ type: 'list', ordered: false, items })
+    return
+  }
+  // Один текстовый блок: абзацы по пустым строкам (описание объекта
+  // приходит с whitespace-pre-line).
+  const raw = decodeEntities(inlineText(c))
+  for (const chunk of raw.split(/\n\s*\n/)) {
+    const text = collapse(chunk)
+    if (text && !seen.has('p:' + text)) { seen.add('p:' + text); out.push({ type: 'paragraph', text }) }
   }
 }
 

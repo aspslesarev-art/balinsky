@@ -162,6 +162,12 @@ export type Verdict = {
   checks: ('permit' | 'lease' | 'delays' | 'zoneMonthly')[]
 }
 
+// Оценка дохода по доходности до налогов — та же шкала, что в «Стоит ли
+// брать»; её же берёт AI-слой (lib/llm/catalog.ts).
+export function moneyTone(pctBeforeTax: number): Tone {
+  return pctBeforeTax >= 0.08 ? 'plus' : pctBeforeTax >= 0.06 ? 'warn' : 'minus'
+}
+
 const NOT_STARTED_RE = /строит|under construction|planned|проект|котлован/i
 
 export type PermitState = 'pbg' | 'slf' | 'pbgApplied' | 'slfApplied' | 'unknown'
@@ -213,7 +219,7 @@ export function buildVerdict(i: VerdictInput): Verdict {
     : (i.daily && i.daily.count >= 5 && (i.daily.occupancyPct ?? 0) >= 70 ? 'plus' : 'warn')
 
   const pct = i.yields?.pct.beforeTax ?? null
-  const moneyTone: Tone = pct == null ? 'warn' : pct >= 0.08 ? 'plus' : pct >= 0.06 ? 'warn' : 'minus'
+  const moneyToneValue: Tone = pct == null ? 'warn' : moneyTone(pct)
 
   const yrs = i.climate?.buildings?.years
   const ys = yrs ? Object.keys(yrs).sort() : []
@@ -228,7 +234,7 @@ export function buildVerdict(i: VerdictInput): Verdict {
   if (flat) pluses.push('flat')
   if (i.saleDiffPct != null && i.saleDiffPct <= -5) pluses.push('cheaper')
   if (airportBand === 'near') pluses.push('nearAirport')
-  if (moneyTone === 'plus') pluses.push('strongYield')
+  if (moneyToneValue === 'plus') pluses.push('strongYield')
 
   const checks: Verdict['checks'] = []
   if (!permitOk(permit) || underConstruction) checks.push('permit')
@@ -240,7 +246,7 @@ export function buildVerdict(i: VerdictInput): Verdict {
     safety: { tone: safetyTone, permit, leaseUnknown, notStarted, noFinishedProjects, hazards },
     comfort: { tone: comfortTone, airportMin: i.airportMin, airportBand, flat, roadM: plot?.road.m ?? null },
     demand: { tone: demandTone, monthlyOnly, ownOccupancy: monthlyOnly ? null : i.ownOccupancy ?? null },
-    money: { tone: moneyTone, pct },
+    money: { tone: moneyToneValue, pct },
     buildingsGrowthPct,
     pluses,
     checks,
