@@ -98,7 +98,7 @@ const COPY = {
     factArea: 'Площадь', factFloor: 'Этаж', factCompletion: 'Сдача',
     factPermits: 'Разрешения', factLeasehold: 'Лизхолд', factDistrict: 'Район',
     factAirport: 'До аэропорта', factGround: 'Цокольный',
-    factLeaseValue: (l: string) => `${l} лет`,
+    factLeaseValue: (l: string) => `${l} ${Number.isFinite(Number(l)) ? pluralRu(Number(l), ['год', 'года', 'лет']) : 'лет'}`,
     descHeading: 'Описание',
     complexLabel: 'Жилой комплекс',
     developerLabel: 'Застройщик',
@@ -126,7 +126,7 @@ const COPY = {
       { q: 'Можно ли иностранцу купить апартаменты на Бали?',
         a: 'Да. Сделка оформляется по схеме лизхолда (долгосрочной аренды) у нотариуса PPAT. Большинство застройщиков работают с международными покупателями.' },
       { q: 'Какой срок лизхолда?',
-        a: lease ? `Базовый срок — ${lease} лет. Условия продления уточняйте у застройщика.` : 'Срок лизхолда уточняйте у застройщика. Стандартно 25–80 лет с возможностью продления.' },
+        a: lease ? `Базовый срок — ${lease} ${Number.isFinite(Number(lease)) ? pluralRu(Number(lease), ['год', 'года', 'лет']) : 'лет'}. Условия продления уточняйте у застройщика.` : 'Срок лизхолда уточняйте у застройщика. Стандартно 25–80 лет с возможностью продления.' },
     ],
     metaFallback: (title: string, district: string | null, price: string | null) =>
       `${title}${district ? ` в районе ${district}` : ''} на Бали${price ? `. Цена ${price}.` : '.'} Фото, планировка, документы.`,
@@ -1268,8 +1268,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               {facts.map(({ Icon, label, value }) => (
                 <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
                   <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
-                    <Icon size={16} />
-                    <span className="text-[12px] uppercase tracking-wide">{label}</span>
+                    <Icon size={16} className="shrink-0" />
+                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
                   </div>
                   <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
                 </div>

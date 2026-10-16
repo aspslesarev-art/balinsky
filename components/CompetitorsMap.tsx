@@ -6,6 +6,7 @@ import { X, Star } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
+import { pluralRu } from '@/lib/plural-ru'
 
 export type CompetitorUnit = {
   id: string
@@ -218,7 +219,7 @@ function PopupCard({ p, onClose }: { p: CompetitorPoint; onClose: () => void }) 
         <div className="flex items-center gap-1 text-[12px] text-[#6B7280] mb-2">
           <Star size={12} className="text-[#F59E0B] fill-[#F59E0B]" />
           <span className="font-medium text-[var(--color-text)]">{p.rating.toFixed(1)}</span>
-          {p.reviews != null && <span>· {p.reviews} отзывов</span>}
+          {p.reviews != null && <span>· {p.reviews} {pluralRu(p.reviews, ['отзыв', 'отзыва', 'отзывов'])}</span>}
         </div>
       )}
       <div className="text-[15px] font-semibold text-[#1D4ED8] mb-1">{priceLabel} <span className="text-[12px] font-normal text-[#6B7280]">/ ночь</span></div>

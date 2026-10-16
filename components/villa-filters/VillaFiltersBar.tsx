@@ -7,6 +7,7 @@ import { VillaGoalFilter } from './VillaGoalFilter'
 import { useVillaFilterUrl, type FilterView } from './useVillaFilterUrl'
 import type { VillaFilterState, VillaFilterOptions } from '@/app/ru/villy/_lib'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { buildDistrictGroups } from '@/lib/district-groups'
 
 const COPY = {
   ru: {
@@ -111,7 +112,7 @@ export function VillaFiltersBar({
       <div className="flex items-center gap-3 flex-wrap">
         <VillaGoalFilter current={state} view={view} lang={lang} />
         <VillaPriceRange label={c.price} min={state.priceMin} max={state.priceMax} current={state} view={view} lang={lang} />
-        <VillaMultiSelect stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable />
+        <VillaMultiSelect stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable groups={buildDistrictGroups(options.district, lang)} />
         <VillaMultiSelect stateKey="bedrooms"  label={c.bedrooms}  options={options.bedrooms}  selected={state.bedrooms}  current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="dealType"  label={c.dealType}  options={options.dealType}  selected={state.dealType}  current={state} view={view} lang={lang} />

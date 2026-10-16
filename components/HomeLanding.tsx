@@ -852,7 +852,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
               <HeroCatalogSearch
                 lang={lang}
                 tryLabel={c.hero.tryLabel}
-                suggestions={c.hero.suggestions.map(label => ({ label, href: villasHref }))}
+                suggestions={c.hero.suggestions.map(label => ({ label }))}
                 sendAria={c.hero.search}
               />
             </div>

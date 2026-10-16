@@ -16,7 +16,7 @@ const COPY = {
     title: 'Что продаётся рядом',
     sub: (n: number, r: number, beds: string, lease: boolean) =>
       `${n} ${plural(n, ['похожая вилла', 'похожие виллы', 'похожих вилл'])}${lease ? ' на лизхолде' : ''} в радиусе ${r} км, ${beds}. Цены из объявлений rumah123.com.`,
-    beds: (b: number, relaxed: boolean) => relaxed ? `${b - 1}–${b + 1} спальни` : `${b} ${plural(b, ['спальня', 'спальни', 'спален'])}`,
+    beds: (b: number, relaxed: boolean) => relaxed ? `${b - 1}–${b + 1} ${plural(b + 1, ['спальня', 'спальни', 'спален'])}` : `${b} ${plural(b, ['спальня', 'спальни', 'спален'])}`,
     self: 'Эта вилла',
     market: 'Середина рынка рядом',
     diff: 'Разница',

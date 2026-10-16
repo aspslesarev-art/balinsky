@@ -161,11 +161,60 @@ export function formatPrice(usd: number, currency: Currency, lang: Lang = 'ru'):
   }
 }
 
+// Пересчёт по курсу — не точная цена, а оценка: «Rp 4 599 995 700» или
+// «28 728 000 ₽» обещают точность до рубля, которой нет. Округляем до трёх
+// значащих цифр («28 700 000 ₽», «230 000 ₽/м²»), а рупии от миллиона
+// показываем компактно, по-человечески: «Rp 4,6 млрд», «Rp 2,1 млн».
+function roundSignificant(value: number, digits = 3): number {
+  if (value < 1000) return Math.round(value)
+  const p = 10 ** (Math.floor(Math.log10(value)) - digits + 1)
+  return Math.round(value / p) * p
+}
+
+// Сумма для коротких мест — плитки «Рынок в цифрах», ставка за ночь,
+// быстрые кнопки фильтра, заголовок «до …»: в валюте посетителя, без хвостов
+// пересчёта, от миллиона — «28,7 млн ₽», «Rp 6,1 млрд». Все пробелы
+// неразрывные: «$342 000» не должен переноситься посередине.
+export function formatMoney(usd: number, currency: Currency, lang: Lang = 'ru'): string {
+  if (!Number.isFinite(usd)) return '—'
+  const raw = usd * CURRENCY_RATES[currency]
+  const value = currency === 'USD' ? raw : roundSignificant(raw)
+  let out: string
+  if (value >= 1_000_000) {
+    // Один знак после запятой: «Rp 6,1 млрд», «28,7 млн ₽», «$1.2M».
+    const suf = compactSuffixes(currency, lang)
+    const [div, word] = value >= 1_000_000_000 ? [1_000_000_000, suf.mlrd] : [1_000_000, suf.mln]
+    const num = roundTo(value / div, 1).replace('.', suf.decimal)
+    // Однобуквенный суффикс пишется слитно ($1.2M), словесный — через пробел.
+    const body = word.length === 1 ? num + word : num + ' ' + word
+    switch (currency) {
+      case 'USD': out = '$' + body; break
+      case 'EUR': out = '€' + body; break
+      case 'RUB': out = body + ' ₽'; break
+      case 'UAH': out = body + ' ₴'; break
+      case 'IDR': out = 'Rp ' + body; break
+    }
+  } else {
+    const grouped = Math.round(value).toLocaleString(EXACT_LOCALE[lang])
+    switch (currency) {
+      case 'USD': out = '$' + grouped; break
+      case 'EUR': out = '€' + grouped; break
+      case 'RUB': out = grouped + ' ₽'; break
+      case 'UAH': out = grouped + ' ₴'; break
+      case 'IDR': out = 'Rp ' + grouped; break
+    }
+  }
+  return out.replace(/[\s ]/g, ' ')
+}
+
 // Same as formatPrice but never compacts — for places that need the exact
 // number (price-per-sqm tables, slider tooltips at the low end of the range).
+// Доллары (валюта базы) — как есть; остальные валюты — округлённый пересчёт.
 export function formatPriceExact(usd: number, currency: Currency, lang: Lang = 'ru'): string {
   if (!Number.isFinite(usd)) return '—'
-  const value = usd * CURRENCY_RATES[currency]
+  const raw = usd * CURRENCY_RATES[currency]
+  if (currency === 'IDR' && raw >= 1_000_000) return 'Rp ' + formatCompact(raw, LANG_SUFFIXES[lang])
+  const value = currency === 'USD' ? raw : roundSignificant(raw)
   switch (currency) {
     case 'USD': return '$' + Math.round(value).toLocaleString('en-US')
     case 'EUR': return '€' + Math.round(value).toLocaleString('de-DE')

@@ -6,6 +6,7 @@ import { VillaCard } from '@/components/VillaCard'
 import { ApartmentCard } from '@/components/ApartmentCard'
 import { LoginCodeForm } from '@/components/LoginCodeForm'
 import { loadResaleUnits, type ResaleUnit } from '@/lib/resale'
+import { pluralRu } from '@/lib/plural-ru'
 
 // Каталог вторичного рынка: юниты каталога с «Тип сделки» = Перепродажа /
 // Вторичка плюс объекты, которые агенты добавили сами. Карточки те же самые,
@@ -107,7 +108,7 @@ export default async function ResalePage({ searchParams }: { searchParams: SP })
         </div>
 
         <div className="mt-6 text-[14px] text-[var(--color-text-muted)]">
-          {filtered.length} объектов
+          {filtered.length} {pluralRu(filtered.length, ['объект', 'объекта', 'объектов'])}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">

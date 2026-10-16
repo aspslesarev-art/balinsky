@@ -15,6 +15,11 @@ import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
 import { loadCatalogPage, buildHeadingLoc, type VillaFilterState } from './_lib'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
+import { CatalogSortSelect } from '@/components/CatalogSortSelect'
+import { HeadingPrice } from '@/components/Money'
+import { filtersFromQuery, relaxSteps, relaxNote, alternativesCopy, type RelaxStep } from '@/lib/catalog-alternatives'
+import { CATALOG_SORTS, type CatalogSort } from '@/lib/catalog-sort'
+import { pluralRu } from '@/lib/plural-ru'
 
 // Absolute origin for JSON-LD `item`/`url` — schema.org consumers want fully
 // qualified URLs. Same source as lib/sitemap-data.ts.
@@ -23,7 +28,7 @@ const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 const COPY = {
   ru: {
     page: 'страница', of: 'из',
-    objects: (n: number) => `${n} объектов`,
+    objects: (n: number) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])}`,
     emptySearch: (q: string) => `По запросу «${q}» ничего не найдено`,
     emptyFilters: 'Ничего не найдено по выбранным фильтрам',
     searchPlaceholder: 'Поиск по виллам, районам, застройщикам…',
@@ -86,7 +91,7 @@ const COPY = {
   },
   uk: {
     page: 'сторінка', of: 'з',
-    objects: (n: number) => `${n} оголошень`,
+    objects: (n: number) => `${n} ${pluralRu(n, ['оголошення', 'оголошення', 'оголошень'])}`,
     emptySearch: (q: string) => `Нічого не знайдено за запитом «${q}»`,
     emptyFilters: 'Немає результатів за вибраними фільтрами',
     searchPlaceholder: 'Пошук вілл, районів, забудовників…',
@@ -104,11 +109,24 @@ function toQueryString(f: VillaFilterState): string {
   if (f.permit.length) sp.set('permit', f.permit.join(','))
   if (f.year.length) sp.set('year', f.year.join(','))
   if (f.developer.length) sp.set('developer', f.developer.join(','))
+  // Догрузка обязана видеть ВСЕ фильтры страницы, иначе со второй порции
+  // в ленту попадали объекты без выбранного стиля/цели/типа сделки.
+  if (f.style.length) sp.set('style', f.style.join(','))
+  if (f.features.length) sp.set('features', f.features.join(','))
+  if (f.goal) sp.set('goal', f.goal)
+  if (f.dealType.length) sp.set('deal', f.dealType.join(','))
+  if (f.sort) sp.set('sort', f.sort)
   return sp.toString()
 }
 
+function sortHrefs(f: VillaFilterState, lang: Lang): Record<CatalogSort | 'default', string> {
+  const out = { default: buildListHref({ ...f, sort: undefined }, lang) } as Record<CatalogSort | 'default', string>
+  for (const s of CATALOG_SORTS) out[s] = buildListHref({ ...f, sort: s }, lang)
+  return out
+}
+
 export async function VillasCatalog({
-  filters,
+  filters: rawFilters,
   page = 1,
   lang = 'ru',
 }: {
@@ -117,8 +135,33 @@ export async function VillasCatalog({
   basePath: string
   lang?: Lang
 }) {
-  const { cards, totalCount, totalPages, hasMore, options, page: actualPage } =
-    await loadCatalogPage(filters, page, lang)
+  // Текстовый поиск пуст — пробуем понять фразу как фильтры («вилла 2 спальни
+  // Чангу до 300к»), а если пусто и так — ищем ближайшие варианты.
+  // Цену и спальни текстовый поиск понять не может («до 100к» он ищет как
+  // слова) — если они во фразе есть, сразу идём по фильтрам.
+  let filters = rawFilters
+  const parsed = filtersFromQuery(rawFilters)
+  const strong = parsed != null && (parsed.priceMin !== rawFilters.priceMin
+    || parsed.priceMax !== rawFilters.priceMax || parsed.bedrooms !== rawFilters.bedrooms)
+  if (strong) filters = parsed
+  let pageData = await loadCatalogPage(filters, page, lang)
+  if (pageData.cards.length === 0 && page === 1 && parsed && !strong) {
+    filters = parsed
+    pageData = await loadCatalogPage(filters, page, lang)
+  }
+  const { cards, totalCount, totalPages, hasMore, options, page: actualPage } = pageData
+  let alternatives: { cards: typeof cards; note: string; href: string } | null = null
+  if (cards.length === 0 && page === 1) {
+    const done: RelaxStep[] = []
+    for (const { step, filters: relaxed } of relaxSteps(filters)) {
+      done.push(step)
+      const alt = await loadCatalogPage(relaxed, 1, lang)
+      if (alt.cards.length > 0) {
+        alternatives = { cards: alt.cards.slice(0, 4), note: relaxNote(done, lang), href: buildListHref(relaxed, lang) }
+        break
+      }
+    }
+  }
   const isSearch = filters.q.trim().length > 0
   const copy = pickCopy(COPY, lang)
 
@@ -158,6 +201,10 @@ export async function VillasCatalog({
     : undefined)
     ?? (isMainHub ? getBuyHeading('villa', lang, totalCount) : undefined)
     ?? buildHeadingLoc(filters, lang)
+  // H1 с ценой из фильтра: сумма — в валюте посетителя (HeadingPrice, на
+  // клиенте), а не «до 279 330 $». Сервер строит заголовок без цены.
+  const hasPrice = filters.priceMin != null || filters.priceMax != null
+  const h1Text = hasPrice ? buildHeadingLoc({ ...filters, priceMin: null, priceMax: null }, lang) : heading
   const sectionRoot = switchLangPath('/ru/villy', lang)
 
   // Structured data for the catalog itself. Product markup already rides on
@@ -201,7 +248,8 @@ export async function VillasCatalog({
 
       <PageContainer>
         <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
-          {heading}
+          {h1Text}
+          {hasPrice && <HeadingPrice min={filters.priceMin} max={filters.priceMax} lang={lang} />}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]"> — {copy.page} {actualPage}</span>
           )}
@@ -225,10 +273,31 @@ export async function VillasCatalog({
           <VillaFiltersBar state={filters} options={options} view="list" lang={lang} />
         </div>
 
-        {cards.length === 0 ? (
-          <div className="py-16 text-center text-[var(--color-text-muted)]">
-            {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
+        {cards.length > 1 && (
+          <div className="mt-3">
+            <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} />
           </div>
+        )}
+
+        {cards.length === 0 ? (
+          alternatives ? (
+            <section className="mt-8" aria-labelledby="catalog-alternatives">
+              <h2 id="catalog-alternatives" className="text-[20px] font-semibold tracking-tight text-[var(--color-text)]">
+                {alternativesCopy(lang).title}
+              </h2>
+              <p className="mt-1 text-[14px] text-[var(--color-text-muted)]">{alternatives.note}</p>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {alternatives.cards.map((c, i) => <VillaCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
+              </div>
+              <a href={alternatives.href} className="mt-6 inline-flex items-center text-[15px] font-medium text-[var(--color-primary)] hover:underline underline-offset-2">
+                {alternativesCopy(lang).all} →
+              </a>
+            </section>
+          ) : (
+            <div className="py-16 text-center text-[var(--color-text-muted)]">
+              {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
+            </div>
+          )
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">

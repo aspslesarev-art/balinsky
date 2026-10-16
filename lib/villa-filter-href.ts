@@ -29,7 +29,10 @@ export function buildListHref(f: VillaFilterState, lang: Lang = 'ru'): string {
     const canonical = buildCanonicalPath(f)
     if (canonical) return canonical
   }
-  const qs = toQueryString(f)
+  // Сортировка нужна только списку — карта её не знает.
+  const sp = new URLSearchParams(toQueryString(f))
+  if (f.sort) sp.set('sort', f.sort)
+  const qs = sp.toString()
   return qs ? `${base}?${qs}` : base
 }
 

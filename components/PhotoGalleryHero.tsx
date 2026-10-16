@@ -254,7 +254,7 @@ function Lightbox({
         <X size={20} />
       </button>
 
-      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/15 text-white text-[13px] font-medium backdrop-blur-sm">
+      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/15 text-white text-[13px] font-medium backdrop-blur-sm whitespace-nowrap tabular-nums">
         {i + 1} / {count}
       </div>
 
