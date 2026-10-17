@@ -252,7 +252,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
       <div className="mt-1 mb-8 text-[13px] text-[var(--color-text-muted)]">{t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
 
       {/* Слева ползунки в одну колонку, справа итог — как у посуточной. */}
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
       <div className="flex flex-col gap-8">
         {basePrice != null && (
           <Slider label={t.price} value={price} min={Math.round(basePrice / 10 / 500) * 500} max={Math.round(basePrice * 2 / 500) * 500} step={500}

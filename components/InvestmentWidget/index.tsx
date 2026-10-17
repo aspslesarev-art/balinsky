@@ -1167,7 +1167,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       <div className="mt-2 mb-8 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{t.calcSub}</div>
 
       {/* Слева ползунки в одну колонку, справа итог. */}
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
       <div className="flex flex-col gap-8">
         {basePrice != null && (
           <Slider label={t.inputPrice} value={price} min={priceLo} max={priceHi} step={500}
