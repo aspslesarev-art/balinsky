@@ -24,7 +24,8 @@ type Index = {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places.json`
 const LISTING_URL = (id: string) =>
-  `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places/${id}.json`
+  // ?v= — смена ключа кэша после дозаполнения пустых файлов (17.10.2026).
+  `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places/${id}.json?v=20261017`
 
 const TTL_MS = 30 * 60 * 1000
 let _index: { ts: number; data: Index } | null = null
