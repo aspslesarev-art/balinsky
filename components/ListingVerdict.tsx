@@ -149,7 +149,7 @@ const COPY = {
     dailyH: 'Сдают посуточно в этом районе',
     dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
     whoLine: (b: number | null, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} в радиусе ${String(km).replace('.', ',')} км`,
-    avg: 'в среднем', range: 'обычно от', occ: (p: number) => `занято около ${p}% ночей`,
+    avg: 'в среднем', range: 'обычно от', from: 'от', occ: (p: number) => `занято около ${p}% ночей`,
     futureT: '', futureBuild: (p: number) => `${p}`, futureData: '',
     prev: 'Назад', next: 'Дальше', open: 'Объявление',
     // Деньги
@@ -269,7 +269,7 @@ const COPY = {
     dailyH: 'Rented nightly in this area',
     dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
     whoLine: (b: number | null, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} within ${km} km`,
-    avg: 'typically', range: 'usually from', occ: (p: number) => `about ${p}% of nights booked`,
+    avg: 'typically', range: 'usually from', from: 'from', occ: (p: number) => `about ${p}% of nights booked`,
     futureT: 'What comes next',
     futureBuild: (p: number) => `More competition ahead: the number of buildings around grew by ${p}% in recent years.`,
     futureData: 'Whether demand is rising or falling we will say later: we have been collecting Booking history since August 2026.',
@@ -539,7 +539,18 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
           {v.demand.monthlyOnly && <p className="mb-2 text-[15px] font-medium text-[var(--color-text)]">{c.dailyHRestricted}</p>}
           {dq && (
             <p className="mb-4 text-[16px] text-[var(--color-text)]">
-              {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={dq.p50} lang={lang} /></span> {c.perNight}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={dq.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={dq.p75} lang={lang} approx={false} /></span>{daily?.occupancyPct != null && !v.demand.monthlyOnly ? `, ${c.occ(Math.round(daily.occupancyPct))}` : ''}.
+              {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={dq.p50} lang={lang} /></span> {c.perNight}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={dq.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={dq.p75} lang={lang} approx={false} /></span>.
+            </p>
+          )}
+          {!dq && dailyComps.length > 0 && (
+            // Меньше трёх соседей — без «в среднем», просто цены как есть.
+            <p className="mb-4 text-[16px] text-[var(--color-text)]">
+              {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {(() => {
+                const ps = dailyComps.map(x => x.adr).filter(x => x > 0).sort((a, b) => a - b)
+                return ps.length > 1 && ps[0] !== ps[ps.length - 1]
+                  ? <>{c.from} <span className="whitespace-nowrap"><InlinePrice usd={ps[0]} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={ps[ps.length - 1]} lang={lang} approx={false} /></span> {c.perNight}</>
+                  : <span className="whitespace-nowrap"><InlinePrice usd={ps[0]} lang={lang} /> {c.perNight}</span>
+              })()}.
             </p>
           )}
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
