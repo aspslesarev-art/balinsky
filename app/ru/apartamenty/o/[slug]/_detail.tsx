@@ -1332,24 +1332,24 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {hasPlace && (
           <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={!!beach} />}
-            {beach && beachRow?.km != null && <BeachBlock beach={beach} km={beachRow.km} lang={lang} />}
-            {geoFacts && (
-              <>
-              {/* Слева дорога и район одной колонкой, справа солнце и погода. */}
+            {/* Ряд 1: слева «Главное рядом», справа солнце, погода и ветер.
+                Ряд 2: слева дорога, справа район и берег. Пляж — ниже, во всю ширину. */}
+            {(livingFacts || geoFacts) && (
               <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                {/* Нет погоды (блок справа пуст) — дорога и район встают рядом. */}
-                <div className={geoFacts.climate?.year?.sunny ? 'flex flex-col gap-4 [&>*]:mb-0' : 'contents [&>*]:mb-0'}>
-                  <ComplexAccessBlock
-                    lang={lang}
-                    routes={geoFacts.routes}
-                  />
-                  <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />
-                </div>
-                <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />
+                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={!!beach} />}
+                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
               </div>
-              </>
             )}
+            {geoFacts && (
+              <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
+                <ComplexAccessBlock
+                  lang={lang}
+                  routes={geoFacts.routes}
+                />
+                <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />
+              </div>
+            )}
+            {beach && beachRow?.km != null && <div className="mb-4"><BeachBlock beach={beach} km={beachRow.km} lang={lang} /></div>}
             {nearby && (
               <GatedBlock kind="nearby" lang={lang}>
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
