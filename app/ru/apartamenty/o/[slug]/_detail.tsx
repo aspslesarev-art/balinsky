@@ -1335,21 +1335,16 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {hasPlace && (
           <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {/* Ряд 1: слева «Главное рядом», справа солнце, погода и ветер.
-                Ряд 2: слева дорога, справа район и берег. Пляж — ниже, во всю ширину. */}
+            {/* Слева: дорога, «Главное рядом», район и берег. Справа: солнце, погода и ветер.
+                Пляж — ниже, во всю ширину. */}
             {(livingFacts || geoFacts) && (
               <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest} />}
+                <div className="flex flex-col gap-4 [&>*]:mb-0">
+                  {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes} />}
+                  {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest} />}
+                  {geoFacts && <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />}
+                </div>
                 {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
-              </div>
-            )}
-            {geoFacts && (
-              <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                <ComplexAccessBlock
-                  lang={lang}
-                  routes={geoFacts.routes}
-                />
-                <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />
               </div>
             )}
             {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} lang={lang} /></div>}
