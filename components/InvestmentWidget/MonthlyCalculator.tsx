@@ -226,8 +226,9 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
   const cyr = lang === 'ru' || lang === 'uk'
   const basePrice = snap.villa.askingPrice
 
-  const rentLo = Math.max(50, Math.floor(m.p25 * 0.6 / 50) * 50)
-  const rentHi = Math.max(rentLo + 50, Math.ceil(m.p75 * 1.5 / 50) * 50)
+  // Цена и аренда — от десятой части до двойной: можно проверить любой свой сценарий.
+  const rentLo = Math.max(10, Math.floor(m.p50 / 10 / 10) * 10)
+  const rentHi = Math.max(rentLo + 50, Math.ceil(m.p50 * 2 / 50) * 50, Math.ceil(m.p75 * 1.5 / 50) * 50)
   const [price, setPrice] = useState<number>(basePrice ?? 0)
   const [rent, setRent] = useState<number>(m.p50)
   const [months, setMonths] = useState<number>(MONTHS_RENTED.median)
@@ -254,7 +255,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
       <div className="flex flex-col gap-8">
         {basePrice != null && (
-          <Slider label={t.price} value={price} min={Math.round(basePrice * 0.75)} max={Math.round(basePrice * 1.25)} step={500}
+          <Slider label={t.price} value={price} min={Math.round(basePrice / 10 / 500) * 500} max={Math.round(basePrice * 2 / 500) * 500} step={500}
             onChange={setPrice} display={fmt(Math.round(price))} />
         )}
         <Slider label={t.rent} value={rent} min={rentLo} max={rentHi} step={10}

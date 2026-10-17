@@ -1155,8 +1155,9 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
     return max > 0 ? bins.map(n => n / max) : []
   }, [nearbyAdrs, adrLo, adrHi])
 
-  const priceLo = basePrice != null ? Math.round(basePrice * 0.75) : 0
-  const priceHi = basePrice != null ? Math.round(basePrice * 1.25) : 0
+  // Цена — от десятой части до двойной: можно проверить любой свой сценарий.
+  const priceLo = basePrice != null ? Math.round(basePrice / 10 / 500) * 500 : 0
+  const priceHi = basePrice != null ? Math.round(basePrice * 2 / 500) * 500 : 0
   const opexUnit = lang === 'ru' ? '$/м²/мес' : '$/m²/mo'
 
   return (
