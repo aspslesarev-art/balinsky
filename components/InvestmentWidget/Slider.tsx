@@ -53,9 +53,9 @@ export function Slider({
 
 export function SliderHead({ label, display }: { label: string; display: string }) {
   return (
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-[13px] text-[var(--color-text-muted)]">{label}</span>
-      <span className="text-[15px] font-semibold text-[var(--color-text)] tabular-nums">{display}</span>
+    <div className="flex items-center justify-between mb-3">
+      <span className="text-[14px] text-[var(--color-text-muted)]">{label}</span>
+      <span className="text-[16px] font-semibold text-[var(--color-text)] tabular-nums">{display}</span>
     </div>
   )
 }

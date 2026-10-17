@@ -9,15 +9,17 @@ export function fmtMoneyShort(n: number | null | undefined, currency: Currency):
   if (n == null || !Number.isFinite(n)) return '—'
   return formatPrice(n, currency)
 }
-export function fmtPct(n: number | null | undefined, digits = 1): string {
+// Десятичная запятая — везде, кроме английского и китайского.
+const dec = (s: string, lang?: Lang) => (lang && lang !== 'en' && lang !== 'zh' ? s.replace('.', ',') : s)
+export function fmtPct(n: number | null | undefined, digits = 1, lang?: Lang): string {
   if (n == null || !Number.isFinite(n)) return '—'
-  return (n * 100).toFixed(digits) + '%'
+  return dec((n * 100).toFixed(digits), lang) + '%'
 }
 export function fmtYears(n: number | null | undefined, lang: Lang = 'ru'): string {
   if (n == null || !Number.isFinite(n)) return '—'
   const unit = pickCopy({ ru: 'лет', en: 'yrs', id: 'thn', fr: 'ans', de: 'J.', zh: '年', nl: 'jr', ban: 'thn', pl: 'lat', uk: 'р.' }, lang)
   if (n > 100) return `>100 ${unit}`
-  return n < 10 ? `${n.toFixed(1)} ${unit}` : `${Math.round(n)} ${unit}`
+  return n < 10 ? `${dec(n.toFixed(1), lang)} ${unit}` : `${Math.round(n)} ${unit}`
 }
 export function fmtDistance(km: number, lang: Lang = 'ru'): string {
   const mU = pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)

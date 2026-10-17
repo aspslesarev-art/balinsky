@@ -1160,11 +1160,13 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   const opexUnit = lang === 'ru' ? '$/м²/мес' : '$/m²/mo'
 
   return (
-    <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      <div className="text-[16px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
-      <div className="text-[13px] text-[var(--color-text-muted)] mt-1 mb-5">{t.calcSub}</div>
+    <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8">
+      <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
+      <div className="mt-2 mb-8 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{t.calcSub}</div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+      {/* Слева ползунки в одну колонку, справа итог. */}
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+      <div className="flex flex-col gap-8">
         {basePrice != null && (
           <Slider label={t.inputPrice} value={price} min={priceLo} max={priceHi} step={500}
             onChange={setPrice} display={fmtUsd(Math.round(price))} />
@@ -1178,16 +1180,17 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
           onChange={setMgmt} display={`${mgmt}%`} />
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="flex flex-col gap-6 rounded-xl bg-[var(--color-search-bg)] p-4 md:p-6 self-start">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="text-[13px] text-[var(--color-text-muted)]">{t.taxStatusLabel}</span>
-        <div className="inline-flex rounded-lg border border-[var(--color-border)] p-0.5">
+        <div className="flex w-full rounded-lg border border-[var(--color-border)] bg-white p-0.5 sm:inline-flex sm:w-auto">
           {(['beforeTax', 'resident', 'nonResident'] as const).map(key => (
             <button
               key={key}
               type="button"
               onClick={() => setTaxStatus(key)}
               aria-pressed={taxStatus === key}
-              className={`px-3 py-1 text-[12px] rounded-md cursor-pointer transition-colors ${
+              className={`flex-1 whitespace-nowrap px-2 sm:px-3 py-1.5 text-[12px] rounded-md cursor-pointer transition-colors ${
                 taxStatus === key
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -1197,22 +1200,22 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
             </button>
           ))}
         </div>
-        <span className="text-[12px] text-[var(--color-text-muted)]">{t.taxStatusHint}</span>
+        <span className="w-full text-[12px] text-[var(--color-text-muted)]">{t.taxStatusHint}</span>
       </div>
 
-      <div className="mt-5 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-baseline gap-x-8 gap-y-2">
-        <div className="text-[30px] font-semibold text-[var(--color-text)] leading-none">
-          {fmtUsd(e.noi)}<span className="text-[14px] font-normal text-[var(--color-text-muted)]">{t.perYearNoi}</span>
-        </div>
-        <div className="text-[13px] text-[var(--color-text-muted)]">{t.payback}: <span className="text-[var(--color-text)] font-medium">{fmtYears(e.payback, lang)}</span></div>
-        <div className="text-[13px] text-[var(--color-text-muted)]">{t.capRate}: <span className="text-[var(--color-text)] font-medium">{fmtPct(e.capRate)}</span></div>
-        {e.leaseholdIrr != null && (
-          <div className="text-[13px] text-[var(--color-text-muted)]">{t.irrLabel}: <span className="text-[var(--color-text)] font-medium">{fmtPct(e.leaseholdIrr)}</span></div>
-        )}
+      <div className="text-[32px] font-semibold text-[var(--color-text)] leading-none">
+        {fmtUsd(e.noi)}<span className="text-[14px] font-normal text-[var(--color-text-muted)]">{t.perYearNoi}</span>
       </div>
+      <dl className="flex flex-col gap-3 text-[14px]">
+        <div className="flex justify-between gap-4"><dt className="text-[var(--color-text-muted)]">{t.payback}</dt><dd className="font-semibold text-[var(--color-text)]">{fmtYears(e.payback, lang)}</dd></div>
+        <div className="flex justify-between gap-4"><dt className="text-[var(--color-text-muted)]">{t.capRate}</dt><dd className="font-semibold text-[var(--color-text)]">{fmtPct(e.capRate, 1, lang)}</dd></div>
+        {e.leaseholdIrr != null && (
+          <div className="flex justify-between gap-4"><dt className="text-[var(--color-text-muted)]">{t.irrLabel}</dt><dd className="font-semibold text-[var(--color-text)]">{fmtPct(e.leaseholdIrr, 1, lang)}</dd></div>
+        )}
+      </dl>
 
       {e.capitalReturned === false && (
-        <div className="mt-3 rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3">
+        <div className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3">
           <div className="text-[13px] font-medium text-[#991B1B]">
             {t.noCapitalReturn}
             {snap.villa.leaseholdYearsLeft != null ? ` — ${fmtYears(snap.villa.leaseholdYearsLeft, lang)}` : ''}
@@ -1224,12 +1227,14 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="mt-3 inline-flex items-center gap-1 text-[12px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] cursor-pointer"
+        className="inline-flex items-center gap-1 self-start text-[13px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)] cursor-pointer"
       >
         {t.howCalced} {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
       </button>
+      </div>
+      </div>
       {open && (
-        <ul className="mt-2 text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
+        <ul className="mt-6 text-[12px] text-[var(--color-text)] space-y-0.5 border-t border-[var(--color-border)] pt-2">
           <li>
             {t.revenue}: {fmtUsd(e.revenue)}
             <span className="text-[var(--color-text-muted)]"> · {fmtUsd(Math.round(e.adr))} × 365 × {Math.round(e.occupancy * 100)}%</span>
