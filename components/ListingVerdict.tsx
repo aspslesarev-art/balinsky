@@ -508,32 +508,6 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   const dq = quartiles(dailyComps.map(x => x.adr))
   const dailyKm = dailyComps.length ? Math.max(...dailyComps.map(x => x.distanceKm)) : null
   const tabs: { key: string; label: string; content: ReactNode }[] = []
-  if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (
-        <div>
-          <p className="mb-4 text-[16px] text-[var(--color-text)]">
-            {c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
-          </p>
-          <CardRail prevLabel={c.prev} nextLabel={c.next}>
-            {[...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd).map(comp => (
-              <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>
-                {comp.photo && (
-                  // Фото из объявления rumah123 — видно, что именно сдают по соседству.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={comp.photo} alt={comp.title} loading="lazy" referrerPolicy="no-referrer" width={480} height={320}
-                    className="aspect-[3/2] w-full bg-[var(--color-search-bg)] object-cover" />
-                )}
-                <span className="flex flex-1 flex-col gap-1 p-5">
-                  <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
-                  <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
-                  <span className="text-[14px] text-[var(--color-text-muted)]">
-                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
-                  </span>
-                </span>
-              </a>
-            ))}
-          </CardRail>
-        </div>
-  ) })
   if (dailyComps.length > 0) tabs.push({ key: 'daily', label: c.tabDaily, content: (
         <div>
           {v.demand.monthlyOnly && <p className="mb-2 text-[15px] font-medium text-[var(--color-text)]">{c.dailyHRestricted}</p>}
@@ -566,6 +540,32 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                   <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.complex ?? comp.name}</span>
                   <span className="text-[14px] text-[var(--color-text-muted)]">
                     {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.rating != null ? `★ ${dec(comp.rating)}` : null, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+              </a>
+            ))}
+          </CardRail>
+        </div>
+  ) })
+  if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (
+        <div>
+          <p className="mb-4 text-[16px] text-[var(--color-text)]">
+            {c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
+          </p>
+          <CardRail prevLabel={c.prev} nextLabel={c.next}>
+            {[...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd).map(comp => (
+              <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>
+                {comp.photo && (
+                  // Фото из объявления rumah123 — видно, что именно сдают по соседству.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={comp.photo} alt={comp.title} loading="lazy" referrerPolicy="no-referrer" width={480} height={320}
+                    className="aspect-[3/2] w-full bg-[var(--color-search-bg)] object-cover" />
+                )}
+                <span className="flex flex-1 flex-col gap-1 p-5">
+                  <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
+                  <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
+                  <span className="text-[14px] text-[var(--color-text-muted)]">
+                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </a>
