@@ -59,7 +59,7 @@ import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingList } from '@/components/LivingVerdict'
 import { BeachBlock } from '@/components/BeachBlock'
-import { nearestBeachProfile } from '@/lib/beaches'
+import { nearestBeachProfile, nearestBeachProfileByPoint } from '@/lib/beaches'
 import { GoalSwitch } from '@/components/GoalSwitch'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
@@ -1260,10 +1260,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   })
   // Ближайший пляж с описанием (lib/beaches.ts) — карточкой в разделе «Место».
   const beachRow = livingFacts?.rows.find(r => r.key === 'beach') ?? null
-  const beachPick = nearestBeachProfile(nearby?.byCategory?.beach)
+  const beachPick = nearestBeachProfile(nearby?.byCategory?.beach) ?? nearestBeachProfileByPoint(lat, lng)
   const beach = beachPick?.beach ?? null
   // Строку «пляж» в «Главном рядом» прячем, только если карточка о том же пляже.
-  const beachIsNearest = !!beachPick && beachPick.placeId === beachRow?.placeId
+  const beachIsNearest = !!beachPick && (beachPick.placeId === beachRow?.placeId || beachRow?.km == null)
   const verdict = buildVerdict({
     living: livingFacts,
     status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,

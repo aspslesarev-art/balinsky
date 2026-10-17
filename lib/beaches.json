@@ -68,7 +68,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:PANTAI_NUSA_DUA_BALI_DI_PAGI_HARI.jpg"
    }
-  ]
+  ],
+  "lat": -8.81651,
+  "lng": 115.2258
  },
  {
   "ids": [
@@ -113,7 +115,9 @@
    "bars": 3,
    "beach_clubs": 6,
    "radius_m": 500
-  }
+  },
+  "lat": -8.8475,
+  "lng": 115.15291
  },
  {
   "ids": [
@@ -153,7 +157,9 @@
    "bars": 7,
    "beach_clubs": 2,
    "radius_m": 500
-  }
+  },
+  "lat": -8.66378,
+  "lng": 115.13593
  },
  {
   "ids": [
@@ -203,7 +209,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Pantai_Gunung_Payung.jpg"
    }
-  ]
+  ],
+  "lat": -8.84078,
+  "lng": 115.19984
  },
  {
   "ids": [
@@ -241,7 +249,9 @@
    "bars": 30,
    "beach_clubs": 2,
    "radius_m": 500
-  }
+  },
+  "lat": -8.65761,
+  "lng": 115.12815
  },
  {
   "ids": [
@@ -296,7 +306,9 @@
     "license": "CC BY-SA 3.0",
     "page": "https://commons.wikimedia.org/wiki/File:Suluban_Beach,_Pecatu,_Bali_-_Indonesia_-_panoramio.jpg"
    }
-  ]
+  ],
+  "lat": -8.81545,
+  "lng": 115.08975
  },
  {
   "ids": [
@@ -358,7 +370,9 @@
     "license": "CC BY 2.0",
     "page": "https://www.flickr.com/photos/51035756584@N01/9333068101"
    }
-  ]
+  ],
+  "lat": -8.65473,
+  "lng": 115.1251
  },
  {
   "ids": [
@@ -420,7 +434,9 @@
     "license": "CC BY 2.0",
     "page": "https://commons.wikimedia.org/wiki/File:Canggu_Beach.jpg"
    }
-  ]
+  ],
+  "lat": -8.66099,
+  "lng": 115.13213
  },
  {
   "ids": [
@@ -459,7 +475,9 @@
    "bars": 1,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "lat": -8.82556,
+  "lng": 115.22108
  },
  {
   "ids": [
@@ -502,7 +520,9 @@
    "bars": 2,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "lat": -8.7125,
+  "lng": 115.25178
  },
  {
   "ids": [
@@ -552,7 +572,9 @@
     "license": "CC BY 2.0",
     "page": "https://commons.wikimedia.org/wiki/File:Thomas_beach_(48976502201).jpg"
    }
-  ]
+  ],
+  "lat": -8.81345,
+  "lng": 115.09625
  },
  {
   "ids": [
@@ -617,7 +639,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Jimbaran_Beach,_Bali_SF0001.jpg"
    }
-  ]
+  ],
+  "lat": -8.78082,
+  "lng": 115.16768
  },
  {
   "ids": [
@@ -655,7 +679,9 @@
    "bars": 0,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "lat": -8.63366,
+  "lng": 115.09783
  },
  {
   "ids": [
@@ -719,7 +745,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Melasti_Beach_coast.jpg"
    }
-  ]
+  ],
+  "lat": -8.84829,
+  "lng": 115.16317
  },
  {
   "ids": [
@@ -767,7 +795,9 @@
     "license": "CC BY 2.0",
     "page": "https://commons.wikimedia.org/wiki/File:Green_Bowl_Beach_(15238737765).jpg"
    }
-  ]
+  ],
+  "lat": -8.84867,
+  "lng": 115.17103
  },
  {
   "ids": [
@@ -829,7 +859,9 @@
     "license": "CC0",
     "page": "https://commons.wikimedia.org/wiki/File:Canggu_beach_1.jpg"
    }
-  ]
+  ],
+  "lat": -8.65948,
+  "lng": 115.13014
  },
  {
   "ids": [
@@ -872,7 +904,9 @@
    "bars": 6,
    "beach_clubs": 3,
    "radius_m": 500
-  }
+  },
+  "lat": -8.67625,
+  "lng": 115.4887
  },
  {
   "ids": [
@@ -911,7 +945,9 @@
    "bars": 3,
    "beach_clubs": 6,
    "radius_m": 500
-  }
+  },
+  "lat": -8.84751,
+  "lng": 115.15289
  },
  {
   "ids": [
@@ -982,7 +1018,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Pantai_Sanur_di_Bali.jpg"
    }
-  ]
+  ],
+  "lat": -8.68437,
+  "lng": 115.26459
  },
  {
   "ids": [
@@ -1050,7 +1088,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Pantai_Sanur_di_Bali.jpg"
    }
-  ]
+  ],
+  "lat": -8.68246,
+  "lng": 115.2643
  },
  {
   "ids": [
@@ -1111,7 +1151,9 @@
     "license": "CC BY 2.0",
     "page": "https://www.flickr.com/photos/102748040@N03/16819186299"
    }
-  ]
+  ],
+  "lat": -8.68346,
+  "lng": 115.15219
  },
  {
   "ids": [
@@ -1152,7 +1194,9 @@
    "bars": 10,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "lat": -8.78242,
+  "lng": 115.16188
  },
  {
   "ids": [
@@ -1189,7 +1233,9 @@
    "bars": 1,
    "beach_clubs": 2,
    "radius_m": 500
-  }
+  },
+  "lat": -8.60091,
+  "lng": 115.07659
  },
  {
   "ids": [
@@ -1256,7 +1302,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Pantai_nusa_dua_bali_2.jpg"
    }
-  ]
+  ],
+  "lat": -8.82702,
+  "lng": 115.2202
  },
  {
   "ids": [
@@ -1318,7 +1366,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Pantai_Padang_Padang_3,_Bali.jpg"
    }
-  ]
+  ],
+  "lat": -8.81162,
+  "lng": 115.10348
  },
  {
   "ids": [
@@ -1380,7 +1430,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Seminyak_Beach_01.jpg"
    }
-  ]
+  ],
+  "lat": -8.69201,
+  "lng": 115.15788
  },
  {
   "ids": [
@@ -1422,7 +1474,9 @@
    "bars": 1,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "lat": -8.64841,
+  "lng": 115.11693
  },
  {
   "ids": [
@@ -1486,7 +1540,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Pandawa_Beach,_Bali,_Indonesia.jpg"
    }
-  ]
+  ],
+  "lat": -8.8437,
+  "lng": 115.18596
  },
  {
   "ids": [
@@ -1528,7 +1584,9 @@
    "bars": 20,
    "beach_clubs": 2,
    "radius_m": 500
-  }
+  },
+  "lat": -8.65208,
+  "lng": 115.12155
  },
  {
   "ids": [
@@ -1583,7 +1641,9 @@
     "license": "CC BY 3.0",
     "page": "https://commons.wikimedia.org/wiki/File:Jl._Batu_Nunggalan,_Pecatu,_Kuta_Sel.,_Kabupaten_Badung,_Bali,_Indonesia_-_panoramio_(1).jpg"
    }
-  ]
+  ],
+  "lat": -8.84536,
+  "lng": 115.11103
  },
  {
   "ids": [
@@ -1624,7 +1684,9 @@
    "bars": 2,
    "beach_clubs": 0,
    "radius_m": 500
-  }
+  },
+  "lat": -8.6475,
+  "lng": 115.11472
  },
  {
   "ids": [
@@ -1663,7 +1725,9 @@
    "bars": 6,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "lat": -8.67424,
+  "lng": 115.14596
  },
  {
   "ids": [
@@ -1721,7 +1785,9 @@
     "license": "CC BY-SA 2.0",
     "page": "https://commons.wikimedia.org/wiki/File:Legian_beach.jpg"
    }
-  ]
+  ],
+  "lat": -8.70395,
+  "lng": 115.16474
  },
  {
   "ids": [
@@ -1763,7 +1829,9 @@
    "bars": 1,
    "beach_clubs": 1,
    "radius_m": 500
-  }
+  },
+  "lat": -8.84223,
+  "lng": 115.19397
  },
  {
   "ids": [
@@ -1816,7 +1884,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Crystal_Bay_Beach.jpg"
    }
-  ]
+  ],
+  "lat": -8.71516,
+  "lng": 115.45906
  },
  {
   "ids": [
@@ -1878,7 +1948,9 @@
     "license": "CC BY 2.0",
     "page": "https://commons.wikimedia.org/wiki/File:Tanjung_Benoa,_Bali_(7188382329).jpg"
    }
-  ]
+  ],
+  "lat": -8.77139,
+  "lng": 115.22294
  },
  {
   "ids": [
@@ -1944,7 +2016,9 @@
     "license": "CC BY-SA 4.0",
     "page": "https://commons.wikimedia.org/wiki/File:Pantai_Sanur_di_Bali.jpg"
    }
-  ]
+  ],
+  "lat": -8.69138,
+  "lng": 115.26654
  },
  {
   "ids": [
@@ -2000,7 +2074,9 @@
     "license": "CC BY 2.0",
     "page": "https://www.flickr.com/photos/70363447@N03/16560252257"
    }
-  ]
+  ],
+  "lat": -8.80569,
+  "lng": 115.11304
  },
  {
   "ids": [
@@ -2048,6 +2124,8 @@
     "license": "CC BY 2.0",
     "page": "https://www.flickr.com/photos/51035756584@N01/9335861886"
    }
-  ]
+  ],
+  "lat": -8.66181,
+  "lng": 115.13299
  }
 ]

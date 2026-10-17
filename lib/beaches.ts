@@ -30,6 +30,9 @@ export type BeachProfile = {
   nearby?: { cafes: number; restaurants: number; bars: number; beach_clubs: number; radius_m: number } | null
   /** Фото пляжа и набережной со свободной лицензией (scripts/upload-beach-photos.mjs). */
   photos?: { src: string; kind: 'beach' | 'promenade'; author: string | null; license: string | null; page: string }[]
+  /** Точка пляжа (Google), для запасного поиска по координатам. */
+  lat?: number
+  lng?: number
   sources: string[]
 }
 
@@ -55,4 +58,17 @@ export function nearestBeachProfile<P extends { id: string; distanceKm: number; 
   if (!best) return null
   const { beach, p } = best
   return { beach, km: p.distanceKm, placeId: p.id, google: { rating: p.rating ?? null, reviews: p.reviews ?? null, url: p.mapsUrl ?? null } }
+}
+
+/** Запасной путь, когда Google не вернул пляжей рядом с объектом (так бывает
+ *  в Сануре и Сесехе): ближайший описанный пляж по прямой, в пределах maxKm. */
+export function nearestBeachProfileByPoint(lat: number | null | undefined, lng: number | null | undefined, maxKm = 3): { beach: BeachProfile; km: number; placeId: string; google: null } | null {
+  if (lat == null || lng == null) return null
+  let best: { beach: BeachProfile; km: number; placeId: string; google: null } | null = null
+  for (const b of data as BeachProfile[]) {
+    if (b.lat == null || b.lng == null) continue
+    const km = 111.32 * Math.hypot(b.lat - lat, (b.lng - lng) * Math.cos(lat * Math.PI / 180))
+    if (km <= maxKm && (!best || km < best.km)) best = { beach: b, km, placeId: b.ids[0], google: null }
+  }
+  return best
 }
