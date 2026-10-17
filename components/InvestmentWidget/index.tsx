@@ -1174,7 +1174,7 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8">
       <div className="flex items-start justify-between gap-4">
         <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
-        {changed && <ResetButton onClick={reset} lang={lang} />}
+        <ResetButton onClick={reset} lang={lang} show={changed} />
       </div>
       <div className="mt-2 mb-8 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{t.calcSub}</div>
 

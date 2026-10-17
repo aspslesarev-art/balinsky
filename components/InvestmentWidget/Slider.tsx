@@ -64,10 +64,11 @@ export function SliderHead({ label, display }: { label: string; display: string 
 }
 
 // «Сбросить» в шапке калькулятора: вернуть цену объекта и обычные значения.
-export function ResetButton({ onClick, lang }: { onClick: () => void; lang: Lang }) {
+// Место под кнопку занято всегда (invisible): появление не сдвигает ни строку, ни текст.
+export function ResetButton({ onClick, lang, show }: { onClick: () => void; lang: Lang; show: boolean }) {
   return (
-    <button type="button" onClick={onClick}
-      className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-white px-3 text-[13px] font-medium text-[var(--color-text)] transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]">
+    <button type="button" onClick={onClick} aria-hidden={!show} tabIndex={show ? 0 : -1}
+      className={`${show ? '' : 'invisible '}-my-1.5 inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-white px-3 text-[13px] font-medium text-[var(--color-text)] transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]`}>
       <RotateCcw size={14} aria-hidden />
       {pickCopy({ ru: 'Сбросить', en: 'Reset' }, lang)}
     </button>
