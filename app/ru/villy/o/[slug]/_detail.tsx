@@ -1488,7 +1488,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
               </div>
             )}
-            {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} lang={lang} /></div>}
+            {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
             {nearby && (
               <GatedBlock kind="nearby" lang={lang}>
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />

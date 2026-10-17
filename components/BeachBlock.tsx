@@ -5,7 +5,7 @@
 // Пояснения к пунктам написаны по-русски, на других языках — только сами
 // значения; остальные языки берут английский.
 import Image from 'next/image'
-import { Waves } from 'lucide-react'
+import { Star, Waves } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import type { BeachProfile } from '@/lib/beaches'
 import { pluralRu } from '@/lib/plural-ru'
@@ -33,6 +33,7 @@ const COPY = {
     ].filter(Boolean).join(', ') + ` в ${n.radius_m} м`,
     nearNone: (r: number) => `заведений в ${r} м нет`,
     promPhoto: 'Набережная', photoBy: 'Фото',
+    reviews: (n: number) => `${n.toLocaleString('ru-RU')} ${pluralRu(n, ['отзыв', 'отзыва', 'отзывов'])} в Google`,
     notes: true,
   },
   en: {
@@ -57,11 +58,12 @@ const COPY = {
     ].filter(Boolean).join(', ') + ` within ${n.radius_m} m`,
     nearNone: (r: number) => `no venues within ${r} m`,
     promPhoto: 'Promenade', photoBy: 'Photos',
+    reviews: (n: number) => `${n.toLocaleString('en-US')} Google ${n === 1 ? 'review' : 'reviews'}`,
     notes: false,
   },
 }
 
-export function BeachBlock({ beach: b, km, lang }: { beach: BeachProfile; km: number; lang: Lang }) {
+export function BeachBlock({ beach: b, km, google, lang }: { beach: BeachProfile; km: number; google?: { rating: number | null; reviews: number | null; url: string | null } | null; lang: Lang }) {
   const c = pickCopy(COPY, lang)
   const name = (lang === 'ru' ? b.name_ru : b.name_en) ?? b.name_en ?? b.name_ru ?? ''
   const note = (s?: string | null) => (c.notes && s ? ` - ${s[0].toLowerCase()}${s.slice(1)}` : '')
@@ -105,6 +107,15 @@ export function BeachBlock({ beach: b, km, lang }: { beach: BeachProfile; km: nu
         <Waves size={18} className="shrink-0 text-[var(--color-primary)]" aria-hidden />
         {c.title(name, c.km(km))}
       </h3>
+      {google?.rating != null && (google.reviews ?? 0) > 0 && (
+        // Оценка точки пляжа в Google Картах — как его оценивают сами отдыхающие.
+        <a href={google.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer"
+          className="mt-1 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]">
+          <Star size={14} className="fill-[#F5B301] text-[#F5B301]" aria-hidden />
+          <span className="font-semibold text-[var(--color-text)]">{lang === 'en' || lang === 'zh' ? google.rating.toFixed(1) : google.rating.toFixed(1).replace('.', ',')}</span>
+          <span>· {c.reviews(google.reviews!)}</span>
+        </a>
+      )}
       {head && <p className="mt-1 text-[15px] text-[var(--color-text)]">{head[0].toUpperCase() + head.slice(1)}</p>}
       {photos.length > 0 && (
         <div className="mt-4">

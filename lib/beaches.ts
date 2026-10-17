@@ -43,14 +43,16 @@ export function beachProfile(placeId: string | null | undefined): BeachProfile |
 /** Ближайший пляж, у которого есть описание, в пределах maxKm. Ближайшей
  *  точкой «пляж» в Google часто бывает мелкий спуск или бич-клуб без
  *  описания (у Bingin Villas — «Хидден бич» в 300 м, а Бингин в 480 м). */
-export function nearestBeachProfile(
-  places: { id: string; distanceKm: number }[] | null | undefined,
+export function nearestBeachProfile<P extends { id: string; distanceKm: number; rating?: number | null; reviews?: number | null; mapsUrl?: string | null }>(
+  places: P[] | null | undefined,
   maxKm = 3,
-): { beach: BeachProfile; km: number; placeId: string } | null {
-  let best: { beach: BeachProfile; km: number; placeId: string } | null = null
+): { beach: BeachProfile; km: number; placeId: string; google: { rating: number | null; reviews: number | null; url: string | null } } | null {
+  let best: { beach: BeachProfile; p: P } | null = null
   for (const p of places ?? []) {
     const b = byId.get(p.id)
-    if (b && p.distanceKm <= maxKm && (!best || p.distanceKm < best.km)) best = { beach: b, km: p.distanceKm, placeId: p.id }
+    if (b && p.distanceKm <= maxKm && (!best || p.distanceKm < best.p.distanceKm)) best = { beach: b, p }
   }
-  return best
+  if (!best) return null
+  const { beach, p } = best
+  return { beach, km: p.distanceKm, placeId: p.id, google: { rating: p.rating ?? null, reviews: p.reviews ?? null, url: p.mapsUrl ?? null } }
 }
