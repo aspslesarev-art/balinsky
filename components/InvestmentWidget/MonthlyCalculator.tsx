@@ -1,6 +1,7 @@
 'use client'
 
 import { pluralRu } from '@/lib/plural-ru'
+import { districtRu } from '@/lib/district-ru'
 import { useMemo, useRef, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react'
 import { Slider, ResetButton } from './Slider'
@@ -30,6 +31,9 @@ type Copy = {
   noCapital: string
   nearby: string; perMonth: string; bedrooms: string
   source: (asOf: string) => string
+  /** Общая база Facebook + Telegram + rumah123 (только ru/en, остальные — en). */
+  sampleMixed?: (n: number, own: number, district: string, km: number) => string
+  sourceMixed?: (rumah: boolean) => string
 }
 
 const COPY: Record<Lang, Copy> = {
@@ -50,6 +54,8 @@ const COPY: Record<Lang, Copy> = {
     noCapital: 'За срок лизхолда вложения не возвращаются',
     nearby: 'Что сдают рядом помесячно', perMonth: '/ мес', bedrooms: 'сп.',
     source: d => `Объявления rumah123.com, выгрузка от ${d}.`,
+    sampleMixed: (n, own, district, km) => `${n} ${pluralRu(n, ['объявление', 'объявления', 'объявлений'])}: ${own} из Facebook и Telegram в районе ${district}${n > own ? `, ${n - own} с rumah123 в радиусе ${km} км` : ''}`,
+    sourceMixed: rumah => `Объявления из Facebook и Telegram (каталог аренды Balinsky)${rumah ? ' и rumah123.com' : ''}.`,
   },
   en: {
     title: 'Monthly rental calculator',
@@ -68,6 +74,8 @@ const COPY: Record<Lang, Copy> = {
     noCapital: 'The investment is not recovered within the leasehold',
     nearby: 'Monthly rentals nearby', perMonth: '/ mo', bedrooms: 'BR',
     source: d => `Listings from rumah123.com, snapshot of ${d}.`,
+    sampleMixed: (n, own, district, km) => `${n} listings: ${own} from Facebook and Telegram in ${district}${n > own ? `, ${n - own} from rumah123 within ${km} km` : ''}`,
+    sourceMixed: rumah => `Listings from Facebook and Telegram (Balinsky rental catalogue)${rumah ? ' and rumah123.com' : ''}.`,
   },
   id: {
     title: 'Kalkulator sewa bulanan',
@@ -255,7 +263,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
         <ResetButton onClick={reset} lang={lang} show={changed} />
       </div>
       <div className="mt-2 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{restricted ? t.sub : t.subCompare}</div>
-      <div className="mt-1 mb-8 text-[13px] text-[var(--color-text-muted)]">{t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
+      <div className="mt-1 mb-8 text-[13px] text-[var(--color-text-muted)]">{m.ownN && m.ownDistrict && t.sampleMixed ? t.sampleMixed(m.n, m.ownN, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
 
       {/* Слева ползунки в одну колонку, справа итог — как у посуточной. */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
@@ -345,7 +353,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
                       {[`${c.bedrooms} ${t.bedrooms}`, c.buildingM2 ? `${c.buildingM2} ${cyr ? 'м²' : 'm²'}` : null].filter(Boolean).join(' · ')}
                     </div>
                     <div className="mt-0.5 text-[11.5px] text-[var(--color-text-muted)]">
-                      {[c.district, `${cyr ? c.distanceKm.toFixed(1).replace('.', ',') : c.distanceKm.toFixed(1)} ${cyr ? 'км' : 'km'}`].filter(Boolean).join(' · ')}
+                      {[lang === 'ru' ? districtRu(c.district) : c.district, c.distanceKm != null ? `${cyr ? c.distanceKm.toFixed(1).replace('.', ',') : c.distanceKm.toFixed(1)} ${cyr ? 'км' : 'km'}` : null].filter(Boolean).join(' · ')}
                     </div>
                     <div className="mt-1.5 text-[14px] font-semibold text-[var(--color-primary-pressed)]">
                       {fmt(c.rentMonthUsd)} <span className="text-[11px] font-normal text-[var(--color-text-muted)]">{t.perMonth}</span>
@@ -363,7 +371,7 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
               <ChevronRight size={18} />
             </button>
           </div>
-          <div className="mt-2 text-[11px] text-[var(--color-text-muted)]">{t.source(asOf)}</div>
+          <div className="mt-2 text-[11px] text-[var(--color-text-muted)]">{m.ownN && t.sourceMixed ? t.sourceMixed(!!m.withRumah) : t.source(asOf)}</div>
         </div>
       )}
     </div>

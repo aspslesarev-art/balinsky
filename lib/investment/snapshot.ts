@@ -446,7 +446,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   // Помесячная аренда (lib/investment/monthly.ts): на жилой земле — вместо
   // посуточной, у остальных вилл — для сравнения. Ставки есть только по виллам.
   const monthly: MonthlyBundle | null = rentalRestricted || kind === 'villa'
-    ? await monthlyRentNear(lat, lng, bedrooms).catch(() => null)
+    ? await monthlyRentNear(lat, lng, bedrooms, { district, kind }).catch(() => null)
     : null
   if (rentalRestricted) {
     // leave scenarios + references null

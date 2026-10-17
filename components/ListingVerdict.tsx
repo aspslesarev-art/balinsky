@@ -4,6 +4,7 @@
 import type { ReactNode } from 'react'
 import { DemandTabs } from './DemandTabs'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { districtRu } from '@/lib/district-ru'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import type { NearbyMatchCard } from '@/lib/investment/snapshot'
@@ -149,6 +150,7 @@ const COPY = {
     dailyH: 'Сдают посуточно в этом районе',
     dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
     whoLine: (b: number | null, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} в радиусе ${String(km).replace('.', ',')} км`,
+    whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} - район ${d} и радиус ${String(km).replace('.', ',')} км`,
     avg: 'в среднем', range: 'обычно от', from: 'от', occ: (p: number) => `занято около ${p}% ночей`,
     futureT: '', futureBuild: (p: number) => `${p}`, futureData: '',
     prev: 'Назад', next: 'Дальше', open: 'Объявление',
@@ -269,6 +271,7 @@ const COPY = {
     dailyH: 'Rented nightly in this area',
     dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
     whoLine: (b: number | null, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} within ${km} km`,
+    whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} in ${d} and within ${km} km`,
     avg: 'typically', range: 'usually from', from: 'from', occ: (p: number) => `about ${p}% of nights booked`,
     futureT: 'What comes next',
     futureBuild: (p: number) => `More competition ahead: the number of buildings around grew by ${p}% in recent years.`,
@@ -550,7 +553,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (
         <div>
           <p className="mb-4 text-[16px] text-[var(--color-text)]">
-            {c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
+            {m.ownN && m.ownDistrict ? c.whoDistrict(m.bedroomsRelaxed ? null : bedrooms, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
           </p>
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
             {[...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd).map(comp => (
@@ -565,7 +568,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                   <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
                   <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
                   <span className="text-[14px] text-[var(--color-text-muted)]">
-                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
+                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, lang === 'ru' ? districtRu(comp.district) : comp.district, comp.distanceKm != null ? `${dec(comp.distanceKm)} ${c.km}` : null].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </a>

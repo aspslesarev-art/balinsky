@@ -20,6 +20,11 @@ import type { RegionDefaults } from './regions'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const MANIFEST_URL = `${SUPABASE_URL}/storage/v1/object/public/rental/_longterm_comps.json`
+// Каталог помесячной аренды сайта (/ru/arenda): объявления из Facebook (id fb…)
+// и Telegram (id tg…), проверенные вручную. Идут в общую базу вместе с rumah123.
+// Точки на карте у них нет, только район (location) — поэтому совпадение по
+// району и числу спален.
+const RENTAL_URL = `${SUPABASE_URL}/storage/v1/object/public/rental/_rental.json`
 const TTL_MS = 60 * 60 * 1000
 
 /** Ступени радиуса и минимум объявлений, при котором медиане можно верить. */
@@ -35,8 +40,8 @@ type RawItem = [number, number, number, number, number | null, string | null, st
 type Manifest = { generatedAt: string; asOf?: string | null; source: string; items: RawItem[] }
 
 export type MonthlyComp = {
-  lat: number
-  lng: number
+  lat: number | null
+  lng: number | null
   bedrooms: number
   rentMonthUsd: number
   buildingM2: number | null
@@ -46,7 +51,8 @@ export type MonthlyComp = {
   district: string | null
   /** Фото из объявления rumah123 (480×320). */
   photo: string | null
-  distanceKm: number
+  /** null — объявление из Facebook/Telegram: известен только район. */
+  distanceKm: number | null
 }
 
 export type MonthlyBundle = {
@@ -60,9 +66,29 @@ export type MonthlyBundle = {
   source: string
   asOf: string
   comps: MonthlyComp[]
+  /** Сколько объявлений из Facebook/Telegram в выборке и их район. */
+  ownN?: number
+  ownDistrict?: string | null
+  /** true — в выборке есть и rumah123. */
+  withRumah?: boolean
 }
 
 let _cache: { ts: number; data: Manifest | null } | null = null
+
+type RentalItem = { id: string; slug: string; title: string; type: string | null; bedrooms: number | null; location: string | null; priceMonthUsd: number | null; photos?: string[] | null; createdTime?: string | null; updatedAt?: string | null }
+let _rentalCache: { ts: number; items: RentalItem[] } | null = null
+
+async function loadRental(): Promise<RentalItem[]> {
+  if (_rentalCache && Date.now() - _rentalCache.ts < TTL_MS) return _rentalCache.items
+  try {
+    const r = await fetch(cdnManifestUrl(RENTAL_URL, 600), { cache: 'no-store' })
+    const items = r.ok ? ((await r.json()) as { items?: RentalItem[] }).items ?? [] : []
+    _rentalCache = { ts: Date.now(), items }
+    return items
+  } catch {
+    return _rentalCache?.items ?? []
+  }
+}
 
 async function loadManifest(): Promise<Manifest | null> {
   if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
@@ -93,18 +119,32 @@ function quantile(sorted: number[], q: number): number {
 }
 
 /** Ставки помесячной аренды похожих вилл вокруг точки. null — данных нет. */
-export async function monthlyRentNear(lat: number, lng: number, bedrooms: number | null): Promise<MonthlyBundle | null> {
-  const m = await loadManifest()
-  if (!m?.items?.length) return null
+export async function monthlyRentNear(
+  lat: number, lng: number, bedrooms: number | null,
+  opts: { district?: string | null; kind?: 'villa' | 'apartment' } = {},
+): Promise<MonthlyBundle | null> {
+  const [m, rental] = await Promise.all([loadManifest(), opts.district ? loadRental() : Promise.resolve([])])
   const beds = bedrooms ?? 2
-  const all: MonthlyComp[] = m.items.map(i => ({
+  const dist = opts.district?.trim().toLowerCase() ?? null
+  const typeRu = opts.kind === 'apartment' ? 'Апартаменты' : 'Вилла'
+  const own: MonthlyComp[] = rental
+    .filter(i => /^(fb|tg)/.test(i.id) && i.location?.trim().toLowerCase() === dist && i.type === typeRu
+      && i.bedrooms === beds && (i.priceMonthUsd ?? 0) > 0)
+    .sort((a, b) => String(b.createdTime ?? b.updatedAt ?? '').localeCompare(String(a.createdTime ?? a.updatedAt ?? '')))
+    .map(i => ({
+      lat: null, lng: null, bedrooms: i.bedrooms!, rentMonthUsd: i.priceMonthUsd!, buildingM2: null,
+      posted: i.createdTime ?? null, url: `/ru/arenda/o/${i.slug}`, title: i.title, district: i.location,
+      photo: i.photos?.[0] ?? null, distanceKm: null,
+    }))
+  if (!m?.items?.length && own.length < 3) return null
+  const all: MonthlyComp[] = (m?.items ?? []).map(i => ({
     lat: i[0], lng: i[1], bedrooms: i[2], rentMonthUsd: i[3], buildingM2: i[4],
     posted: i[5], url: i[6], title: i[7], district: i[8], photo: i[9] ?? null, distanceKm: km(lat, lng, i[0], i[1]),
   }))
 
   const pick = (radius: number, relaxed: boolean) => all
-    .filter(c => c.distanceKm <= radius && (relaxed ? Math.abs(c.bedrooms - beds) <= 1 : c.bedrooms === beds))
-    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .filter(c => (c.distanceKm ?? Infinity) <= radius && (relaxed ? Math.abs(c.bedrooms - beds) <= 1 : c.bedrooms === beds))
+    .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0))
 
   let chosen: MonthlyComp[] = []
   let radiusKm: number = RADII_KM[0]
@@ -117,20 +157,25 @@ export async function monthlyRentNear(lat: number, lng: number, bedrooms: number
     const wider = pick(RADII_KM[RADII_KM.length - 1], true)
     if (wider.length > chosen.length) { chosen = wider; relaxed = true }
   }
-  if (chosen.length < 3) return null
+  // Одна общая база (решение владельца 17.10.2026): Facebook, Telegram и rumah123
+  // вместе — и для цен, и для карточек.
+  const pool = [...own, ...chosen]
+  if (pool.length < 3) return null
 
-  const rents = chosen.map(c => c.rentMonthUsd).sort((a, b) => a - b)
+  const rents = pool.map(c => c.rentMonthUsd).sort((a, b) => a - b)
   return {
     p25: quantile(rents, 0.25),
     p50: quantile(rents, 0.5),
     p75: quantile(rents, 0.75),
-    n: chosen.length,
+    n: pool.length,
     radiusKm,
     bedroomsRelaxed: relaxed,
-    source: m.source,
-    asOf: m.asOf ?? m.generatedAt,
-    // Для карточек — ближайшие с ценой около медианы и ссылкой.
-    comps: chosen.filter(c => c.url).slice(0, 6),
+    source: [own.length ? 'Facebook, Telegram' : null, chosen.length ? (m?.source ?? 'rumah123') : null].filter(Boolean).join(', '),
+    asOf: m?.asOf ?? m?.generatedAt ?? new Date().toISOString(),
+    comps: [...own, ...chosen.filter(c => c.url)].slice(0, 16),
+    ownN: own.length,
+    ownDistrict: own.length ? own[0].district : null,
+    withRumah: chosen.length > 0,
   }
 }
 
