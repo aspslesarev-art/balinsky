@@ -1458,18 +1458,17 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           ) : null} />
 
         <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
+          {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
+          <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
             dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite} lang={lang} />
           {landOk && (
-            <div className="max-w-[760px]">
-              {landOk && (
-                <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                  <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-                </LazyMount>
-              )}
-            </div>
+            <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+              <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+            </LazyMount>
           )}
+          </div>
         </DataChapter>
 
         {hasPlace && (
