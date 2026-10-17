@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
+import { Home, Building, Building2, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
@@ -24,9 +24,8 @@ const NAV: NavItem[] = [
   { key: 'villy',            labelKey: 'nav.villas',     Icon: Home },
   { key: 'apartamenty',      labelKey: 'nav.apartments', Icon: Building },
   { key: 'zhilye-kompleksy', labelKey: 'nav.complexes',  Icon: Building2 },
-  { key: 'zastrojshhiki',    labelKey: 'nav.developers', Icon: HardHat },
-  // Аренда и перепродажа убраны из верхнего меню (17.10.2026): обе — в подвале,
-  // перепродажа сразу под арендой; страницы доступны по прямым ссылкам и в sitemap.
+  // Застройщики, аренда и перепродажа убраны из верхнего меню (17.10.2026):
+  // все три — в подвале; страницы доступны по прямым ссылкам и в sitemap.
 ]
 
 export function Header({ active }: { active?: NavKey }) {
