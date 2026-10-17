@@ -64,7 +64,7 @@ export function VillaPresentationButton({
 }: VillaPresentationData & { variant?: 'primary' | 'outline'; lang?: Lang }) {
   const [open, setOpen] = useState(false)
   const t = lang === 'ru'
-    ? { outline: 'Презентация PDF',  primary: 'Презентация',  aria: 'Открыть презентацию виллы' }
+    ? { outline: 'Скачать презентацию PDF',  primary: 'Презентация',  aria: 'Открыть презентацию виллы' }
     : { outline: 'PDF presentation', primary: 'Presentation', aria: 'Open villa presentation' }
   // 'outline' matches the new PriceCtaCard CTA row — same 54px height
   // as the green Buy button, white background with a hairline border so

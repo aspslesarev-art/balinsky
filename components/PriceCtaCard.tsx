@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
-import { Send, FileText, MapPinned, UserRound, Lock } from 'lucide-react'
+import { Send, Lock } from 'lucide-react'
 import { ApproxPrice } from './InlinePrice'
 import { useCurrency } from './CurrencyContext'
 import { formatPriceExact } from '@/lib/currency'
@@ -11,21 +11,12 @@ import type { Lang } from '@/lib/i18n'
 
 const COPY = {
   ru: {
-    buyChat: 'Контакты застройщика',
-    buySeller: 'Контакты продавца',
+    buyChat: 'Связаться с застройщиком',
+    buySeller: 'Связаться с продавцом',
     perSqm: '/ м²',
     priceUpdated: (d: string) => `Цена обновлена ${d}`,
     reservedTitle: 'Объект сейчас забронирован',
     reservedUntil: (d: string) => `Резерв действует до ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Прямой контакт продавца' },
-      { icon: 'file', label: 'Документы по объекту' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Документы и проверка объекта' },
-      { icon: 'map',  label: 'Мастер-план и планировки' },
-      { icon: 'user', label: 'Прямой контакт застройщика' },
-    ],
     locale: 'ru-RU',
   },
   en: {
@@ -35,15 +26,6 @@ const COPY = {
     priceUpdated: (d: string) => `Price updated ${d}`,
     reservedTitle: 'Currently reserved',
     reservedUntil: (d: string) => `Hold expires on ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Direct seller contact' },
-      { icon: 'file', label: 'Property documents' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Documents & due diligence' },
-      { icon: 'map',  label: 'Master plan & layouts' },
-      { icon: 'user', label: 'Direct developer contact' },
-    ],
     locale: 'en-GB',
   },
   id: {
@@ -53,15 +35,6 @@ const COPY = {
     priceUpdated: (d: string) => `Harga diperbarui ${d}`,
     reservedTitle: 'Saat ini dipesan',
     reservedUntil: (d: string) => `Hold berlaku hingga ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Kontak langsung penjual' },
-      { icon: 'file', label: 'Dokumen properti' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Dokumen & due diligence' },
-      { icon: 'map',  label: 'Master plan & denah' },
-      { icon: 'user', label: 'Kontak langsung pengembang' },
-    ],
     locale: 'id-ID',
   },
   fr: {
@@ -71,15 +44,6 @@ const COPY = {
     priceUpdated: (d: string) => `Prix mis à jour ${d}`,
     reservedTitle: 'Actuellement réservé',
     reservedUntil: (d: string) => `Le blocage expire le ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Contact direct du vendeur' },
-      { icon: 'file', label: 'Documents du bien' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Documents & due diligence' },
-      { icon: 'map',  label: 'Plan directeur & plans' },
-      { icon: 'user', label: 'Contact direct du promoteur' },
-    ],
     locale: 'fr-FR',
   },
   de: {
@@ -89,15 +53,6 @@ const COPY = {
     priceUpdated: (d: string) => `Preis aktualisiert ${d}`,
     reservedTitle: 'Derzeit reserviert',
     reservedUntil: (d: string) => `Reservierung gilt bis ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Direkter Verkäuferkontakt' },
-      { icon: 'file', label: 'Objektunterlagen' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Unterlagen & Due Diligence' },
-      { icon: 'map',  label: 'Masterplan & Grundrisse' },
-      { icon: 'user', label: 'Direkter Bauträgerkontakt' },
-    ],
     locale: 'de-DE',
   },
   zh: {
@@ -107,15 +62,6 @@ const COPY = {
     priceUpdated: (d: string) => `价格更新于 ${d}`,
     reservedTitle: '目前已预订',
     reservedUntil: (d: string) => `保留有效期至 ${d}。`,
-    chipsResale: [
-      { icon: 'user', label: '卖家直接联系' },
-      { icon: 'file', label: '房产文件' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: '文件与尽职调查' },
-      { icon: 'map',  label: '总体规划与户型图' },
-      { icon: 'user', label: '开发商直接联系' },
-    ],
     locale: 'zh-CN',
   },
   nl: {
@@ -125,15 +71,6 @@ const COPY = {
     priceUpdated: (d: string) => `Prijs bijgewerkt ${d}`,
     reservedTitle: 'Momenteel gereserveerd',
     reservedUntil: (d: string) => `Reservering geldt tot ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Direct contact met verkoper' },
-      { icon: 'file', label: 'Objectdocumenten' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Documenten & due diligence' },
-      { icon: 'map',  label: 'Masterplan & plattegronden' },
-      { icon: 'user', label: 'Direct contact met ontwikkelaar' },
-    ],
     locale: 'nl-NL',
   },
   ban: {
@@ -143,15 +80,6 @@ const COPY = {
     priceUpdated: (d: string) => `Aji kaanyarin ${d}`,
     reservedTitle: 'Sané mangkin kareservasi',
     reservedUntil: (d: string) => `Hold mamargi kantos ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Kontak langsung sang adol' },
-      { icon: 'file', label: 'Dokumen properti' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Dokumen & due diligence' },
-      { icon: 'map',  label: 'Master plan & denah' },
-      { icon: 'user', label: 'Kontak langsung pangwangun' },
-    ],
     locale: 'id-ID',
   },
   pl: {
@@ -161,15 +89,6 @@ const COPY = {
     priceUpdated: (d: string) => `Cena zaktualizowana ${d}`,
     reservedTitle: 'Obecnie zarezerwowane',
     reservedUntil: (d: string) => `Rezerwacja wygasa ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Bezpośredni kontakt ze sprzedającym' },
-      { icon: 'file', label: 'Dokumenty nieruchomości' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Dokumenty i due diligence' },
-      { icon: 'map',  label: 'Master plan i rzuty' },
-      { icon: 'user', label: 'Bezpośredni kontakt z deweloperem' },
-    ],
     locale: 'pl-PL',
   },
   uk: {
@@ -179,15 +98,6 @@ const COPY = {
     priceUpdated: (d: string) => `Ціну оновлено ${d}`,
     reservedTitle: 'Зараз заброньовано',
     reservedUntil: (d: string) => `Бронь діє до ${d}.`,
-    chipsResale: [
-      { icon: 'user', label: 'Прямий контакт продавця' },
-      { icon: 'file', label: 'Документи обʼєкта' },
-    ],
-    chipsPrimary: [
-      { icon: 'file', label: 'Документи та due diligence' },
-      { icon: 'map',  label: 'Майстер-план і планування' },
-      { icon: 'user', label: 'Прямий контакт забудовника' },
-    ],
     locale: 'uk-UA',
   },
 } as const
@@ -300,24 +210,6 @@ export function PriceCtaCard({
           </div>
         )}
 
-        {/* Trust chips. Three short labels under the buttons that
-            tell the visitor what they actually get on the other side
-            of the click — closes the "куда я ухожу" gap without
-            collapsing into a microtext line. */}
-        <ul className="flex flex-wrap gap-1.5 md:justify-end w-full md:w-auto">
-          {(isResale ? c.chipsResale : c.chipsPrimary).map(({ icon, label }) => {
-            const Icon = icon === 'user' ? UserRound : icon === 'map' ? MapPinned : FileText
-            return ({ Icon, label })
-          }).map(({ Icon, label }) => (
-            <li
-              key={label}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[var(--color-search-bg)] text-[12px] text-[var(--color-text-muted)]"
-            >
-              <Icon size={13} strokeWidth={1.6} className="opacity-80" />
-              {label}
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   )
