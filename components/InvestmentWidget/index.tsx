@@ -1090,8 +1090,9 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 
   // ADR slider band derived from the competitor percentiles (p25…p75),
   // widened so the user can explore a bit beyond the observed range.
-  const adrLo = Math.max(1, Math.floor(sc.bad.adrAsking * 0.6))
-  const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adrAsking * 1.5), Math.ceil((snap.ownBooking?.adr ?? 0) * 1.2))
+  // Цена за ночь — вниз в десять раз и вверх вдвое от обычного коридора соседей.
+  const adrLo = Math.max(1, Math.floor(sc.bad.adrAsking * 0.6 / 10))
+  const adrHi = Math.max(adrLo + 1, Math.ceil(sc.good.adrAsking * 1.5 * 2), Math.ceil((snap.ownBooking?.adr ?? 0) * 1.2 * 2))
 
   // Ставки соседей для зон в дорожке ползунка. Берём их у того же
   // источника, что и карточки «что рядом сдают» ниже: раньше шкала
@@ -1184,14 +1185,14 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
       <div className="flex flex-col gap-6 rounded-xl bg-[var(--color-search-bg)] p-4 md:p-6 self-start">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="text-[13px] text-[var(--color-text-muted)]">{t.taxStatusLabel}</span>
-        <div className="flex w-full rounded-lg border border-[var(--color-border)] bg-white p-0.5 sm:inline-flex sm:w-auto">
+        <div className="flex w-full gap-1 rounded-lg border border-[var(--color-border)] bg-white p-1 sm:inline-flex sm:w-auto">
           {(['beforeTax', 'resident', 'nonResident'] as const).map(key => (
             <button
               key={key}
               type="button"
               onClick={() => setTaxStatus(key)}
               aria-pressed={taxStatus === key}
-              className={`flex-1 whitespace-nowrap px-2 sm:px-3 py-1.5 text-[12px] rounded-md cursor-pointer transition-colors ${
+              className={`flex-auto whitespace-nowrap px-2.5 sm:px-4 py-1.5 text-[12px] rounded-md cursor-pointer transition-colors ${
                 taxStatus === key
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'

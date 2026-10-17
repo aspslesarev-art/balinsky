@@ -269,10 +269,10 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
       <div className="flex flex-col gap-6 self-start rounded-xl bg-[var(--color-search-bg)] p-4 md:p-6">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="text-[13px] text-[var(--color-text-muted)]">{t.taxLabel}</span>
-        <div className="flex w-full rounded-lg border border-[var(--color-border)] bg-white p-0.5 sm:inline-flex sm:w-auto">
+        <div className="flex w-full gap-1 rounded-lg border border-[var(--color-border)] bg-white p-1 sm:inline-flex sm:w-auto">
           {(['beforeTax', 'resident', 'nonResident'] as const).map(key => (
             <button key={key} type="button" onClick={() => setTaxStatus(key)} aria-pressed={taxStatus === key}
-              className={`flex-1 cursor-pointer whitespace-nowrap rounded-md px-2 py-1.5 text-[12px] transition-colors sm:px-3 ${taxStatus === key ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}`}>
+              className={`flex-auto cursor-pointer whitespace-nowrap rounded-md px-2.5 py-1.5 text-[12px] transition-colors sm:px-4 ${taxStatus === key ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}`}>
               {key === 'beforeTax' ? t.taxBefore : key === 'resident' ? t.resident : t.nonResident}
             </button>
           ))}
