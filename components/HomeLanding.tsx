@@ -771,7 +771,7 @@ async function loadDistrictCovers(): Promise<Record<string, string>> {
 // Те же списки, что выводят каталоги и разделы: в базе есть опубликованные,
 // но не показанные объекты (скрытые застройщики, без данных), и счётчик на
 // главной расходился с каталогом (932 против 408 + 494).
-async function loadStats() {
+export async function loadStats() {
   const [v, a, k, d] = await Promise.all([loadAllVillas(), loadAllApartments(), loadAllComplexes(), loadPublicDevelopers()])
   return {
     objects: v.enriched.length + a.enriched.length,
