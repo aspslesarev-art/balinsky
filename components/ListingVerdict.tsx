@@ -2,6 +2,7 @@
 // (безопасно → удобно → спрос → деньги). Выводы — lib/listing-verdict.ts.
 // Тексты пока RU + EN; остальные языки берут английский до перевода.
 import type { ReactNode } from 'react'
+import { DemandTabs } from './DemandTabs'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
@@ -144,6 +145,7 @@ const COPY = {
     dailySubRestricted: 'этому объекту так сдавать нельзя',
     monthlyCards: 'Что сдают рядом помесячно', away: 'от объекта', km: 'км', br: 'сп.',
     monthlyH: 'Сдают помесячно в этом районе',
+    tabMonthly: 'Помесячно', tabDaily: 'Посуточно', tabSale: 'Продажа рядом', tabsLabel: 'Что сдают и продают рядом',
     dailyH: 'Сдают посуточно в этом районе',
     dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
     whoLine: (b: number | null, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} в радиусе ${String(km).replace('.', ',')} км`,
@@ -263,6 +265,7 @@ const COPY = {
     dailySubRestricted: 'that is what neighbours charge - not allowed here',
     monthlyCards: 'Monthly rentals nearby', away: 'away', km: 'km', br: 'BR',
     monthlyH: 'Rented monthly in this area',
+    tabMonthly: 'Monthly', tabDaily: 'Nightly', tabSale: 'For sale nearby', tabsLabel: 'Rentals and sales nearby',
     dailyH: 'Rented nightly in this area',
     dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
     whoLine: (b: number | null, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} within ${km} km`,
@@ -488,13 +491,15 @@ function quartiles(xs: number[]): { p25: number; p50: number; p75: number } | nu
 
 // «Будет ли спрос?»: что сдают рядом помесячно и посуточно — одной строкой цены
 // и карточками объявлений с фото, без отдельных плиток с теми же цифрами.
-export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], lang }: {
+export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], sale, lang }: {
   verdict: Verdict
   monthly: MonthlyBundle | null
   bedrooms: number | null
   daily: { count: number; adrUsd: number | null; occupancyPct: number | null } | null
   /** Похожие объекты на Booking (снимок калькулятора) — карточки с фото. */
   dailyComps?: NearbyMatchCard[]
+  /** Лента «Продаются в этом районе» — третьей вкладкой. */
+  sale?: ReactNode
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
@@ -502,12 +507,10 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   const cardCls = 'flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
   const dq = quartiles(dailyComps.map(x => x.adr))
   const dailyKm = dailyComps.length ? Math.max(...dailyComps.map(x => x.distanceKm)) : null
-  return (
-    <div className="flex flex-col gap-10">
-      {m && m.comps.length > 0 && (
+  const tabs: { key: string; label: string; content: ReactNode }[] = []
+  if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (
         <div>
-          <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.monthlyH}</h3>
-          <p className="mt-1 mb-4 text-[16px] text-[var(--color-text)]">
+          <p className="mb-4 text-[16px] text-[var(--color-text)]">
             {c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
           </p>
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
@@ -530,13 +533,12 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             ))}
           </CardRail>
         </div>
-      )}
-
-      {dailyComps.length > 0 && (
+  ) })
+  if (dailyComps.length > 0) tabs.push({ key: 'daily', label: c.tabDaily, content: (
         <div>
-          <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{v.demand.monthlyOnly ? c.dailyHRestricted : c.dailyH}</h3>
+          {v.demand.monthlyOnly && <p className="mb-2 text-[15px] font-medium text-[var(--color-text)]">{c.dailyHRestricted}</p>}
           {dq && (
-            <p className="mt-1 mb-4 text-[16px] text-[var(--color-text)]">
+            <p className="mb-4 text-[16px] text-[var(--color-text)]">
               {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={dq.p50} lang={lang} /></span> {c.perNight}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={dq.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={dq.p75} lang={lang} approx={false} /></span>{daily?.occupancyPct != null && !v.demand.monthlyOnly ? `, ${c.occ(Math.round(daily.occupancyPct))}` : ''}.
             </p>
           )}
@@ -559,9 +561,9 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             ))}
           </CardRail>
         </div>
-      )}
-    </div>
-  )
+  ) })
+  if (sale) tabs.push({ key: 'sale', label: c.tabSale, content: sale })
+  return <DemandTabs tabs={tabs} label={c.tabsLabel} />
 }
 
 export function YieldSummary({ yields: y, leaseYears, calcAnchor, lang }: { yields: YieldFacts; leaseYears: number | null; calcAnchor: string; lang: Lang }) {

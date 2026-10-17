@@ -82,7 +82,7 @@ function plural(n: number, forms: [string, string, string]): string {
 // Как «Сдают помесячно/посуточно в этом районе» (ListingVerdict → DemandSummary):
 // заголовок, одна строка цен и объявления с фото от дорогих к дешёвым. Сравнение
 // цены этого объекта за м² — одной фразой в «Сколько принесёт?».
-export function SaleCompsBlock({ data, bedrooms, lang }: { data: SaleCompsBundle; bedrooms: number | null; lang: Lang }) {
+export function SaleCompsBlock({ data, bedrooms, lang, hideTitle }: { data: SaleCompsBundle; bedrooms: number | null; lang: Lang; hideTitle?: boolean }) {
   const c = pickCopy(COPY, lang)
   const isYear = data.metric === 'year'
   const prices = data.comps.map(x => x.priceUsd).filter(x => x > 0).sort((x, y) => x - y)
@@ -90,9 +90,9 @@ export function SaleCompsBlock({ data, bedrooms, lang }: { data: SaleCompsBundle
   const sorted = [...data.comps].sort((x, y) => y.priceUsd - x.priceUsd)
   return (
     <div>
-      <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.title}</h3>
+      {!hideTitle && <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.title}</h3>}
       {prices.length >= 3 && (
-        <p className="mt-1 mb-4 text-[16px] text-[var(--color-text)]">
+        <p className={`${hideTitle ? '' : 'mt-1 '}mb-4 text-[16px] text-[var(--color-text)]`}>
           {c.line(c.beds(bedrooms ?? 2, data.bedroomsRelaxed), data.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={q(0.5)} lang={lang} /></span>, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={q(0.25)} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={q(0.75)} lang={lang} approx={false} /></span>.
         </p>
       )}
