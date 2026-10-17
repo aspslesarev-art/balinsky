@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { RentalComps } from './RentalComps'
-import { Slider } from './Slider'
+import { Slider, ResetButton } from './Slider'
 import { MonthlyCalculator } from './MonthlyCalculator'
 import { usePathname } from 'next/navigation'
 import {
@@ -1123,9 +1123,18 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
   // Комплекс сам сдаётся на Booking — стартуем с его цены и загрузки
   // (решение владельца 15.10.2026), иначе со ставки соседей и загрузки района.
   const own = snap.ownBooking
-  const [adr, setAdr] = useState<number>(own?.adr ?? sc.median.adrAsking)
-  const [occ, setOcc] = useState<number>(Math.round((own?.occupancy ?? snap.region.occupancyByScenario.median) * 100))
-  const [mgmt, setMgmt] = useState<number>(Math.round(snap.region.mgmtFeePct * 100))
+  const def = {
+    price: basePrice ?? 0,
+    adr: own?.adr ?? sc.median.adrAsking,
+    occ: Math.round((own?.occupancy ?? snap.region.occupancyByScenario.median) * 100),
+    mgmt: Math.round(snap.region.mgmtFeePct * 100),
+  }
+  const [adr, setAdr] = useState<number>(def.adr)
+  const [occ, setOcc] = useState<number>(def.occ)
+  const [mgmt, setMgmt] = useState<number>(def.mgmt)
+  // Кнопка «Сбросить» появляется, как только что-то сдвинули.
+  const changed = price !== def.price || adr !== def.adr || occ !== def.occ || mgmt !== def.mgmt
+  const reset = () => { setPrice(def.price); setAdr(def.adr); setOcc(def.occ); setMgmt(def.mgmt) }
   const [taxStatus, setTaxStatus] = useState<TaxStatus>('beforeTax')
   const [open, setOpen] = useState(false)
 
@@ -1163,7 +1172,10 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
 
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8">
-      <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
+      <div className="flex items-start justify-between gap-4">
+        <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
+        {changed && <ResetButton onClick={reset} lang={lang} />}
+      </div>
       <div className="mt-2 mb-8 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{t.calcSub}</div>
 
       {/* Слева ползунки в одну колонку, справа итог. */}

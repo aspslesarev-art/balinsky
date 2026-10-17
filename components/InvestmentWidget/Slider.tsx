@@ -1,5 +1,8 @@
 'use client'
 
+import { RotateCcw } from 'lucide-react'
+import { pickCopy, type Lang } from '@/lib/i18n'
+
 // Плотность рынка под ползунком ADR: сколько соседей реально сдают по
 // каждой ставке. Без неё ползунок двигается вслепую — видно число, но
 // не видно, подтверждено ли оно рынком. Цвет — светофорные токены
@@ -59,3 +62,15 @@ export function SliderHead({ label, display }: { label: string; display: string 
     </div>
   )
 }
+
+// «Сбросить» в шапке калькулятора: вернуть цену объекта и обычные значения.
+export function ResetButton({ onClick, lang }: { onClick: () => void; lang: Lang }) {
+  return (
+    <button type="button" onClick={onClick}
+      className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-white px-3 text-[13px] font-medium text-[var(--color-text)] transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]">
+      <RotateCcw size={14} aria-hidden />
+      {pickCopy({ ru: 'Сбросить', en: 'Reset' }, lang)}
+    </button>
+  )
+}
+

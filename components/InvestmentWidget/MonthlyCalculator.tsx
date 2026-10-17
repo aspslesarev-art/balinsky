@@ -3,7 +3,7 @@
 import { pluralRu } from '@/lib/plural-ru'
 import { useMemo, useRef, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react'
-import { Slider } from './Slider'
+import { Slider, ResetButton } from './Slider'
 import { fmtMoney, fmtPct, fmtYears } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
@@ -229,10 +229,13 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
   // Цена и аренда — от десятой части до двойной: можно проверить любой свой сценарий.
   const rentLo = Math.max(10, Math.floor(m.p50 / 10 / 10) * 10)
   const rentHi = Math.max(rentLo + 50, Math.ceil(m.p50 * 2 / 50) * 50, Math.ceil(m.p75 * 1.5 / 50) * 50)
-  const [price, setPrice] = useState<number>(basePrice ?? 0)
-  const [rent, setRent] = useState<number>(m.p50)
-  const [months, setMonths] = useState<number>(MONTHS_RENTED.median)
-  const [agent, setAgent] = useState<number>(Math.round(AGENT_FEE_PCT * 100))
+  const def = { price: basePrice ?? 0, rent: m.p50, months: MONTHS_RENTED.median, agent: Math.round(AGENT_FEE_PCT * 100) }
+  const [price, setPrice] = useState<number>(def.price)
+  const [rent, setRent] = useState<number>(def.rent)
+  const [months, setMonths] = useState<number>(def.months)
+  const [agent, setAgent] = useState<number>(def.agent)
+  const changed = price !== def.price || rent !== def.rent || months !== def.months || agent !== def.agent
+  const reset = () => { setPrice(def.price); setRent(def.rent); setMonths(def.months); setAgent(def.agent) }
   const [taxStatus, setTaxStatus] = useState<TaxStatus>('beforeTax')
   const [open, setOpen] = useState(false)
 
@@ -247,7 +250,10 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
 
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8">
-      <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.title}</div>
+      <div className="flex items-start justify-between gap-4">
+        <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.title}</div>
+        {changed && <ResetButton onClick={reset} lang={lang} />}
+      </div>
       <div className="mt-2 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{restricted ? t.sub : t.subCompare}</div>
       <div className="mt-1 mb-8 text-[13px] text-[var(--color-text-muted)]">{t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
 
