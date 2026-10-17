@@ -36,7 +36,6 @@ const InvestmentWidget = dynamic(
 const LandProfileBlock = dynamic(
   () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
 )
-import { RentalCompareSection } from '@/components/RentalCompareSection'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { AgentStoriesButton } from '@/components/AgentStoriesButton'
@@ -1486,12 +1485,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} inquiry={{ kind: 'apartment', name: title, complexName: parentComplexName, priceUsd: priceNum }} />}
 
-        <RentalCompareSection
-          district={district}
-          bedrooms={bedrooms}
-          villaPriceUsd={priceNum}
-          lang={lang}
-        />
+        {/* «Что сдают рядом помесячно» убран 17.10.2026: повторял вкладку «Помесячно» в «Будет ли спрос?». */}
 
         {aptVideos.length > 0 && (
           <VideoGrid videos={aptVideos} title={parentComplexName ? `${pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)}: ${parentComplexName}` : pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)} />
