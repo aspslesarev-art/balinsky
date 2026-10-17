@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Building, Building2, HardHat, Repeat, Menu, X } from 'lucide-react'
+import { Home, Building, Building2, HardHat, Menu, X } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
@@ -25,13 +25,8 @@ const NAV: NavItem[] = [
   { key: 'apartamenty',      labelKey: 'nav.apartments', Icon: Building },
   { key: 'zhilye-kompleksy', labelKey: 'nav.complexes',  Icon: Building2 },
   { key: 'zastrojshhiki',    labelKey: 'nav.developers', Icon: HardHat },
-  // Перепродажа — вторичный рынок, который агенты ведут сами. Раздел
-  // русскоязычный (объекты заводят и описывают по-русски), поэтому в меню
-  // он показывается только на /ru; на других языках его нет, и ссылки,
-  // ведущей в 404, не возникает.
-  { key: 'pereprodazha', ruOnly: { label: 'Перепродажа', href: '/ru/pereprodazha' }, Icon: Repeat },
-  // Аренда убрана из верхнего меню (страницы /ru/arenda и /en/rental
-  // остаются доступны по прямым ссылкам и в sitemap).
+  // Аренда и перепродажа убраны из верхнего меню (17.10.2026): обе — в подвале,
+  // перепродажа сразу под арендой; страницы доступны по прямым ссылкам и в sitemap.
 ]
 
 export function Header({ active }: { active?: NavKey }) {
