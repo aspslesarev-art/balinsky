@@ -39,3 +39,18 @@ for (const b of data as BeachProfile[]) for (const id of b.ids) byId.set(id, b)
 export function beachProfile(placeId: string | null | undefined): BeachProfile | null {
   return placeId ? byId.get(placeId) ?? null : null
 }
+
+/** Ближайший пляж, у которого есть описание, в пределах maxKm. Ближайшей
+ *  точкой «пляж» в Google часто бывает мелкий спуск или бич-клуб без
+ *  описания (у Bingin Villas — «Хидден бич» в 300 м, а Бингин в 480 м). */
+export function nearestBeachProfile(
+  places: { id: string; distanceKm: number }[] | null | undefined,
+  maxKm = 3,
+): { beach: BeachProfile; km: number; placeId: string } | null {
+  let best: { beach: BeachProfile; km: number; placeId: string } | null = null
+  for (const p of places ?? []) {
+    const b = byId.get(p.id)
+    if (b && p.distanceKm <= maxKm && (!best || p.distanceKm < best.km)) best = { beach: b, km: p.distanceKm, placeId: p.id }
+  }
+  return best
+}

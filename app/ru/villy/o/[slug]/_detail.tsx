@@ -59,7 +59,7 @@ import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingList } from '@/components/LivingVerdict'
 import { BeachBlock } from '@/components/BeachBlock'
-import { beachProfile } from '@/lib/beaches'
+import { nearestBeachProfile } from '@/lib/beaches'
 import { GoalSwitch } from '@/components/GoalSwitch'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
@@ -1260,7 +1260,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
   })
   // Ближайший пляж с описанием (lib/beaches.ts) — карточкой в разделе «Место».
   const beachRow = livingFacts?.rows.find(r => r.key === 'beach') ?? null
-  const beach = beachRow && beachRow.km != null && beachRow.km <= 3 ? beachProfile(beachRow.placeId) : null
+  const beachPick = nearestBeachProfile(nearby?.byCategory?.beach)
+  const beach = beachPick?.beach ?? null
+  // Строку «пляж» в «Главном рядом» прячем, только если карточка о том же пляже.
+  const beachIsNearest = !!beachPick && beachPick.placeId === beachRow?.placeId
   const verdict = buildVerdict({
     living: livingFacts,
     status, yearRaw, permit, leaseYears, rentalRestricted, complex: complexFacts,
@@ -1477,7 +1480,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 Ряд 2: слева дорога, справа район и берег. Пляж — ниже, во всю ширину. */}
             {(livingFacts || geoFacts) && (
               <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={!!beach} />}
+                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest} />}
                 {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
               </div>
             )}
@@ -1490,7 +1493,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
                 <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />
               </div>
             )}
-            {beach && beachRow?.km != null && <div className="mb-4"><BeachBlock beach={beach} km={beachRow.km} lang={lang} /></div>}
+            {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} lang={lang} /></div>}
             {nearby && (
               <GatedBlock kind="nearby" lang={lang}>
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
