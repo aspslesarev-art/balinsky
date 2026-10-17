@@ -31,7 +31,7 @@ const COPY = {
     caveat: 'В объявлениях запрашиваемые цены, и там есть как новые, так и пожившие виллы.',
     few: 'Объявлений меньше 30 — это ориентир, а не рыночная цифра.',
     noVerdict: 'Похожих объявлений с площадью и сроком мало, поэтому цену не сравниваем.',
-    bedShort: 'сп.',
+    bedShort: 'сп.', studio: 'студия',
     m2: 'м²',
     lease: (y: number) => `лизхолд ${y} ${plural(y, ['год', 'года', 'лет'])}`,
     freehold: 'фрихолд',
@@ -60,7 +60,7 @@ const COPY = {
     caveat: 'Listings show asking prices and include both new and lived-in villas.',
     few: 'Fewer than 30 listings — treat this as a guide, not a market figure.',
     noVerdict: 'Too few similar listings with area and lease term to compare the price.',
-    bedShort: 'bd',
+    bedShort: 'bd', studio: 'studio',
     m2: 'm²',
     lease: (y: number) => `leasehold ${y} yrs`,
     freehold: 'freehold',
@@ -109,7 +109,7 @@ function CompCard({ comp, isYear, lang }: { comp: SaleComp; isYear: boolean; lan
   const photo = comp.photo?.replace('/1080x720-fit/', '/720x480-fit/') ?? null
   const right = comp.leasehold === true && comp.leaseYears ? c.lease(comp.leaseYears) : comp.leasehold === false ? c.freehold : null
   const metric = isYear ? comp.ppmYear : comp.ppm
-  const facts = [`${comp.bedrooms} ${c.bedShort}`, comp.buildingM2 && `${comp.buildingM2} ${c.m2}`, right].filter(Boolean).join(' · ')
+  const facts = [comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.bedShort}`, comp.buildingM2 && `${comp.buildingM2} ${c.m2}`, right].filter(Boolean).join(' · ')
   return (
       <a
         href={comp.url}

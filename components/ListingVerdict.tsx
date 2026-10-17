@@ -143,7 +143,7 @@ const COPY = {
     dailyT: 'Посуточно у соседей', dailyTRestricted: 'Посуточно у соседей', perNight: 'за ночь',
     dailySub: (n: number, occ: number | null) => `${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])} на Booking${occ != null ? `, загрузка около ${Math.round(occ)}%` : ''}`,
     dailySubRestricted: 'этому объекту так сдавать нельзя',
-    monthlyCards: 'Что сдают рядом помесячно', away: 'от объекта', km: 'км', br: 'сп.',
+    monthlyCards: 'Что сдают рядом помесячно', away: 'от объекта', km: 'км', br: 'сп.', studio: 'студия',
     monthlyH: 'Сдают помесячно в этом районе',
     tabMonthly: 'Помесячно', tabDaily: 'Посуточно', tabSale: 'Продажа рядом', tabsLabel: 'Что сдают и продают рядом',
     dailyH: 'Сдают посуточно в этом районе',
@@ -263,7 +263,7 @@ const COPY = {
     dailyT: 'Nightly at neighbours', dailyTRestricted: 'If nightly rental were allowed', perNight: 'per night',
     dailySub: (n: number, occ: number | null) => `${en(n, 'place', 'places')} on Booking${occ != null ? `, about ${Math.round(occ)}% booked` : ''}`,
     dailySubRestricted: 'that is what neighbours charge - not allowed here',
-    monthlyCards: 'Monthly rentals nearby', away: 'away', km: 'km', br: 'BR',
+    monthlyCards: 'Monthly rentals nearby', away: 'away', km: 'km', br: 'BR', studio: 'studio',
     monthlyH: 'Rented monthly in this area',
     tabMonthly: 'Monthly', tabDaily: 'Nightly', tabSale: 'For sale nearby', tabsLabel: 'Rentals and sales nearby',
     dailyH: 'Rented nightly in this area',
@@ -526,7 +526,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                   <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
                   <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
                   <span className="text-[14px] text-[var(--color-text-muted)]">
-                    {[comp.bedrooms != null ? `${comp.bedrooms} ${c.br}` : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
+                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, comp.district, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </a>
@@ -565,7 +565,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                   <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.adr} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perNight}</span></span>
                   <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.complex ?? comp.name}</span>
                   <span className="text-[14px] text-[var(--color-text-muted)]">
-                    {[comp.bedrooms != null ? `${comp.bedrooms} ${c.br}` : null, comp.rating != null ? `★ ${dec(comp.rating)}` : null, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
+                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.rating != null ? `★ ${dec(comp.rating)}` : null, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </a>
