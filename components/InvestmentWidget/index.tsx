@@ -1045,18 +1045,7 @@ function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Sn
               <MonthlyCalculator snap={snap} lang={lang} />
             ) : snap.scenarios ? (
               <>
-                {snap.adrBasis === 'matches' && (snap.searchRadiusKm ?? 2) > 2 && (
-                  <Banner tone="info" icon={<Info size={16} />} className="mt-4">
-                    {t.widerRadius(snap.searchRadiusKm)}
-                  </Banner>
-                )}
-                {snap.adrBasis !== 'matches' && (
-                  <Banner tone="info" icon={<Info size={16} />} className="mt-4">
-                    {snap.adrBasis === 'few' ? t.adrFew(snap.references?.length ?? 0) : t.adrArea}
-                  </Banner>
-                )}
                 <Calculator snap={snap} lang={lang} />
-                {snap.references && snap.references.length > 0 && <References snap={snap} lang={lang} />}
               </>
             ) : snap.references ? (
               <References snap={snap} lang={lang} />
@@ -1068,12 +1057,6 @@ function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Sn
           <div className="mt-4">
             <InvestmentMap apiKey={apiKey} snap={snap} allPois={allPois} lang={lang} />
           </div>
-        )}
-
-        {snap.flags.expandedZone && (
-          <Banner tone="info" icon={<Info size={16} />} className="mt-4">
-            {t.expandedZone(snap.zone.raw, snap.zone.applied)}
-          </Banner>
         )}
 
         {snap.flags.emergingMarket && !snap.flags.rentalRestricted && <EmergingBlock snap={snap} lang={lang} />}
