@@ -1028,7 +1028,12 @@ function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Sn
                 <div>{t.restrictedBody}</div>
               </div>
             </Banner>
-            {snap.monthly && <MonthlyCalculator snap={snap} lang={lang} />}
+            {snap.monthly && (
+              <>
+                <NightCost snap={snap} lang={lang} mode="monthly" />
+                <MonthlyCalculator snap={snap} lang={lang} />
+              </>
+            )}
           </>
         ) : (
           <>
@@ -1043,7 +1048,10 @@ function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Sn
               </div>
             )}
             {rentMode === 'monthly' && snap.monthly ? (
-              <MonthlyCalculator snap={snap} lang={lang} />
+              <>
+                <NightCost snap={snap} lang={lang} mode="monthly" />
+                <MonthlyCalculator snap={snap} lang={lang} />
+              </>
             ) : snap.scenarios ? (
               <>
                 <NightCost snap={snap} lang={lang} />
