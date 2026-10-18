@@ -1010,6 +1010,8 @@ function Skeleton() {
 function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Snapshot; apiKey: string; lang: Lang; showMap?: boolean }) {
   const t = pickCopy(COPY, lang)
   const [rentMode, setRentMode] = useState<'daily' | 'monthly'>('daily')
+  // Цена объекта одна на обе вкладки: поменял в посуточной — она же в помесячной.
+  const [price, setPrice] = useState<number>(snap.villa.askingPrice ?? 0)
   const allPois = useMemo(() => {
     const out: { lat: number; lng: number; name: string | null; category: string }[] = []
     for (const [cat, list] of Object.entries(snap.nearbyByCategory)) {
@@ -1028,12 +1030,7 @@ function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Sn
                 <div>{t.restrictedBody}</div>
               </div>
             </Banner>
-            {snap.monthly && (
-              <>
-                <NightCost snap={snap} lang={lang} mode="monthly" />
-                <MonthlyCalculator snap={snap} lang={lang} />
-              </>
-            )}
+            {snap.monthly && <MonthlyCalculator snap={snap} lang={lang} price={price} setPrice={setPrice} />}
           </>
         ) : (
           <>
@@ -1047,19 +1044,19 @@ function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Sn
                 ))}
               </div>
             )}
-            {rentMode === 'monthly' && snap.monthly ? (
-              <>
-                <NightCost snap={snap} lang={lang} mode="monthly" />
-                <MonthlyCalculator snap={snap} lang={lang} />
-              </>
-            ) : snap.scenarios ? (
-              <>
-                <NightCost snap={snap} lang={lang} />
-                <Calculator snap={snap} lang={lang} />
-              </>
-            ) : snap.references ? (
-              <References snap={snap} lang={lang} />
-            ) : null}
+            {/* Обе вкладки остаются смонтированными: при переключении ползунки не сбрасываются. */}
+            {snap.monthly && (
+              <div hidden={rentMode !== 'monthly'}>
+                <MonthlyCalculator snap={snap} lang={lang} price={price} setPrice={setPrice} />
+              </div>
+            )}
+            <div hidden={rentMode === 'monthly' && !!snap.monthly}>
+              {snap.scenarios ? (
+                <Calculator snap={snap} lang={lang} price={price} setPrice={setPrice} />
+              ) : snap.references ? (
+                <References snap={snap} lang={lang} />
+              ) : null}
+            </div>
           </>
         )}
 
@@ -1089,7 +1086,7 @@ function Banner({ tone, icon, children, className }: { tone: 'info' | 'danger' |
   )
 }
 
-function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lang; price: number; setPrice: (n: number) => void }) {
   const t = pickCopy(COPY, lang)
   const { currency } = useCurrency()
   // fmtMoney сам переводит доллары в валюту посетителя — курс сюда не
@@ -1126,7 +1123,6 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
     return () => { cancelled = true }
   }, [villaLat, villaLng])
 
-  const [price, setPrice] = useState<number>(basePrice ?? 0)
   // Ползунок ходит по ставке из выдачи соседей; коэффициент реализации
   // применяется внутри расчёта, поэтому пользователь двигает ровно то число,
   // которое видит в карточках конкурентов ниже.
@@ -1187,6 +1183,9 @@ function Calculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
         <ResetButton onClick={reset} lang={lang} show={changed} />
       </div>
       <div className="mt-2 mb-8 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{t.calcSub}</div>
+
+      {/* Сначала себестоимость, потом доходность — от тех же ползунков ниже. */}
+      <NightCost snap={snap} lang={lang} live={{ price, rate: adr, load: occ / 100 }} embedded />
 
       {/* Слева ползунки в одну колонку, справа итог. */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">

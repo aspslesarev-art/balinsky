@@ -8,6 +8,7 @@ import { Slider, ResetButton } from './Slider'
 import { fmtMoney, fmtPct, fmtYears } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
+import { NightCost } from './NightCost'
 import { AGENT_FEE_PCT, MONTHS_RENTED, computeMonthlyEconomics } from '@/lib/investment/monthly'
 import type { TaxStatus } from '@/lib/investment/economics'
 import { pickCopy, type Lang } from '@/lib/i18n'
@@ -223,7 +224,7 @@ const COPY: Record<Lang, Copy> = {
   },
 }
 
-export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }) {
+export function MonthlyCalculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lang; price: number; setPrice: (n: number) => void }) {
   const restricted = snap.flags.rentalRestricted
   const t = pickCopy(COPY, lang)
   const { currency } = useCurrency()
@@ -238,7 +239,6 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
   const rentLo = Math.max(10, Math.floor(m.p50 / 10 / 10) * 10)
   const rentHi = Math.max(rentLo + 50, Math.ceil(m.p50 * 2 / 50) * 50, Math.ceil(m.p75 * 1.5 / 50) * 50)
   const def = { price: basePrice ?? 0, rent: m.p50, months: MONTHS_RENTED.median, agent: Math.round(AGENT_FEE_PCT * 100) }
-  const [price, setPrice] = useState<number>(def.price)
   const [rent, setRent] = useState<number>(def.rent)
   const [months, setMonths] = useState<number>(def.months)
   const [agent, setAgent] = useState<number>(def.agent)
@@ -264,6 +264,9 @@ export function MonthlyCalculator({ snap, lang }: { snap: Snapshot; lang: Lang }
       </div>
       <div className="mt-2 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{restricted ? t.sub : t.subCompare}</div>
       <div className="mt-1 mb-8 text-[13px] text-[var(--color-text-muted)]">{m.ownN && m.ownDistrict && t.sampleMixed ? t.sampleMixed(m.n, m.ownN, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
+
+      {/* Сначала себестоимость, потом доходность — от тех же ползунков ниже. */}
+      <NightCost snap={snap} lang={lang} mode="monthly" live={{ price, rate: rent, load: months }} embedded />
 
       {/* Слева ползунки в одну колонку, справа итог — как у посуточной. */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
