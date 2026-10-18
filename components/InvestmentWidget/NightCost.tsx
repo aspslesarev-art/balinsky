@@ -20,6 +20,7 @@ const RU = {
   vsRate: (x: string) => `Себестоимость в ${x} раза ниже вашей ставки`,
   aboveRate: 'Себестоимость выше вашей ставки',
   noLoad: 'Без загрузки себестоимость не считается',
+  detailed: 'Подробный расчёт доходности',
   calcRate: 'Ваша ставка',
   calcRateSub: 'Из калькулятора ниже',
   eyebrow: 'Себестоимость',
@@ -62,6 +63,7 @@ const ID: Copy = {
   vsRate: (x) => `Biaya pokok ${x}× lebih rendah dari tarif Anda`,
   aboveRate: 'Biaya pokok lebih tinggi dari tarif Anda',
   noLoad: 'Tanpa okupansi biaya pokok tidak bisa dihitung',
+  detailed: 'Perhitungan imbal hasil terperinci',
   calcRate: 'Tarif Anda',
   calcRateSub: 'Dari kalkulator di bawah',
   eyebrow: 'Biaya pokok',
@@ -106,6 +108,7 @@ const COPY: Record<Lang, Copy> = {
     vsRate: (x) => `Cost price is ${x}× below your rate`,
     aboveRate: 'Cost price is above your rate',
     noLoad: 'With zero occupancy there is no cost price',
+    detailed: 'Detailed yield calculation',
     calcRate: 'Your rate',
     calcRateSub: 'From the calculator below',
     eyebrow: 'Cost price',
@@ -149,6 +152,7 @@ const COPY: Record<Lang, Copy> = {
     vsRate: (x) => `Le prix de revient est ${x} fois inférieur à votre tarif`,
     aboveRate: 'Le prix de revient dépasse votre tarif',
     noLoad: 'Sans occupation, pas de prix de revient',
+    detailed: 'Calcul détaillé du rendement',
     calcRate: 'Votre tarif',
     calcRateSub: 'Depuis le calculateur ci-dessous',
     eyebrow: 'Prix de revient',
@@ -189,6 +193,7 @@ const COPY: Record<Lang, Copy> = {
     vsRate: (x) => `Die Selbstkosten liegen ${x}-mal unter Ihrem Preis`,
     aboveRate: 'Die Selbstkosten liegen über Ihrem Preis',
     noLoad: 'Ohne Auslastung keine Selbstkosten',
+    detailed: 'Detaillierte Renditeberechnung',
     calcRate: 'Ihr Preis',
     calcRateSub: 'Aus dem Rechner unten',
     eyebrow: 'Selbstkosten',
@@ -229,6 +234,7 @@ const COPY: Record<Lang, Copy> = {
     vsRate: (x) => `成本比您的价格低 ${x} 倍`,
     aboveRate: '成本高于您的价格',
     noLoad: '入住率为零时无法计算成本',
+    detailed: '详细收益计算',
     calcRate: '您的价格',
     calcRateSub: '来自下方计算器',
     eyebrow: '成本价',
@@ -269,6 +275,7 @@ const COPY: Record<Lang, Copy> = {
     vsRate: (x) => `De kostprijs ligt ${x}× onder uw tarief`,
     aboveRate: 'De kostprijs ligt boven uw tarief',
     noLoad: 'Zonder bezetting geen kostprijs',
+    detailed: 'Gedetailleerde rendementsberekening',
     calcRate: 'Uw tarief',
     calcRateSub: 'Uit de calculator hieronder',
     eyebrow: 'Kostprijs',
@@ -309,6 +316,7 @@ const COPY: Record<Lang, Copy> = {
     vsRate: (x) => `Koszt własny jest ${x} razy niższy od Twojej stawki`,
     aboveRate: 'Koszt własny jest wyższy od Twojej stawki',
     noLoad: 'Bez obłożenia nie da się policzyć kosztu',
+    detailed: 'Szczegółowe obliczenie rentowności',
     calcRate: 'Twoja stawka',
     calcRateSub: 'Z kalkulatora poniżej',
     eyebrow: 'Koszt własny',
@@ -349,6 +357,7 @@ const COPY: Record<Lang, Copy> = {
     vsRate: (x) => `Собівартість у ${x} раза нижча за вашу ставку`,
     aboveRate: 'Собівартість вища за вашу ставку',
     noLoad: 'Без завантаження собівартість не рахується',
+    detailed: 'Детальний розрахунок дохідності',
     calcRate: 'Ваша ставка',
     calcRateSub: 'З калькулятора нижче',
     eyebrow: 'Собівартість',
@@ -434,6 +443,7 @@ export function NightCost({ snap, lang, mode = 'daily', live, embedded = false }
   const ratioText = (Math.round(ratio * 10) / 10).toLocaleString(c.locale)
 
   return (
+    <>
     <section className={embedded ? 'mb-8 border-b border-[var(--color-border)] pb-8' : 'mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8'} aria-labelledby={`night-cost-title-${mode}`}>
       <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{c.eyebrow}</div>
       <h3 id={`night-cost-title-${mode}`} className="mt-1 text-[18px] font-semibold tracking-tight text-[var(--color-text)]">{t.title}</h3>
@@ -491,5 +501,8 @@ export function NightCost({ snap, lang, mode = 'daily', live, embedded = false }
         </p>
       </div>
     </section>
+    {/* Граница шагов: выше себестоимость, ниже — ползунки и доходность. */}
+    {embedded && <h3 className="mb-6 text-[18px] font-semibold tracking-tight text-[var(--color-text)]">{c.detailed}</h3>}
+    </>
   )
 }
