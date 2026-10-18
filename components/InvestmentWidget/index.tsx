@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { RentalComps } from './RentalComps'
 import { Slider, ResetButton } from './Slider'
 import { MonthlyCalculator } from './MonthlyCalculator'
+import { NightCost } from './NightCost'
 import { usePathname } from 'next/navigation'
 import {
   Info, ChevronDown, ChevronUp, TrendingUp,
@@ -1045,6 +1046,7 @@ function InvestmentWidgetView({ snap, apiKey, lang, showMap = true }: { snap: Sn
               <MonthlyCalculator snap={snap} lang={lang} />
             ) : snap.scenarios ? (
               <>
+                <NightCost snap={snap} lang={lang} />
                 <Calculator snap={snap} lang={lang} />
               </>
             ) : snap.references ? (

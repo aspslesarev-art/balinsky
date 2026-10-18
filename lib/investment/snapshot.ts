@@ -45,6 +45,8 @@ export type InvestmentSnapshot = {
     area: number | null
     askingPrice: number | null
     leaseholdYearsLeft: number | null
+    /** Сколько лет осталось до сдачи по «Year of completion»; 0 — уже сдан. */
+    buildYearsLeft: number | null
     hasPool: boolean | null
     district: string | null
     photo: string | null
@@ -387,6 +389,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   // окончания: с 2053 года до неё сегодня 26 лет, а не 30. Берём меньшее —
   // от остатка срока зависит, вернутся ли вложения.
   const leaseholdYearsLeft = yearsLeft(numberOrNull(d['Leasehold'] ?? d['Leashold']), d['Leasehold до'])
+  const buildYearsLeft = yearsToCompletion(d['Year of completion'] ?? d['Year of completion '])
   const hasPool = detectPool(d)
   const district = firstString(d['Location 2']) ?? firstString(d['Location'])
 
@@ -541,7 +544,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   return {
     villaId,
     generatedAt: new Date().toISOString(),
-    villa: { title, lat, lng, bedrooms, area, askingPrice, leaseholdYearsLeft, hasPool, district, photo },
+    villa: { title, lat, lng, bedrooms, area, askingPrice, leaseholdYearsLeft, buildYearsLeft, hasPool, district, photo },
     region,
     zone: {
       applied: matchResult.appliedZone,
@@ -703,4 +706,16 @@ function yearsLeft(term: number | null, until: unknown): number | null {
   const left = Math.round(((t - Date.now()) / (365.25 * 86_400_000)) * 10) / 10
   if (left <= 0) return term
   return term == null ? left : Math.min(term, left)
+}
+
+// «2027» или «4 кв. 2027». Год без квартала считаем сдачей в конце года:
+// так ночей лизхолда выходит меньше, а цена ночи не занижается.
+function yearsToCompletion(v: unknown): number | null {
+  const raw = firstString(v)
+  const m = raw?.match(/(20\d\d)/)
+  if (!m) return null
+  const q = raw!.match(/([1-4])\s*(?:кв|q)/i)
+  const end = Date.UTC(Number(m[1]), q ? Number(q[1]) * 3 : 12, 1)
+  const left = (end - Date.now()) / (365.25 * 86_400_000)
+  return Math.max(0, Math.round(left * 10) / 10)
 }
