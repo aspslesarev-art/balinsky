@@ -226,7 +226,7 @@ async function runTurn(
             '   Потом карточки. Больше ничего.',
             '5. Если посетитель называет КОНКРЕТНЫЙ объект по имени («почему не показал X», «что про Y», «а Maison Boheme?») — вызови search_listings с query="<имя>" и попробуй kind=villa, если 0 — попробуй kind=apartment, потом kind=complex. Не гадай — либо найди и расскажи, либо честно скажи «под этим именем не нашёл, проверь написание».',
             '5b. Когда запрос широкий (тип объекта — «вилла», «апарты», «жильё», «недвижка» — без явного отсева комплексов) — ВСЕГДА делай ДВА параллельных вызова search_listings: kind=villa И kind=complex с теми же фильтрами. Многие желанные объекты (Maison Boheme и аналоги) проходят как complex, а не villa, и теряются если искать только в одном bucket. Объедини результаты, отсортируй по релевантности и отдай топ-5.',
-            '5c. Когда посетитель упомянул "белый песок / white sand" — это ЖЁСТКОЕ требование. Подходят ТОЛЬКО: Букит (Uluwatu, Bingin, Padang Padang, Balangan, Dreamland, Pecatu, Ungasan, Nusa Dua, Jimbaran, Pandawa, Melasti, Green Bowl), Сануре, Танджунг-Беноа, Амед, Туламбен. Чёрный песок — Чангу, Берава, Перененан, Семиньяк, Кута, Легиан, Сесех, Танах-Лот, Ньяньи, Кедунгу, Балиан, Медеви, Ловина — ИХ ИСКЛЮЧИ. Если в выборке вышли чёрно-песочные — переспроси search с query, ограниченным белыми районами.',
+            '5c. Когда посетитель упомянул "белый песок / white sand" — это ЖЁСТКОЕ требование. Подходят ТОЛЬКО: Букит (Uluwatu, Bingin, Padang Padang, Balangan, Dreamland, Pecatu, Ungasan, Nusa Dua, Jimbaran, Pandawa, Melasti, Green Bowl), Сануре, Танджунг-Беноа, Амед, Туламбен. Чёрный песок — Чангу, Берава, Перененан, Семиньяк, Кута, Легиан, Сесех, Танах-Лот, Ньяни, Кедунгу, Балиан, Медеви, Ловина — ИХ ИСКЛЮЧИ. Если в выборке вышли чёрно-песочные — переспроси search с query, ограниченным белыми районами.',
             '5d. Когда посетитель сказал "пешком до пляжа / в пешей доступности / walking distance" — даже Umalas, Kerobokan, Tibubeneng, Dalung, Padonan не подходят (они 1-2 км от воды). Только Berawa, Batu Bolong, Pererenan beachfront, Echo Beach, Seminyak beachfront, Jimbaran bay, Sanur beachfront, Bukit cliffside проектов с явным «beachfront / 1 минута / на пляже».',
             '5e. ⚠️ ФРИХОЛД / ХГБ: если посетитель просит «фрихолд», «freehold», «полное право собственности», «ХГБ», «HGB», «Hak Milik» — НЕ ИЩИ объекты. Сразу честно ответь:',
             '     «Иностранцу в Индонезии freehold (Hak Milik) недоступен по закону — этим правом владеют только граждане Индонезии. Для иностранцев существуют две легальные схемы:',
@@ -491,7 +491,7 @@ function userWantsWalkingToBeach(userText: string, history: ChatCompletionMessag
 
 // White-sand-only ask. Drops black-sand districts (Чангу / Берава /
 // Перененан / Семиньяк / Кута / Легиан / Сесех / Танах-Лот /
-// Кедунгу / Балиан / Медеви / Ньяньи / Ловина).
+// Кедунгу / Балиан / Медеви / Ньяни / Ловина).
 function userWantsWhiteSand(userText: string, history: ChatCompletionMessageParam[]): boolean {
   return matchesAcrossHistory(
     userText, history,

@@ -14,7 +14,7 @@ const MAP: Record<string, string> = {
   'Sanur':      'Санур',
   'Pererenan':  'Переренан',
   'Nusa Dua':   'Нуса Дуа',
-  'Nyanyi':     'Нянь',
+  'Nyanyi':     'Ньяни',
   'Melasti':    'Меласти',
   'Kerobokan':  'Керобокан',
   'Cemagi':     'Чемаги',
