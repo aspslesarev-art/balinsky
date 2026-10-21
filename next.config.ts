@@ -162,6 +162,10 @@ export default function config(phase: string): NextConfig {
   if (phase !== PHASE_DEVELOPMENT_SERVER) return nextConfig;
   return {
     ...nextConfig,
+    // Своя папка для `next dev`: проверочная `next build` писала в ту же
+    // .next, пока локальная копия работала, и портила кэш Turbopack — все
+    // страницы объектов отдавали 404 (22.10.2026).
+    distDir: '.next-dev',
     experimental: { ...nextConfig.experimental, turbopackMemoryLimit: 1536 * 1024 * 1024 },
   };
 }

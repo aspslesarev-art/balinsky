@@ -1,4 +1,5 @@
 import type { HubConfig } from '@/lib/hub-page'
+import { ComplexDetail, generateComplexMetadata } from './o/[slug]/_detail'
 import { ComplexesCatalog } from './_catalog'
 import { buildMetadataEn, loadCatalogPage, type ComplexFilterState } from './_lib'
 import { parseCleanPath, stripPagination, buildCanonicalPath } from '@/lib/complex-seo-routes'
@@ -12,4 +13,5 @@ export const complexHub: HubConfig<ComplexFilterState> = {
   loadCatalogPage: (f, page, lang) => loadCatalogPage(f, page, lang),
   buildMetadata: (f, lang, opts) => buildMetadataEn(f, opts, lang),
   Catalog: ComplexesCatalog,
+  detail: { Component: ComplexDetail, metadata: generateComplexMetadata },
 }

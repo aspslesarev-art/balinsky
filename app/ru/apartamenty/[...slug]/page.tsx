@@ -1,4 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation'
+import { decodeSeg, isDetailPath } from '@/lib/hub-page'
+import { ApartmentDetail, generateApartmentMetadata } from '../o/[slug]/_detail'
 import { ApartamentyCatalog } from '../_catalog'
 import { buildMetadata, loadCatalogPage } from '../_lib'
 import {
@@ -18,6 +20,8 @@ export function generateStaticParams() { return [] }
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { slug } = await params
+  // Адрес объекта при сбое маршрутов локального next dev — см. isDetailPath.
+  if (isDetailPath(slug)) return generateApartmentMetadata(decodeSeg(slug[1]), 'ru')
   const stripped = stripPagination(slug)
   if (!stripped) return { robots: { index: false, follow: false } }
   const { segments, page } = stripped
@@ -44,6 +48,7 @@ export async function generateMetadata({ params }: { params: Params }) {
 
 export default async function Page({ params }: { params: Params }) {
   const { slug } = await params
+  if (isDetailPath(slug)) return <ApartmentDetail slug={decodeSeg(slug[1])} lang="ru" />
   const stripped = stripPagination(slug)
   if (!stripped) notFound()
   const { segments, page } = stripped

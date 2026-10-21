@@ -23,6 +23,22 @@ export type HubConfig<F> = {
   loadCatalogPage: (f: F, page: number, lang: Lang) => Promise<{ totalCount: number; totalPages: number }>
   buildMetadata: (f: F, lang: Lang, opts: MetaOpts) => Metadata
   Catalog: (props: { filters: F; page: number; basePath: string; lang: Lang }) => Promise<React.ReactElement>
+  /** Страница объекта — см. isDetailPath. */
+  detail: {
+    Component: (props: { slug: string; lang: Lang }) => Promise<React.ReactElement>
+    metadata: (slug: string, lang: Lang) => Promise<Metadata>
+  }
+}
+
+/**
+ * Адрес объекта (`<раздел>/o/<slug>`) в этот маршрут попадать не должен: его
+ * забирает более точный `o/[slug]`. Но локальный `next dev` (Turbopack) после
+ * пересборки маршрутов временами отдаёт его сюда, и вместо объекта был 404
+ * (владелец 22.10.2026). Тогда показываем объект отсюда же; на проде все
+ * маршруты собраны заранее и эта ветка не срабатывает.
+ */
+export function isDetailPath(slug: string[]): boolean {
+  return slug.length === 2 && slug[0] === 'o' && !!slug[1]
 }
 
 const PAGE_WORD: Record<Lang, (n: number) => string> = {
@@ -31,7 +47,7 @@ const PAGE_WORD: Record<Lang, (n: number) => string> = {
   nl: n => `pagina ${n}`, ban: n => `kaca ${n}`, pl: n => `strona ${n}`, uk: n => `сторінка ${n}`,
 }
 
-function decodeSeg(s: string): string {
+export function decodeSeg(s: string): string {
   try { return decodeURIComponent(s) } catch { return s }
 }
 
@@ -51,6 +67,7 @@ export function makeHubPage<F>(cfg: HubConfig<F>, lang: Lang) {
 
   async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
     const { slug } = await params
+    if (isDetailPath(slug)) return cfg.detail.metadata(decodeSeg(slug[1]), lang)
     const r = resolve(slug)
     if (!r) return { robots: { index: false, follow: false } }
     const { page, filters, ruCanonical } = r
@@ -78,6 +95,7 @@ export function makeHubPage<F>(cfg: HubConfig<F>, lang: Lang) {
 
   async function Page({ params }: { params: Params }) {
     const { slug } = await params
+    if (isDetailPath(slug)) return <cfg.detail.Component slug={decodeSeg(slug[1])} lang={lang} />
     const r = resolve(slug)
     if (!r) notFound()
     const { segments, page, filters, canonical } = r

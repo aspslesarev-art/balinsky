@@ -1,4 +1,5 @@
 import type { HubConfig } from '@/lib/hub-page'
+import { ApartmentDetail, generateApartmentMetadata } from './o/[slug]/_detail'
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { ApartamentyCatalog } from './_catalog'
 import { buildMetadataLoc, loadCatalogPage } from './_lib'
@@ -12,4 +13,5 @@ export const apartmentHub: HubConfig<FilterState> = {
   loadCatalogPage: (f, page, lang) => loadCatalogPage(f, page, lang),
   buildMetadata: (f, lang, opts) => buildMetadataLoc(f, lang, opts),
   Catalog: ApartamentyCatalog,
+  detail: { Component: ApartmentDetail, metadata: generateApartmentMetadata },
 }

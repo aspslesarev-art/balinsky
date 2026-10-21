@@ -1,4 +1,5 @@
 import type { HubConfig } from '@/lib/hub-page'
+import { VillaDetail, generateVillaMetadata } from './o/[slug]/_detail'
 import { VillasCatalog } from './_catalog'
 import { buildMetadataLoc, loadCatalogPage, type VillaFilterState } from './_lib'
 import { parseCleanPath, stripPagination, buildCanonicalPath } from '@/lib/villa-seo-routes'
@@ -11,4 +12,5 @@ export const villaHub: HubConfig<VillaFilterState> = {
   loadCatalogPage: (f, page, lang) => loadCatalogPage(f, page, lang),
   buildMetadata: (f, lang, opts) => buildMetadataLoc(f, lang, opts),
   Catalog: VillasCatalog,
+  detail: { Component: VillaDetail, metadata: generateVillaMetadata },
 }
