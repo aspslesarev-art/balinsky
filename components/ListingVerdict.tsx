@@ -9,6 +9,7 @@ import { districtRu } from '@/lib/district-ru'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import type { NearbyMatchCard } from '@/lib/investment/snapshot'
+import type { AirbnbComp } from '@/lib/airbnb-nearby'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
@@ -150,6 +151,9 @@ const COPY = {
     tabMonthly: 'Помесячно', tabDaily: 'Посуточно', tabSale: 'Продажа рядом', tabsLabel: 'Что сдают и продают рядом',
     dailyH: 'Сдают посуточно в этом районе',
     occNote: 'Загрузка — по estatemarket.io: доля ночей за месяц, когда этот вариант нельзя было забронировать (бронь или закрыл хозяин); у объекта — средняя по его вариантам.',
+    airbnbLine: (n: number) => `На Airbnb рядом ${n} ${pluralRu(n, ['похожий объект', 'похожих объекта', 'похожих объектов'])}`,
+    airbnbNote: 'Цена на Airbnb — сколько гость платит за ночь вместе со сборами при брони на 5 ночей. Оценка на Booking — из 10, на Airbnb — из 5. Airbnb сдвигает точку на карте, поэтому расстояние до его объектов примерное.',
+    approx: 'около',
     dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
     whoLine: (b: number | null, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} в радиусе ${String(km).replace('.', ',')} км`,
     whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} - район ${d} и радиус ${String(km).replace('.', ',')} км`,
@@ -272,6 +276,9 @@ const COPY = {
     tabMonthly: 'Monthly', tabDaily: 'Nightly', tabSale: 'For sale nearby', tabsLabel: 'Rentals and sales nearby',
     dailyH: 'Rented nightly in this area',
     occNote: 'Occupancy is from estatemarket.io: share of nights in a month this option could not be booked (booked or closed by the owner); for the property, the average across its options.',
+    airbnbLine: (n: number) => `On Airbnb nearby: ${en(n, 'similar place', 'similar places')}`,
+    airbnbNote: 'Airbnb price is what a guest pays per night including fees, for a 5-night stay. Booking rates guests out of 10, Airbnb out of 5. Airbnb shifts map pins, so distances to its listings are approximate.',
+    approx: '~',
     dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
     whoLine: (b: number | null, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} within ${km} km`,
     whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} in ${d} and within ${km} km`,
@@ -510,13 +517,15 @@ function plausibleArea(m2: number | null): number | null {
   return m2 != null && m2 >= 20 ? m2 : null
 }
 
-export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], sale, lang }: {
+export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], airbnbComps = [], sale, lang }: {
   verdict: Verdict
   monthly: MonthlyBundle | null
   bedrooms: number | null
   daily: { count: number; adrUsd: number | null; occupancyPct: number | null } | null
   /** Похожие объекты на Booking (снимок калькулятора) — карточки с фото. */
   dailyComps?: NearbyMatchCard[]
+  /** Соседи на Airbnb с тем же числом спален (lib/airbnb-nearby.ts) — в той же ленте. */
+  airbnbComps?: AirbnbComp[]
   /** Лента «Продаются в этом районе» — третьей вкладкой. */
   sale?: ReactNode
   lang: Lang
@@ -527,7 +536,8 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   const dq = quartiles(dailyComps.map(x => x.adr))
   const dailyKm = dailyComps.length ? Math.max(...dailyComps.map(x => x.distanceKm)) : null
   const tabs: { key: string; label: string; content: ReactNode }[] = []
-  if (dailyComps.length > 0) tabs.push({ key: 'daily', label: c.tabDaily, content: (
+  const aq = quartiles(airbnbComps.map(x => x.priceUsd))
+  if (dailyComps.length > 0 || airbnbComps.length > 0) tabs.push({ key: 'daily', label: c.tabDaily, content: (
         <div>
           {v.demand.monthlyOnly && <p className="mb-2 text-[15px] font-medium text-[var(--color-text)]">{c.dailyHRestricted}</p>}
           {dq && (
@@ -546,10 +556,21 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
               })()}.
             </p>
           )}
+          {airbnbComps.length > 0 && (
+            // Airbnb отдельной строкой: его цена со сборами, в «обычно» Booking не смешиваем.
+            <p className="-mt-2 mb-4 text-[16px] text-[var(--color-text)]">
+              {c.airbnbLine(airbnbComps.length)}{aq ? <>: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={aq.p50} lang={lang} /></span> {c.perNight}</> : ''}.
+            </p>
+          )}
+          {/* Booking и Airbnb одной лентой, от дорогих к дешёвым (владелец 21.10.2026). */}
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
-            {[...dailyComps].sort((a, b) => b.adr - a.adr).slice(0, 12).map(comp => (
+            {[
+              ...[...dailyComps].sort((a, b) => b.adr - a.adr).slice(0, 12).map(comp => ({ price: comp.adr, node: (
               <BookingCompCard
-                key={comp.id}
+                key={`b-${comp.id}`}
+                source="booking"
+                rating={comp.facts?.score ?? null}
+                reviews={comp.facts?.reviewCount ?? null}
                 href={comp.url}
                 photo={comp.facts?.roomPhoto ?? comp.photo}
                 fallbackPhoto={comp.photo}
@@ -564,10 +585,31 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                 propertyOcc={comp.facts?.occ ?? null}
                 lang={lang}
               />
-            ))}
+              ) })),
+              ...airbnbComps.map(comp => ({ price: comp.priceUsd, node: (
+              <BookingCompCard
+                key={`a-${comp.id}`}
+                source="airbnb"
+                rating={comp.rating}
+                reviews={comp.reviews}
+                href={comp.url}
+                photo={comp.photo}
+                priceUsd={comp.priceUsd}
+                name={comp.name}
+                variant={null}
+                bedrooms={comp.bedrooms}
+                areaSqm={null}
+                distance={`${c.approx} ${dec(comp.distanceKm)} ${c.km}`}
+                lang={lang}
+              />
+              ) })),
+            ].sort((a, b) => b.price - a.price).map(x => x.node)}
           </CardRail>
-          {dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null) && (
-            <p className="mt-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">{c.occNote}</p>
+          {(dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null) || airbnbComps.length > 0) && (
+            <p className="mt-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
+              {dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null) ? c.occNote : ''}
+              {airbnbComps.length > 0 ? ` ${c.airbnbNote}` : ''}
+            </p>
           )}
         </div>
   ) })

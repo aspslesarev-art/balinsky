@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BedDouble, Building2, ChartNoAxesColumn, Ruler, Star } from 'lucide-react'
+import { BedDouble, Building2, ChartNoAxesColumn, MessageSquare, Ruler, Star } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { InlinePrice } from './InlinePrice'
@@ -14,8 +14,8 @@ import { InlinePrice } from './InlinePrice'
 // (вариант) и где (объект) → спальни, площадь, расстояние → из чего состоит
 // объект и как загружен целиком → чем отличается от объекта на странице.
 //
-// Та же карточка показывает соседа с Airbnb (21.10.2026): там загрузки пока
-// нет — вместо неё рейтинг и число отзывов, а площадка подписана на фото.
+// Та же карточка показывает соседа с Airbnb (21.10.2026). Вверху на фото —
+// площадка, оценка и отзывы; внизу — загрузка (у Airbnb её пока нет).
 
 export type CompMix = { villas: number; apartments: number; rooms: number }
 
@@ -34,6 +34,7 @@ const COPY = {
     whole: (p: number) => `Весь объект за месяц - ${p}%`,
     reviews: (n: number) => `${n} ${pluralRu(n, ['отзыв', 'отзыва', 'отзывов'])}`,
     newListing: 'Новое',
+    ratingLabel: (r: string) => `Оценка ${r}`,
   },
   en: {
     perNight: 'per night',
@@ -48,8 +49,15 @@ const COPY = {
     whole: (p: number) => `Whole property ${p}% a month`,
     reviews: (n: number) => `${n} review${n === 1 ? '' : 's'}`,
     newListing: 'New',
+    ratingLabel: (r: string) => `Rated ${r}`,
   },
 } as const
+
+/** 4.92 → «4,92», 8.9 → «8,9»: без лишнего нуля, запятая по-русски. */
+function fmtRating(r: number, lang: Lang): string {
+  const s = (Math.round(r * 100) / 100).toString()
+  return lang === 'ru' || lang === 'uk' ? s.replace('.', ',') : s
+}
 
 export function mixTotal(m: CompMix | null | undefined): number {
   return m ? m.villas + m.apartments + m.rooms : 0
@@ -90,7 +98,7 @@ export function BookingCompCard({
   size?: 'sm' | 'md'
   /** Подпись площадки на фото — где лента смешанная. */
   source?: 'booking' | 'airbnb'
-  /** Рейтинг гостей (Airbnb, из 5) — показывается, когда загрузки нет. */
+  /** Оценка гостей как на площадке: Booking из 10, Airbnb из 5. */
   rating?: number | null
   reviews?: number | null
 }) {
@@ -128,20 +136,24 @@ export function BookingCompCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img key={src} src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(f => f + 1)} className="absolute inset-0 h-full w-full object-cover" />
         )}
-        {source && (
-          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-[12px] font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06),0_4px_12px_rgb(0_0_0/.08)]">
-            {source === 'airbnb' ? 'Airbnb' : 'Booking'}
-          </span>
-        )}
-        {badge == null && (rating != null || reviews === 0) && (
-          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-[13px] font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06),0_4px_12px_rgb(0_0_0/.08)]">
+        {/* Вверху слева одной плашкой (владелец 21.10.2026): площадка, оценка
+            со звездой, число отзывов со значком комментария. Booking ставит
+            оценку из 10, Airbnb — из 5: показываем как на площадке. */}
+        {(source || rating != null || reviews === 0) && (
+          <span className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full bg-white/95 px-2.5 py-1 text-[12px] font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06),0_4px_12px_rgb(0_0_0/.08)]">
+            {source && <span>{source === 'airbnb' ? 'Airbnb' : 'Booking'}</span>}
             {rating != null ? (
               <>
-                <Star size={13} aria-hidden className="fill-current" />
-                {lang === 'ru' ? rating.toFixed(2).replace(/0$/, '').replace('.', ',') : rating.toFixed(2).replace(/0$/, '')}
-                {reviews ? <span className="font-normal text-[var(--color-text-muted)]">· {c.reviews(reviews)}</span> : null}
+                <span className="inline-flex items-center gap-0.5" aria-label={c.ratingLabel(fmtRating(rating, lang))}>
+                  {fmtRating(rating, lang)}<Star size={12} aria-hidden className="fill-[#E8A33D] text-[#E8A33D]" />
+                </span>
+                {reviews ? (
+                  <span className="inline-flex items-center gap-1 font-medium text-[var(--color-text-muted)]" aria-label={c.reviews(reviews)}>
+                    <MessageSquare size={12} aria-hidden />{reviews}
+                  </span>
+                ) : null}
               </>
-            ) : c.newListing}
+            ) : reviews === 0 ? <span className="font-medium text-[var(--color-text-muted)]">{c.newListing}</span> : null}
           </span>
         )}
         {badge != null && (

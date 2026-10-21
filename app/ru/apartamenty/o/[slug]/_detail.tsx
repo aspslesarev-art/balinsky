@@ -70,6 +70,7 @@ import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
+import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { curatePhotos } from '@/lib/listing-photos'
@@ -1000,7 +1001,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const parentComplexName = parentComplex?.name ?? null
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
@@ -1012,6 +1013,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
     loadOneUnitDemand('apartment', a.airtable_id, lang).catch(() => null),
     loadVerdictSnapshot(a.airtable_id, 'apartment'),
     loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
+    loadAirbnbNearby(lat, lng, bedrooms),
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
   // зонирования. Переводы пока генерятся только для ЖК, поэтому на
@@ -1338,7 +1340,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {hasDemand && (
           <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
-            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} daily={dailyFacts} />
+            <DemandSummary verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps} daily={dailyFacts} />
             {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
                 по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
           </DataChapter>

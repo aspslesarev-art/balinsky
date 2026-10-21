@@ -377,6 +377,9 @@ export type BookingFacts = {
   /** Загрузка варианта и всего объекта, %. */
   roomOcc: number | null
   occ: number | null
+  /** Оценка гостей на Booking (из 10) и число отзывов — наш сбор booking_occ_properties. */
+  score: number | null
+  reviewCount: number | null
 }
 
 /** slug карточки из ссылки вида booking.com/hotel/id/<slug>.html?… */
@@ -391,10 +394,20 @@ async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatch
   const slugs = cards.map(c => bookingSlug(c.url))
   const req = cards.map((c, i) => ({ slug: slugs[i], bedrooms: c.bedrooms })).filter(r => r.slug)
   if (!req.length) return cards
-  const { data, error } = await sb.rpc('booking_slug_facts', {
-    p_slugs: req.map(r => r.slug),
-    p_bedrooms: req.map(r => r.bedrooms),
-  })
+  const [{ data, error }, reviews] = await Promise.all([
+    sb.rpc('booking_slug_facts', {
+      p_slugs: req.map(r => r.slug),
+      p_bedrooms: req.map(r => r.bedrooms),
+    }),
+    sb.from('booking_occ_properties').select('slug, review_score, review_count').in('slug', req.map(r => r.slug!)),
+  ])
+  if (reviews.error) console.error('[snapshot] booking reviews:', reviews.error.message)
+  const reviewBySlug = new Map<string, { score: number | null; count: number | null }>()
+  for (const r of (reviews.data ?? []) as { slug: string; review_score: number | null; review_count: number | null }[]) {
+    // 0 у Booking = оценки ещё нет.
+    const score = r.review_score == null || Number(r.review_score) <= 0 ? null : Number(r.review_score)
+    reviewBySlug.set(r.slug, { score, count: score == null ? null : Number(r.review_count ?? 0) })
+  }
   if (error) {
     console.error('[snapshot] booking_slug_facts:', error.message)
     return cards
@@ -412,6 +425,8 @@ async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatch
       rooms: num(r.n_rooms) ?? 0,
       roomOcc: num(r.room_occ),
       occ: num(r.occ),
+      score: reviewBySlug.get(String(r.slug))?.score ?? null,
+      reviewCount: reviewBySlug.get(String(r.slug))?.count ?? null,
     })
   }
   return cards.map((c, i) => ({ ...c, facts: (slugs[i] && bySlug.get(slugs[i]!)) || null }))

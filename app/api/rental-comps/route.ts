@@ -143,6 +143,18 @@ export async function GET(req: Request) {
       if (data.length || abnb.length) break
     }
 
+    // Оценка гостей и отзывы Booking — из нашего сбора (booking_occ_properties) по slug.
+    const slugs = (data as Row[]).map(r => r.slug).filter((x): x is string => !!x)
+    const reviewBySlug = new Map<string, { score: number; count: number }>()
+    if (slugs.length) {
+      const { data: rv, error: rvErr } = await sb.from('booking_occ_properties').select('slug, review_score, review_count').in('slug', slugs)
+      if (rvErr) console.error('[rental-comps] reviews:', rvErr.message)
+      for (const r of (rv ?? []) as { slug: string; review_score: number | null; review_count: number | null }[]) {
+        // 0 у Booking = оценки ещё нет.
+        if (r.review_score != null && Number(r.review_score) > 0) reviewBySlug.set(r.slug, { score: Number(r.review_score), count: Number(r.review_count ?? 0) })
+      }
+    }
+
     const booking = (data as Row[]).map(r => ({
       source: 'booking' as const,
       id: String(r.id),
@@ -172,8 +184,8 @@ export async function GET(req: Request) {
         : r.title
           ? `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.title)}`
           : null,
-      rating: null as number | null,
-      reviews: null as number | null,
+      rating: (r.slug ? reviewBySlug.get(r.slug)?.score : undefined) ?? null as number | null,
+      reviews: (r.slug ? reviewBySlug.get(r.slug)?.count : undefined) ?? null as number | null,
     }))
 
     // Airbnb: цена — из выдачи поиска (за ночь со сборами), загрузки пока нет,
