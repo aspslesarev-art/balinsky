@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { formatPriceExact } from '@/lib/currency'
-import { InlinePrice } from '../InlinePrice'
 import { useCurrency } from '../CurrencyContext'
+import { BookingCompCard, type CompMix } from '../BookingCompCard'
 
 // «Что рядом сдают за эти же деньги»: живая подборка объектов Booking в
 // коридоре вокруг ADR, который посетитель выставил ползунком.
@@ -28,9 +28,10 @@ type Item = {
   image: string | null
   /** Конкретный вариант на Booking, чья цена в коридоре («One-Bedroom Villa»). */
   roomType: string | null
-  /** Загрузка по нашему ежедневному сбору Booking и за сколько ночей. */
-  occPct: number | null
-  occNights: number | null
+  /** Загрузка варианта по estatemarket, %; `occupancy` — всего объекта. */
+  roomOcc: number | null
+  roomPhoto: string | null
+  mix: CompMix | null
   url: string | null
 }
 
@@ -47,7 +48,6 @@ const COPY = {
     empty: 'В этом радиусе и в этой цене на Booking пока никого — попробуйте больший радиус или другую ставку.',
     r500: '500 м',
     r1000: '1 км',
-    occ: (n: number, nights: number) => `загрузка ${n}% за ${nights} ${nights % 10 === 1 && nights % 100 !== 11 ? 'ночь' : nights % 10 >= 2 && nights % 10 <= 4 && (nights % 100 < 12 || nights % 100 > 14) ? 'ночи' : 'ночей'}`,
     houseLess: (d: number) => `на ${d} м² меньше вашего дома`,
     houseMore: (d: number) => `на ${d} м² больше вашего дома`,
     houseSame: 'площадь как у вашего дома',
@@ -55,14 +55,9 @@ const COPY = {
     landMore: (d: number, land: number) => `на ${d} м² больше вашего участка (${land} м²)`,
     bedsLess: (d: number) => `на ${d} ${d === 1 ? 'спальню' : d < 5 ? 'спальни' : 'спален'} меньше`,
     bedsMore: (d: number) => `на ${d} ${d === 1 ? 'спальню' : d < 5 ? 'спальни' : 'спален'} больше`,
-    perNight: '/ночь',
     m: 'м',
     km: 'км',
-    beds: (n: number) => (n === 0 ? 'студия' : `${n} ${n === 1 ? 'спальня' : n < 5 ? 'спальни' : 'спален'}`),
-    sqm: 'м²',
-    kinds: { villa: 'вилла', apartment: 'апартаменты', hotel: 'отель', resort: 'резорт',
-             guesthouse: 'гестхаус', house: 'дом', hostel: 'хостел', aparthotel: 'апарт-отель' } as Record<string, string>,
-    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект. Загрузка — наш ежедневный сбор: сколько открытых ночей забронировали. Площадь — как её указал объект; у вилл в неё часто входит участок, поэтому их сравниваем и с вашим домом, и с участком.',
+    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект. Загрузка — по estatemarket.io: доля занятых дат в календаре Booking, в неё входят и даты, закрытые хозяином. Площадь — как её указал объект; у вилл в неё часто входит участок, поэтому их сравниваем и с вашим домом, и с участком.',
     prev: 'Предыдущие объекты',
     next: 'Следующие объекты',
   },
@@ -74,7 +69,6 @@ const COPY = {
     empty: 'Nothing on Booking in this radius at this price — try a wider radius or another rate.',
     r500: '500 m',
     r1000: '1 km',
-    occ: (n: number, nights: number) => `${n}% occupied over ${nights} night${nights === 1 ? '' : 's'}`,
     houseLess: (d: number) => `${d} m² smaller than your house`,
     houseMore: (d: number) => `${d} m² larger than your house`,
     houseSame: 'same size as your house',
@@ -82,14 +76,9 @@ const COPY = {
     landMore: (d: number, land: number) => `${d} m² larger than your plot (${land} m²)`,
     bedsLess: (d: number) => `${d} bedroom${d === 1 ? '' : 's'} fewer`,
     bedsMore: (d: number) => `${d} bedroom${d === 1 ? '' : 's'} more`,
-    perNight: '/night',
     m: 'm',
     km: 'km',
-    beds: (n: number) => (n === 0 ? 'studio' : `${n} BR`),
-    sqm: 'm²',
-    kinds: { villa: 'villa', apartment: 'apartment', hotel: 'hotel', resort: 'resort',
-             guesthouse: 'guesthouse', house: 'house', hostel: 'hostel', aparthotel: 'aparthotel' } as Record<string, string>,
-    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists. Occupancy is our daily tracking: how many open nights got booked. Size is as the property lists it; villas often include the plot, so we compare them with both your house and your plot.',
+    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists. Occupancy is from estatemarket.io: share of booked dates in the Booking calendar, including dates the owner closed. Size is as the property lists it; villas often include the plot, so we compare them with both your house and your plot.',
     prev: 'Previous listings',
     next: 'Next listings',
   },
@@ -128,6 +117,32 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }:
 
   const c = pickCopy(COPY, lang)
   const { currency } = useCurrency()
+
+  // Чем сосед отличается от объекта на странице; good — в пользу объекта.
+  // Номер отеля сравниваем с домом. Вилла на Booking часто указывает площадь
+  // вместе с участком: если её цифра больше нашего дома, сверяем ещё и с
+  // участком, а не пишем, что у соседа «дом больше» (владелец 21.10.2026).
+  function compareWith(it: Item): { text: string; good: boolean; kind?: 'area' | 'beds' }[] {
+    const diffs: { text: string; good: boolean; kind?: 'area' | 'beds' }[] = []
+    if (areaSqm && it.areaSqm != null) {
+      const theirs = Math.round(it.areaSqm)
+      const house = Math.round(areaSqm)
+      const d = theirs - house
+      if (Math.abs(d) <= AREA_SAME_M2) diffs.push({ text: c.houseSame, good: false })
+      else if (d < 0) diffs.push({ text: c.houseLess(-d), good: true })
+      else if (isWholeHome(it) && landSqm) {
+        const land = Math.round(landSqm)
+        const total = Math.max(house, land)
+        if (theirs > total * 1.1) diffs.push({ text: c.landMore(theirs - land, land), good: false })
+        else diffs.push({ text: c.withLand, good: false })
+      } else diffs.push({ text: c.houseMore(d), good: false })
+    }
+    if (bedrooms != null && it.bedrooms != null && it.bedrooms !== bedrooms) {
+      const d = it.bedrooms - bedrooms
+      diffs.push(d < 0 ? { text: c.bedsLess(-d), good: true, kind: 'beds' } : { text: c.bedsMore(d), good: false, kind: 'beds' })
+    }
+    return diffs
+  }
 
   /** Прокрутка на «экран» ленты: чуть меньше её ширины, чтобы край оставался виден. */
   function scrollBy(dir: -1 | 1) {
@@ -192,7 +207,7 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }:
       {loading && items === null && (
         <div className="flex gap-3 overflow-hidden">
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="shrink-0 w-[210px] rounded-xl border border-[var(--color-border)] overflow-hidden">
+            <div key={i} className="shrink-0 w-[240px] rounded-xl border border-[var(--color-border)] overflow-hidden">
               <div className="aspect-[4/3] bg-[var(--color-search-bg)]" />
               <div className="p-2.5 space-y-2">
                 <div className="h-3 rounded bg-[var(--color-search-bg)]" />
@@ -217,83 +232,25 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }:
             className={`flex gap-3 overflow-x-auto snap-x scroll-smooth pb-1 [scrollbar-width:thin] ${loading ? 'opacity-60' : ''}`}
           >
           {items.map(it => (
-            <a
-              key={it.id}
-              href={it.url ?? undefined}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              className="group shrink-0 w-[210px] snap-start rounded-xl border border-[var(--color-border)] overflow-hidden no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] transition-colors"
-            >
-              {/* Фото отдаёт CDN Booking — своего egress не тратим. next/image
-                  здесь не нужен: чужие картинки не оптимизируем. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={it.image ?? ''}
-                alt={it.title ?? ''}
-                loading="lazy"
-                className="block w-full aspect-[4/3] object-cover"
+            <div key={it.id} className="shrink-0 w-[240px] snap-start">
+              <BookingCompCard
+                href={it.url}
+                photo={it.roomPhoto ?? it.image}
+                fallbackPhoto={it.image}
+                priceUsd={it.price}
+                name={it.title ?? ''}
+                variant={it.roomType}
+                bedrooms={it.bedrooms}
+                areaSqm={it.areaSqm}
+                distance={it.distanceM != null ? fmtDistance(it.distanceM, c) : null}
+                mix={it.mix}
+                variantOcc={it.roomOcc}
+                propertyOcc={it.occupancy}
+                compare={compareWith(it)}
+                lang={lang}
+                size="sm"
               />
-              <div className="p-2.5">
-                <div className="text-[13px] font-medium leading-snug line-clamp-2">{it.title}</div>
-                {it.roomType && (
-                  <div className="mt-0.5 text-[11.5px] leading-snug text-[var(--color-text-muted)] line-clamp-2" title={it.roomType}>{it.roomType}</div>
-                )}
-                {/* Состав объекта — то, что делает сравнение честным.
-                    Площадь у Booking заполнена меньше чем у процента
-                    объектов, поэтому показываем её только когда есть. */}
-                <div className="mt-1 text-[11.5px] text-[var(--color-text)]">
-                  {[
-                    it.unitKind ? (c.kinds[it.unitKind] ?? it.unitKind) : null,
-                    it.bedrooms != null ? c.beds(it.bedrooms) : null,
-                    it.areaSqm != null ? `${Math.round(it.areaSqm)} ${c.sqm}` : null,
-                  ].filter(Boolean).join(' · ')}
-                </div>
-                <div className="mt-0.5 text-[11.5px] text-[var(--color-text-muted)]">
-                  {it.distanceM != null && fmtDistance(it.distanceM, c)}
-                </div>
-                {/* Чем сосед отличается от объекта на странице. Зелёным — то,
-                    в чём объект на странице выигрывает. */}
-                {(() => {
-                  const diffs: { text: string; ours: boolean }[] = []
-                  // Номер отеля сравниваем с домом. Вилла на Booking часто
-                  // указывает площадь вместе с участком: если её цифра больше
-                  // нашего дома, сверяем ещё и с участком, а не пишем, что
-                  // у соседа «дом больше» (жалоба владельца 21.10.2026).
-                  if (areaSqm && it.areaSqm != null) {
-                    const theirs = Math.round(it.areaSqm)
-                    const house = Math.round(areaSqm)
-                    const d = theirs - house
-                    if (Math.abs(d) <= AREA_SAME_M2) diffs.push({ text: c.houseSame, ours: false })
-                    else if (d < 0) diffs.push({ text: c.houseLess(-d), ours: true })
-                    else if (isWholeHome(it) && landSqm) {
-                      const land = Math.round(landSqm)
-                      const total = Math.max(house, land)
-                      if (theirs > total * 1.1) diffs.push({ text: c.landMore(theirs - land, land), ours: false })
-                      else diffs.push({ text: c.withLand, ours: false })
-                    } else diffs.push({ text: c.houseMore(d), ours: false })
-                  }
-                  if (bedrooms != null && it.bedrooms != null && it.bedrooms !== bedrooms) {
-                    const d = it.bedrooms - bedrooms
-                    diffs.push(d < 0 ? { text: c.bedsLess(-d), ours: true } : { text: c.bedsMore(d), ours: false })
-                  }
-                  if (diffs.length === 0) return null
-                  return (
-                    <div className="mt-1 space-y-0.5 text-[11.5px] leading-snug">
-                      {diffs.map(x => (
-                        <div key={x.text} className={x.ours ? 'text-[var(--color-primary-pressed)]' : 'text-[var(--color-text-muted)]'}>{x.text}</div>
-                      ))}
-                    </div>
-                  )
-                })()}
-                <div className="mt-1.5 text-[14px] font-semibold text-[var(--color-primary-pressed)]">
-                  {it.price != null && <InlinePrice usd={it.price} lang={lang} />}
-                  <span className="text-[11px] font-normal text-[var(--color-text-muted)]">{c.perNight}</span>
-                </div>
-                {it.occPct != null && it.occNights != null && (
-                  <div className="mt-0.5 text-[11.5px] text-[var(--color-text)]">{c.occ(it.occPct, it.occNights)}</div>
-                )}
-              </div>
-            </a>
+            </div>
           ))}
           </div>
 

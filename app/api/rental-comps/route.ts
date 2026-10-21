@@ -43,8 +43,11 @@ type Row = {
   slug: string | null
   image: string | null
   room_type: string | null
-  occ_pct: number | null
-  occ_nights: number | null
+  room_photo: string | null
+  room_occ: number | null
+  n_villas: number | null
+  n_apts: number | null
+  n_rooms: number | null
 }
 
 function num(v: string | null): number | null {
@@ -116,10 +119,13 @@ export async function GET(req: Request) {
       // Вариант жилья, чья цена попала в коридор (migrations/104): у комплекса
       // однушка и трёхспальная вилла стоят по-разному, сравниваем с конкретной.
       roomType: r.room_type ?? null,
-      // Загрузка по нашему ежедневному сбору (migrations/123); null, если
-      // объект не отслеживается или ночей пока меньше пяти.
-      occPct: r.occ_pct == null ? null : Number(r.occ_pct),
-      occNights: r.occ_nights == null ? null : Number(r.occ_nights),
+      // Загрузка по estatemarket (migrations/126): варианта и всего объекта.
+      roomOcc: r.room_occ == null ? null : Number(r.room_occ),
+      // Фото самого варианта вместо общего кадра объекта, когда оно есть.
+      roomPhoto: r.room_photo ? `https://cf.bstatic.com${r.room_photo}` : null,
+      mix: r.n_villas == null && r.n_apts == null && r.n_rooms == null ? null : {
+        villas: Number(r.n_villas ?? 0), apartments: Number(r.n_apts ?? 0), rooms: Number(r.n_rooms ?? 0),
+      },
       // Все объекты в базе — на Бали, значит код страны в адресе карточки
       // всегда `id` (проверено 21.10.2026). Без slug — поиск по названию.
       url: r.slug

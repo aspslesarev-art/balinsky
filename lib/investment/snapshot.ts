@@ -358,22 +358,25 @@ export type NearbyMatchCard = {
   distanceKm: number
   lat: number
   lng: number
-  /** Что это за объект по нашим данным Booking (migrations/125); null —
-   *  объекта нет в booking_data_cards по slug из ссылки. */
+  /** Что это за объект по данным Booking/estatemarket (migrations/126);
+   *  null — объекта нет в booking_data_cards по slug из ссылки. */
   facts?: BookingFacts | null
 }
 
-/** Состав объекта на Booking и загрузка по нашему ежедневному сбору. */
+/** Состав объекта на Booking, вариант и загрузка по estatemarket. */
 export type BookingFacts = {
   unitKind: string | null
   /** Вариант с тем же числом спален, что у карточки («Two-Bedroom Villa»). */
   roomType: string | null
-  villas: number | null
-  apartments: number | null
-  rooms: number | null
-  roomOccPct: number | null
-  occPct: number | null
-  occNights: number | null
+  /** Фото этого варианта (cf.bstatic.com) — вместо общего кадра объекта. */
+  roomPhoto: string | null
+  roomArea: number | null
+  villas: number
+  apartments: number
+  rooms: number
+  /** Загрузка варианта и всего объекта, %. */
+  roomOcc: number | null
+  occ: number | null
 }
 
 /** slug карточки из ссылки вида booking.com/hotel/id/<slug>.html?… */
@@ -402,12 +405,13 @@ async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatch
     bySlug.set(String(r.slug), {
       unitKind: (r.unit_kind as string | null) ?? null,
       roomType: (r.room_type as string | null) ?? null,
-      villas: num(r.n_villas),
-      apartments: num(r.n_apts),
-      rooms: num(r.n_rooms),
-      roomOccPct: num(r.room_occ_pct),
-      occPct: num(r.occ_pct),
-      occNights: num(r.occ_nights),
+      roomPhoto: r.room_photo ? `https://cf.bstatic.com${r.room_photo}` : null,
+      roomArea: num(r.room_area),
+      villas: num(r.n_villas) ?? 0,
+      apartments: num(r.n_apts) ?? 0,
+      rooms: num(r.n_rooms) ?? 0,
+      roomOcc: num(r.room_occ),
+      occ: num(r.occ),
     })
   }
   return cards.map((c, i) => ({ ...c, facts: (slugs[i] && bySlug.get(slugs[i]!)) || null }))
