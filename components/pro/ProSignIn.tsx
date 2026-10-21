@@ -9,12 +9,24 @@ import { PRO_COPY, legalLinks } from './copy'
 import { ProBackdrop } from './ProBackdrop'
 
 // Окно входа в Balinsky Pro поверх размытой панели аналитики — вариант A
-// из макета, «как у AirDNA» (владелец 21.10.2026). Два пути: Google и код
-// на почту — паролей нет. «Войти» и «Создать аккаунт» — один и тот же
+// из макета, «как у AirDNA» (владелец 21.10.2026). Пути: Telegram (бот шлёт
+// ссылку и 4 цифры) и код на почту — паролей нет. Google временно скрыт
+// (GOOGLE_ENABLED): в Google Cloud ещё не добавлен адрес возврата. «Войти» и «Создать аккаунт» — один и тот же
 // вход, переключатель меняет только заголовок, как у AirDNA.
 // После входа возвращаем туда, откуда пришли (?next), иначе в каталог вилл.
 
 const CODE_LENGTH = 6
+const TG_CODE_LENGTH = 4
+const GOOGLE_ENABLED = false
+
+function TelegramMark() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
+      <circle cx="12" cy="12" r="12" fill="#229ED9" />
+      <path fill="#fff" d="M5.4 11.7l11.1-4.3c.5-.2 1 .1.8.9l-1.9 8.9c-.1.6-.5.8-1 .5l-2.9-2.1-1.4 1.3c-.2.2-.3.3-.6.3l.2-2.9 5.4-4.9c.2-.2 0-.3-.4-.1l-6.6 4.2-2.8-.9c-.6-.2-.6-.6.1-.9z" />
+    </svg>
+  )
+}
 
 function GoogleMark() {
   return (
@@ -44,7 +56,8 @@ export function ProSignIn({ lang, next, browseHref, error, user }: {
   const t = PRO_COPY[lang]
   const legal = legalLinks(lang)
   const [mode, setMode] = useState<'signup' | 'login'>('signup')
-  const [step, setStep] = useState<'choose' | 'email' | 'code'>('choose')
+  const [step, setStep] = useState<'choose' | 'email' | 'code' | 'tg'>('choose')
+  const [tgUrl, setTgUrl] = useState('')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
@@ -85,6 +98,52 @@ export function ProSignIn({ lang, next, browseHref, error, user }: {
       const d = await r.json().catch(() => null)
       if (d?.ok) { window.location.href = after; return }
       setMsg(typeof d?.error === 'string' ? d.error : t.network)
+    } catch {
+      setMsg(t.network)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Вход через Telegram: тот же /api/auth/start, что у кабинета. Бот
+  // присылает ссылку (вернёт на `after` уже со входом) и 4 цифры — их можно
+  // ввести здесь, если ссылка открылась в другом браузере.
+  async function startTelegram() {
+    setBusy(true); setMsg(null)
+    try {
+      const r = await fetch('/api/auth/start', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ path: after }),
+      })
+      const d = await r.json().catch(() => null)
+      if (!r.ok || !d?.url) throw new Error('start')
+      setTgUrl(d.url)
+      setStep('tg')
+      setCode('')
+      // Телефон — той же вкладкой (вторую перехватывает приложение Telegram),
+      // компьютер — новой; заблокировали окно — той же.
+      const touch = window.matchMedia('(pointer: coarse)').matches
+      if (touch || !window.open(d.url, '_blank')) window.location.href = d.url
+    } catch {
+      setMsg(t.tgFailed)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function verifyTelegram(value: string) {
+    setBusy(true); setMsg(null)
+    try {
+      const r = await fetch('/api/auth/code', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ code: value, lang: mailLang }),
+      })
+      const d = await r.json().catch(() => null)
+      if (d?.ok) { window.location.href = after; return }
+      setMsg(typeof d?.error === 'string' ? d.error : t.network)
+      setCode('')
     } catch {
       setMsg(t.network)
     } finally {
@@ -144,7 +203,8 @@ export function ProSignIn({ lang, next, browseHref, error, user }: {
                 <div className="flex flex-col gap-3">
                   {step === 'choose' && (
                     <>
-                      <a href={googleHref} className={BTN}><GoogleMark />{t.google}</a>
+                      {GOOGLE_ENABLED && <a href={googleHref} className={BTN}><GoogleMark />{t.google}</a>}
+                      <button type="button" onClick={startTelegram} disabled={busy} className={BTN}><TelegramMark />{busy ? t.tgOpening : t.telegram}</button>
                       <button type="button" onClick={() => { setStep('email'); setMsg(null) }} className={BTN}>
                         <Mail size={22} strokeWidth={1.75} aria-hidden />{t.email}
                       </button>
@@ -157,8 +217,29 @@ export function ProSignIn({ lang, next, browseHref, error, user }: {
                       <input id="pro-email" type="email" required autoFocus autoComplete="email" inputMode="email"
                         placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} className={INPUT} />
                       <button type="submit" disabled={busy || !email} className={PRIMARY}>{busy ? t.sending : t.send}</button>
-                      <a href={googleHref} className={BTN}><GoogleMark />{t.google}</a>
+                      {GOOGLE_ENABLED
+                        ? <a href={googleHref} className={BTN}><GoogleMark />{t.google}</a>
+                        : <button type="button" onClick={startTelegram} disabled={busy} className={BTN}><TelegramMark />{t.telegram}</button>}
                     </form>
+                  )}
+
+                  {step === 'tg' && (
+                    <div className="flex flex-col gap-3">
+                      <p className="text-center text-[15px] leading-relaxed text-[var(--color-text-muted)]">{t.tgSent}</p>
+                      <label className="sr-only" htmlFor="pro-tg-code">{t.codeLabel}</label>
+                      <input id="pro-tg-code" autoFocus autoComplete="one-time-code" inputMode="numeric"
+                        maxLength={TG_CODE_LENGTH} placeholder="••••" value={code} disabled={busy}
+                        onChange={e => {
+                          const v = e.target.value.replace(/\D/g, '').slice(0, TG_CODE_LENGTH)
+                          setCode(v)
+                          if (v.length === TG_CODE_LENGTH) void verifyTelegram(v)
+                        }}
+                        className={`${INPUT} text-center text-[22px] tracking-[0.4em]`} />
+                      <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[15px] text-[var(--color-text-muted)]">
+                        {tgUrl && <a href={tgUrl} rel="noreferrer" className={LINK}>{t.tgOpen}</a>}
+                        <button type="button" onClick={startTelegram} disabled={busy} className={`${LINK} cursor-pointer`}>{t.tgResend}</button>
+                      </div>
+                    </div>
                   )}
 
                   {step === 'code' && (
