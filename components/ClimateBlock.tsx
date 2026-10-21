@@ -127,29 +127,31 @@ export function ClimateBlock({ climate, air, lang, lat, lng, footer }: Props) {
         </span>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {/* По строке на факт (владелец 21.10.2026): в две колонки «лучшие месяцы»
+          обрезались многоточием. */}
+      <div className="mt-3 flex flex-col gap-2">
         {bestLabel && (
-          <div className="flex min-w-0 items-center gap-1.5">
-            <Sun size={15} className="shrink-0 text-[#F59E0B]" />
+          <div className="flex min-w-0 items-start gap-1.5">
+            <Sun size={15} className="mt-0.5 shrink-0 text-[#F59E0B]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.best}:</span>
-            <span className="truncate text-[13px] font-medium text-[var(--color-text)]">
+            <span className="text-[13px] font-medium text-[var(--color-text)]">
               {bestLabel}
               {bestAvg ? ` · ${bestAvg} ${perMonthPhrase(bestAvg, lang, t.perMonth)}` : ''}
             </span>
           </div>
         )}
         {worstLabel && (
-          <div className="flex min-w-0 items-center gap-1.5">
-            <CloudRain size={15} className="shrink-0 text-[#3B82F6]" />
+          <div className="flex min-w-0 items-start gap-1.5">
+            <CloudRain size={15} className="mt-0.5 shrink-0 text-[#3B82F6]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.worst}:</span>
-            <span className="truncate text-[13px] font-medium text-[var(--color-text)]">{worstLabel}</span>
+            <span className="text-[13px] font-medium text-[var(--color-text)]">{worstLabel}</span>
           </div>
         )}
         {airWord && (
-          <div className="flex min-w-0 items-center gap-1.5">
-            <Wind size={15} className="shrink-0 text-[var(--color-primary)]" />
+          <div className="flex min-w-0 items-start gap-1.5">
+            <Wind size={15} className="mt-0.5 shrink-0 text-[var(--color-primary)]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.air}:</span>
-            <span className="truncate text-[13px] font-medium text-[var(--color-text)]">{airWord}</span>
+            <span className="text-[13px] font-medium text-[var(--color-text)]">{airWord}</span>
           </div>
         )}
       </div>
