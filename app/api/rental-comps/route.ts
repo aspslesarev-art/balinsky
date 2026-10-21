@@ -143,13 +143,18 @@ export async function GET(req: Request) {
       if (data.length || abnb.length) break
     }
 
-    // Оценка гостей и отзывы Booking — из нашего сбора (booking_occ_properties) по slug.
+    // Оценка гостей и отзывы Booking — из нашего сбора по slug: отслеживаемые
+    // объекты (booking_occ_properties) и остальные (booking_property_reviews).
     const slugs = (data as Row[]).map(r => r.slug).filter((x): x is string => !!x)
     const reviewBySlug = new Map<string, { score: number; count: number }>()
     if (slugs.length) {
-      const { data: rv, error: rvErr } = await sb.from('booking_occ_properties').select('slug, review_score, review_count').in('slug', slugs)
-      if (rvErr) console.error('[rental-comps] reviews:', rvErr.message)
-      for (const r of (rv ?? []) as { slug: string; review_score: number | null; review_count: number | null }[]) {
+      const [occ, extra] = await Promise.all([
+        sb.from('booking_occ_properties').select('slug, review_score, review_count').in('slug', slugs),
+        sb.from('booking_property_reviews').select('slug, review_score, review_count').in('slug', slugs),
+      ])
+      if (occ.error) console.error('[rental-comps] reviews:', occ.error.message)
+      if (extra.error) console.error('[rental-comps] extra reviews:', extra.error.message)
+      for (const r of [...(extra.data ?? []), ...(occ.data ?? [])] as { slug: string; review_score: number | null; review_count: number | null }[]) {
         // 0 у Booking = оценки ещё нет.
         if (r.review_score != null && Number(r.review_score) > 0) reviewBySlug.set(r.slug, { score: Number(r.review_score), count: Number(r.review_count ?? 0) })
       }

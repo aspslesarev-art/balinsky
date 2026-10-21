@@ -401,16 +401,20 @@ async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatch
     for (let i = 0; i < 2 && res.error; i++) res = await q()
     return res
   }
-  const [{ data, error }, reviews] = await Promise.all([
+  // Оценка: отслеживаемые объекты (до 40 номеров) и остальные, собранные
+  // facts.mjs --cards в booking_property_reviews (migrations/132).
+  const [{ data, error }, reviews, extraReviews] = await Promise.all([
     retry(() => sb.rpc('booking_slug_facts', {
       p_slugs: req.map(r => r.slug),
       p_bedrooms: req.map(r => r.bedrooms),
     })),
     retry(() => sb.from('booking_occ_properties').select('slug, review_score, review_count').in('slug', req.map(r => r.slug!))),
+    retry(() => sb.from('booking_property_reviews').select('slug, review_score, review_count').in('slug', req.map(r => r.slug!))),
   ])
   if (reviews.error) console.error('[snapshot] booking reviews:', reviews.error.message)
+  if (extraReviews.error) console.error('[snapshot] booking extra reviews:', extraReviews.error.message)
   const reviewBySlug = new Map<string, { score: number | null; count: number | null }>()
-  for (const r of (reviews.data ?? []) as { slug: string; review_score: number | null; review_count: number | null }[]) {
+  for (const r of [...(extraReviews.data ?? []), ...(reviews.data ?? [])] as { slug: string; review_score: number | null; review_count: number | null }[]) {
     // 0 у Booking = оценки ещё нет.
     const score = r.review_score == null || Number(r.review_score) <= 0 ? null : Number(r.review_score)
     reviewBySlug.set(r.slug, { score, count: score == null ? null : Number(r.review_count ?? 0) })
