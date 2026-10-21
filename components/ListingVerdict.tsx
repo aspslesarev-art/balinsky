@@ -154,6 +154,13 @@ const COPY = {
     avg: 'в среднем', range: 'обычно от', from: 'от', occ: (p: number) => `занято около ${p}% ночей`,
     futureT: '', futureBuild: (p: number) => `${p}`, futureData: '',
     prev: 'Назад', next: 'Дальше', open: 'Объявление',
+    mix: (v: number, a: number, r: number) => 'Всего в объекте: ' + [
+      v ? `${v} ${pluralRu(v, ['вилла', 'виллы', 'вилл'])}` : '',
+      a ? `${a} ${pluralRu(a, ['апартаменты', 'апартаментов', 'апартаментов'])}` : '',
+      r ? `${r} ${pluralRu(r, ['номер', 'номера', 'номеров'])}` : '',
+    ].filter(Boolean).join(' · '),
+    occThis: (kind: 'villa' | 'apt' | 'room', p: number) => `${kind === 'villa' ? 'эта вилла занята' : kind === 'apt' ? 'эти апартаменты заняты' : 'этот номер занят'} на ${p}%`,
+    occAll: (p: number, n: number) => `загрузка объекта ${p}% за ${n} ${pluralRu(n, ['ночь', 'ночи', 'ночей'])}`,
     // Деньги
     yTitle: (p: string) => `В среднем объект приносил бы ${p} в год`,
     yLeadMonthly: 'Если сдавать помесячно по средней цене соседей -',
@@ -277,6 +284,13 @@ const COPY = {
     futureBuild: (p: number) => `More competition ahead: the number of buildings around grew by ${p}% in recent years.`,
     futureData: 'Whether demand is rising or falling we will say later: we have been collecting Booking history since August 2026.',
     prev: 'Previous', next: 'Next', open: 'Listing',
+    mix: (v: number, a: number, r: number) => 'Whole property: ' + [
+      v ? `${v} villa${v === 1 ? '' : 's'}` : '',
+      a ? `${a} apartment${a === 1 ? '' : 's'}` : '',
+      r ? `${r} room${r === 1 ? '' : 's'}` : '',
+    ].filter(Boolean).join(' · '),
+    occThis: (kind: 'villa' | 'apt' | 'room', p: number) => `this ${kind === 'villa' ? 'villa' : kind === 'apt' ? 'apartment' : 'room'} ${p}% booked`,
+    occAll: (p: number, n: number) => `property ${p}% booked over ${n} night${n === 1 ? '' : 's'}`,
     yTitle: (p: string) => `On average this property would earn ${p} a year today`,
     yLeadMonthly: 'If you simply rent it out monthly at the neighbours’ typical price -',
     yLeadDaily: 'If you rent it out nightly at the occupancy of similar listings around and a rate in line with neighbours and properties at this price -',
@@ -494,6 +508,24 @@ function quartiles(xs: number[]): { p25: number; p50: number; p75: number } | nu
 
 // «Будет ли спрос?»: что сдают рядом помесячно и посуточно — одной строкой цены
 // и карточками объявлений с фото, без отдельных плиток с теми же цифрами.
+/** Название варианта у соседа: из нашей базы Booking, иначе имя карточки
+ *  (когда у неё отдельно указан комплекс, имя - это и есть вариант). */
+function variant(comp: NearbyMatchCard): string | null {
+  return comp.facts?.roomType ?? (comp.complex ? comp.name : null)
+}
+
+/** Как назвать вариант. Без подсказки в названии - по типу объекта:
+ *  у виллы на Booking это вилла (те же правила, что migrations/125). */
+function variantKind(name: string | null, unitKind: string | null): 'villa' | 'apt' | 'room' {
+  if (name && /villa|house|bungalow|cottage|joglo|chalet|home|вилл|дом/i.test(name)) return 'villa'
+  if (name && /apartment|studio|loft|flat|апартамент|студи/i.test(name)) return 'apt'
+  return unitKind === 'villa' || unitKind === 'house' ? 'villa' : 'room'
+}
+
+function unitTotal(f: NonNullable<NearbyMatchCard['facts']>): number {
+  return (f.villas ?? 0) + (f.apartments ?? 0) + (f.rooms ?? 0)
+}
+
 export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], sale, lang }: {
   verdict: Verdict
   monthly: MonthlyBundle | null
@@ -541,9 +573,23 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                 <span className="flex flex-1 flex-col gap-1 p-5">
                   <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.adr} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perNight}</span></span>
                   <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.complex ?? comp.name}</span>
+                  {/* Какой именно вариант сравниваем: фото часто общее для
+                      комплекса, а цена - за одну конкретную виллу или номер. */}
+                  {variant(comp) && <span className="text-[14px] leading-snug text-[var(--color-text)] line-clamp-2">{variant(comp)}</span>}
                   <span className="text-[14px] text-[var(--color-text-muted)]">
                     {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.rating != null ? `★ ${dec(comp.rating)}` : null, `${dec(comp.distanceKm)} ${c.km}`].filter(Boolean).join(' · ')}
                   </span>
+                  {comp.facts && unitTotal(comp.facts) > 1 && (
+                    <span className="text-[14px] text-[var(--color-text-muted)]">{c.mix(comp.facts.villas ?? 0, comp.facts.apartments ?? 0, comp.facts.rooms ?? 0)}</span>
+                  )}
+                  {comp.facts && (comp.facts.roomOccPct != null || comp.facts.occPct != null) && (
+                    <span className="mt-auto pt-2 text-[14px] text-[var(--color-text)]">
+                      {[
+                        comp.facts.roomOccPct != null && unitTotal(comp.facts) > 1 ? c.occThis(variantKind(variant(comp), comp.facts.unitKind), comp.facts.roomOccPct) : null,
+                        comp.facts.occPct != null && comp.facts.occNights != null ? c.occAll(comp.facts.occPct, comp.facts.occNights) : null,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
                 </span>
               </a>
             ))}

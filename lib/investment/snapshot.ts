@@ -358,6 +358,59 @@ export type NearbyMatchCard = {
   distanceKm: number
   lat: number
   lng: number
+  /** Что это за объект по нашим данным Booking (migrations/125); null —
+   *  объекта нет в booking_data_cards по slug из ссылки. */
+  facts?: BookingFacts | null
+}
+
+/** Состав объекта на Booking и загрузка по нашему ежедневному сбору. */
+export type BookingFacts = {
+  unitKind: string | null
+  /** Вариант с тем же числом спален, что у карточки («Two-Bedroom Villa»). */
+  roomType: string | null
+  villas: number | null
+  apartments: number | null
+  rooms: number | null
+  roomOccPct: number | null
+  occPct: number | null
+  occNights: number | null
+}
+
+/** slug карточки из ссылки вида booking.com/hotel/id/<slug>.html?… */
+function bookingSlug(url: string | null): string | null {
+  const m = url?.match(/booking\.com\/hotel\/[a-z]{2}\/([^./?#]+)/i)
+  return m ? m[1] : null
+}
+
+// Состав и загрузка соседей — одним запросом на всю ленту. Сбой здесь не
+// должен ронять расчёт: карточки просто остаются без этих строк.
+async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatchCard[]> {
+  const slugs = cards.map(c => bookingSlug(c.url))
+  const req = cards.map((c, i) => ({ slug: slugs[i], bedrooms: c.bedrooms })).filter(r => r.slug)
+  if (!req.length) return cards
+  const { data, error } = await sb.rpc('booking_slug_facts', {
+    p_slugs: req.map(r => r.slug),
+    p_bedrooms: req.map(r => r.bedrooms),
+  })
+  if (error) {
+    console.error('[snapshot] booking_slug_facts:', error.message)
+    return cards
+  }
+  const num = (v: unknown) => (v == null ? null : Number(v))
+  const bySlug = new Map<string, BookingFacts>()
+  for (const r of (data ?? []) as Record<string, unknown>[]) {
+    bySlug.set(String(r.slug), {
+      unitKind: (r.unit_kind as string | null) ?? null,
+      roomType: (r.room_type as string | null) ?? null,
+      villas: num(r.n_villas),
+      apartments: num(r.n_apts),
+      rooms: num(r.n_rooms),
+      roomOccPct: num(r.room_occ_pct),
+      occPct: num(r.occ_pct),
+      occNights: num(r.occ_nights),
+    })
+  }
+  return cards.map((c, i) => ({ ...c, facts: (slugs[i] && bySlug.get(slugs[i]!)) || null }))
 }
 
 function detectPool(d: Record<string, unknown>): boolean | null {
@@ -513,7 +566,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const weakPerformance = scenarios != null && scenarios.bad.capRate != null && scenarios.bad.capRate < region.capRateThresholdWeak
   const leaseholdRisk = scenarios != null && (scenarios.bad.leaseholdRisk || scenarios.median.leaseholdRisk)
 
-  const competitors = matchResult.matches.slice(0, 50).map(toCard)
+  const competitors = await attachBookingFacts(matchResult.matches.slice(0, 50).map(toCard))
   const matchIds = new Set(matchResult.matches.map(m => m.id))
   // Группируем все объекты в радиусе по координатам, чтобы не плодить маркеры на одной точке
   const groupedMap = new Map<string, { lat: number; lng: number; adrs: number[]; beds: number[]; ids: string[]; matchAny: boolean }>()
