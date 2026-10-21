@@ -463,6 +463,36 @@ export async function startEmailLogin(rawEmail: unknown, nextPath: unknown, lang
   }
 }
 
+/**
+ * Вход по уже подтверждённой почте (Google): тот же аккаунт, что у входа
+ * кодом на этот адрес. Имя из Google кладём, только если в аккаунте его нет.
+ */
+export async function signInVerifiedEmail(
+  rawEmail: string,
+  firstName: string | null,
+  lastName: string | null,
+): Promise<number | null> {
+  const email = normalizeEmail(rawEmail)
+  if (!email) return null
+  const id = emailUserId(email)
+  try {
+    const { error } = await sb.from('site_users').upsert(
+      { telegram_id: id },
+      { onConflict: 'telegram_id', ignoreDuplicates: true },
+    )
+    if (error) throw new Error(error.message)
+    const now = new Date().toISOString()
+    await sb.from('site_users').update({ last_login_at: now }).eq('telegram_id', id)
+    const clean = (v: string | null) => (v ? v.trim().slice(0, 80) || null : null)
+    if (firstName) await sb.from('site_users').update({ first_name: clean(firstName) }).eq('telegram_id', id).is('first_name', null)
+    if (lastName) await sb.from('site_users').update({ last_name: clean(lastName) }).eq('telegram_id', id).is('last_name', null)
+    return id
+  } catch (e) {
+    console.error('[site-auth] signInVerifiedEmail:', e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
 export type CodeResult =
   | { ok: true; telegramId: number }
   | { ok: false; reason: 'invalid' | 'expired' | 'blocked' | 'pending' }

@@ -122,6 +122,13 @@ export function Header({ active }: { active?: NavKey }) {
           <WishlistHeaderLink />
           <CurrencyToggle />
           <LangSwitch />
+          {/* Вход в Pro-аналитику (владелец 21.10.2026). После входа вернёт на эту же страницу. */}
+          <Link
+            href={`/pro?next=${encodeURIComponent(pathname)}`}
+            className="rounded-full bg-[var(--color-primary)] px-3.5 py-1.5 text-[12px] font-semibold tracking-wide text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            Pro
+          </Link>
         </div>
       </div>
 

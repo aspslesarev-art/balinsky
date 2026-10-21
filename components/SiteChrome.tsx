@@ -37,6 +37,8 @@ export function SiteChrome() {
   // Личный трекер плана — не витрина: ни футера маркетплейса, ни консультанта,
   // ни оверлея правки контента.
   if (pathname === '/plan') return null
+  // Вход в Pro — окно на весь экран поверх размытой аналитики, футер лишний.
+  if (pathname === '/pro') return null
   const lang: Lang = detectLang(pathname)
   return (
     <>
