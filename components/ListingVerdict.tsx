@@ -364,7 +364,7 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
         <ul className="flex flex-col gap-3">
           {cards.map(card => (
             <li key={card.key}>
-              <a href={`#${anchors[card.key]}`} className="flex flex-col gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]">
+              <a href={`#${anchors[card.key]}`} className="bx-auth-link flex flex-col gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]">
                 <span className="flex justify-between gap-3 text-[14px]">
                   <span className="text-[var(--color-text-muted)]">{c.qShort[card.key]}</span>
                   <span className={`font-semibold ${TONE_TEXT[card.tone]}`}>{card.status}</span>

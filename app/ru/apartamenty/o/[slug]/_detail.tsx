@@ -9,7 +9,7 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import {
-  BedDouble, Square, Building2, Calendar, FileCheck2, Lock, MapPin, Plane,
+  BedDouble, Square, Calendar, FileCheck2, Lock, MapPin, Plane,
   ChevronRight, Layers, HardHat, Star,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
@@ -38,7 +38,6 @@ const LandProfileBlock = dynamic(
 )
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
-import { AgentStoriesButton } from '@/components/AgentStoriesButton'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingList } from '@/components/LivingVerdict'
@@ -63,7 +62,6 @@ import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
 import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
-import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { permitLabel } from '@/components/presentation-copy'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
@@ -983,8 +981,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   const seoText = lang !== 'ru' && lang !== 'uk' && seoTextRaw && hasCyrillic(seoTextRaw) ? translitPreserveCase(seoTextRaw) : seoTextRaw
   const kb = await loadKbPageContent('apartment', a.airtable_id, lang)
   // Non-RU: prefer the native-language SEO Text over the RU/EN-only KB body.
-  const pageBodyRaw = lang === 'ru' ? (kb?.body ?? seoText) : (seoText ?? kb?.body ?? null)
-  const pageBody = lang !== 'ru' && lang !== 'uk' && pageBodyRaw && hasCyrillic(pageBodyRaw) ? translitPreserveCase(pageBodyRaw) : pageBodyRaw
   const vision = curated.vision
   const photoAlts = photos.map((_, i) => altFor(vision, i, lang, title))
   // Resale: drop the developer-manager CTA and route the visitor to
@@ -1218,7 +1214,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
-          {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
+          {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
             {bedrooms != null && <span>{bedrooms} BR</span>}
             {area != null && <span>{area} {c.sqm}</span>}
@@ -1237,32 +1233,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               listingSlug={slug}
               listingTitle={title}
               reservedUntil={activeReservation?.expires_at ?? null}
-              presentationButton={
-                <>
-                <VillaPresentationButton
-                  variant="outline"
-                  lang={lang}
-                  villaId={a.airtable_id}
-                  slug={slug}
-                  kind="apartment"
-                  title={title}
-                  district={district}
-                  photos={photos}
-                  priceUsd={priceNum}
-                  pricePerM2={priceM2}
-                  bedrooms={bedrooms}
-                  area={area}
-                  land={null}
-                  yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
-                  lease={lease}
-                  permit={permit}
-                  lat={lat}
-                  lng={lng}
-                  seoText={pageBody}
-                />
-                {lang === 'ru' && <AgentStoriesButton kind="apartment" id={a.airtable_id} />}
-                </>
-              }
+              presentationButton={null}
             />
           )}
         </section>
@@ -1318,6 +1289,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasDemand ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
           ) : null} />
 
+        {/* Разделы аналитики — только для вошедших (.bx-auth-block в globals.css). */}
+        <div className="bx-auth-block">
         <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
           {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
           <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
@@ -1383,59 +1356,11 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             </GatedBlock>
           </DataChapter>
         )}
+        </div>
 
-
-        {(parentComplex || developer || devName) && (
+        {(developer || devName) && (
           <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* COMPLEX (left) */}
-            {parentComplex ? (
-              <Link
-                href={`${complexesRoot}/o/${parentComplex.slug}`}
-                className="group block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors"
-              >
-                {parentComplex.cover_url && (
-                  <div className="relative h-[160px] bg-[var(--color-search-bg)]">
-                    <Image src={parentComplex.cover_url} alt={parentComplexName ?? ''} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
-                  </div>
-                )}
-                <div className="p-5">
-                  <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                    <Building2 size={14} /> {c.complexLabel}
-                  </div>
-                  <div className="text-[19px] font-semibold text-[var(--color-text)] mb-2">{parentComplexName}</div>
-                  {(() => {
-                    const pcDistrict = parentComplex.district ?? parentComplex.district_alt
-                    const pcTypesRaw = Array.isArray(parentComplex.types) ? (parentComplex.types as unknown[]).map(String) : []
-                    const pcYearRaw = parentComplex.year_trail ?? parentComplex.year
-                    const pcStatus = parentComplex.status
-                    const pcUnits = parentComplex.units
-                    const hasMeta = pcDistrict || pcTypesRaw.length || pcYearRaw || pcUnits != null
-                    return hasMeta ? (
-                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--color-text-muted)] mb-4">
-                        {pcDistrict && <span>{pcDistrict}</span>}
-                        {pcTypesRaw.length > 0 && <span>{pcTypesRaw.join(', ')}</span>}
-                        {pcYearRaw && (
-                          <span>{pcStatus?.toLowerCase().includes('построен') ? c.completedShort : c.completion(pcYearRaw)}</span>
-                        )}
-                        {pcUnits != null && <span>{c.units(pcUnits)}</span>}
-                      </div>
-                    ) : null
-                  })()}
-                  <div className="text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                    {c.openComplex} <ChevronRight size={14} />
-                  </div>
-                </div>
-              </Link>
-            ) : (
-              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-5 opacity-60">
-                <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                  <Building2 size={14} /> {c.complexLabel}
-                </div>
-                <div className="text-[15px] text-[var(--color-text-muted)]">{c.sellingSeparately}</div>
-              </div>
-            )}
-
-            {/* DEVELOPER (right) */}
+            {/* Карточку комплекса убрали 21.10.2026 (владелец): остаются застройщик, контакты, видео. */}
             {developer ? (
               <Link
                 href={`${developersRoot}/${developer.slug}`}

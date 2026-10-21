@@ -373,6 +373,24 @@ html[data-auth='1'] .bx-anon-only {
   display: none;
 }
 
+/* Аналитика на страницах вилл и апартаментов — только для вошедших
+   (владелец 21.10.2026). Гостю раздел не показывается вовсе, без размытия
+   и замков: страница должна выглядеть цельной. Разметка та же для всех,
+   поэтому одна ISR-копия и поисковики видят текст. Ссылки итога, которые
+   ведут в скрытые разделы, у гостя не кликаются. */
+.bx-auth-block {
+  display: none;
+}
+
+html[data-auth='1'] .bx-auth-block {
+  display: block;
+}
+
+html:not([data-auth='1']) .bx-auth-link {
+  pointer-events: none;
+  cursor: default;
+}
+
 /* === Headline type ===
    Public pages only (RootShell puts .site on <html>; editors don't get it).
    Page and section titles and the big numbers use Libre Franklin — the
