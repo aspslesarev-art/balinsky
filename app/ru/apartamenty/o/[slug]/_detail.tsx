@@ -1273,6 +1273,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         {/* Аналитика — четыре раздела в одном порядке: место → аренда
             рядом → доходность → участок (как на странице виллы). */}
         {/* «Для дохода / Для жизни»: в режиме «для жизни» — только безопасность и удобство (lib/living.ts). */}
+        {/* Итог «Для дохода / Для жизни» и разделы аналитики — только для вошедших
+            (.bx-auth-block в globals.css); гостю после описания сразу контакты менеджера. */}
+        <div className="bx-auth-block">
         <GoalSwitch lang={lang}
           income={
             <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={null}
@@ -1288,9 +1291,6 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
               anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasDemand ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
           ) : null} />
-
-        {/* Разделы аналитики — только для вошедших (.bx-auth-block в globals.css). */}
-        <div className="bx-auth-block">
         <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
           {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
           <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
@@ -1358,6 +1358,9 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         )}
         </div>
 
+        {/* Карточка застройщика — тоже только для вошедших (владелец 21.10.2026):
+            гостю после описания сразу контакты менеджера. */}
+        <div className="bx-auth-block">
         {(developer || devName) && (
           <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Карточку комплекса убрали 21.10.2026 (владелец): остаются застройщик, контакты, видео. */}
@@ -1407,6 +1410,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
             ) : null}
           </section>
         )}
+        </div>
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} inquiry={{ kind: 'apartment', name: title, complexName: parentComplexName, priceUsd: priceNum }} />}
 
