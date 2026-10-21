@@ -165,6 +165,16 @@ type ManagerCopy = {
   otherMessenger: string
   note: string
 }
+
+// Цвета мессенджеров (владелец 21.10.2026): Telegram — синий, WhatsApp и WeChat —
+// зелёный. Оттенки темнее фирменных (#2AABEE, #25D366): с ними белый текст
+// не дотягивает до контраста 4.5:1; эти дают ~4.8.
+const BTN_TONE = {
+  blue: 'bg-[#1877B8] hover:bg-[#13649B] text-white',
+  green: 'bg-[#15843F] hover:bg-[#106B32] text-white',
+  plain: 'border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[var(--color-text)]',
+} as const
+
 function ManagerRow({
   m,
   lang,
@@ -186,12 +196,12 @@ function ManagerRow({
   const closeLead = useCallback(() => setLead(null), [])
   // В Китае Telegram и WhatsApp заблокированы — на китайской версии первая
   // кнопка WeChat (открывает «Другой» с уже выбранным WeChat).
-  const buttons: { ch: LeadChannel; m?: OtherMessenger; label: string; Icon: typeof Send }[] = [
+  const buttons: { ch: LeadChannel; m?: OtherMessenger; label: string; Icon: typeof Send; tone: keyof typeof BTN_TONE }[] = [
     lang === 'zh'
-      ? { ch: 'other', m: 'WeChat', label: 'WeChat', Icon: MessagesSquare }
-      : { ch: 'telegram', label: 'Telegram', Icon: Send },
-    { ch: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle },
-    { ch: 'other', label: c.otherMessenger, Icon: MessagesSquare },
+      ? { ch: 'other', m: 'WeChat', label: 'WeChat', Icon: MessagesSquare, tone: 'green' }
+      : { ch: 'telegram', label: 'Telegram', Icon: Send, tone: 'blue' },
+    { ch: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle, tone: 'green' },
+    { ch: 'other', label: c.otherMessenger, Icon: MessagesSquare, tone: 'plain' },
   ]
   // Silent fallback to the RU value when an EN counterpart isn't
   // filled in Airtable yet — manager cards already render fine in
@@ -251,7 +261,7 @@ function ManagerRow({
             <Video size={16} /> {c.videoCall}
           </a>
         )}
-        {buttons.map((b, i) => (
+        {buttons.map(b => (
           <button
             key={b.label}
             type="button"
@@ -259,9 +269,7 @@ function ManagerRow({
               setLead({ ch: b.ch, m: b.m })
               reportLeadFormEvent('click', b.ch, { managerId: m.id, managerName: m.name, developerName })
             }}
-            className={i === 0
-              ? 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium transition-colors cursor-pointer'
-              : 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-[var(--color-border)] bg-white hover:bg-[var(--color-search-bg)] text-[var(--color-text)] text-[14px] font-medium transition-colors cursor-pointer'}
+            className={`inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full text-[14px] font-medium transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${BTN_TONE[b.tone]}`}
           >
             <b.Icon size={16} strokeWidth={1.6} /> {b.label}
           </button>
