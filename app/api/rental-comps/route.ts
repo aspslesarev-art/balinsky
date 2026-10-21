@@ -43,6 +43,8 @@ type Row = {
   slug: string | null
   image: string | null
   room_type: string | null
+  occ_pct: number | null
+  occ_nights: number | null
 }
 
 function num(v: string | null): number | null {
@@ -114,12 +116,17 @@ export async function GET(req: Request) {
       // Вариант жилья, чья цена попала в коридор (migrations/104): у комплекса
       // однушка и трёхспальная вилла стоят по-разному, сравниваем с конкретной.
       roomType: r.room_type ?? null,
-      // Прямая ссылка на карточку требует кода страны, которого в данных
-      // нет, — часть ссылок оказалась бы битой. Поиск по названию открывает
-      // тот же объект и не ломается.
-      url: r.title
-        ? `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.title)}`
-        : null,
+      // Загрузка по нашему ежедневному сбору (migrations/123); null, если
+      // объект не отслеживается или ночей пока меньше пяти.
+      occPct: r.occ_pct == null ? null : Number(r.occ_pct),
+      occNights: r.occ_nights == null ? null : Number(r.occ_nights),
+      // Все объекты в базе — на Бали, значит код страны в адресе карточки
+      // всегда `id` (проверено 21.10.2026). Без slug — поиск по названию.
+      url: r.slug
+        ? `https://www.booking.com/hotel/id/${encodeURIComponent(r.slug)}.html`
+        : r.title
+          ? `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.title)}`
+          : null,
     }))
 
     // radius — что спросили, usedRadius — где на самом деле нашлось.

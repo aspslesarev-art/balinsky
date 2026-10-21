@@ -28,6 +28,9 @@ type Item = {
   image: string | null
   /** Конкретный вариант на Booking, чья цена в коридоре («One-Bedroom Villa»). */
   roomType: string | null
+  /** Загрузка по нашему ежедневному сбору Booking и за сколько ночей. */
+  occPct: number | null
+  occNights: number | null
   url: string | null
 }
 
@@ -44,7 +47,12 @@ const COPY = {
     empty: 'В этом радиусе и в этой цене на Booking пока никого — попробуйте больший радиус или другую ставку.',
     r500: '500 м',
     r1000: '1 км',
-    occ: (n: number) => `загрузка ${n}%`,
+    occ: (n: number, nights: number) => `загрузка ${n}% за ${nights} ${nights % 10 === 1 && nights % 100 !== 11 ? 'ночь' : nights % 10 >= 2 && nights % 10 <= 4 && (nights % 100 < 12 || nights % 100 > 14) ? 'ночи' : 'ночей'}`,
+    areaLess: (d: number) => `на ${d} м² меньше вашей`,
+    areaMore: (d: number) => `на ${d} м² больше вашей`,
+    areaSame: 'площадь как у вашей',
+    bedsLess: (d: number) => `на ${d} ${d === 1 ? 'спальню' : d < 5 ? 'спальни' : 'спален'} меньше`,
+    bedsMore: (d: number) => `на ${d} ${d === 1 ? 'спальню' : d < 5 ? 'спальни' : 'спален'} больше`,
     perNight: '/ночь',
     m: 'м',
     km: 'км',
@@ -52,7 +60,7 @@ const COPY = {
     sqm: 'м²',
     kinds: { villa: 'вилла', apartment: 'апартаменты', hotel: 'отель', resort: 'резорт',
              guesthouse: 'гестхаус', house: 'дом', hostel: 'хостел', aparthotel: 'апарт-отель' } as Record<string, string>,
-    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект.',
+    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект. Загрузка — наш ежедневный сбор: сколько открытых ночей забронировали.',
     prev: 'Предыдущие объекты',
     next: 'Следующие объекты',
   },
@@ -64,7 +72,12 @@ const COPY = {
     empty: 'Nothing on Booking in this radius at this price — try a wider radius or another rate.',
     r500: '500 m',
     r1000: '1 km',
-    occ: (n: number) => `${n}% occupancy`,
+    occ: (n: number, nights: number) => `${n}% occupied over ${nights} night${nights === 1 ? '' : 's'}`,
+    areaLess: (d: number) => `${d} m² smaller than yours`,
+    areaMore: (d: number) => `${d} m² larger than yours`,
+    areaSame: 'same size as yours',
+    bedsLess: (d: number) => `${d} bedroom${d === 1 ? '' : 's'} fewer`,
+    bedsMore: (d: number) => `${d} bedroom${d === 1 ? '' : 's'} more`,
     perNight: '/night',
     m: 'm',
     km: 'km',
@@ -72,7 +85,7 @@ const COPY = {
     sqm: 'm²',
     kinds: { villa: 'villa', apartment: 'apartment', hotel: 'hotel', resort: 'resort',
              guesthouse: 'guesthouse', house: 'house', hostel: 'hostel', aparthotel: 'aparthotel' } as Record<string, string>,
-    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists.',
+    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists. Occupancy is our daily tracking: how many open nights got booked.',
     prev: 'Previous listings',
     next: 'Next listings',
   },
@@ -82,8 +95,18 @@ function fmtDistance(m: number, c: { m: string; km: string }): string {
   return m < 950 ? `${Math.round(m / 10) * 10} ${c.m}` : `${(m / 1000).toFixed(1)} ${c.km}`
 }
 
-export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number; adr: number; lang: Lang }) {
-  const [radius, setRadius] = useState<number>(500)
+/** Сравнение с объектом на странице: площадь в пределах ±5 м² считаем равной. */
+const AREA_SAME_M2 = 5
+
+export function RentalComps({ lat, lng, adr, lang, areaSqm, bedrooms }: {
+  lat: number; lng: number; adr: number; lang: Lang
+  /** Площадь и спальни объекта на странице — с ними сравниваем соседей. */
+  areaSqm?: number | null
+  bedrooms?: number | null
+}) {
+  // По умолчанию километр: в 500 м и в коридоре ставки часто один-два
+  // объекта, а по ним рынок не понять (просьба владельца 21.10.2026).
+  const [radius, setRadius] = useState<number>(1000)
   const [items, setItems] = useState<Item[] | null>(null)
   // В каком радиусе объекты в итоге нашлись: в разреженных районах API
   // расширяет поиск сам, и промолчать об этом нельзя — на переключателе
@@ -218,10 +241,35 @@ export function RentalComps({ lat, lng, adr, lang }: { lat: number; lng: number;
                 <div className="mt-0.5 text-[11.5px] text-[var(--color-text-muted)]">
                   {it.distanceM != null && fmtDistance(it.distanceM, c)}
                 </div>
+                {/* Чем сосед отличается от объекта на странице. Зелёным — то,
+                    в чём объект на странице выигрывает. */}
+                {(() => {
+                  const diffs: { text: string; ours: boolean }[] = []
+                  if (areaSqm && it.areaSqm != null) {
+                    const d = Math.round(it.areaSqm - areaSqm)
+                    if (Math.abs(d) <= AREA_SAME_M2) diffs.push({ text: c.areaSame, ours: false })
+                    else diffs.push(d < 0 ? { text: c.areaLess(-d), ours: true } : { text: c.areaMore(d), ours: false })
+                  }
+                  if (bedrooms != null && it.bedrooms != null && it.bedrooms !== bedrooms) {
+                    const d = it.bedrooms - bedrooms
+                    diffs.push(d < 0 ? { text: c.bedsLess(-d), ours: true } : { text: c.bedsMore(d), ours: false })
+                  }
+                  if (diffs.length === 0) return null
+                  return (
+                    <div className="mt-1 space-y-0.5 text-[11.5px] leading-snug">
+                      {diffs.map(x => (
+                        <div key={x.text} className={x.ours ? 'text-[var(--color-primary-pressed)]' : 'text-[var(--color-text-muted)]'}>{x.text}</div>
+                      ))}
+                    </div>
+                  )
+                })()}
                 <div className="mt-1.5 text-[14px] font-semibold text-[var(--color-primary-pressed)]">
                   {it.price != null && <InlinePrice usd={it.price} lang={lang} />}
                   <span className="text-[11px] font-normal text-[var(--color-text-muted)]">{c.perNight}</span>
                 </div>
+                {it.occPct != null && it.occNights != null && (
+                  <div className="mt-0.5 text-[11.5px] text-[var(--color-text)]">{c.occ(it.occPct, it.occNights)}</div>
+                )}
               </div>
             </a>
           ))}
