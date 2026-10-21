@@ -515,3 +515,18 @@ html.js-reveal [data-reveal].is-in {
    доходность прячутся, пока выбран этот режим. */
 html[data-goal="live"] #arenda,
 html[data-goal="live"] #dokhodnost { display: none; }
+
+/* Ветер у дома (components/WindRose.tsx): стрелки плывут по направлению
+   ветра и гаснут. Только transform и opacity; линейно — бесконечный цикл. */
+@keyframes bx-wind-flow {
+  0% { transform: translate(calc(var(--wdx) * -1), calc(var(--wdy) * -1)); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(var(--wdx), var(--wdy)); opacity: 0; }
+}
+.bx-wind-streak {
+  animation: bx-wind-flow 3.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bx-wind-streak { animation: none; }
+}
