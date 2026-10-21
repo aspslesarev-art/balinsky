@@ -121,6 +121,10 @@ export function BookingCompCard({
     distance,
   ].filter(Boolean)
   const pad = size === 'sm' ? 'p-3' : 'p-4'
+  // 0 в старых данных Booking = оценки нет. «Новое» — только у Airbnb: там
+  // ноль отзывов значит новое объявление, у Booking — просто нет данных.
+  const score = rating != null && rating > 0 ? rating : null
+  const isNew = score == null && reviews === 0 && source === 'airbnb'
 
   return (
     <a
@@ -139,13 +143,13 @@ export function BookingCompCard({
         {/* Вверху слева одной плашкой (владелец 21.10.2026): площадка, оценка
             со звездой, число отзывов со значком комментария. Booking ставит
             оценку из 10, Airbnb — из 5: показываем как на площадке. */}
-        {(source || rating != null || reviews === 0) && (
+        {(source || score != null || isNew) && (
           <span className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full bg-white/95 px-2.5 py-1 text-[12px] font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06),0_4px_12px_rgb(0_0_0/.08)]">
             {source && <span>{source === 'airbnb' ? 'Airbnb' : 'Booking'}</span>}
-            {rating != null ? (
+            {score != null ? (
               <>
-                <span className="inline-flex items-center gap-0.5" aria-label={c.ratingLabel(fmtRating(rating, lang))}>
-                  {fmtRating(rating, lang)}<Star size={12} aria-hidden className="fill-[#E8A33D] text-[#E8A33D]" />
+                <span className="inline-flex items-center gap-0.5" aria-label={c.ratingLabel(fmtRating(score, lang))}>
+                  {fmtRating(score, lang)}<Star size={12} aria-hidden className="fill-[#E8A33D] text-[#E8A33D]" />
                 </span>
                 {reviews ? (
                   <span className="inline-flex items-center gap-1 font-medium text-[var(--color-text-muted)]" aria-label={c.reviews(reviews)}>
@@ -153,7 +157,7 @@ export function BookingCompCard({
                   </span>
                 ) : null}
               </>
-            ) : reviews === 0 ? <span className="font-medium text-[var(--color-text-muted)]">{c.newListing}</span> : null}
+            ) : isNew ? <span className="font-medium text-[var(--color-text-muted)]">{c.newListing}</span> : null}
           </span>
         )}
         {badge != null && (

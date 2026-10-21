@@ -394,12 +394,19 @@ async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatch
   const slugs = cards.map(c => bookingSlug(c.url))
   const req = cards.map((c, i) => ({ slug: slugs[i], bedrooms: c.bedrooms })).filter(r => r.slug)
   if (!req.length) return cards
+  // Сеть до Supabase иногда рвётся («fetch failed»), а снимок кешируется на
+  // сутки — без повтора соседи сутки висели без загрузки и оценки (21.10.2026).
+  const retry = async <T extends { error: unknown }>(q: () => PromiseLike<T>): Promise<T> => {
+    let res = await q()
+    for (let i = 0; i < 2 && res.error; i++) res = await q()
+    return res
+  }
   const [{ data, error }, reviews] = await Promise.all([
-    sb.rpc('booking_slug_facts', {
+    retry(() => sb.rpc('booking_slug_facts', {
       p_slugs: req.map(r => r.slug),
       p_bedrooms: req.map(r => r.bedrooms),
-    }),
-    sb.from('booking_occ_properties').select('slug, review_score, review_count').in('slug', req.map(r => r.slug!)),
+    })),
+    retry(() => sb.from('booking_occ_properties').select('slug, review_score, review_count').in('slug', req.map(r => r.slug!))),
   ])
   if (reviews.error) console.error('[snapshot] booking reviews:', reviews.error.message)
   const reviewBySlug = new Map<string, { score: number | null; count: number | null }>()
@@ -408,9 +415,15 @@ async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatch
     const score = r.review_score == null || Number(r.review_score) <= 0 ? null : Number(r.review_score)
     reviewBySlug.set(r.slug, { score, count: score == null ? null : Number(r.review_count ?? 0) })
   }
+  // Оценка — на самой карточке (Booking, из 10), чтобы не пропадала вместе с
+  // составом и загрузкой, если booking_slug_facts не ответил.
+  const withReviews = cards.map((c, i) => {
+    const rv = slugs[i] ? reviewBySlug.get(slugs[i]!) : undefined
+    return rv?.score != null ? { ...c, rating: rv.score, reviews: rv.count } : c
+  })
   if (error) {
     console.error('[snapshot] booking_slug_facts:', error.message)
-    return cards
+    return withReviews
   }
   const num = (v: unknown) => (v == null ? null : Number(v))
   const bySlug = new Map<string, BookingFacts>()
@@ -429,7 +442,7 @@ async function attachBookingFacts(cards: NearbyMatchCard[]): Promise<NearbyMatch
       reviewCount: reviewBySlug.get(String(r.slug))?.count ?? null,
     })
   }
-  return cards.map((c, i) => ({ ...c, facts: (slugs[i] && bySlug.get(slugs[i]!)) || null }))
+  return withReviews.map((c, i) => ({ ...c, facts: (slugs[i] && bySlug.get(slugs[i]!)) || null }))
 }
 
 function detectPool(d: Record<string, unknown>): boolean | null {

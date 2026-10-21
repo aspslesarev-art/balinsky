@@ -569,8 +569,8 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
               <BookingCompCard
                 key={`b-${comp.id}`}
                 source="booking"
-                rating={comp.facts?.score ?? null}
-                reviews={comp.facts?.reviewCount ?? null}
+                rating={comp.facts?.score ?? comp.rating ?? null}
+                reviews={comp.facts?.reviewCount ?? comp.reviews ?? null}
                 href={comp.url}
                 photo={comp.facts?.roomPhoto ?? comp.photo}
                 fallbackPhoto={comp.photo}
