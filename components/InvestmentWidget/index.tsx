@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { InfoTip } from '../InfoTip'
 import { RentalComps } from './RentalComps'
 import { Slider, ResetButton } from './Slider'
 import { MonthlyCalculator } from './MonthlyCalculator'
@@ -1178,11 +1179,14 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
 
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        {/* Как считаем — под значком i (владелец 22.10.2026). */}
+        <div className="flex items-center gap-1">
+          <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.calcTitle}</div>
+          <InfoTip label={lang === 'ru' ? 'Как считаем' : 'How we calculate'} align="start">{t.calcSub}</InfoTip>
+        </div>
         <ResetButton onClick={reset} lang={lang} show={changed} />
       </div>
-      <div className="mt-2 mb-8 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{t.calcSub}</div>
 
       {/* Сначала себестоимость, потом доходность — от тех же ползунков ниже. */}
       <NightCost snap={snap} lang={lang} live={{ price, rate: adr, load: occ / 100 }} embedded />

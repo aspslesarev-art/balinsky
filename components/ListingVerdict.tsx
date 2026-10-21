@@ -4,6 +4,7 @@
 import type { ReactNode } from 'react'
 import { DemandTabs } from './DemandTabs'
 import { BookingCompCard } from './BookingCompCard'
+import { InfoTip } from './InfoTip'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { districtRu } from '@/lib/district-ru'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
@@ -154,6 +155,7 @@ const COPY = {
     airbnbLine: (n: number) => `На Airbnb рядом ${n} ${pluralRu(n, ['похожий объект', 'похожих объекта', 'похожих объектов'])}`,
     airbnbNote: 'Цена на Airbnb — сколько гость платит за ночь вместе со сборами при брони на 5 ночей. Оценка на Booking — из 10, на Airbnb — из 5. Airbnb сдвигает точку на карте, поэтому расстояние до его объектов примерное.',
     approx: 'около',
+    infoLabel: 'Откуда эти цифры',
     dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
     whoLine: (b: number | null, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} в радиусе ${String(km).replace('.', ',')} км`,
     whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} - район ${d} и радиус ${String(km).replace('.', ',')} км`,
@@ -279,6 +281,7 @@ const COPY = {
     airbnbLine: (n: number) => `On Airbnb nearby: ${en(n, 'similar place', 'similar places')}`,
     airbnbNote: 'Airbnb price is what a guest pays per night including fees, for a 5-night stay. Booking rates guests out of 10, Airbnb out of 5. Airbnb shifts map pins, so distances to its listings are approximate.',
     approx: '~',
+    infoLabel: 'Where these numbers come from',
     dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
     whoLine: (b: number | null, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} within ${km} km`,
     whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} in ${d} and within ${km} km`,
@@ -537,17 +540,21 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   const dailyKm = dailyComps.length ? Math.max(...dailyComps.map(x => x.distanceKm)) : null
   const tabs: { key: string; label: string; content: ReactNode }[] = []
   const aq = quartiles(airbnbComps.map(x => x.priceUsd))
+  const hasOcc = dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null)
   if (dailyComps.length > 0 || airbnbComps.length > 0) tabs.push({ key: 'daily', label: c.tabDaily, content: (
         <div>
           {v.demand.monthlyOnly && <p className="mb-2 text-[15px] font-medium text-[var(--color-text)]">{c.dailyHRestricted}</p>}
+          {/* Сводка слева, пояснение «откуда цифры» — под значком i справа (владелец 22.10.2026). */}
+          <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-2">
           {dq && (
-            <p className="mb-4 text-[16px] text-[var(--color-text)]">
+            <p className="text-[16px] text-[var(--color-text)]">
               {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={dq.p50} lang={lang} /></span> {c.perNight}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={dq.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={dq.p75} lang={lang} approx={false} /></span>.
             </p>
           )}
           {!dq && dailyComps.length > 0 && (
             // Меньше трёх соседей — без «в среднем», просто цены как есть.
-            <p className="mb-4 text-[16px] text-[var(--color-text)]">
+            <p className="text-[16px] text-[var(--color-text)]">
               {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {(() => {
                 const ps = dailyComps.map(x => x.adr).filter(x => x > 0).sort((a, b) => a - b)
                 return ps.length > 1 && ps[0] !== ps[ps.length - 1]
@@ -558,10 +565,17 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
           )}
           {airbnbComps.length > 0 && (
             // Airbnb отдельной строкой: его цена со сборами, в «обычно» Booking не смешиваем.
-            <p className="-mt-2 mb-4 text-[16px] text-[var(--color-text)]">
+            <p className="text-[16px] text-[var(--color-text)]">
               {c.airbnbLine(airbnbComps.length)}{aq ? <>: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={aq.p50} lang={lang} /></span> {c.perNight}</> : ''}.
             </p>
           )}
+          </div>
+          {(hasOcc || airbnbComps.length > 0) && (
+            <InfoTip label={c.infoLabel}>
+              {[hasOcc ? c.occNote : '', airbnbComps.length > 0 ? c.airbnbNote : ''].filter(Boolean).join(' ')}
+            </InfoTip>
+          )}
+          </div>
           {/* Booking и Airbnb одной лентой, от дорогих к дешёвым (владелец 21.10.2026). */}
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
             {[
@@ -605,12 +619,6 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
               ) })),
             ].sort((a, b) => b.price - a.price).map(x => x.node)}
           </CardRail>
-          {(dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null) || airbnbComps.length > 0) && (
-            <p className="mt-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-              {dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null) ? c.occNote : ''}
-              {airbnbComps.length > 0 ? ` ${c.airbnbNote}` : ''}
-            </p>
-          )}
         </div>
   ) })
   if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (

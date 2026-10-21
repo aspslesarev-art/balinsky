@@ -6,6 +6,7 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 import { formatPriceExact } from '@/lib/currency'
 import { useCurrency } from '../CurrencyContext'
 import { BookingCompCard, type CompMix } from '../BookingCompCard'
+import { InfoTip } from '../InfoTip'
 
 // «Что рядом сдают за эти же деньги»: живая подборка объектов Booking в
 // коридоре вокруг ADR, который посетитель выставил ползунком.
@@ -66,6 +67,7 @@ const COPY = {
     m: 'м',
     km: 'км',
     approx: 'около',
+    infoLabel: 'Откуда данные',
     source: 'Данные Booking и Airbnb, обновляются ежедневно. Цена на Booking — ставка за ночь, которую выставляет объект; на Airbnb — сколько гость платит за ночь вместе со сборами, при брони на 5 ночей. Загрузка Booking — по estatemarket.io: доля ночей за месяц, когда этот вариант нельзя было забронировать (бронь или закрыл хозяин); у объекта — средняя по его вариантам. Загрузку Airbnb мы собираем с 20.10.2026 и покажем, когда наберётся месяц; пока — рейтинг гостей. Airbnb сдвигает точку на карте, поэтому расстояние до его объектов примерное. Площадь — как её указал объект; у вилл в неё часто входит участок, поэтому их сравниваем и с вашим домом, и с участком.',
     prev: 'Предыдущие объекты',
     next: 'Следующие объекты',
@@ -88,6 +90,7 @@ const COPY = {
     m: 'm',
     km: 'km',
     approx: '~',
+    infoLabel: 'About this data',
     source: 'Booking and Airbnb data, refreshed daily. Booking price is the nightly rate each property lists; Airbnb price is what a guest pays per night including fees, for a 5-night stay. Booking occupancy is from estatemarket.io: share of nights in a month this option could not be booked (booked or closed by the owner); for the property, the average across its options. We have tracked Airbnb occupancy since 20 Oct 2026 and will show it once a month of data builds up; until then, the guest rating. Airbnb shifts map pins, so distances to its listings are approximate. Size is as the property lists it; villas often include the plot, so we compare them with both your house and your plot.',
     prev: 'Previous listings',
     next: 'Next listings',
@@ -192,7 +195,11 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }:
   return (
     <div className="mt-10 border-t border-[var(--color-border)] pt-8">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
-        <div className="text-[12px] uppercase tracking-wide font-semibold text-[var(--color-text)]">{c.title}</div>
+        {/* Пояснение «откуда данные» — под значком i (владелец 22.10.2026). */}
+        <div className="flex items-center gap-1">
+          <div className="text-[12px] uppercase tracking-wide font-semibold text-[var(--color-text)]">{c.title}</div>
+          <InfoTip label={c.infoLabel} align="start">{c.source}</InfoTip>
+        </div>
         <div className="flex gap-1.5">
           {RADII.map(r => (
             <button
@@ -290,7 +297,6 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }:
         </div>
       )}
 
-      <div className="mt-3 text-[11.5px] text-[var(--color-text-muted)]">{c.source}</div>
     </div>
   )
 }
