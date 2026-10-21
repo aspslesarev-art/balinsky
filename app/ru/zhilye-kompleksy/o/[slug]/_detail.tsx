@@ -65,7 +65,7 @@ import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
 import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
-import { loadComplexAccess, loadGeoFacts } from '@/lib/complex-access'
+import { loadComplexAccess, loadGeoFacts, type RouteLeg } from '@/lib/complex-access'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
 import { PlotSiteBlock, plotChapterHint } from '@/components/PlotSiteBlock'
@@ -109,6 +109,18 @@ function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang):
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
   if (lang !== 'ru') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
   return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0).replace(".", ",")} км`
+}
+
+// Маршрут Google (дорога, без пробок и в пробку) точнее прямой: у BIOM по
+// прямой 15 км, а ехать 27 км и больше часа. Прямая — только если маршрута нет.
+function fmtAirportRoute(leg: RouteLeg | undefined, lang: Lang): string | null {
+  if (!leg?.m || !leg.s) return null
+  const km = Math.round(leg.m / 1000)
+  const peak = Math.round(leg.s / 60)
+  const free = leg.static_s ? Math.round(leg.static_s / 60) : null
+  // Неразрывные пробелы и склейка у тире: на телефоне строка не рвётся внутри «65–74 мин».
+  const min = free != null && free < peak ? `${free}\u2060–\u2060${peak}` : String(peak)
+  return lang === 'ru' ? `${km}\u00a0км · ${min}\u00a0мин` : `${km}\u00a0km · ${min}\u00a0min`
 }
 
 const COPY = {
@@ -1597,6 +1609,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const gmap = firstString(d['Link from Google maps on location'] ?? d['Google maps'] ?? d['Google map'])
 
   // Key facts
+  const airportFact = fmtAirportRoute(geoFacts?.routes?.airport, lang) ?? fmtAirportDistance(lat, lng, lang)
   const facts: { Icon: typeof Building2; label: string; value: string }[] = [
     types.length > 0 && { Icon: Home, label: copy.factType, value: types.join(', ') },
     yearRaw && { Icon: Calendar, label: copy.factCompletion, value: status?.toLowerCase().includes('построен') ? copy.factCompletionDone : yearRaw },
@@ -1604,7 +1617,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     lease && { Icon: Lock, label: copy.factLeasehold, value: copy.factLeaseValue(lease) },
     totalUnits != null && { Icon: BedDouble, label: copy.factUnits, value: String(totalUnits) },
     district && { Icon: MapPin, label: copy.factDistrict, value: district },
-    fmtAirportDistance(lat, lng, lang) && { Icon: Plane, label: copy.factAirport, value: fmtAirportDistance(lat, lng, lang)! },
+    airportFact && { Icon: Plane, label: copy.factAirport, value: airportFact },
   ].filter(Boolean) as { Icon: typeof Building2; label: string; value: string }[]
 
   const ready = readiness(d)
