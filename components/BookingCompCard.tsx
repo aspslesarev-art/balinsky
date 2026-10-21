@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BedDouble, Building2, ChartNoAxesColumn, Ruler } from 'lucide-react'
+import { BedDouble, Building2, ChartNoAxesColumn, Ruler, Star } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { InlinePrice } from './InlinePrice'
@@ -13,6 +13,9 @@ import { InlinePrice } from './InlinePrice'
 // фото именно этого варианта с загрузкой поверх → цена за ночь → что это
 // (вариант) и где (объект) → спальни, площадь, расстояние → из чего состоит
 // объект и как загружен целиком → чем отличается от объекта на странице.
+//
+// Та же карточка показывает соседа с Airbnb (21.10.2026): там загрузки пока
+// нет — вместо неё рейтинг и число отзывов, а площадка подписана на фото.
 
 export type CompMix = { villas: number; apartments: number; rooms: number }
 
@@ -29,6 +32,8 @@ const COPY = {
       m.rooms ? `${m.rooms} ${pluralRu(m.rooms, ['номер', 'номера', 'номеров'])}` : '',
     ].filter(Boolean).join(', '),
     whole: (p: number) => `Весь объект за месяц - ${p}%`,
+    reviews: (n: number) => `${n} ${pluralRu(n, ['отзыв', 'отзыва', 'отзывов'])}`,
+    newListing: 'Новое',
   },
   en: {
     perNight: 'per night',
@@ -41,6 +46,8 @@ const COPY = {
       m.rooms ? `${m.rooms} room${m.rooms === 1 ? '' : 's'}` : '',
     ].filter(Boolean).join(', '),
     whole: (p: number) => `Whole property ${p}% a month`,
+    reviews: (n: number) => `${n} review${n === 1 ? '' : 's'}`,
+    newListing: 'New',
   },
 } as const
 
@@ -58,6 +65,7 @@ function occColor(p: number): string {
 export function BookingCompCard({
   href, photo, fallbackPhoto, priceUsd, name, variant, bedrooms, areaSqm, distance,
   mix, variantOcc, propertyOcc, compare = [], lang, size = 'md',
+  source, rating, reviews,
 }: {
   href: string | null
   photo: string | null
@@ -80,6 +88,11 @@ export function BookingCompCard({
   compare?: { text: string; good: boolean; kind?: 'area' | 'beds' }[]
   lang: Lang
   size?: 'sm' | 'md'
+  /** Подпись площадки на фото — где лента смешанная. */
+  source?: 'booking' | 'airbnb'
+  /** Рейтинг гостей (Airbnb, из 5) — показывается, когда загрузки нет. */
+  rating?: number | null
+  reviews?: number | null
 }) {
   const c = pickCopy(COPY, lang)
   // Ссылки на фото у Booking со временем умирают: тогда пробуем запасное,
@@ -114,6 +127,22 @@ export function BookingCompCard({
           // картинки не оптимизируем.
           // eslint-disable-next-line @next/next/no-img-element
           <img key={src} src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(f => f + 1)} className="absolute inset-0 h-full w-full object-cover" />
+        )}
+        {source && (
+          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-[12px] font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06),0_4px_12px_rgb(0_0_0/.08)]">
+            {source === 'airbnb' ? 'Airbnb' : 'Booking'}
+          </span>
+        )}
+        {badge == null && (rating != null || reviews === 0) && (
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-[13px] font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06),0_4px_12px_rgb(0_0_0/.08)]">
+            {rating != null ? (
+              <>
+                <Star size={13} aria-hidden className="fill-current" />
+                {lang === 'ru' ? rating.toFixed(2).replace(/0$/, '').replace('.', ',') : rating.toFixed(2).replace(/0$/, '')}
+                {reviews ? <span className="font-normal text-[var(--color-text-muted)]">· {c.reviews(reviews)}</span> : null}
+              </>
+            ) : c.newListing}
+          </span>
         )}
         {badge != null && (
           <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-[13px] font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06),0_4px_12px_rgb(0_0_0/.08)]">

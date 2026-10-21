@@ -22,6 +22,8 @@ const BAND_BELOW = 0.50
 const BAND_ABOVE = 0.10
 const ALLOWED_RADII: readonly number[] = [500, 1000]
 const LIMIT = 48
+/** Соседи с Airbnb (migrations/129) — добавляются в ту же ленту. */
+const AIRBNB_LIMIT = 24
 
 // Куда расширять поиск, если в запрошенном радиусе никого. Плотность
 // аренды на Бали разная: в Чангу в 500 м сотни объектов, а в Сануре
@@ -48,6 +50,31 @@ type Row = {
   n_villas: number | null
   n_apts: number | null
   n_rooms: number | null
+}
+
+type AirbnbRow = {
+  id: string
+  name: string | null
+  title: string | null
+  property_type: string | null
+  room_type: string | null
+  bedrooms: number | null
+  rating: number | null
+  reviews: number | null
+  distance_m: number | null
+  price: number | null
+  photo: string | null
+}
+
+/** Тип жилья Airbnb → то же деление, что у Booking (вилла/дом/апартаменты/номер). */
+function airbnbKind(propertyType: string | null): 'villa' | 'house' | 'apartment' | 'room' | null {
+  const t = (propertyType ?? '').toLowerCase()
+  if (!t) return null
+  if (/room|hostel|shared/.test(t)) return 'room'
+  if (/villa/.test(t)) return 'villa'
+  if (/rental unit|condo|apartment|loft|serviced/.test(t)) return 'apartment'
+  if (/home|house|bungalow|cottage|guesthouse|guest suite|cabin|townhouse|tiny|place/.test(t)) return 'house'
+  return null
 }
 
 function num(v: string | null): number | null {
@@ -94,19 +121,31 @@ export async function GET(req: Request) {
       return (data ?? []) as Row[]
     }
 
-    let usedRadius = radius
-    let data = await ask(radius)
-    for (const wider of FALLBACK_RADII) {
-      if (data.length || wider <= radius) continue
-      data = await ask(wider)
-      usedRadius = wider
-      if (data.length) break
+    const askAirbnb = async (r: number) => {
+      const { data, error } = await sb.rpc('airbnb_price_comps', {
+        p_lat: lat,
+        p_lng: lng,
+        p_radius_m: r,
+        p_price_min: priceMin,
+        p_price_max: priceMax,
+        p_limit: AIRBNB_LIMIT,
+      })
+      if (error) throw new Error(error.message)
+      return (data ?? []) as AirbnbRow[]
     }
 
-    // SQL отдаёт ближайших к середине коридора; лента — от дорогих к дешёвым.
-    const sorted = [...(data as Row[])].sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0))
-    const items = sorted.map(r => ({
-      id: r.id,
+    let usedRadius = radius
+    let [data, abnb] = await Promise.all([ask(radius), askAirbnb(radius)])
+    for (const wider of FALLBACK_RADII) {
+      if (data.length || abnb.length || wider <= radius) continue
+      ;[data, abnb] = await Promise.all([ask(wider), askAirbnb(wider)])
+      usedRadius = wider
+      if (data.length || abnb.length) break
+    }
+
+    const booking = (data as Row[]).map(r => ({
+      source: 'booking' as const,
+      id: String(r.id),
       title: r.title,
       unitKind: r.unit_kind,
       bedrooms: r.bedrooms,
@@ -133,7 +172,36 @@ export async function GET(req: Request) {
         : r.title
           ? `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.title)}`
           : null,
+      rating: null as number | null,
+      reviews: null as number | null,
     }))
+
+    // Airbnb: цена — из выдачи поиска (за ночь со сборами), загрузки пока нет,
+    // вместо неё рейтинг. Точку Airbnb размывает, расстояние — примерное.
+    const airbnb = abnb.map(r => ({
+      source: 'airbnb' as const,
+      id: r.id,
+      title: r.name?.replace(/\s+/g, ' ').trim() || r.title,
+      unitKind: airbnbKind(r.property_type),
+      bedrooms: r.bedrooms,
+      areaSqm: null as number | null,
+      distanceM: r.distance_m == null ? null : Number(r.distance_m),
+      occupancy: null as number | null,
+      price: r.price == null ? null : Number(r.price),
+      star: null as number | null,
+      image: r.photo ? `${r.photo}?im_w=480` : null,
+      roomType: null as string | null,
+      roomOcc: null as number | null,
+      roomPhoto: null as string | null,
+      mix: null,
+      url: `https://www.airbnb.com/rooms/${encodeURIComponent(r.id)}`,
+      // Рейтинг 0 у Airbnb — новое объявление без отзывов, а не «ноль звёзд».
+      rating: r.rating == null || Number(r.rating) <= 0 ? null : Number(r.rating),
+      reviews: r.rating != null && Number(r.rating) <= 0 ? 0 : r.reviews == null ? null : Number(r.reviews),
+    }))
+
+    // SQL отдаёт ближайших к середине коридора; лента — от дорогих к дешёвым.
+    const items = [...booking, ...airbnb].sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0))
 
     // radius — что спросили, usedRadius — где на самом деле нашлось.
     const res = NextResponse.json({ ok: true, priceMin, priceMax, radius, usedRadius, items })

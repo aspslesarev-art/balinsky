@@ -14,9 +14,14 @@ import { BookingCompCard, type CompMix } from '../BookingCompCard'
 // видит фотографии, цену за ночь и загрузку тех, с кем реально будет
 // конкурировать. Поэтому сегмент не сужается до «вилла, 2 спальни» —
 // показываем всё, что попадает в цену и в радиус.
+//
+// С 21.10.2026 в ту же ленту идут соседи с Airbnb (просьба владельца): цена —
+// из поиска Airbnb, вместо загрузки рейтинг, площадка подписана на фото.
 
 type Item = {
-  id: number
+  source: 'booking' | 'airbnb'
+  /** Строка: id Airbnb длиннее 2^53 и в числе округляется. */
+  id: string
   title: string | null
   unitKind: string | null
   bedrooms: number | null
@@ -33,6 +38,9 @@ type Item = {
   roomPhoto: string | null
   mix: CompMix | null
   url: string | null
+  /** Рейтинг гостей из 5 и число отзывов — только у Airbnb. */
+  rating: number | null
+  reviews: number | null
 }
 
 const RADII = [500, 1000] as const
@@ -42,10 +50,10 @@ const DEBOUNCE_MS = 450
 const COPY = {
   ru: {
     title: 'Что рядом сдают за эти же деньги',
-    sub: (a: string, b: string) => `Всё, что сдаётся на Booking в этом бюджете: от ${b} до ${a} за ночь, сначала самые дорогие.`,
+    sub: (a: string, b: string) => `Всё, что сдаётся на Booking и Airbnb в этом бюджете: от ${b} до ${a} за ночь, сначала самые дорогие.`,
     widened: (r: number) => `Рядом в этой ставке никого, поэтому показываем в радиусе ${r < 1000 ? `${r} м` : `${r / 1000} км`}.`,
     subLoading: 'Подбираем объекты по вашей ставке…',
-    empty: 'В этом радиусе и в этой цене на Booking пока никого — попробуйте больший радиус или другую ставку.',
+    empty: 'В этом радиусе и в этой цене на Booking и Airbnb пока никого — попробуйте больший радиус или другую ставку.',
     r500: '500 м',
     r1000: '1 км',
     houseLess: (d: number) => `на ${d} м² меньше вашего дома`,
@@ -57,16 +65,17 @@ const COPY = {
     bedsMore: (d: number) => `на ${d} ${d === 1 ? 'спальню' : d < 5 ? 'спальни' : 'спален'} больше`,
     m: 'м',
     km: 'км',
-    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект. Загрузка — по estatemarket.io: доля ночей за месяц, когда этот вариант нельзя было забронировать (бронь или закрыл хозяин); у объекта — средняя по его вариантам. Площадь — как её указал объект; у вилл в неё часто входит участок, поэтому их сравниваем и с вашим домом, и с участком.',
+    approx: 'около',
+    source: 'Данные Booking и Airbnb, обновляются ежедневно. Цена на Booking — ставка за ночь, которую выставляет объект; на Airbnb — сколько гость платит за ночь вместе со сборами, при брони на 5 ночей. Загрузка Booking — по estatemarket.io: доля ночей за месяц, когда этот вариант нельзя было забронировать (бронь или закрыл хозяин); у объекта — средняя по его вариантам. Загрузку Airbnb мы собираем с 20.10.2026 и покажем, когда наберётся месяц; пока — рейтинг гостей. Airbnb сдвигает точку на карте, поэтому расстояние до его объектов примерное. Площадь — как её указал объект; у вилл в неё часто входит участок, поэтому их сравниваем и с вашим домом, и с участком.',
     prev: 'Предыдущие объекты',
     next: 'Следующие объекты',
   },
   en: {
     title: 'What the same money rents nearby',
-    sub: (a: string, b: string) => `Everything on Booking within this budget: ${b} down to ${a} per night, most expensive first.`,
+    sub: (a: string, b: string) => `Everything on Booking and Airbnb within this budget: ${b} down to ${a} per night, most expensive first.`,
     widened: (r: number) => `Nothing at this rate right nearby, so we widened the search to ${r < 1000 ? `${r} m` : `${r / 1000} km`}.`,
     subLoading: 'Finding listings at your rate…',
-    empty: 'Nothing on Booking in this radius at this price — try a wider radius or another rate.',
+    empty: 'Nothing on Booking or Airbnb in this radius at this price — try a wider radius or another rate.',
     r500: '500 m',
     r1000: '1 km',
     houseLess: (d: number) => `${d} m² smaller than your house`,
@@ -78,14 +87,17 @@ const COPY = {
     bedsMore: (d: number) => `${d} bedroom${d === 1 ? '' : 's'} more`,
     m: 'm',
     km: 'km',
-    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists. Occupancy is from estatemarket.io: share of nights in a month this option could not be booked (booked or closed by the owner); for the property, the average across its options. Size is as the property lists it; villas often include the plot, so we compare them with both your house and your plot.',
+    approx: '~',
+    source: 'Booking and Airbnb data, refreshed daily. Booking price is the nightly rate each property lists; Airbnb price is what a guest pays per night including fees, for a 5-night stay. Booking occupancy is from estatemarket.io: share of nights in a month this option could not be booked (booked or closed by the owner); for the property, the average across its options. We have tracked Airbnb occupancy since 20 Oct 2026 and will show it once a month of data builds up; until then, the guest rating. Airbnb shifts map pins, so distances to its listings are approximate. Size is as the property lists it; villas often include the plot, so we compare them with both your house and your plot.',
     prev: 'Previous listings',
     next: 'Next listings',
   },
 } as const
 
-function fmtDistance(m: number, c: { m: string; km: string }): string {
-  return m < 950 ? `${Math.round(m / 10) * 10} ${c.m}` : `${(m / 1000).toFixed(1)} ${c.km}`
+function fmtDistance(m: number, c: { m: string; km: string; approx: string }, approx = false): string {
+  // Точка Airbnb размыта на сотни метров — до 50 м точности нет.
+  const s = m < 950 ? `${Math.round(m / (approx ? 50 : 10)) * (approx ? 50 : 10)} ${c.m}` : `${(m / 1000).toFixed(1)} ${c.km}`
+  return approx ? `${c.approx} ${s}` : s
 }
 
 /** Сравнение с объектом на странице: площадь в пределах ±5 м² считаем равной. */
@@ -232,7 +244,7 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }:
             className={`flex gap-3 overflow-x-auto snap-x scroll-smooth pb-1 [scrollbar-width:thin] ${loading ? 'opacity-60' : ''}`}
           >
           {items.map(it => (
-            <div key={it.id} className="shrink-0 w-[240px] snap-start">
+            <div key={`${it.source}-${it.id}`} className="shrink-0 w-[240px] snap-start">
               <BookingCompCard
                 href={it.url}
                 photo={it.roomPhoto ?? it.image}
@@ -242,13 +254,16 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }:
                 variant={it.roomType}
                 bedrooms={it.bedrooms}
                 areaSqm={it.areaSqm}
-                distance={it.distanceM != null ? fmtDistance(it.distanceM, c) : null}
+                distance={it.distanceM != null ? fmtDistance(it.distanceM, c, it.source === 'airbnb') : null}
                 mix={it.mix}
                 variantOcc={it.roomOcc}
                 propertyOcc={it.occupancy}
                 compare={compareWith(it)}
                 lang={lang}
                 size="sm"
+                source={it.source}
+                rating={it.rating}
+                reviews={it.reviews}
               />
             </div>
           ))}
