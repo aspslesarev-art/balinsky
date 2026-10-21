@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArticleMedia, ArticleVideos } from '@/components/ArticleMedia'
-import { Calendar, MapPin, HardHat, Video, Send } from 'lucide-react'
+import { Calendar, MapPin, HardHat, Video, Send, ExternalLink } from 'lucide-react'
 import { botLink } from '@/lib/bot-link'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -26,6 +26,7 @@ const COPY = {
     home: 'Главная', eventsCrumb: 'Мероприятия',
     pastBadge: 'прошло',
     register: 'Записаться через Telegram',
+    registerSite: 'Регистрация на сайте события',
     onMap: 'На карте',
     video: 'Видео',
   },
@@ -33,6 +34,7 @@ const COPY = {
     home: 'Home', eventsCrumb: 'Events',
     pastBadge: 'past',
     register: 'Register via Telegram',
+    registerSite: 'Register on the event website',
     onMap: 'On the map',
     video: 'Video',
   },
@@ -40,6 +42,7 @@ const COPY = {
     home: 'Beranda', eventsCrumb: 'Acara',
     pastBadge: 'selesai',
     register: 'Daftar via Telegram',
+    registerSite: 'Daftar di situs acara',
     onMap: 'Di peta',
     video: 'Video',
   },
@@ -47,6 +50,7 @@ const COPY = {
     home: 'Accueil', eventsCrumb: 'Événements',
     pastBadge: 'passé',
     register: 'S’inscrire via Telegram',
+    registerSite: 'S’inscrire sur le site de l’événement',
     onMap: 'Sur la carte',
     video: 'Vidéo',
   },
@@ -54,6 +58,7 @@ const COPY = {
     home: 'Startseite', eventsCrumb: 'Veranstaltungen',
     pastBadge: 'vorbei',
     register: 'Über Telegram anmelden',
+    registerSite: 'Anmeldung auf der Event-Website',
     onMap: 'Auf der Karte',
     video: 'Video',
   },
@@ -61,6 +66,7 @@ const COPY = {
     home: '首页', eventsCrumb: '活动',
     pastBadge: '已结束',
     register: '通过 Telegram 报名',
+    registerSite: '在活动官网报名',
     onMap: '在地图上',
     video: '视频',
   },
@@ -68,6 +74,7 @@ const COPY = {
     home: 'Home', eventsCrumb: 'Evenementen',
     pastBadge: 'voorbij',
     register: 'Aanmelden via Telegram',
+    registerSite: 'Aanmelden op de website van het evenement',
     onMap: 'Op de kaart',
     video: 'Video',
   },
@@ -75,6 +82,7 @@ const COPY = {
     home: 'Beranda', eventsCrumb: 'Acara',
     pastBadge: 'sampun puput',
     register: 'Ndaftar liwat Telegram',
+    registerSite: 'Ndaftar ring situs acara',
     onMap: 'Ring peta',
     video: 'Video',
   },
@@ -82,6 +90,7 @@ const COPY = {
     home: 'Strona główna', eventsCrumb: 'Wydarzenia',
     pastBadge: 'zakończone',
     register: 'Zapisz się przez Telegram',
+    registerSite: 'Rejestracja na stronie wydarzenia',
     onMap: 'Na mapie',
     video: 'Wideo',
   },
@@ -89,6 +98,7 @@ const COPY = {
     home: 'Головна', eventsCrumb: 'Заходи',
     pastBadge: 'завершено',
     register: 'Записатися через Telegram',
+    registerSite: 'Реєстрація на сайті події',
     onMap: 'На карті',
     video: 'Відео',
   },
@@ -249,9 +259,10 @@ export async function EventDetail({ slug, lang }: { slug: string; lang: Lang }) 
           <ArticleVideos videos={e.videos} />
 
           <div className="mt-6 flex flex-wrap gap-3">
+            {/* Есть сайт события — ведём туда; бот только для событий без своей регистрации. */}
             {!past && (
-              <a href={botLink('event', e.id)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-primary)] text-white text-[14px] font-medium no-underline hover:bg-[var(--color-primary-hover)]">
-                <Send size={14} /> {c.register}
+              <a href={e.registerUrl ?? botLink('event', e.id)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-primary)] text-white text-[14px] font-medium no-underline hover:bg-[var(--color-primary-hover)]">
+                {e.registerUrl ? <><ExternalLink size={14} /> {c.registerSite}</> : <><Send size={14} /> {c.register}</>}
               </a>
             )}
             {e.locationUrl && (
