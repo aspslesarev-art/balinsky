@@ -43,6 +43,9 @@ export type InvestmentSnapshot = {
     lng: number
     bedrooms: number | null
     area: number | null
+    /** Участок, м² (`Земля`). Нужен, чтобы сравнивать с площадью соседа на
+     *  Booking: у вилл туда часто вписан дом вместе с участком. */
+    land: number | null
     askingPrice: number | null
     leaseholdYearsLeft: number | null
     /** Сколько лет осталось до сдачи по «Year of completion»; 0 — уже сдан. */
@@ -384,6 +387,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const title = firstString(d['SEO:Title']) ?? firstString(d['ИИ Имя']) ?? villaId
   const bedrooms = numberOrNull(d['Комнаты'])
   const area = numberOrNull(d['Площадь'])
+  const land = numberOrNull(d['Земля'])
   const askingPrice = numberOrNull(d['price'] ?? d['Цена'])
   // «Leasehold» часто хранит исходный срок (30 лет), а «Leasehold до» — дату
   // окончания: с 2053 года до неё сегодня 26 лет, а не 30. Берём меньшее —
@@ -544,7 +548,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   return {
     villaId,
     generatedAt: new Date().toISOString(),
-    villa: { title, lat, lng, bedrooms, area, askingPrice, leaseholdYearsLeft, buildYearsLeft, hasPool, district, photo },
+    villa: { title, lat, lng, bedrooms, area, land, askingPrice, leaseholdYearsLeft, buildYearsLeft, hasPool, district, photo },
     region,
     zone: {
       applied: matchResult.appliedZone,

@@ -1315,7 +1315,7 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
 
       {/* Соседи — ниже расчёта, как у помесячной аренды. */}
       {snap.villa.lat != null && snap.villa.lng != null && (
-        <RentalComps lat={snap.villa.lat} lng={snap.villa.lng} adr={adr} lang={lang} areaSqm={snap.villa.area} bedrooms={snap.villa.bedrooms} />
+        <RentalComps lat={snap.villa.lat} lng={snap.villa.lng} adr={adr} lang={lang} areaSqm={snap.villa.area} landSqm={snap.villa.land} bedrooms={snap.villa.bedrooms} />
       )}
     </div>
   )

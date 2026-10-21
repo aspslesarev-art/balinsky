@@ -48,9 +48,11 @@ const COPY = {
     r500: '500 м',
     r1000: '1 км',
     occ: (n: number, nights: number) => `загрузка ${n}% за ${nights} ${nights % 10 === 1 && nights % 100 !== 11 ? 'ночь' : nights % 10 >= 2 && nights % 10 <= 4 && (nights % 100 < 12 || nights % 100 > 14) ? 'ночи' : 'ночей'}`,
-    areaLess: (d: number) => `на ${d} м² меньше вашей`,
-    areaMore: (d: number) => `на ${d} м² больше вашей`,
-    areaSame: 'площадь как у вашей',
+    houseLess: (d: number) => `на ${d} м² меньше вашего дома`,
+    houseMore: (d: number) => `на ${d} м² больше вашего дома`,
+    houseSame: 'площадь как у вашего дома',
+    withLand: 'как ваш дом с участком',
+    landMore: (d: number, land: number) => `на ${d} м² больше вашего участка (${land} м²)`,
     bedsLess: (d: number) => `на ${d} ${d === 1 ? 'спальню' : d < 5 ? 'спальни' : 'спален'} меньше`,
     bedsMore: (d: number) => `на ${d} ${d === 1 ? 'спальню' : d < 5 ? 'спальни' : 'спален'} больше`,
     perNight: '/ночь',
@@ -60,7 +62,7 @@ const COPY = {
     sqm: 'м²',
     kinds: { villa: 'вилла', apartment: 'апартаменты', hotel: 'отель', resort: 'резорт',
              guesthouse: 'гестхаус', house: 'дом', hostel: 'хостел', aparthotel: 'апарт-отель' } as Record<string, string>,
-    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект. Загрузка — наш ежедневный сбор: сколько открытых ночей забронировали.',
+    source: 'Данные Booking, обновляются ежедневно. Цена — ставка за ночь, которую выставляет объект. Загрузка — наш ежедневный сбор: сколько открытых ночей забронировали. Площадь — как её указал объект; у вилл в неё часто входит участок, поэтому их сравниваем и с вашим домом, и с участком.',
     prev: 'Предыдущие объекты',
     next: 'Следующие объекты',
   },
@@ -73,9 +75,11 @@ const COPY = {
     r500: '500 m',
     r1000: '1 km',
     occ: (n: number, nights: number) => `${n}% occupied over ${nights} night${nights === 1 ? '' : 's'}`,
-    areaLess: (d: number) => `${d} m² smaller than yours`,
-    areaMore: (d: number) => `${d} m² larger than yours`,
-    areaSame: 'same size as yours',
+    houseLess: (d: number) => `${d} m² smaller than your house`,
+    houseMore: (d: number) => `${d} m² larger than your house`,
+    houseSame: 'same size as your house',
+    withLand: 'about your house plus plot',
+    landMore: (d: number, land: number) => `${d} m² larger than your plot (${land} m²)`,
     bedsLess: (d: number) => `${d} bedroom${d === 1 ? '' : 's'} fewer`,
     bedsMore: (d: number) => `${d} bedroom${d === 1 ? '' : 's'} more`,
     perNight: '/night',
@@ -85,7 +89,7 @@ const COPY = {
     sqm: 'm²',
     kinds: { villa: 'villa', apartment: 'apartment', hotel: 'hotel', resort: 'resort',
              guesthouse: 'guesthouse', house: 'house', hostel: 'hostel', aparthotel: 'aparthotel' } as Record<string, string>,
-    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists. Occupancy is our daily tracking: how many open nights got booked.',
+    source: 'Booking data, refreshed daily. Price is the nightly rate each property lists. Occupancy is our daily tracking: how many open nights got booked. Size is as the property lists it; villas often include the plot, so we compare them with both your house and your plot.',
     prev: 'Previous listings',
     next: 'Next listings',
   },
@@ -98,10 +102,16 @@ function fmtDistance(m: number, c: { m: string; km: string }): string {
 /** Сравнение с объектом на странице: площадь в пределах ±5 м² считаем равной. */
 const AREA_SAME_M2 = 5
 
-export function RentalComps({ lat, lng, adr, lang, areaSqm, bedrooms }: {
+/** Целое жильё (вилла, дом): Booking-площадь у них часто вместе с участком. */
+function isWholeHome(it: Item): boolean {
+  return it.unitKind === 'villa' || it.unitKind === 'house' || /villa|house|bungalow/i.test(it.roomType ?? '')
+}
+
+export function RentalComps({ lat, lng, adr, lang, areaSqm, landSqm, bedrooms }: {
   lat: number; lng: number; adr: number; lang: Lang
-  /** Площадь и спальни объекта на странице — с ними сравниваем соседей. */
+  /** Дом, участок и спальни объекта на странице — с ними сравниваем соседей. */
   areaSqm?: number | null
+  landSqm?: number | null
   bedrooms?: number | null
 }) {
   // По умолчанию километр: в 500 м и в коридоре ставки часто один-два
@@ -245,10 +255,22 @@ export function RentalComps({ lat, lng, adr, lang, areaSqm, bedrooms }: {
                     в чём объект на странице выигрывает. */}
                 {(() => {
                   const diffs: { text: string; ours: boolean }[] = []
+                  // Номер отеля сравниваем с домом. Вилла на Booking часто
+                  // указывает площадь вместе с участком: если её цифра больше
+                  // нашего дома, сверяем ещё и с участком, а не пишем, что
+                  // у соседа «дом больше» (жалоба владельца 21.10.2026).
                   if (areaSqm && it.areaSqm != null) {
-                    const d = Math.round(it.areaSqm - areaSqm)
-                    if (Math.abs(d) <= AREA_SAME_M2) diffs.push({ text: c.areaSame, ours: false })
-                    else diffs.push(d < 0 ? { text: c.areaLess(-d), ours: true } : { text: c.areaMore(d), ours: false })
+                    const theirs = Math.round(it.areaSqm)
+                    const house = Math.round(areaSqm)
+                    const d = theirs - house
+                    if (Math.abs(d) <= AREA_SAME_M2) diffs.push({ text: c.houseSame, ours: false })
+                    else if (d < 0) diffs.push({ text: c.houseLess(-d), ours: true })
+                    else if (isWholeHome(it) && landSqm) {
+                      const land = Math.round(landSqm)
+                      const total = Math.max(house, land)
+                      if (theirs > total * 1.1) diffs.push({ text: c.landMore(theirs - land, land), ours: false })
+                      else diffs.push({ text: c.withLand, ours: false })
+                    } else diffs.push({ text: c.houseMore(d), ours: false })
                   }
                   if (bedrooms != null && it.bedrooms != null && it.bedrooms !== bedrooms) {
                     const d = it.bedrooms - bedrooms
