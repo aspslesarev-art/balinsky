@@ -118,6 +118,11 @@ export async function getSiteUser(): Promise<SiteUser | null> {
   }
 }
 
+// Safari не сохраняет Secure-куки на http://localhost — без этого вход на
+// локальной копии (localhost:3000) не работал: код «не находил» сессию
+// (владелец 21.10.2026). На проде (https) куки по-прежнему Secure.
+const SECURE_COOKIES = process.env.NODE_ENV === 'production'
+
 type CookieSpec = {
   name: string
   value: string
@@ -147,7 +152,7 @@ export async function getSessionTelegramId(): Promise<number | null> {
 /** Cookies to set on a successful login. Written by the route handler. */
 export function sessionCookies(telegramId: number): CookieSpec[] {
   const maxAge = SESSION_TTL_DAYS * 24 * 60 * 60
-  const common = { path: '/', maxAge, sameSite: 'lax' as const, secure: true }
+  const common = { path: '/', maxAge, sameSite: 'lax' as const, secure: SECURE_COOKIES }
   return [
     { name: SESSION_COOKIE, value: encodeSession(telegramId), ...common, httpOnly: true },
     { name: AUTH_FLAG_COOKIE, value: '1', ...common, httpOnly: false },
@@ -155,7 +160,7 @@ export function sessionCookies(telegramId: number): CookieSpec[] {
 }
 
 export function clearedCookies(): CookieSpec[] {
-  const common = { path: '/', maxAge: 0, sameSite: 'lax' as const, secure: true }
+  const common = { path: '/', maxAge: 0, sameSite: 'lax' as const, secure: SECURE_COOKIES }
   return [
     { name: SESSION_COOKIE, value: '', ...common, httpOnly: true },
     { name: AUTH_FLAG_COOKIE, value: '', ...common, httpOnly: false },
@@ -265,7 +270,7 @@ export function challengeCookie(challenge: string): CookieSpec {
     path: '/',
     maxAge: Math.floor(CODE_TTL_MS / 1000),
     sameSite: 'lax',
-    secure: true,
+    secure: SECURE_COOKIES,
     httpOnly: true,
   }
 }
