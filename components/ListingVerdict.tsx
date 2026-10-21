@@ -149,6 +149,7 @@ const COPY = {
     monthlyH: 'Сдают помесячно в этом районе',
     tabMonthly: 'Помесячно', tabDaily: 'Посуточно', tabSale: 'Продажа рядом', tabsLabel: 'Что сдают и продают рядом',
     dailyH: 'Сдают посуточно в этом районе',
+    occNote: 'Загрузка — по estatemarket.io: доля ночей за месяц, когда этот вариант нельзя было забронировать (бронь или закрыл хозяин); у объекта — средняя по его вариантам.',
     dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
     whoLine: (b: number | null, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} в радиусе ${String(km).replace('.', ',')} км`,
     whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? `${b} ${pluralRu(b, ['спальня', 'спальни', 'спален'])}` : 'Похожие объекты'} - район ${d} и радиус ${String(km).replace('.', ',')} км`,
@@ -270,6 +271,7 @@ const COPY = {
     monthlyH: 'Rented monthly in this area',
     tabMonthly: 'Monthly', tabDaily: 'Nightly', tabSale: 'For sale nearby', tabsLabel: 'Rentals and sales nearby',
     dailyH: 'Rented nightly in this area',
+    occNote: 'Occupancy is from estatemarket.io: share of nights in a month this option could not be booked (booked or closed by the owner); for the property, the average across its options.',
     dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
     whoLine: (b: number | null, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} within ${km} km`,
     whoDistrict: (b: number | null, d: string, km: number) => `${b != null ? en(b, 'bedroom', 'bedrooms') : 'Similar places'} in ${d} and within ${km} km`,
@@ -564,6 +566,9 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
               />
             ))}
           </CardRail>
+          {dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null) && (
+            <p className="mt-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">{c.occNote}</p>
+          )}
         </div>
   ) })
   if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (

@@ -21,25 +21,26 @@ const COPY = {
     perNight: 'за ночь',
     beds: (n: number) => (n === 0 ? 'студия' : `${n} ${pluralRu(n, ['спальня', 'спальни', 'спален'])}`),
     sqm: 'м²',
-    booked: (p: number) => `Занято ${p}%`,
+    // Период — месяц: знаменатель у estatemarket 31 ночь (migrations/128).
+    booked: (p: number) => `Занято ${p}% за месяц`,
     mix: (m: CompMix) => 'В объекте ' + [
       m.villas ? `${m.villas} ${pluralRu(m.villas, ['вилла', 'виллы', 'вилл'])}` : '',
       m.apartments ? `${m.apartments} ${pluralRu(m.apartments, ['апартаменты', 'апартаментов', 'апартаментов'])}` : '',
       m.rooms ? `${m.rooms} ${pluralRu(m.rooms, ['номер', 'номера', 'номеров'])}` : '',
     ].filter(Boolean).join(', '),
-    whole: (p: number) => `Весь объект занят на ${p}%`,
+    whole: (p: number) => `Весь объект за месяц - ${p}%`,
   },
   en: {
     perNight: 'per night',
     beds: (n: number) => (n === 0 ? 'studio' : `${n} BR`),
     sqm: 'm²',
-    booked: (p: number) => `${p}% booked`,
+    booked: (p: number) => `${p}% booked a month`,
     mix: (m: CompMix) => 'Property has ' + [
       m.villas ? `${m.villas} villa${m.villas === 1 ? '' : 's'}` : '',
       m.apartments ? `${m.apartments} apartment${m.apartments === 1 ? '' : 's'}` : '',
       m.rooms ? `${m.rooms} room${m.rooms === 1 ? '' : 's'}` : '',
     ].filter(Boolean).join(', '),
-    whole: (p: number) => `Whole property ${p}% booked`,
+    whole: (p: number) => `Whole property ${p}% a month`,
   },
 } as const
 
