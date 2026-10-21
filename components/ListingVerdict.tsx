@@ -501,6 +501,13 @@ function variant(comp: NearbyMatchCard): string | null {
   return comp.facts?.roomType ?? (comp.complex ? comp.name : null)
 }
 
+/** Площадь из старого манифеста конкурентов — без проверки по типу
+ *  варианта (её делает migrations/127), поэтому отсекаем явную ошибку
+ *  хозяина вроде «вилла 9 м²» (100 кв. футов). */
+function plausibleArea(m2: number | null): number | null {
+  return m2 != null && m2 >= 20 ? m2 : null
+}
+
 export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], sale, lang }: {
   verdict: Verdict
   monthly: MonthlyBundle | null
@@ -548,7 +555,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                 name={comp.complex ?? comp.name}
                 variant={variant(comp)}
                 bedrooms={comp.bedrooms}
-                areaSqm={comp.facts?.roomArea ?? comp.area}
+                areaSqm={comp.facts ? comp.facts.roomArea : plausibleArea(comp.area)}
                 distance={`${dec(comp.distanceKm)} ${c.km}`}
                 mix={comp.facts}
                 variantOcc={comp.facts?.roomOcc ?? null}
