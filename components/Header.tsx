@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Building, Building2, Menu, X } from 'lucide-react'
+import { Home, Building, Building2, Menu, X, UserRound } from 'lucide-react'
 import { LangSwitch } from './LangSwitch'
 import { CurrencyToggle } from './CurrencyContext'
 import { WishlistHeaderLink } from './WishlistHeaderLink'
@@ -122,10 +122,20 @@ export function Header({ active }: { active?: NavKey }) {
           <WishlistHeaderLink />
           <CurrencyToggle />
           <LangSwitch />
-          {/* Вход в Pro-аналитику (владелец 21.10.2026). После входа вернёт на эту же страницу. */}
+          {/* Вход в Pro-аналитику (владелец 21.10.2026). После входа вернёт на эту же страницу.
+              Вошедшему вместо неё — кабинет (22.10.2026); переключает метка data-auth
+              из куки bx_auth, как и гейт аналитики, поэтому без мигания. */}
+          <Link
+            href="/kabinet"
+            aria-label={lang === 'ru' ? 'Личный кабинет' : 'Account'}
+            className="bx-auth-only items-center gap-1.5 rounded-full border border-[var(--color-primary)] px-3 py-1.5 text-[12px] font-semibold tracking-wide text-[var(--color-primary)] no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            <UserRound size={14} strokeWidth={2} aria-hidden />
+            Pro
+          </Link>
           <Link
             href={`/pro?next=${encodeURIComponent(pathname)}`}
-            className="rounded-full bg-[var(--color-primary)] px-3.5 py-1.5 text-[12px] font-semibold tracking-wide text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+            className="bx-anon-only rounded-full bg-[var(--color-primary)] px-3.5 py-1.5 text-[12px] font-semibold tracking-wide text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
             Pro
           </Link>

@@ -3,7 +3,7 @@ import { Header } from '@/components/Header'
 import Link from 'next/link'
 import { getSiteUser } from '@/lib/site-auth'
 import { getAgentContact } from '@/lib/agent-listings/store'
-import { LOGIN_URL } from '@/components/GatedBlock'
+import { redirect } from 'next/navigation'
 
 // Account page: sign in, and once signed in, the name that goes on PDF
 // presentations. Deliberately thin — an investor never has to touch it, and
@@ -29,33 +29,8 @@ export default async function KabinetPage({
   // Контакты агента — то, что увидит клиент на карточке добавленного объекта.
   const contact = user ? await getAgentContact(user.telegramId) : null
 
-  if (!user) {
-    return (
-      <>
-        <Header />
-        <main className="mx-auto w-full max-w-xl px-6 py-16">
-        <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)]">Вход</h1>
-        {sp.login === 'expired' && (
-          <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-[14px] text-amber-900">
-            Ссылка уже использована или устарела. Запросите новую — это займёт пару секунд.
-          </p>
-        )}
-        <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-text-muted)]">
-          Вход через Telegram, без пароля: бот пришлёт одноразовую ссылку. Он нужен, чтобы
-          разместить свой объект на перепродажу и вести кабинет. Вся аналитика открыта и без входа.
-        </p>
-        <a
-          href={LOGIN_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#229ED9] px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#1b8ec2]"
-        >
-          Войти через Telegram
-        </a>
-        </main>
-      </>
-    )
-  }
+  // Гость — на общую страницу входа Pro, после входа вернёт сюда.
+  if (!user) redirect('/pro?next=/kabinet')
 
   return (
     <>
@@ -63,8 +38,16 @@ export default async function KabinetPage({
       <main className="mx-auto w-full max-w-xl px-6 py-16">
       <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)]">Личный кабинет</h1>
       <p className="mt-2 text-[15px] text-[var(--color-text-muted)]">
-        Вы вошли{user.username ? ` как @${user.username}` : ''}. Вся аналитика на сайте открыта.
+        Вы вошли{user.username ? ` как @${user.username}` : ''}.
       </p>
+
+      <div className="mt-6 flex items-start gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-5">
+        <span className="mt-0.5 shrink-0 rounded-full bg-[var(--color-primary)] px-2.5 py-0.5 text-[12px] font-semibold tracking-wide text-white">Pro</span>
+        <p className="text-[14px] leading-relaxed text-[var(--color-text-muted)]">
+          Доступ открыт: на страницах вилл и апартаментов видна вся аналитика - доходность,
+          спрос, соседи на Booking и Airbnb, калькулятор.
+        </p>
+      </div>
 
       {sp.saved === '1' && (
         <p className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-[14px] text-emerald-900">Сохранено.</p>
