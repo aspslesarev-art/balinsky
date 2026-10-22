@@ -588,14 +588,6 @@ const COPY = {
   },
 } as const
 
-type Copy = { countOne: string; countFew: string; countMany: string }
-function plural(n: number, lang: Lang, copy: Copy): string {
-  if (lang !== 'ru') return n === 1 ? copy.countOne : copy.countMany
-  const mod10 = n % 10, mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return copy.countOne
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return copy.countFew
-  return copy.countMany
-}
 
 function detailHref(item: WishlistItem, lang: Lang): string {
   switch (item.kind) {
@@ -631,6 +623,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
   const c = pickCopy(COPY, lang)
   const home = switchLangPath('/ru', lang)
   const [downloadOpen, setDownloadOpen] = useState(false)
+  // Вкладки «Виллы и апартаменты / ЖК / Аренда» (макет 22.10.2026): выбранная
+  // пустая вкладка не показывается — берётся первая непустая.
+  const [tabPick, setTabPick] = useState<'real' | 'complexes' | 'rentals' | null>(null)
   // Сравнение в PDF само делится на страницы по 5 колонок (ShortlistPdf);
   // агенту обычно нужно 5–10 объектов, больше — файл раздувается.
   const PDF_MAX_ITEMS = 10
@@ -858,6 +853,9 @@ export function ShortlistView({ lang }: { lang: Lang }) {
     .sort((a, b) => b.score - a.score)
     .map(x => x.it)
 
+  const firstTab = realEstate.length ? 'real' : complexes.length ? 'complexes' : 'rentals'
+  const tab = tabPick && { real: realEstate.length, complexes: complexes.length, rentals: rentals.length }[tabPick] > 0 ? tabPick : firstTab
+
   // Build the shareable Telegram message — one URL per saved item so the
   // recipient can tap straight into each detail page.
   // Раньше в сообщение уходила надпись кнопки («Отправить в Telegram») и голые
@@ -880,53 +878,40 @@ export function ShortlistView({ lang }: { lang: Lang }) {
           { label: c.crumb },
         ]} />
 
-        <div className="flex items-end justify-between gap-3 mt-4 mb-6 flex-wrap">
-          <div>
-            <h1 className="text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
+        <div className="flex items-end justify-between gap-x-6 gap-y-4 mt-4 mb-6 flex-wrap">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[28px] md:text-[32px] font-semibold leading-tight tracking-tight text-[var(--color-text)]">
               {c.h1}
+              {ready && items.length > 0 && (
+                <span className="font-normal text-[var(--color-text-muted)]"> · {items.length}</span>
+              )}
             </h1>
             {ready && items.length > 0 && (
-              <div className="text-[14px] text-[var(--color-text-muted)] mt-1">
-                {items.length} {plural(items.length, lang, c)}
-              </div>
+              <p className="max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{c.intro}</p>
             )}
           </div>
           {ready && items.length > 0 && (
-            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
+              <a
+                href={shareHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] bg-white px-3 sm:px-4 py-2.5 text-[14px] font-medium text-[var(--color-text)] no-underline transition-colors duration-[120ms] hover:border-[var(--color-text-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+              >
+                <Send size={16} className="text-[#229ED9]" aria-hidden /> {c.sendToBot}
+              </a>
               <button
                 type="button"
                 onClick={() => setDownloadOpen(true)}
                 disabled={pdfDisabled}
                 title={pdfDisabled ? c.pdfTooMany(PDF_MAX_ITEMS) : undefined}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[12px] sm:text-[13px] font-medium disabled:bg-[var(--color-border)] disabled:hover:bg-[var(--color-border)] disabled:text-[var(--color-text-muted)] disabled:cursor-not-allowed"
-                aria-label={c.downloadPdf}
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] px-3 sm:px-4 py-2.5 text-[14px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] disabled:cursor-not-allowed disabled:bg-[var(--color-border)] disabled:text-[var(--color-text-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
               >
-                <Download size={14} /> {c.downloadPdf}
-              </button>
-              <a
-                href={shareHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text)] text-[12px] sm:text-[13px] font-medium no-underline"
-              >
-                <Send size={14} /> {c.sendToBot}
-              </a>
-              <button
-                type="button"
-                onClick={() => { if (confirm(pickCopy({ ru: 'Очистить весь шортлист?', en: 'Clear the whole shortlist?', id: 'Kosongkan seluruh shortlist?', fr: 'Vider toute la liste ?', de: 'Die gesamte Merkliste leeren?', zh: '清空整个候选清单？', nl: 'De hele shortlist wissen?', ban: 'Kosongang makasami shortlist?', pl: 'Wyczyścić całą listę życzeń?', uk: 'Очистити весь список обраного?' }, lang))) clear() }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[12px] sm:text-[13px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-search-bg)]"
-              >
-                <Trash2 size={14} /> {c.clear}
+                <Download size={16} aria-hidden /> {c.downloadPdf}
               </button>
             </div>
           )}
         </div>
-
-        {ready && items.length > 0 && (
-          <div className={`text-[12px] mb-4 -mt-3 ${pdfDisabled ? 'text-[#B91C1C]' : 'text-[var(--color-text-muted)]'}`}>
-            {pdfDisabled ? c.pdfTooMany(PDF_MAX_ITEMS) : c.pdfLimit(PDF_MAX_ITEMS)}
-          </div>
-        )}
 
         {!ready ? null : items.length === 0 ? (
           <div className="rounded-2xl border border-[var(--color-border)] bg-white px-6 py-12 text-center">
@@ -940,9 +925,35 @@ export function ShortlistView({ lang }: { lang: Lang }) {
           </div>
         ) : (
           <>
-            <p className="text-[14px] text-[var(--color-text-muted)] mb-6 max-w-2xl">{c.intro}</p>
+            {(() => {
+              const tabs = [
+                { key: 'real' as const, label: c.sectionRealEstate, n: realEstate.length },
+                { key: 'complexes' as const, label: c.sectionComplexes, n: complexes.length },
+                { key: 'rentals' as const, label: c.sectionRental, n: rentals.length },
+              ]
+              return (
+                <div className="-mx-6 mb-6 flex gap-2 overflow-x-auto px-6 max-w-none sm:mx-0 sm:flex-wrap sm:px-0" role="tablist">
+                  {tabs.map(t => {
+                    const active = t.key === tab
+                    return (
+                      <button
+                        key={t.key}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        disabled={t.n === 0}
+                        onClick={() => setTabPick(t.key)}
+                        className={`shrink-0 cursor-pointer whitespace-nowrap rounded-full px-3.5 py-2 text-[14px] transition-colors duration-[120ms] disabled:cursor-default disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${active ? 'bg-[var(--color-text)] font-medium text-white' : 'border border-[var(--color-border)] text-[#1F3B2F] enabled:hover:border-[var(--color-text-muted)]'}`}
+                      >
+                        {t.label} · {t.n}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })()}
 
-            {realEstate.length > 0 && (() => {
+            {tab === 'real' && (() => {
               // Surface the rental-zoning risk before the comparison so
               // the visitor reads "this villa is on residential land"
               // up front, not only by spotting a red cell halfway down.
@@ -950,10 +961,6 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               const restrictedNames = restricted.map(it => it.title).join(', ')
               return (
               <section className="mb-10">
-                <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
-                  {c.sectionRealEstate}
-                  <span className="text-[var(--color-text-muted)] font-normal ml-2">· {realEstate.length}</span>
-                </h2>
 
                 {restricted.length > 0 && (
                   <div className="mb-4 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] p-4 flex gap-3">
@@ -1032,23 +1039,24 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                     below that it fits cleanly, above that the user
                     can swipe through all 10 columns without anything
                     being squished. */}
-                <div className="hidden md:block overflow-x-auto pb-4">
+                <div className="hidden md:block w-fit max-w-full overflow-x-auto rounded-xl border border-[var(--color-border)]">
                   <table
-                    className="table-fixed border-separate border-spacing-x-2 md:border-spacing-x-3 w-full"
-                    style={{ minWidth: `${realEstate.length === 1 ? 280 : 88 + realEstate.length * 220}px` }}
+                    className="table-fixed border-collapse w-full"
+                    // Колонка не шире 320 px: при двух объектах фото иначе на пол-экрана.
+                    style={{ minWidth: `${180 + realEstate.length * 220}px`, width: `${180 + realEstate.length * 320}px` }}
                   >
                     <colgroup>
-                      <col className="w-[88px] md:w-[120px]" />
+                      <col className="w-[180px]" />
                       {realEstate.map(it => <col key={`${it.kind}:${it.slug}`} />)}
                     </colgroup>
                     <thead>
                       <tr>
-                        <th className="sticky left-0 bg-[var(--color-bg)] z-10 align-top"></th>
+                        <th className="sticky left-0 bg-white z-10 align-top border-b border-[var(--color-border)]"></th>
                         {realEstate.map(it => (
-                          <th key={`${it.kind}:${it.slug}`} className="text-left align-top snap-start">
+                          <th key={`${it.kind}:${it.slug}`} className="text-left align-top snap-start p-4 font-normal border-b border-l border-[var(--color-border)]">
                             <div className="relative">
                               <Link href={detailHref(it, lang)} className="block group no-underline text-[var(--color-text)]">
-                                <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-search-bg)] mb-2">
+                                <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-[var(--color-search-bg)] mb-2">
                                   {it.photo ? (
                                     <Image src={it.photo} alt={it.title} fill sizes="(max-width: 768px) 80vw, 320px" className="object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
                                   ) : (
@@ -1061,7 +1069,8 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                                     rows as multi-line ones — keeps
                                     the comparison rows visually
                                     aligned across columns. */}
-                                <div className="text-[13px] md:text-[15px] font-semibold leading-snug line-clamp-2 mb-2 md:mb-3 min-h-[2.6em] md:min-h-[2.6em]">{it.title}</div>
+                                <div className="text-[15px] font-semibold leading-snug line-clamp-2">{it.title}</div>
+                                {it.district && <div className="mt-1 text-[13px] text-[var(--color-text-muted)]">{it.district}</div>}
                               </Link>
                               <button
                                 type="button"
@@ -1077,10 +1086,11 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.filter(r => realEstate.some(it => r.cell(it))).map(r => {
+                      {rows.filter(r => realEstate.some(it => r.cell(it))).map((r, ri) => {
+                        const zebra = ri % 2 === 1 ? 'bg-[var(--color-surface-alt)]' : 'bg-white'
                         return (
-                          <tr key={r.key}>
-                            <td className="sticky left-0 bg-[var(--color-bg)] z-10 text-[10px] md:text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] py-2 md:py-3 align-top pr-2">
+                          <tr key={r.key} className={zebra}>
+                            <td className={`sticky left-0 z-10 ${zebra} text-[14px] text-[var(--color-text-muted)] px-4 py-3.5 align-top border-t border-[var(--color-border)]`}>
                               {r.label}
                             </td>
                             {realEstate.map(it => {
@@ -1092,7 +1102,7 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                               // "Builder name" above "✓ N · ▲ M".
                               const lines = v != null ? v.split('\n') : []
                               return (
-                                <td key={`${r.key}-${it.kind}:${it.slug}`} className="text-[13px] md:text-[14px] py-2 md:py-3 align-top">
+                                <td key={`${r.key}-${it.kind}:${it.slug}`} className={`text-[14px] px-4 py-3.5 align-top border-t border-l border-[var(--color-border)] ${verdict === 'best' ? 'bg-[var(--color-primary-soft)]' : ''}`}>
                                   {v != null ? (
                                     <span className={`inline-flex flex-col items-start gap-0.5 ${verdictTextClass(verdict)}`}>
                                       <span className="inline-flex items-center gap-1.5">
@@ -1121,12 +1131,8 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               )
             })()}
 
-            {complexes.length > 0 && (
+            {tab === 'complexes' && (
               <section className="mb-10">
-                <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
-                  {c.sectionComplexes}
-                  <span className="text-[var(--color-text-muted)] font-normal ml-2">· {complexes.length}</span>
-                </h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {complexes.map(item => {
                     const completion = item.completionYear
@@ -1196,12 +1202,8 @@ export function ShortlistView({ lang }: { lang: Lang }) {
               </section>
             )}
 
-            {rentals.length > 0 && (
+            {tab === 'rentals' && (
               <section className="mb-10">
-                <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)] mb-4">
-                  {c.sectionRental}
-                  <span className="text-[var(--color-text-muted)] font-normal ml-2">· {rentals.length}</span>
-                </h2>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {rentals.map(item => {
                     const price = item.priceUsd != null && Number.isFinite(item.priceUsd)
@@ -1248,6 +1250,19 @@ export function ShortlistView({ lang }: { lang: Lang }) {
                 </ul>
               </section>
             )}
+
+            <div className="mt-2 mb-10 flex flex-wrap items-center justify-between gap-3 text-[14px]">
+              <span className={pdfDisabled ? 'text-[#B91C1C]' : 'text-[var(--color-text-muted)]'}>
+                {pdfDisabled ? c.pdfTooMany(PDF_MAX_ITEMS) : c.pdfLimit(PDF_MAX_ITEMS)}
+              </span>
+              <button
+                type="button"
+                onClick={() => { if (confirm(pickCopy({ ru: 'Очистить весь шортлист?', en: 'Clear the whole shortlist?', id: 'Kosongkan seluruh shortlist?', fr: 'Vider toute la liste ?', de: 'Die gesamte Merkliste leeren?', zh: '清空整个候选清单？', nl: 'De hele shortlist wissen?', ban: 'Kosongang makasami shortlist?', pl: 'Wyczyścić całą listę życzeń?', uk: 'Очистити весь список обраного?' }, lang))) clear() }}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[var(--color-text-muted)] underline hover:text-[var(--color-text)]"
+              >
+                <Trash2 size={14} aria-hidden /> {c.clear}
+              </button>
+            </div>
           </>
         )}
 
