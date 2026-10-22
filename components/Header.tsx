@@ -128,10 +128,9 @@ export function Header({ active }: { active?: NavKey }) {
           <Link
             href="/kabinet"
             aria-label={lang === 'ru' ? 'Личный кабинет' : 'Account'}
-            className="bx-auth-only items-center gap-1.5 rounded-full border border-[var(--color-primary)] px-3 py-1.5 text-[12px] font-semibold tracking-wide text-[var(--color-primary)] no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+            className="bx-auth-only h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-white no-underline ring-2 ring-[var(--color-primary)] ring-offset-2 transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]"
           >
-            <UserRound size={14} strokeWidth={2} aria-hidden />
-            Pro
+            <UserRound size={16} strokeWidth={2} aria-hidden />
           </Link>
           <Link
             href={`/pro?next=${encodeURIComponent(pathname)}`}

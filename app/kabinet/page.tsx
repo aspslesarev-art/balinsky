@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
-import { Header } from '@/components/Header'
 import Link from 'next/link'
-import { getSiteUser } from '@/lib/site-auth'
-import { getAgentContact } from '@/lib/agent-listings/store'
 import { redirect } from 'next/navigation'
+import { Home, UserRound, CreditCard, ChevronRight, Check } from 'lucide-react'
+import { Header } from '@/components/Header'
+import { WishlistRow } from '@/components/kabinet/WishlistRow'
+import { getSiteUser } from '@/lib/site-auth'
+import { countByAuthor } from '@/lib/agent-listings/store'
 
-// Account page: sign in, and once signed in, the name that goes on PDF
-// presentations. Deliberately thin — an investor never has to touch it, and
-// an agent only fills it in once, right before their first export.
+// Личный кабинет, вариант B из макета (владелец 22.10.2026,
+// https://claude.ai/artifact/WNV7xCPXhUBskR9ztyyG6w): шапка с именем и
+// значком Pro, ниже список разделов. Форма профиля — /kabinet/profil.
 
 export const dynamic = 'force-dynamic'
 
@@ -17,104 +19,93 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-const INPUT =
-  'mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-[15px] text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]'
+const ROW =
+  'flex items-center gap-4 px-6 py-5 no-underline text-[var(--color-text)] transition-colors duration-[120ms] hover:bg-[var(--color-surface-alt)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-primary)]'
+const ICON =
+  'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
 
-export default async function KabinetPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ saved?: string; error?: string; login?: string }>
-}) {
-  const [user, sp] = await Promise.all([getSiteUser(), searchParams])
-  // Контакты агента — то, что увидит клиент на карточке добавленного объекта.
-  const contact = user ? await getAgentContact(user.telegramId) : null
+const PRO_PERKS = [
+  'Доходность и окупаемость',
+  'Будет ли спрос: Booking и Airbnb',
+  'Калькулятор посуточной аренды',
+  'Что сдают рядом за те же деньги',
+]
 
+export default async function KabinetPage() {
+  const user = await getSiteUser()
   // Гость — на общую страницу входа Pro, после входа вернёт сюда.
   if (!user) redirect('/pro?next=/kabinet')
+  const objects = await countByAuthor(user.telegramId)
+
+  const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || (user.username ? `@${user.username}` : 'Без имени')
+  const initial = (user.firstName || user.username || '?').trim().charAt(0).toUpperCase()
 
   return (
     <>
       <Header />
-      <main className="mx-auto w-full max-w-xl px-6 py-16">
-      <h1 className="text-[26px] font-semibold tracking-tight text-[var(--color-text)]">Личный кабинет</h1>
-      <p className="mt-2 text-[15px] text-[var(--color-text-muted)]">
-        Вы вошли{user.username ? ` как @${user.username}` : ''}.
-      </p>
-
-      <div className="mt-6 flex items-start gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-        <span className="mt-0.5 shrink-0 rounded-full bg-[var(--color-primary)] px-2.5 py-0.5 text-[12px] font-semibold tracking-wide text-white">Pro</span>
-        <p className="text-[14px] leading-relaxed text-[var(--color-text-muted)]">
-          Доступ открыт: на страницах вилл и апартаментов видна вся аналитика - доходность,
-          спрос, соседи на Booking и Airbnb, калькулятор.
-        </p>
-      </div>
-
-      {sp.saved === '1' && (
-        <p className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-[14px] text-emerald-900">Сохранено.</p>
-      )}
-      {sp.error === '1' && (
-        <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-[14px] text-red-900">
-          Не удалось сохранить. Попробуйте ещё раз.
-        </p>
-      )}
-
-      <form method="POST" action="/api/account" className="mt-8 space-y-5">
-        <div>
-          <label htmlFor="firstName" className="text-[14px] font-medium text-[var(--color-text)]">Имя</label>
-          <input id="firstName" name="firstName" defaultValue={user.firstName ?? ''} className={INPUT} />
-        </div>
-        <div>
-          <label htmlFor="lastName" className="text-[14px] font-medium text-[var(--color-text)]">Фамилия</label>
-          <input id="lastName" name="lastName" defaultValue={user.lastName ?? ''} className={INPUT} />
-        </div>
-        <div>
-          <label htmlFor="phone" className="text-[14px] font-medium text-[var(--color-text)]">Телефон</label>
-          <input id="phone" name="phone" defaultValue={contact?.phone ?? ''} placeholder="+62 …" className={INPUT} />
-        </div>
-        <div>
-          <label htmlFor="agency" className="text-[14px] font-medium text-[var(--color-text)]">Агентство</label>
-          <input id="agency" name="agency" defaultValue={contact?.agency ?? ''} className={INPUT} />
-        </div>
-        <div>
-          <label htmlFor="contactNote" className="text-[14px] font-medium text-[var(--color-text)]">Как с вами связаться</label>
-          <input id="contactNote" name="contactNote" defaultValue={contact?.note ?? ''}
-            placeholder="Например: пишите в Telegram, отвечаю до 22:00 по Бали" className={INPUT} />
-        </div>
-        <label className="flex items-start gap-3 text-[14px] text-[var(--color-text)]">
-          <input type="checkbox" name="isAgent" defaultChecked={user.isAgent} className="mt-1" />
-          <span>
-            Я агент
-            <span className="block text-[13px] text-[var(--color-text-muted)]">
-              Имя, фамилия и контакты подставятся в PDF-презентации и на карточки объектов,
-              которые вы добавите сами.
-            </span>
+      <main className="mx-auto flex w-full max-w-[720px] flex-col gap-8 px-4 py-12 sm:px-6">
+        <div className="flex items-center gap-4">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-[26px] font-semibold text-white" aria-hidden>
+            {initial}
           </span>
-        </label>
-        <button
-          type="submit"
-          className="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-[15px] font-semibold text-white"
-        >
-          Сохранить
-        </button>
-      </form>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-[28px] font-semibold leading-tight tracking-tight">{name}</h1>
+              <span className="rounded-full bg-[var(--color-primary)] px-2.5 py-0.5 text-[12px] font-semibold tracking-wide text-white">PRO</span>
+            </div>
+            <span className="text-[14px] text-[var(--color-text-muted)]">
+              {user.username && name !== `@${user.username}` ? `@${user.username} · ` : ''}Pro открыт
+            </span>
+          </div>
+          <form method="POST" action="/api/account">
+            <input type="hidden" name="action" value="logout" />
+            <button type="submit" className="cursor-pointer rounded-lg px-2 py-2 text-[14px] text-[var(--color-text-muted)] underline hover:text-[var(--color-text)]">
+              Выйти
+            </button>
+          </form>
+        </div>
 
-      <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-        <p className="text-[15px] font-medium text-[var(--color-text)]">Свои объекты</p>
-        <p className="mt-1 text-[14px] text-[var(--color-text-muted)]">
-          Добавьте виллу или апартаменты: характеристики подтянутся из каталога, на карточке будут ваши контакты.
-        </p>
-        <Link href="/kabinet/objekty"
-          className="mt-4 inline-flex rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[15px] font-semibold text-white">
-          Мои объекты
-        </Link>
-      </div>
+        <section className="divide-y divide-[var(--color-border)] overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+          <WishlistRow className={ROW} />
+          <Link href="/kabinet/objekty" className={ROW}>
+            <span className={ICON}><Home size={20} strokeWidth={2} aria-hidden /></span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[16px] font-semibold">Мои объекты</span>
+              <span className="text-[14px] text-[var(--color-text-muted)]">
+                {objects > 0 ? `Добавлено: ${objects}` : 'Пока нет. Добавьте виллу или апартаменты с вашими контактами'}
+              </span>
+            </span>
+            <ChevronRight size={18} strokeWidth={2} className="shrink-0 text-[var(--color-text-muted)]" aria-hidden />
+          </Link>
+          <Link href="/kabinet/profil" className={ROW}>
+            <span className={ICON}><UserRound size={20} strokeWidth={2} aria-hidden /></span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[16px] font-semibold">Профиль и контакты</span>
+              <span className="text-[14px] text-[var(--color-text-muted)]">Имя, телефон, агентство - для презентаций и ваших объектов</span>
+            </span>
+            <ChevronRight size={18} strokeWidth={2} className="shrink-0 text-[var(--color-text-muted)]" aria-hidden />
+          </Link>
+          {/* Оплаты пока нет — строка без ссылки, только статус. */}
+          <div className="flex items-center gap-4 px-6 py-5">
+            <span className={ICON}><CreditCard size={20} strokeWidth={2} aria-hidden /></span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[16px] font-semibold">Подписка Pro</span>
+              <span className="text-[14px] text-[var(--color-text-muted)]">Доступ открыт</span>
+            </span>
+          </div>
+        </section>
 
-      <form method="POST" action="/api/account" className="mt-10">
-        <input type="hidden" name="action" value="logout" />
-        <button type="submit" className="text-[14px] text-[var(--color-text-muted)] underline">
-          Выйти
-        </button>
-      </form>
+        <section className="flex flex-col gap-3 rounded-xl bg-[var(--color-surface-alt)] p-6">
+          <h2 className="text-[16px] font-semibold">Что открывает Pro</h2>
+          <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+            {PRO_PERKS.map(p => (
+              <li key={p} className="flex items-center gap-2 text-[14px] leading-relaxed text-[#1F3B2F]">
+                <Check size={16} strokeWidth={2.25} className="shrink-0 text-[var(--color-primary)]" aria-hidden />
+                {p}
+              </li>
+            ))}
+          </ul>
+        </section>
       </main>
     </>
   )

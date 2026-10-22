@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { AuthFlag } from '@/components/AuthFlag'
 // Self-hosted (app/fonts): Google-hosted fonts are downloaded during every
 // build, and a flaky fetch failed a production deploy on 2026-09-25.
 import localFont from "next/font/local";
@@ -123,6 +124,7 @@ export function RootShell({
         <link rel="dns-prefetch" href="https://mc.yandex.ru" />
       </head>
       <body className="min-h-full flex flex-col">
+        <AuthFlag />
         {/* GTM / GA4 / Метрика. Client-side so admin work and our own
             browsing never land in the reports — see components/Analytics.tsx. */}
         <Analytics />
