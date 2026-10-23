@@ -56,6 +56,10 @@ export type SaleCompsBundle = {
   radiusKm: number
   bedroomsRelaxed: boolean
   comps: SaleComp[]
+  /** Четверти цены за м² (на год) по всем похожим — для зон «дешевле / середина / дороже». */
+  q: { p25: number; p50: number; p75: number; min: number; max: number } | null
+  /** Сколько похожих вилл в каждой зоне. */
+  counts: { cheap: number; mid: number; pricey: number } | null
   source: string
   asOf: string
 }
@@ -170,13 +174,27 @@ export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle 
   const diffPct = med && self ? Math.round((self / med - 1) * 100) : null
 
   // Карточки: сначала с фото и площадью, ближние — выше.
-  const comps = [...chosen]
-    .sort((a, b) => Number(!!b.photo && !!b.buildingM2) - Number(!!a.photo && !!a.buildingM2) || a.distanceKm - b.distanceKm)
-    .slice(0, SHOW)
+  const byQuality = (a: SaleComp, b: SaleComp) => Number(!!b.photo && !!b.buildingM2) - Number(!!a.photo && !!a.buildingM2) || a.distanceKm - b.distanceKm
+  const sortedVals = [...vals].sort((a, b) => a - b)
+  const qt = (p: number) => sortedVals[Math.min(sortedVals.length - 1, Math.floor((sortedVals.length - 1) * p))]
+  const q = vals.length >= MIN_FOR_VERDICT ? { p25: qt(0.25), p50: qt(0.5), p75: qt(0.75), min: sortedVals[0], max: sortedVals[sortedVals.length - 1] } : null
+  let comps: SaleComp[]
+  let counts: SaleCompsBundle['counts'] = null
+  if (q) {
+    // Зоны (владелец 23.10.2026): в ленте — до SHOW вилл из каждой, чтобы
+    // плашка «дешевле / середина / дороже» было к чему прокрутить.
+    const zone = (c: SaleComp) => { const v = val(c); return v == null ? null : v < q.p25 ? 'cheap' : v > q.p75 ? 'pricey' : 'mid' }
+    const groups = { cheap: [] as SaleComp[], mid: [] as SaleComp[], pricey: [] as SaleComp[] }
+    for (const c of chosen) { const z = zone(c); if (z) groups[z].push(c) }
+    counts = { cheap: groups.cheap.length, mid: groups.mid.length, pricey: groups.pricey.length }
+    comps = [...groups.cheap.sort(byQuality).slice(0, SHOW), ...groups.mid.sort(byQuality).slice(0, SHOW), ...groups.pricey.sort(byQuality).slice(0, SHOW)]
+  } else {
+    comps = [...chosen].sort(byQuality).slice(0, SHOW)
+  }
 
   return {
     metric, median: med, self, diffPct,
-    n: chosen.length, radiusKm, bedroomsRelaxed: relaxed, comps,
+    n: chosen.length, radiusKm, bedroomsRelaxed: relaxed, comps, q, counts,
     source: idx.source, asOf: idx.asOf ?? idx.generatedAt,
   }
 }

@@ -9,6 +9,8 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 import { type SaleCompsBundle, type SaleComp } from '@/lib/sale-comps'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
+import { BandedRail } from './BandedRail'
+import { BAND_SURFACE, BAND_TEXT, type Band } from '@/lib/band-colors'
 
 const COPY = {
   ru: {
@@ -39,6 +41,15 @@ const COPY = {
     open: 'Объявление',
     prev: 'Назад', next: 'Дальше',
     asOf: (d: string) => `Данные на ${d}`,
+    verdict: (diff: number, year: boolean) => `${Math.abs(diff) <= 5 ? 'Эта вилла на уровне рынка' : `Эта вилла ${diff > 0 ? 'дороже' : 'дешевле'} рынка на ${Math.abs(diff)}%`} - если сравнивать цену ${year ? 'за м² на год владения' : 'за м²'}`,
+    midMark: 'середина рынка',
+    selfMark: 'эта вилла',
+    note: (n: number, r: number, year: boolean) => `${year ? 'За м² в год = цена ÷ площадь дома ÷ срок лизхолда. Так честно сравниваются виллы с разным сроком. ' : 'За м² = цена ÷ площадь дома. '}${n} ${plural(n, ['похожая вилла', 'похожие виллы', 'похожих вилл'])} в ${String(r).replace('.', ',')} км, объявления rumah123.com.`,
+    heading: 'Что продаётся рядом',
+    zone: { good: 'Дешевле рынка', mid: 'Середина рынка', bad: 'Дороже рынка' } as Record<Band, string>,
+    tag: { good: 'Дешевле', mid: 'Середина', bad: 'Дороже' } as Record<Band, string>,
+    upTo: 'до', from: 'от',
+    count: (n: number, here: boolean) => `${n} ${plural(n, ['вилла', 'виллы', 'вилл'])}${here ? ' · здесь эта вилла' : ''}`,
   },
   en: {
     title: 'For sale in this area',
@@ -68,6 +79,15 @@ const COPY = {
     open: 'Listing',
     prev: 'Previous', next: 'Next',
     asOf: (d: string) => `Data as of ${d}`,
+    verdict: (diff: number, year: boolean) => `${Math.abs(diff) <= 5 ? 'This villa is in line with the market' : `This villa is ${Math.abs(diff)}% ${diff > 0 ? 'above' : 'below'} the market`} - comparing price per m² ${year ? 'per year of ownership' : ''}`.trim(),
+    midMark: 'market midpoint',
+    selfMark: 'this villa',
+    note: (n: number, r: number, year: boolean) => `${year ? 'Per m² per year = price ÷ floor area ÷ lease term, so different lease terms compare fairly. ' : 'Per m² = price ÷ floor area. '}${n} similar ${n === 1 ? 'villa' : 'villas'} within ${r} km, rumah123.com listings.`,
+    heading: 'For sale nearby',
+    zone: { good: 'Below market', mid: 'Market midpoint', bad: 'Above market' } as Record<Band, string>,
+    tag: { good: 'Cheaper', mid: 'Midpoint', bad: 'Pricier' } as Record<Band, string>,
+    upTo: 'up to', from: 'from',
+    count: (n: number, here: boolean) => `${n} ${n === 1 ? 'villa' : 'villas'}${here ? ' · this villa is here' : ''}`,
   },
 }
 
@@ -79,31 +99,71 @@ function plural(n: number, forms: [string, string, string]): string {
 }
 
 
-// Как «Сдают помесячно/посуточно в этом районе» (ListingVerdict → DemandSummary):
-// заголовок, одна строка цен и объявления с фото от дорогих к дешёвым. Сравнение
-// цены этого объекта за м² — одной фразой в «Сколько принесёт?».
-export function SaleCompsBlock({ data, bedrooms, lang, hideTitle }: { data: SaleCompsBundle; bedrooms: number | null; lang: Lang; hideTitle?: boolean }) {
+// Вкладка «Продажа рядом» (макет «Продажа рядом: вариант 1», владелец 23.10.2026):
+// вывод «дороже/дешевле рынка на X% за м² в год», шкала с этой виллой и
+// серединой рынка, три зоны «дешевле / середина / дороже» с подсветкой карточек.
+export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundle; bedrooms: number | null; lang: Lang; hideTitle?: boolean }) {
   const c = pickCopy(COPY, lang)
   const isYear = data.metric === 'year'
-  const prices = data.comps.map(x => x.priceUsd).filter(x => x > 0).sort((x, y) => x - y)
-  const q = (p: number) => prices[Math.min(prices.length - 1, Math.floor((prices.length - 1) * p))]
-  const sorted = [...data.comps].sort((x, y) => y.priceUsd - x.priceUsd)
+  const q = data.q
+  const metric = (x: SaleComp) => isYear ? x.ppmYear : x.ppm
+  // Для покупателя дешевле — хорошо: зелёный, дороже — красный (владелец 23.10.2026).
+  const band = (v: number): Band => !q ? 'mid' : v < q.p25 ? 'good' : v > q.p75 ? 'bad' : 'mid'
+  const sorted = [...data.comps].sort((x, y) => (metric(x) ?? 0) - (metric(y) ?? 0))
+  const P = (usd: number) => <span className="whitespace-nowrap"><InlinePrice usd={Math.round(usd)} lang={lang} approx={false} /></span>
+  // Позиция на шкале: три равные трети — до четверти, середина, после трёх четвертей.
+  const pos = (v: number) => {
+    if (!q) return 50
+    const seg = (a: number, b: number, lo: number) => lo + (b > a ? Math.min(1, Math.max(0, (v - a) / (b - a))) : 0.5) * 100 / 3
+    return v < q.p25 ? seg(q.min, q.p25, 0) : v <= q.p75 ? seg(q.p25, q.p75, 100 / 3) : seg(q.p75, Math.max(q.max, v), 200 / 3)
+  }
+  const selfBand = data.self != null ? band(data.self) : null
+
   return (
-    <div>
+    <div className="flex flex-col gap-8">
       {!hideTitle && <h3 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-text)]">{c.title}</h3>}
-      {prices.length >= 3 && (
-        <p className={`${hideTitle ? '' : 'mt-1 '}mb-4 text-[16px] text-[var(--color-text)]`}>
-          {c.line(c.beds(bedrooms ?? 2, data.bedroomsRelaxed), data.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={q(0.5)} lang={lang} /></span>, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={q(0.25)} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={q(0.75)} lang={lang} approx={false} /></span>.
-        </p>
+      {data.diffPct != null && data.self != null && data.median != null && q && (
+        <section className="flex flex-col gap-5 rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6">
+          <p className="text-[18px] font-semibold leading-snug tracking-tight md:text-[20px]">{c.verdict(data.diffPct, isYear)}</p>
+          <div className="flex flex-col gap-2 px-2">
+            {/* Эта вилла — подписью над шкалой, середина рынка — под ней: так не накладываются. */}
+            <div className="relative h-10 text-[13px]">
+              <span className="absolute bottom-0 -translate-x-1/2 whitespace-nowrap text-center font-semibold text-[var(--color-text)]" style={{ left: `${Math.min(85, Math.max(15, pos(data.self)))}%` }}>{c.selfMark}<br />{P(data.self)}</span>
+            </div>
+            <div className="relative h-3 rounded-full bg-[linear-gradient(90deg,rgb(31_139_95/.25)_0_33.3%,rgb(232_160_40/.3)_33.3%_66.6%,rgb(209_67_52/.25)_66.6%_100%)]" aria-hidden="true">
+              <div className="absolute -inset-y-1.5 w-0.5 bg-[var(--color-text-muted)]" style={{ left: `${pos(data.median)}%` }} />
+              <div className="absolute -top-[5px] h-[22px] w-[22px] -translate-x-1/2 rounded-full border-[3px] border-white bg-[#D93025] shadow-[0_0_0_2px_#D93025]" style={{ left: `${pos(data.self)}%` }} />
+            </div>
+            <div className="relative h-10 text-[13px] text-[var(--color-text-muted)]">
+              <span className="absolute -translate-x-1/2 whitespace-nowrap text-center" style={{ left: `${Math.min(85, Math.max(15, pos(data.median)))}%` }}>{P(data.median)}<br />{c.midMark}</span>
+            </div>
+          </div>
+          <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">
+            {c.note(data.n, data.radiusKm, isYear)}{data.n < 30 ? ` ${c.few}` : ''}
+          </p>
+        </section>
       )}
-      <CardRail prevLabel={c.prev} nextLabel={c.next}>
-        {sorted.map(comp => <CompCard key={comp.url} comp={comp} isYear={isYear} lang={lang} />)}
-      </CardRail>
+      {q && data.counts ? (
+        <BandedRail heading={c.heading} prevLabel={c.prev} nextLabel={c.next}
+          chips={[
+            { band: 'good', title: c.zone.good, range: <>{c.upTo} {P(q.p25)}</>, money: c.count(data.counts.cheap, selfBand === 'good') },
+            { band: 'mid', title: c.zone.mid, range: <>{P(q.p25)} – {P(q.p75)}</>, money: c.count(data.counts.mid, selfBand === 'mid') },
+            { band: 'bad', title: c.zone.bad, range: <>{c.from} {P(q.p75)}</>, money: c.count(data.counts.pricey, selfBand === 'bad') },
+          ]}
+          items={sorted.map(comp => {
+            const t = band(metric(comp) ?? q.p50)
+            return { band: t, node: <CompCard key={comp.url} comp={comp} isYear={isYear} lang={lang} tone={t} tag={c.tag[t]} /> }
+          })} />
+      ) : (
+        <CardRail prevLabel={c.prev} nextLabel={c.next}>
+          {sorted.map(comp => <CompCard key={comp.url} comp={comp} isYear={isYear} lang={lang} />)}
+        </CardRail>
+      )}
     </div>
   )
 }
 
-function CompCard({ comp, isYear, lang }: { comp: SaleComp; isYear: boolean; lang: Lang }) {
+function CompCard({ comp, isYear, lang, tone, tag }: { comp: SaleComp; isYear: boolean; lang: Lang; tone?: Band; tag?: string }) {
   const c = pickCopy(COPY, lang)
   // rumah123 отдаёт картинку в нужном размере сам — большую не тянем.
   const photo = comp.photo?.replace('/1080x720-fit/', '/720x480-fit/') ?? null
@@ -115,7 +175,7 @@ function CompCard({ comp, isYear, lang }: { comp: SaleComp; isYear: boolean; lan
         href={comp.url}
         target="_blank"
         rel="nofollow noopener noreferrer"
-        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+        className={`group flex h-full flex-col overflow-hidden rounded-2xl border ${tone ? BAND_SURFACE[tone] : 'border-[var(--color-border)] bg-white'} transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]`}
       >
         <div className="relative aspect-[3/2] bg-[var(--color-search-bg)]">
           {photo && (
@@ -123,6 +183,7 @@ function CompCard({ comp, isYear, lang }: { comp: SaleComp; isYear: boolean; lan
           )}
         </div>
         <div className="flex flex-1 flex-col gap-1 p-5">
+          {tone && tag && <span className={`mb-1 self-start rounded-full bg-white px-2.5 py-0.5 text-[12px] font-semibold ${BAND_TEXT[tone]}`}>{tag}</span>}
           <div className="text-[20px] font-semibold text-[var(--color-text)] leading-tight">
             <InlinePrice usd={comp.priceUsd} lang={lang} />
           </div>
