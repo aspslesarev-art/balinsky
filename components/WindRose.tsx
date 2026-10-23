@@ -215,13 +215,14 @@ function streaks(flowDeg: number) {
 function WindMap({ flowDeg, lat, lng, here, north, compact = false }: { flowDeg: number; lat: number; lng: number; here: string; north: string; compact?: boolean }) {
   const { x0, y0, fx, fy } = tileOf(lat, lng)
   const tiles: { dx: number; dy: number }[] = []
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) tiles.push({ dx, dy })
+  // 5 плиток в ширину: на широкой полосе 3 не закрывали края — слева оставалась серая полоса.
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -2; dx <= 2; dx++) tiles.push({ dx, dy })
   const s = streaks(flowDeg)
   return (
     <div className={`relative h-[240px] w-full overflow-hidden rounded-xl bg-[var(--color-neutral-200)] ${compact ? '' : 'sm:h-[340px]'}`}>
       <div
         className="absolute"
-        style={{ width: TILE * 3, height: TILE * 3, left: `calc(50% - ${TILE + fx}px)`, top: `calc(50% - ${TILE + fy}px)`, transform: 'translateZ(0)' }}
+        style={{ width: TILE * 5, height: TILE * 3, left: `calc(50% - ${2 * TILE + fx}px)`, top: `calc(50% - ${TILE + fy}px)`, transform: 'translateZ(0)' }}
       >
         {tiles.map(({ dx, dy }) => (
           // eslint-disable-next-line @next/next/no-img-element
@@ -234,7 +235,7 @@ function WindMap({ flowDeg, lat, lng, here, north, compact = false }: { flowDeg:
             loading="lazy"
             decoding="async"
             className="absolute max-w-none select-none"
-            style={{ left: (dx + 1) * TILE, top: (dy + 1) * TILE }}
+            style={{ left: (dx + 2) * TILE, top: (dy + 1) * TILE }}
             draggable={false}
           />
         ))}
