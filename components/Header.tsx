@@ -134,7 +134,7 @@ export function Header({ active }: { active?: NavKey }) {
           </Link>
           <Link
             href={`/pro?next=${encodeURIComponent(pathname)}`}
-            className="bx-anon-only rounded-full bg-[var(--color-primary)] px-3.5 py-1.5 text-[12px] font-semibold tracking-wide text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+            className="bx-anon-only rounded-full bg-[var(--color-primary-hover)] px-3.5 py-1.5 text-[12px] font-semibold tracking-wide text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
             Pro
           </Link>

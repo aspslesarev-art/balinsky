@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { InfoTip } from '../InfoTip'
-import { RentalComps } from './RentalComps'
 import { Slider, ResetButton } from './Slider'
 import { MonthlyCalculator } from './MonthlyCalculator'
 import { usePathname } from 'next/navigation'
@@ -1313,10 +1312,8 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
         </ul>
       )}
 
-      {/* Соседи — ниже расчёта, как у помесячной аренды. */}
-      {snap.villa.lat != null && snap.villa.lng != null && (
-        <RentalComps lat={snap.villa.lat} lng={snap.villa.lng} adr={adr} lang={lang} areaSqm={snap.villa.area} landSqm={snap.villa.land} bedrooms={snap.villa.bedrooms} />
-      )}
+      {/* Лента «Что рядом сдают за эти же деньги» убрана 23.10.2026: те же соседи —
+          в «Будет ли спрос → Посуточно». */}
     </div>
   )
 }

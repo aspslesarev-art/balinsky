@@ -417,6 +417,21 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
   )
 }
 
+/** «Что проверить до оплаты» — в правой колонке «Безопасно ли это?» под участком
+ *  (макет «Безопасно ли это?», B — владелец 23.10.2026): закрывает пустоту справа. */
+export function SafetyChecks({ verdict: v, lang }: { verdict: Verdict; lang: Lang }) {
+  const c = pickCopy(COPY, lang)
+  if (!v.checks.length) return null
+  return (
+    <div className="rounded-[20px] border border-[var(--color-border)] bg-white p-5 md:p-6">
+      <h3 className="text-[16px] font-semibold text-[var(--color-text)]">{c.checks}</h3>
+      <ol className="mt-3 list-decimal pl-5 flex flex-col gap-1.5 text-[15px] leading-relaxed text-[var(--color-text)] marker:font-semibold marker:text-[#8A4B00]">
+        {v.checks.map(k => <li key={k}>{c.check[k]}</li>)}
+      </ol>
+    </div>
+  )
+}
+
 // «Безопасно ли это?» одним списком: документы, стройка, земля, застройщик,
 // природа, подъезд и уклон — строка на пункт с цветной точкой. Подсказка — только
 // где нужно действие (что спросить у застройщика), без вводных абзацев.

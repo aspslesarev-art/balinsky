@@ -61,13 +61,12 @@ import { LivingList } from '@/components/LivingVerdict'
 import { BeachBlock } from '@/components/BeachBlock'
 import { nearestBeachProfile, nearestBeachProfileByPoint } from '@/lib/beaches'
 import { GoalSwitch } from '@/components/GoalSwitch'
-import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
-import { ListingVerdict, SafetyCards, DemandSummary, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
+import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -1438,15 +1437,18 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
           ) : null} />
         <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
           {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
-          <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
+          <div className={`grid grid-cols-1 items-stretch gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
             dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
           {landOk && (
-            <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-              <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-            </LazyMount>
+            <div className="flex flex-col gap-6 [&>*:last-child]:flex-1">
+              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+              </LazyMount>
+              <SafetyChecks verdict={verdict} lang={lang} />
+            </div>
           )}
           </div>
         </DataChapter>
@@ -1472,11 +1474,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               </div>
             )}
             {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
-            {nearby && (
-              <GatedBlock kind="nearby" lang={lang}>
-                <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
-              </GatedBlock>
-            )}
+            {/* «Что рядом» списком убран 23.10.2026: повторял «Главное рядом» и карту с точками. */}
             {/* Карта туристов — сразу под «Что рядом»: вместе отвечают, оживлённо ли вокруг. */}
             {lat != null && lng != null && (
               <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>

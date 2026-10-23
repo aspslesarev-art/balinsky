@@ -78,7 +78,7 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
               >
                 <div className="relative w-full aspect-video bg-[var(--color-search-bg)]">
                   {thumb ? (
-                    <Image src={thumb} alt={v.name ?? 'Видео'} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+                    <Image src={thumb} alt="" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
                   )}
