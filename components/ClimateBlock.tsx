@@ -95,7 +95,7 @@ type Props = {
   footer?: ReactNode
 }
 
-export function ClimateBlock({ climate, air, lang, lat, lng, footer, wide = false }: Props & { /** Широкой полосой: цифры слева, ветер справа (страницы вилл и апартаментов, 23.10.2026). */ wide?: boolean }) {
+export function ClimateBlock({ climate, air, lang, lat, lng, footer, wide = false }: Props & { /** Широкой полосой: цифры слева, ветер справа, оба с верхнего края; карта ветра ниже (страницы вилл и апартаментов, 23.10.2026). */ wide?: boolean }) {
   const t = pickCopy(COPY, lang)
   const year = climate?.year
   if (!climate || !year?.sunny) return null
@@ -117,10 +117,9 @@ export function ClimateBlock({ climate, air, lang, lat, lng, footer, wide = fals
 
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-      {wide && <h3 className="mb-3 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>}
-      <div className={wide && climate.wind ? 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-8' : ''}>
+      <div className={wide && climate.wind ? 'grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8' : ''}>
       <div className="min-w-0">
-      {!wide && <h3 className="mb-3 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>}
+      <h3 className="mb-3 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>
 
       <div className="flex items-baseline gap-2">
         <Sun size={18} className="shrink-0 translate-y-0.5 text-[#F59E0B]" />
@@ -162,7 +161,7 @@ export function ClimateBlock({ climate, air, lang, lat, lng, footer, wide = fals
       </div>
       {climate.wind && (
         <div className={wide ? 'min-w-0 border-t border-[var(--color-border)] pt-4 lg:border-t-0 lg:pt-0' : 'mt-4 border-t border-[var(--color-border)] pt-4'}>
-          <WindRose wind={climate.wind} lang={lang} lat={lat} lng={lng} />
+          <WindRose wind={climate.wind} lang={lang} lat={lat} lng={lng} compact={wide} />
         </div>
       )}
       </div>

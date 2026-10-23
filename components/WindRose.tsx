@@ -212,13 +212,13 @@ function streaks(flowDeg: number) {
   return { list: out, dx: dx * 28, dy: dy * 28 }
 }
 
-function WindMap({ flowDeg, lat, lng, here, north }: { flowDeg: number; lat: number; lng: number; here: string; north: string }) {
+function WindMap({ flowDeg, lat, lng, here, north, compact = false }: { flowDeg: number; lat: number; lng: number; here: string; north: string; compact?: boolean }) {
   const { x0, y0, fx, fy } = tileOf(lat, lng)
   const tiles: { dx: number; dy: number }[] = []
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) tiles.push({ dx, dy })
   const s = streaks(flowDeg)
   return (
-    <div className="relative h-[240px] w-full overflow-hidden rounded-xl bg-[var(--color-neutral-200)] sm:h-[340px]">
+    <div className={`relative h-[240px] w-full overflow-hidden rounded-xl bg-[var(--color-neutral-200)] ${compact ? '' : 'sm:h-[340px]'}`}>
       <div
         className="absolute"
         style={{ width: TILE * 3, height: TILE * 3, left: `calc(50% - ${TILE + fx}px)`, top: `calc(50% - ${TILE + fy}px)`, transform: 'translateZ(0)' }}
@@ -285,9 +285,9 @@ function Rose({ data }: { data: WindRoseData }) {
 
 // ---------------------------------------------------------------- block
 
-type Props = { wind: Wind | null | undefined; lang: Lang; lat?: number | null; lng?: number | null }
+type Props = { wind: Wind | null | undefined; lang: Lang; lat?: number | null; lng?: number | null; /** Ниже карта — в полосе «Солнце и погода» (23.10.2026). */ compact?: boolean }
 
-export function WindRose({ wind, lang, lat, lng }: Props) {
+export function WindRose({ wind, lang, lat, lng, compact = false }: Props) {
   const [season, setSeason] = useState<Season>(wind?.dry?.pct?.length ? 'dry' : 'all')
   const t = pickCopy(COPY, lang)
   if (!wind?.all?.pct?.length) return null
@@ -328,7 +328,7 @@ export function WindRose({ wind, lang, lat, lng }: Props) {
       </div>
 
       {lat != null && lng != null
-        ? <WindMap flowDeg={(dom.mean + 180) % 360} lat={lat} lng={lng} here={t.here} north={t.north} />
+        ? <WindMap flowDeg={(dom.mean + 180) % 360} lat={lat} lng={lng} here={t.here} north={t.north} compact={compact} />
         : <div className="w-[168px]"><Rose data={data} /></div>}
 
       <div className="flex flex-col gap-1">
