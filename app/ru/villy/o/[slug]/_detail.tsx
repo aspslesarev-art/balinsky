@@ -1457,17 +1457,18 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {districtCopy && districtSlug && (
               <div className="[&>section]:!mb-0"><DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} /></div>
             )}
-            {/* Три полосы друг под другом: текст слева, карта справа — «Как добраться»,
-                «Главное рядом», «Солнце и погода» (макет «Удобно ли там жить?», B —
+            {/* Три полосы друг под другом: текст слева, карта справа — «Солнце и погода»,
+                «Как добраться», «Главное рядом» (макет «Удобно ли там жить?», B —
                 владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли
                 это?». Пляж — ниже, во всю ширину. */}
             {(livingFacts || geoFacts) && (
               <div className="mb-4 flex flex-col gap-4 [&>*]:mb-0">
+                {/* «Солнце и погода» — сразу под «О районе» (владелец 23.10.2026). */}
+                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
                 {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
                   map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
                 {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
                   map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
-                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
               </div>
             )}
             {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
