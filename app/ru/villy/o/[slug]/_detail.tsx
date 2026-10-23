@@ -1451,16 +1451,21 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {hasPlace && (
           <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {/* Слева: дорога, «Главное рядом», район и берег. Справа: солнце, погода и ветер.
+            {/* Сверху две карты рядом: «Как добраться» и «Главное рядом» (макет «Карты», A —
+                владелец 23.10.2026). Ниже: район и берег слева, солнце, погода и ветер справа.
                 Пляж — ниже, во всю ширину. */}
             {(livingFacts || geoFacts) && (
-              <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                <div className="flex flex-col gap-4 [&>*]:mb-0">
-                  {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes} />}
-                  {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest} />}
-                  {geoFacts && <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />}
+              <div className="mb-4 flex flex-col gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
+                  {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
+                    map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
+                  {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
+                    map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
                 </div>
-                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
+                  {geoFacts && <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />}
+                  {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
+                </div>
               </div>
             )}
             {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}

@@ -5,6 +5,7 @@
 // Read-by-id loader where null is a legitimate "not found" (caller renders
 // nothing), so this is deliberately NOT wrapped in safeCachedTable/unstable_cache
 // — see CLAUDE.md "Caching & egress" and lib/safe-cached-table.ts.
+import type { RouteLines } from './listing-map'
 import { createClient } from '@supabase/supabase-js'
 
 const sb = createClient(
@@ -108,6 +109,8 @@ export type GeoFacts = {
   air: { uaqi_avg: number | null; ispu_avg: number | null; dominant: string | null; hours: number } | null
   routes: Routes | null
   routes_peak_at: string | null
+  /** Линии маршрутов для карты «Как добраться» (scripts/route-lines.ts). */
+  route_lines: RouteLines | null
   /** Approach-road proxies. Nothing renders them today — see migration 058. */
   access: {
     sv?: { date: string | null; dist_m: number | null; status: string } | null
@@ -126,7 +129,7 @@ export async function loadGeoFacts(
 ): Promise<GeoFacts | null> {
   const { data, error } = await sb
     .from('listing_geo_facts')
-    .select('elevation_m,sunshine_hours_year,climate,air,routes,routes_peak,routes_peak_at,access')
+    .select('elevation_m,sunshine_hours_year,climate,air,routes,routes_peak,routes_peak_at,route_lines,access')
     .eq('kind', kind)
     .eq('airtable_id', airtableId)
     .maybeSingle()
@@ -142,6 +145,7 @@ export async function loadGeoFacts(
     // those legs have no static_s and render as a single number.
     routes: (data.routes_peak as Routes | null) ?? (data.routes as Routes | null) ?? null,
     routes_peak_at: (data.routes_peak_at as string | null) ?? null,
+    route_lines: (data.route_lines as RouteLines | null) ?? null,
     access: (data.access as GeoFacts['access']) ?? null,
   }
 }

@@ -5,6 +5,9 @@ import { Plane, Car, Waves, Mountain } from 'lucide-react'
 import type { ComplexAccess, Routes } from '@/lib/complex-access'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { placeName } from '@/lib/translit'
+import { ROUTE_COLOR, type RouteLines } from '@/lib/listing-map'
+import { ListingMap } from './ListingMap'
+import { LazyMount } from './LazyMount'
 
 const COPY = {
   ru: { title: 'Как добраться', airport: 'Аэропорт', canggu: 'Чангу', seminyak: 'Семиньяк', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур', min: 'мин', km: 'км', beach: 'До пляжа', elevation: 'Высота над морем', m: 'м' },
@@ -35,11 +38,13 @@ type Props = {
    * unlabelled hour and read up to half an hour longer for the same trip.
    */
   routes?: Routes | null
+  /** Карта с маршрутами (макет «Карты», A — 23.10.2026): линии, точка и имя объекта. */
+  map?: { lines: RouteLines; lat: number; lng: number; name: string } | null
 }
 
 const MINUTES = (sec: number) => Math.round(sec / 60)
 
-export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) {
+export function ComplexAccessBlock({ access, lang, elevationM, routes, map }: Props) {
   const t = pickCopy(COPY, lang)
   // Both numbers when the road makes a real difference, one when it doesn't:
   // "45–56" says something, "45–46" is noise.
@@ -71,13 +76,28 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes }: Props) 
   const hasElevation = elevationM != null
   if (rows.length === 0 && !hasBeach && !hasElevation) return null
 
+  const color = (key: string) => map ? (ROUTE_COLOR as Record<string, string>)[key] : undefined
+  const mapRoutes = map ? rows.flatMap(r => {
+    const line = map.lines[r.key as keyof RouteLines]
+    return line?.length ? [{ key: r.key, color: color(r.key)!, label: `${r.label} ${r.text} ${t.min}`, line }] : []
+  }) : []
+
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
       <h3 className="mb-3 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>
+      {map && mapRoutes.length > 0 && (
+        <div className="mb-4">
+          <LazyMount fallback={<div className="h-[320px] rounded-xl bg-[var(--color-search-bg)]" />}>
+            <ListingMap lat={map.lat} lng={map.lng} name={map.name} routes={mapRoutes} />
+          </LazyMount>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
         {rows.map(({ key, label, text, Icon }) => (
           <div key={key} className="flex min-w-0 items-center gap-1.5">
-            <Icon size={16} className="shrink-0 text-[var(--color-primary)]" />
+            {color(key)
+              ? <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color(key) }} />
+              : <Icon size={16} className="shrink-0 text-[var(--color-primary)]" />}
             <span className="truncate text-[13px] text-[var(--color-text-muted)]">{label}</span>
             <span className="shrink-0 text-[14px] font-semibold text-[var(--color-text)]">
               {text} {t.min}

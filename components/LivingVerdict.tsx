@@ -8,6 +8,10 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 import type { LivingFacts, LivingRow, NoiseReason } from '@/lib/living'
 import type { Tone } from '@/lib/listing-verdict'
 import { pluralRu } from '@/lib/plural-ru'
+import { nearPoints } from '@/lib/listing-map'
+import type { NearbyPlace } from '@/lib/nearby-places'
+import { ListingMap } from './ListingMap'
+import { LazyMount } from './LazyMount'
 
 const TONE_DOT: Record<Tone, string> = { plus: 'bg-[var(--color-primary)]', warn: 'bg-[#D08A1C]', minus: 'bg-[#C0392B]' }
 
@@ -59,12 +63,20 @@ const COPY = {
   },
 }
 
-export function LivingList({ facts: f, lang, hideBeach = false }: { facts: LivingFacts; lang: Lang; /** Пляж описан отдельной карточкой (BeachBlock) — здесь не повторяем. */ hideBeach?: boolean }) {
+export function LivingList({ facts: f, lang, hideBeach = false, map }: {
+  facts: LivingFacts
+  lang: Lang
+  /** Пляж описан отдельной карточкой (BeachBlock) — здесь не повторяем. */
+  hideBeach?: boolean
+  /** Карта: объект красной точкой, места рядом цветными (макет «Карты», A — 23.10.2026). */
+  map?: { byCategory: Record<string, NearbyPlace[]>; lat: number; lng: number; name: string } | null
+}) {
   const c = pickCopy(COPY, lang)
   const row = (k: LivingRow['key']) => f.rows.find(r => r.key === k)
   const dist = (r: LivingRow, extra?: string | null) =>
     [r.km != null ? c.km(r.km) : c.far(r.searchKm ?? 0), r.name, extra].filter(Boolean).join(' · ')
 
+  const near = map ? nearPoints(map.byCategory) : null
   const lines: Line[] = []
   const school = row('school'), beach = row('beach'), health = row('health'), shop = row('shop'), cafes = row('cafes'), quiet = row('quiet'), volcano = row('volcano')
   if (school) lines.push({ key: 'school', label: school.intl ? c.labels.intl : c.labels.school, value: dist(school), tone: school.tone })
@@ -78,6 +90,21 @@ export function LivingList({ facts: f, lang, hideBeach = false }: { facts: Livin
   return (
     <div className="rounded-[20px] border border-[var(--color-border)] bg-white px-5 md:px-6">
       <h3 className="pt-5 text-[15px] font-semibold text-[var(--color-text)]">{c.title}</h3>
+      {near && near.points.length > 0 && (
+        <div className="mt-3 flex flex-col gap-3">
+          <LazyMount fallback={<div className="h-[320px] rounded-xl bg-[var(--color-search-bg)]" />}>
+            <ListingMap lat={map!.lat} lng={map!.lng} name={map!.name} points={near.points} />
+          </LazyMount>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[var(--color-text-muted)]">
+            {near.groups.map(g => (
+              <span key={g.key} className="flex items-center gap-1.5">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />
+                {lang === 'ru' ? g.ru : g.en}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <dl className="mt-2 divide-y divide-[var(--color-border)]">
         {lines.map(l => (
           <div key={l.key} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-6">
