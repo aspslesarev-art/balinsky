@@ -398,8 +398,18 @@ const COPY: Record<Lang, Copy> = {
  *  за месяц) и загрузка (доля 0..1 посуточно, число месяцев помесячно). */
 export type NightCostLive = { price: number; rate: number; load: number }
 
-/** embedded — шаг внутри карточки калькулятора: без своей рамки, с чертой снизу. */
-export function NightCost({ snap, lang, mode = 'daily', live, embedded = false }: { snap: Snapshot; lang: Lang; mode?: 'daily' | 'monthly'; live?: NightCostLive; embedded?: boolean }) {
+/** Поля снимка, нужные блоку: страница передаёт только их, а не весь снимок с соседями. */
+export type NightCostSnap = {
+  villa: Pick<Snapshot['villa'], 'askingPrice' | 'leaseholdYearsLeft' | 'buildYearsLeft'>
+  scenarios: { median: Pick<NonNullable<Snapshot['scenarios']>['median'], 'adrAsking'> } | null
+  monthly: Pick<NonNullable<Snapshot['monthly']>, 'p50'> | null
+  ownBooking: Pick<NonNullable<Snapshot['ownBooking']>, 'adr' | 'occupancy'> | null
+  region: { occupancyByScenario: Pick<Snapshot['region']['occupancyByScenario'], 'median'> }
+}
+
+/** bare — внутри вкладки «Будет ли спрос?»: без своей рамки и заголовка
+ *  (с 23.10.2026 блок стоит там, а не в калькуляторе). */
+export function NightCost({ snap, lang, mode = 'daily', live, bare = false }: { snap: NightCostSnap; lang: Lang; mode?: 'daily' | 'monthly'; live?: NightCostLive; bare?: boolean }) {
   const c = COPY[lang] ?? COPY.en
   const t = c[mode]
   const { currency } = useCurrency()
@@ -443,12 +453,13 @@ export function NightCost({ snap, lang, mode = 'daily', live, embedded = false }
   const ratioText = (Math.round(ratio * 10) / 10).toLocaleString(c.locale)
 
   return (
-    <>
-    <section className={embedded ? 'mb-8 border-b border-[var(--color-border)] pb-8' : 'mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8'} aria-labelledby={`night-cost-title-${mode}`}>
-      <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{c.eyebrow}</div>
-      <h3 id={`night-cost-title-${mode}`} className="mt-1 text-[18px] font-semibold tracking-tight text-[var(--color-text)]">{t.title}</h3>
+    <section className={bare ? '' : 'mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8'} aria-labelledby={bare ? undefined : `night-cost-title-${mode}`} aria-label={bare ? t.title : undefined}>
+      {!bare && <>
+        <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{c.eyebrow}</div>
+        <h3 id={`night-cost-title-${mode}`} className="mt-1 text-[18px] font-semibold tracking-tight text-[var(--color-text)]">{t.title}</h3>
+      </>}
 
-      <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className={`${bare ? '' : 'mt-6 '}grid grid-cols-1 gap-3 lg:grid-cols-3`}>
         <div className="flex flex-col gap-2 rounded-xl bg-[var(--color-surface-alt)] p-4">
           <div className="text-[14px] text-[var(--color-text-muted)]">{c.own}</div>
           <div className="text-[28px] font-semibold leading-tight tracking-tight text-[var(--color-text)] tabular-nums">
@@ -489,7 +500,7 @@ export function NightCost({ snap, lang, mode = 'daily', live, embedded = false }
         </div>
       </div>
 
-      <div className={embedded ? 'mt-4' : 'mt-6 border-t border-[var(--color-border)] pt-4'}>
+      <div className={bare ? 'mt-4' : 'mt-6 border-t border-[var(--color-border)] pt-4'}>
         <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">
           {c.note(
             money(price),
@@ -501,8 +512,5 @@ export function NightCost({ snap, lang, mode = 'daily', live, embedded = false }
         </p>
       </div>
     </section>
-    {/* Граница шагов: выше себестоимость, ниже — ползунки и доходность. */}
-    {embedded && <h3 className="mb-6 text-[18px] font-semibold tracking-tight text-[var(--color-text)]">{c.detailed}</h3>}
-    </>
   )
 }

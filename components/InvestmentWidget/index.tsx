@@ -5,7 +5,6 @@ import { InfoTip } from '../InfoTip'
 import { RentalComps } from './RentalComps'
 import { Slider, ResetButton } from './Slider'
 import { MonthlyCalculator } from './MonthlyCalculator'
-import { NightCost } from './NightCost'
 import { usePathname } from 'next/navigation'
 import {
   Info, ChevronDown, ChevronUp, TrendingUp,
@@ -1187,9 +1186,6 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
         </div>
         <ResetButton onClick={reset} lang={lang} show={changed} />
       </div>
-
-      {/* Сначала себестоимость, потом доходность — от тех же ползунков ниже. */}
-      <NightCost snap={snap} lang={lang} live={{ price, rate: adr, load: occ / 100 }} embedded />
 
       {/* Слева ползунки в одну колонку, справа итог. */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">

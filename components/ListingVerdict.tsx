@@ -9,7 +9,8 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 import { districtRu } from '@/lib/district-ru'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
-import type { NearbyMatchCard } from '@/lib/investment/snapshot'
+import type { InvestmentSnapshot, NearbyMatchCard } from '@/lib/investment/snapshot'
+import { NightCost, type NightCostSnap } from './InvestmentWidget/NightCost'
 import type { AirbnbComp } from '@/lib/airbnb-nearby'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
@@ -520,7 +521,7 @@ function plausibleArea(m2: number | null): number | null {
   return m2 != null && m2 >= 20 ? m2 : null
 }
 
-export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], airbnbComps = [], sale, lang }: {
+export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], airbnbComps = [], sale, snap, lang }: {
   verdict: Verdict
   monthly: MonthlyBundle | null
   bedrooms: number | null
@@ -531,9 +532,19 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   airbnbComps?: AirbnbComp[]
   /** Лента «Продаются в этом районе» — третьей вкладкой. */
   sale?: ReactNode
+  /** Снимок калькулятора — для «Сколько стоит вам ночь / месяц» (владелец 23.10.2026). */
+  snap?: InvestmentSnapshot | null
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
+  // В клиентский блок — только нужные поля, не весь снимок с соседями.
+  const cost: NightCostSnap | null = snap ? {
+    villa: { askingPrice: snap.villa.askingPrice, leaseholdYearsLeft: snap.villa.leaseholdYearsLeft, buildYearsLeft: snap.villa.buildYearsLeft },
+    scenarios: snap.scenarios ? { median: { adrAsking: snap.scenarios.median.adrAsking } } : null,
+    monthly: snap.monthly ? { p50: snap.monthly.p50 } : null,
+    ownBooking: snap.ownBooking ? { adr: snap.ownBooking.adr, occupancy: snap.ownBooking.occupancy } : null,
+    region: { occupancyByScenario: { median: snap.region.occupancyByScenario.median } },
+  } : null
   const dec = (x: number) => (lang === 'en' || lang === 'zh' ? x.toFixed(1) : x.toFixed(1).replace('.', ','))
   const cardCls = 'flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
   const dq = quartiles(dailyComps.map(x => x.adr))
@@ -576,6 +587,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             </InfoTip>
           )}
           </div>
+          {cost && <div className="mb-8"><NightCost snap={cost} lang={lang} bare /></div>}
           {/* Booking и Airbnb одной лентой, от дорогих к дешёвым (владелец 21.10.2026). */}
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
             {[
@@ -626,6 +638,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
           <p className="mb-4 text-[16px] text-[var(--color-text)]">
             {m.ownN && m.ownDistrict ? c.whoDistrict(m.bedroomsRelaxed ? null : bedrooms, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
           </p>
+          {cost && <div className="mb-8"><NightCost snap={cost} lang={lang} mode="monthly" bare /></div>}
           <CardRail prevLabel={c.prev} nextLabel={c.next}>
             {[...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd).map(comp => (
               <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>

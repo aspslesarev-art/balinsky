@@ -8,7 +8,6 @@ import { Slider, ResetButton } from './Slider'
 import { fmtMoney, fmtPct, fmtYears } from './utils'
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
-import { NightCost } from './NightCost'
 import { AGENT_FEE_PCT, MONTHS_RENTED, computeMonthlyEconomics } from '@/lib/investment/monthly'
 import type { TaxStatus } from '@/lib/investment/economics'
 import { pickCopy, type Lang } from '@/lib/i18n'
@@ -264,9 +263,6 @@ export function MonthlyCalculator({ snap, lang, price, setPrice }: { snap: Snaps
       </div>
       <div className="mt-2 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{restricted ? t.sub : t.subCompare}</div>
       <div className="mt-1 mb-8 text-[13px] text-[var(--color-text-muted)]">{m.ownN && m.ownDistrict && t.sampleMixed ? t.sampleMixed(m.n, m.ownN, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
-
-      {/* Сначала себестоимость, потом доходность — от тех же ползунков ниже. */}
-      <NightCost snap={snap} lang={lang} mode="monthly" live={{ price, rate: rent, load: months }} embedded />
 
       {/* Слева ползунки в одну колонку, справа итог — как у посуточной. */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
