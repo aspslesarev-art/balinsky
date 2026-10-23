@@ -119,10 +119,12 @@ export function NightReceiptBlock({ r, marketMedian, lang }: { r: Receipt; marke
   return (
     <section aria-label={c.eyebrow(r.unit)} className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-        <div className={`${tile} ${earn > 0 ? 'bg-[var(--color-primary-soft)] text-[var(--color-primary-pressed)]' : 'bg-[rgb(209_67_52/.08)] text-[#8A1F14]'}`}>
-          <span className="text-[13px]">{c.kNet(r.unit)}</span>
-          <span className="text-[24px] font-semibold leading-tight tracking-tight tabular-nums text-[var(--color-text)]">{P(r.net)}</span>
-          <span className="text-[12px] leading-snug">{earn > 0 ? c.kNetSub(P(earn)) : c.kNetLoss}</span>
+        {/* Без заливки по смыслу (владелец 23.10.2026): цветные плитки путались с
+            цветными зонами «плохо / средне / хорошо» ниже. */}
+        <div className={`${tile} bg-[var(--color-surface-alt)]`}>
+          <span className="text-[13px] text-[var(--color-text-muted)]">{c.kNet(r.unit)}</span>
+          <span className="text-[24px] font-semibold leading-tight tracking-tight tabular-nums">{P(r.net)}</span>
+          <span className="text-[12px] leading-snug text-[var(--color-text-muted)]">{earn > 0 ? c.kNetSub(P(earn)) : c.kNetLoss}</span>
         </div>
         <div className={`${tile} bg-[var(--color-surface-alt)]`}>
           <span className="text-[13px] text-[var(--color-text-muted)]">{c.kMonth}</span>
