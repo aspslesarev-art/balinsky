@@ -118,6 +118,7 @@ export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundl
     return v < q.p25 ? seg(q.min, q.p25, 0) : v <= q.p75 ? seg(q.p25, q.p75, 100 / 3) : seg(q.p75, Math.max(q.max, v), 200 / 3)
   }
   const selfBand = data.self != null ? band(data.self) : null
+  const unit = <span className="whitespace-nowrap text-[14px] font-medium text-[var(--color-text-muted)]">{isYear ? c.perYear : c.perM2}</span>
 
   return (
     <div className="flex flex-col gap-8">
@@ -128,14 +129,14 @@ export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundl
           <div className="flex flex-col gap-2 px-2">
             {/* Эта вилла — подписью над шкалой, середина рынка — под ней: так не накладываются. */}
             <div className="relative h-10 text-[13px]">
-              <span className="absolute bottom-0 -translate-x-1/2 whitespace-nowrap text-center font-semibold text-[var(--color-text)]" style={{ left: `${Math.min(85, Math.max(15, pos(data.self)))}%` }}>{c.selfMark}<br />{P(data.self)}</span>
+              <span className="absolute bottom-0 -translate-x-1/2 whitespace-nowrap text-center font-semibold text-[var(--color-text)]" style={{ left: `${Math.min(85, Math.max(15, pos(data.self)))}%` }}>{c.selfMark}<br />{P(data.self)} <span className="font-normal text-[var(--color-text-muted)]">{isYear ? c.perYear : c.perM2}</span></span>
             </div>
             <div className="relative h-3 rounded-full bg-[linear-gradient(90deg,rgb(31_139_95/.25)_0_33.3%,rgb(232_160_40/.3)_33.3%_66.6%,rgb(209_67_52/.25)_66.6%_100%)]" aria-hidden="true">
               <div className="absolute -inset-y-1.5 w-0.5 bg-[var(--color-text-muted)]" style={{ left: `${pos(data.median)}%` }} />
               <div className="absolute -top-[5px] h-[22px] w-[22px] -translate-x-1/2 rounded-full border-[3px] border-white bg-[#D93025] shadow-[0_0_0_2px_#D93025]" style={{ left: `${pos(data.self)}%` }} />
             </div>
             <div className="relative h-10 text-[13px] text-[var(--color-text-muted)]">
-              <span className="absolute -translate-x-1/2 whitespace-nowrap text-center" style={{ left: `${Math.min(85, Math.max(15, pos(data.median)))}%` }}>{P(data.median)}<br />{c.midMark}</span>
+              <span className="absolute -translate-x-1/2 whitespace-nowrap text-center" style={{ left: `${Math.min(85, Math.max(15, pos(data.median)))}%` }}>{P(data.median)} {isYear ? c.perYear : c.perM2}<br />{c.midMark}</span>
             </div>
           </div>
           <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">
@@ -146,9 +147,10 @@ export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundl
       {q && data.counts ? (
         <BandedRail heading={c.heading} prevLabel={c.prev} nextLabel={c.next}
           chips={[
-            { band: 'good', title: c.zone.good, range: <>{c.upTo} {P(q.p25)}</>, money: c.count(data.counts.cheap, selfBand === 'good') },
-            { band: 'mid', title: c.zone.mid, range: <>{P(q.p25)} – {P(q.p75)}</>, money: c.count(data.counts.mid, selfBand === 'mid') },
-            { band: 'bad', title: c.zone.bad, range: <>{c.from} {P(q.p75)}</>, money: c.count(data.counts.pricey, selfBand === 'bad') },
+            // Без единицы «$40» читалось как цена виллы (владелец 23.10.2026).
+            { band: 'good', title: c.zone.good, range: <>{c.upTo} {P(q.p25)} {unit}</>, money: c.count(data.counts.cheap, selfBand === 'good') },
+            { band: 'mid', title: c.zone.mid, range: <>{P(q.p25)} – {P(q.p75)} {unit}</>, money: c.count(data.counts.mid, selfBand === 'mid') },
+            { band: 'bad', title: c.zone.bad, range: <>{c.from} {P(q.p75)} {unit}</>, money: c.count(data.counts.pricey, selfBand === 'bad') },
           ]}
           items={sorted.map(comp => {
             const t = band(metric(comp) ?? q.p50)
