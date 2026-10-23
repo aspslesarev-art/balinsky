@@ -1453,6 +1453,10 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
 
         {hasPlace && (
           <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
+            {/* «О районе» — первым в разделе, над «Как добраться» (владелец 23.10.2026). */}
+            {districtCopy && districtSlug && (
+              <div className="[&>section]:!mb-0"><DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} /></div>
+            )}
             {/* Три полосы друг под другом: текст слева, карта справа — «Как добраться»,
                 «Главное рядом», «Солнце и погода» (макет «Удобно ли там жить?», B —
                 владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли
@@ -1475,9 +1479,6 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
             {/* Карта туристов — сразу под «Что рядом»: вместе отвечают, оживлённо ли вокруг. */}
             {lat != null && lng != null && (
               <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
-            )}
-            {districtCopy && districtSlug && (
-              <DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
             )}
           </DataChapter>
         )}
