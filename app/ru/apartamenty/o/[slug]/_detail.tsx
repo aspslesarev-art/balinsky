@@ -1,6 +1,7 @@
 // Shared apartment-detail renderer for both /ru/apartamenty/o/[slug]
 // and /en/apartments/o/[slug]. Layout / data fetching live here only.
 
+import { ProPendingNote } from '@/components/ProPendingNote'
 import type { ReactNode } from 'react'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
@@ -1277,6 +1278,7 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
         {/* «Для дохода / Для жизни»: в режиме «для жизни» — только безопасность и удобство (lib/living.ts). */}
         {/* Итог «Для дохода / Для жизни» и разделы аналитики — только для вошедших
             (.bx-auth-block в globals.css); гостю после описания сразу контакты менеджера. */}
+        <ProPendingNote lang={lang} />
         <div className="bx-auth-block">
         <GoalSwitch lang={lang}
           income={

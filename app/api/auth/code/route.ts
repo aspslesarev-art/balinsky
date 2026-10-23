@@ -1,6 +1,7 @@
+import { loginCookies } from '@/lib/pro-access'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { LOGIN_CHALLENGE_COOKIE, redeemLoginCode, sessionCookies } from '@/lib/site-auth'
+import { LOGIN_CHALLENGE_COOKIE, redeemLoginCode } from '@/lib/site-auth'
 
 // Проверка кода из Telegram. Код сам по себе ничего не значит: он
 // действителен только вместе с challenge из httpOnly-куки этого браузера,
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
   }
 
   const res = NextResponse.json({ ok: true })
-  for (const c of sessionCookies(result.telegramId)) res.cookies.set(c)
+  for (const c of await loginCookies(result.telegramId)) res.cookies.set(c)
   // Challenge отработал — гасим куку, чтобы она не болталась до истечения.
   res.cookies.set({ name: LOGIN_CHALLENGE_COOKIE, value: '', path: '/', maxAge: 0 })
   return res

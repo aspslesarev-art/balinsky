@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { Home, UserRound, CreditCard, ChevronRight, Check } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { WishlistRow } from '@/components/kabinet/WishlistRow'
-import { getSiteUser } from '@/lib/site-auth'
+import { getSiteUser, getProStatus } from '@/lib/site-auth'
 import { countByAuthor } from '@/lib/agent-listings/store'
 
 // Личный кабинет, вариант B из макета (владелец 22.10.2026,
@@ -35,7 +35,8 @@ export default async function KabinetPage() {
   const user = await getSiteUser()
   // Гость — на общую страницу входа Pro, после входа вернёт сюда.
   if (!user) redirect('/pro?next=/kabinet')
-  const objects = await countByAuthor(user.telegramId)
+  const [objects, pro] = await Promise.all([countByAuthor(user.telegramId), getProStatus(user.telegramId)])
+  const proText = pro === 'granted' ? 'Pro открыт' : pro === 'denied' ? 'Без Pro' : 'Pro на проверке'
 
   const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || (user.username ? `@${user.username}` : 'Без имени')
   const initial = (user.firstName || user.username || '?').trim().charAt(0).toUpperCase()
@@ -51,10 +52,10 @@ export default async function KabinetPage() {
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="truncate text-[28px] font-semibold leading-tight tracking-tight">{name}</h1>
-              <span className="rounded-full bg-[var(--color-primary)] px-2.5 py-0.5 text-[12px] font-semibold tracking-wide text-white">PRO</span>
+              {pro === 'granted' && <span className="rounded-full bg-[var(--color-primary)] px-2.5 py-0.5 text-[12px] font-semibold tracking-wide text-white">PRO</span>}
             </div>
             <span className="text-[14px] text-[var(--color-text-muted)]">
-              {user.username && name !== `@${user.username}` ? `@${user.username} · ` : ''}Pro открыт
+              {user.username && name !== `@${user.username}` ? `@${user.username} · ` : ''}{proText}
             </span>
           </div>
           <form method="POST" action="/api/account">
@@ -90,7 +91,7 @@ export default async function KabinetPage() {
             <span className={ICON}><CreditCard size={20} strokeWidth={2} aria-hidden /></span>
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="text-[16px] font-semibold">Подписка Pro</span>
-              <span className="text-[14px] text-[var(--color-text-muted)]">Доступ открыт</span>
+              <span className="text-[14px] text-[var(--color-text-muted)]">{pro === 'granted' ? 'Доступ открыт' : pro === 'denied' ? 'Доступ не открыт' : 'На проверке - придёт сообщение, когда откроем'}</span>
             </span>
           </div>
         </section>

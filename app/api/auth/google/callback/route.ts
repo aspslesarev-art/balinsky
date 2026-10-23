@@ -1,7 +1,8 @@
+import { loginCookies } from '@/lib/pro-access'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { GOOGLE_NEXT_COOKIE, GOOGLE_STATE_COOKIE, exchangeGoogleCode } from '@/lib/google-signin'
-import { safeNextPath, sessionCookies, signInVerifiedEmail } from '@/lib/site-auth'
+import { safeNextPath, signInVerifiedEmail } from '@/lib/site-auth'
 
 // Возврат с Google: сверяем state, меняем code на почту, ставим сессию сайта.
 
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
   if (id == null) return fail()
 
   const res = NextResponse.redirect(new URL(next, url))
-  for (const c of sessionCookies(id)) res.cookies.set(c)
+  for (const c of await loginCookies(id)) res.cookies.set(c)
   const gone = { path: '/api/auth/google', maxAge: 0 }
   res.cookies.set({ name: GOOGLE_STATE_COOKIE, value: '', ...gone })
   res.cookies.set({ name: GOOGLE_NEXT_COOKIE, value: '', ...gone })

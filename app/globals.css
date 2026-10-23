@@ -382,11 +382,22 @@ html[data-auth='1'] .bx-anon-only {
   display: none;
 }
 
-html[data-auth='1'] .bx-auth-block {
+/* С 23.10.2026 аналитику открывает Pro (решение владельца в /admin/pro),
+   а не просто вход: метка data-pro из куки bx_pro. */
+html[data-pro='1'] .bx-auth-block {
   display: block;
 }
 
-html:not([data-auth='1']) .bx-auth-link {
+/* Вошёл, но Pro ещё не открыт — плашка «Доступ на проверке». */
+.bx-pending-only {
+  display: none;
+}
+
+html[data-auth='1']:not([data-pro='1']) .bx-pending-only {
+  display: block;
+}
+
+html:not([data-pro='1']) .bx-auth-link {
   pointer-events: none;
   cursor: default;
 }

@@ -115,7 +115,7 @@ export function RootShell({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(document.cookie.indexOf('bx_auth=1')>-1)document.documentElement.setAttribute('data-auth','1')}catch(e){}",
+              "try{var c=document.cookie,h=document.documentElement;if(c.indexOf('bx_auth=1')>-1)h.setAttribute('data-auth','1');if(c.indexOf('bx_pro=1')>-1)h.setAttribute('data-pro','1')}catch(e){}",
           }}
         />
         {/* Analytics origins — preconnect so the deferred script isn't

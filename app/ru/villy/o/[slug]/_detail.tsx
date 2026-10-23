@@ -2,6 +2,7 @@
 // /en/villas/o/[slug]. Layout, data fetching and section order live
 // here; locale-specific copy is in the COPY table below.
 
+import { ProPendingNote } from '@/components/ProPendingNote'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import type { ReactNode } from 'react'
 import { notFound, permanentRedirect } from 'next/navigation'
@@ -1419,6 +1420,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
         {/* «Для дохода / Для жизни»: в режиме «для жизни» — только безопасность и удобство (lib/living.ts). */}
         {/* Итог «Для дохода / Для жизни» и разделы аналитики — только для вошедших
             (.bx-auth-block в globals.css); гостю после описания сразу контакты менеджера. */}
+        <ProPendingNote lang={lang} />
         <div className="bx-auth-block">
         <GoalSwitch lang={lang}
           income={

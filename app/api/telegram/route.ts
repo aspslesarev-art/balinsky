@@ -1,3 +1,4 @@
+import { handleProCallback } from '@/lib/pro-access'
 import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { handleStart, fallbackReply, handleSubscriptionCommand, handleDeleteCommand } from '@/lib/telegram-handlers'
@@ -98,6 +99,12 @@ export async function POST(req: Request) {
   // Черновик статьи из чата застройщика: Новость / Акция / … / Пропустить.
   if (update.callback_query?.data?.startsWith('dvu:')) {
     await handleDevUpdateCallback(token, update.callback_query)
+    return NextResponse.json({ ok: true, callback: true })
+  }
+
+  // «Дать Pro / Без Pro» под сообщением о новом входе (lib/pro-access.ts).
+  if (update.callback_query?.data?.startsWith('pro:')) {
+    await handleProCallback(token, update.callback_query)
     return NextResponse.json({ ok: true, callback: true })
   }
 

@@ -21,6 +21,8 @@ import { sendMail } from './mailer'
 const SESSION_COOKIE = 'bx_session'
 /** JS-readable companion flag — un-blurs gated blocks, grants nothing. */
 export const AUTH_FLAG_COOKIE = 'bx_auth'
+/** Такой же читаемый флаг «Pro открыт»: показывает аналитику (23.10.2026). */
+export const PRO_FLAG_COOKIE = 'bx_pro'
 
 const SESSION_TTL_DAYS = 180
 const TOKEN_TTL_MS = 15 * 60 * 1000
@@ -164,7 +166,28 @@ export function clearedCookies(): CookieSpec[] {
   return [
     { name: SESSION_COOKIE, value: '', ...common, httpOnly: true },
     { name: AUTH_FLAG_COOKIE, value: '', ...common, httpOnly: false },
+    { name: PRO_FLAG_COOKIE, value: '', ...common, httpOnly: false },
   ]
+}
+
+/** Флаг Pro: ставится, когда доступ открыт, и снимается, когда нет. */
+export function proCookie(on: boolean): CookieSpec {
+  return {
+    name: PRO_FLAG_COOKIE,
+    value: on ? '1' : '',
+    path: '/',
+    maxAge: on ? SESSION_TTL_DAYS * 24 * 60 * 60 : 0,
+    sameSite: 'lax',
+    secure: SECURE_COOKIES,
+    httpOnly: false,
+  }
+}
+
+export type ProStatus = 'pending' | 'granted' | 'denied'
+
+export async function getProStatus(telegramId: number): Promise<ProStatus | null> {
+  const { data } = await sb.from('site_users').select('pro').eq('telegram_id', telegramId).maybeSingle()
+  return (data as { pro: ProStatus } | null)?.pro ?? null
 }
 
 // ----------------------------------------------------------- login tokens
@@ -373,7 +396,6 @@ export async function issueLogin(
 //
 // Вся инфраструктура аккаунта держится на числовом id (сессия, избранное,
 // site_users.telegram_id). Пользователю с почтой выдаём отрицательный id —
-// сам адрес нигде не хранится;
 // детерминированный от адреса: Telegram-id всегда положительные, так что
 // пересечься они не могут, а тот же адрес всегда попадает в тот же аккаунт.
 // Код — шесть цифр (не четыре, как в боте): адрес виден атакующему, а
@@ -431,13 +453,15 @@ export async function startEmailLogin(rawEmail: unknown, nextPath: unknown, lang
       .gt('created_at', hourAgo)
     if ((count ?? 0) >= EMAIL_CODES_PER_HOUR) return { ok: false, reason: 'rate_limited' }
 
-    // The address itself is not stored: the account id is derived from it,
-    // so the same email always lands in the same account.
+    // The account id is derived from the address, so the same email always
+    // lands in the same account.
     const { error: userErr } = await sb.from('site_users').upsert(
       { telegram_id: id },
       { onConflict: 'telegram_id', ignoreDuplicates: true },
     )
     if (userErr) throw new Error(userErr.message)
+    // С 23.10.2026 адрес храним — по нему владелец находит человека в /admin/pro.
+    await sb.from('site_users').update({ email }).eq('telegram_id', id).is('email', null)
 
     const challenge = randomBytes(18).toString('base64url')
     const code = String(randomInt(0, 10 ** EMAIL_CODE_LENGTH)).padStart(EMAIL_CODE_LENGTH, '0')
@@ -488,6 +512,7 @@ export async function signInVerifiedEmail(
     if (error) throw new Error(error.message)
     const now = new Date().toISOString()
     await sb.from('site_users').update({ last_login_at: now }).eq('telegram_id', id)
+    await sb.from('site_users').update({ email }).eq('telegram_id', id).is('email', null)
     const clean = (v: string | null) => (v ? v.trim().slice(0, 80) || null : null)
     if (firstName) await sb.from('site_users').update({ first_name: clean(firstName) }).eq('telegram_id', id).is('first_name', null)
     if (lastName) await sb.from('site_users').update({ last_name: clean(lastName) }).eq('telegram_id', id).is('last_name', null)

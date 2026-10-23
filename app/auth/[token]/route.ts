@@ -1,5 +1,6 @@
+import { loginCookies } from '@/lib/pro-access'
 import { NextResponse } from 'next/server'
-import { consumeLoginToken, safeNextPath, sessionCookies } from '@/lib/site-auth'
+import { consumeLoginToken, safeNextPath } from '@/lib/site-auth'
 
 // Redeem the one-time link the Telegram bot sent.
 //
@@ -36,6 +37,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
   }
 
   const res = NextResponse.redirect(new URL(next, url.origin))
-  for (const c of sessionCookies(telegramId)) res.cookies.set(c)
+  for (const c of await loginCookies(telegramId)) res.cookies.set(c)
   return res
 }
