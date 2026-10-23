@@ -43,23 +43,18 @@ export function ListingMap({ lat, lng, name, routes, points, className = 'h-[320
       m.on('load', () => {
         if (routes?.length) {
           const b = new ml.LngLatBounds(center, center)
-          for (const r of routes) {
+          // Длинные снизу, короткие сверху: до аэропорта и в Улувату дорога общая,
+          // и короткий маршрут иначе прятался под длинным.
+          const len = (l: number[][]) => l.reduce((d, c, i) => i ? d + Math.hypot(c[0] - l[i - 1][0], c[1] - l[i - 1][1]) : 0, 0)
+          for (const r of [...routes].sort((a, b) => len(b.line) - len(a.line))) {
             r.line.forEach(c => b.extend(c as [number, number]))
             // Префикс bx-: в стиле подложки уже есть слой «airport».
             const id = `bx-route-${r.key}`
             m.addSource(id, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: r.line } } })
             m.addLayer({ id: `${id}-casing`, type: 'line', source: id, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#FFFFFF', 'line-width': 7 } })
             m.addLayer({ id, type: 'line', source: id, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': r.color, 'line-width': 4 } })
-            const end = r.line[r.line.length - 1]
-            // Санур рядом с объектом у многих — подпись легла бы на сам объект.
-            if (end && Math.hypot(end[0] - lng, end[1] - lat) > 0.03) {
-              const el = document.createElement('div')
-              el.className = 'bx-map-label'
-              el.innerHTML = `<span style="color:${r.color}">●</span> ${r.label}`
-              new ml.Marker({ element: el, anchor: 'left', offset: [8, 0] }).setLngLat(end as [number, number]).addTo(m)
-            }
           }
-          m.fitBounds(b, { padding: { top: 32, bottom: 48, left: 32, right: 150 }, animate: false })
+          m.fitBounds(b, { padding: 32, animate: false })
         }
         if (points?.length) {
           m.addSource('bx-pts', {
@@ -71,10 +66,14 @@ export function ListingMap({ lat, lng, name, routes, points, className = 'h-[320
         const me = document.createElement('div')
         me.className = 'bx-map-me'
         new ml.Marker({ element: me }).setLngLat(center).addTo(m)
-        const tag = document.createElement('div')
-        tag.className = 'bx-map-label'
-        tag.textContent = name
-        new ml.Marker({ element: tag, anchor: 'top', offset: [0, 12] }).setLngLat(center).addTo(m)
+        // На карте маршрутов подписей нет: они закрывали линии, а куда сколько
+        // ехать — списком под картой (владелец 23.10.2026).
+        if (!routes?.length) {
+          const tag = document.createElement('div')
+          tag.className = 'bx-map-label'
+          tag.textContent = name
+          new ml.Marker({ element: tag, anchor: 'top', offset: [0, 12] }).setLngLat(center).addTo(m)
+        }
         // Подпись OpenStreetMap — свёрнутой кнопкой «i»: раскрытая закрывала низ карты.
         ref.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
       })
