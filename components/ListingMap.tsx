@@ -66,14 +66,8 @@ export function ListingMap({ lat, lng, name, routes, points, className = 'h-[320
         const me = document.createElement('div')
         me.className = 'bx-map-me'
         new ml.Marker({ element: me }).setLngLat(center).addTo(m)
-        // На карте маршрутов подписей нет: они закрывали линии, а куда сколько
-        // ехать — списком под картой (владелец 23.10.2026).
-        if (!routes?.length) {
-          const tag = document.createElement('div')
-          tag.className = 'bx-map-label'
-          tag.textContent = name
-          new ml.Marker({ element: tag, anchor: 'top', offset: [0, 12] }).setLngLat(center).addTo(m)
-        }
+        // Объект — только красной точкой, без подписи: она закрывала маршруты
+        // и точки вокруг (владелец 23.10.2026).
         // Подпись OpenStreetMap — свёрнутой кнопкой «i»: раскрытая закрывала низ карты.
         ref.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
       })

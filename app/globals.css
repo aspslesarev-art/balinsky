@@ -542,16 +542,7 @@ html[data-goal="live"] #dokhodnost { display: none; }
   .bx-wind-streak { animation: none; }
 }
 
-/* Подписи и точка объекта на картах MapLibre (components/ListingMap.tsx). */
-.bx-map-label {
-  background: #fff;
-  border-radius: 999px;
-  padding: 3px 10px;
-  font: 600 12px/1.4 var(--font-sans, system-ui), system-ui, sans-serif;
-  color: var(--color-text);
-  white-space: nowrap;
-  box-shadow: 0 1px 2px rgb(0 0 0 / .06), 0 4px 12px rgb(0 0 0 / .1);
-}
+/* Точка объекта на картах MapLibre (components/ListingMap.tsx). */
 .bx-map-me {
   width: 16px;
   height: 16px;
