@@ -8,8 +8,8 @@ import { LazyMount } from './LazyMount'
 // одна пометка, что значат пятна.
 // Бесплатная подложка OpenStreetMap вместо платной карты Google.
 const NOTE = {
-  ru: 'Красным - места, где отзывы в Google оставляют в основном иностранцы',
-  en: 'Red: places reviewed on Google mostly by foreigners',
+  ru: 'Красным - где много мест с оценкой от 4,3 и от 50 отзывов в Google',
+  en: 'Red: many places rated 4.3+ with 50+ Google reviews',
 }
 const TITLE = { ru: 'Карта иностранных туристов', en: 'Where foreign tourists go', id: 'Peta turis asing', fr: 'Carte des touristes étrangers', de: 'Wo ausländische Touristen sind', zh: '外国游客聚集地图', nl: 'Waar buitenlandse toeristen zijn', ban: 'Peta turis asing', pl: 'Mapa zagranicznych turystów', uk: 'Карта іноземних туристів' }
 

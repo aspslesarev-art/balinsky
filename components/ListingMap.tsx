@@ -4,15 +4,20 @@
 //   routes — линии по дорогам от объекта до аэропорта, Чангу, Убуда, Улувату
 //            и Санура (listing_geo_facts.route_lines, scripts/route-lines.ts);
 //   near   — объект красной точкой и места рядом цветными точками;
-//   heat   — где бывают иностранные туристы: красные пятна по отзывам Google
-//            (_heat_tourists.json), раньше — платная карта Google по кнопке.
+//   heat   — где много мест с оценкой от 4,3 и от 50 отзывов в Google
+//            (_heat_reviews.json, scripts/build-review-heat.mjs); раньше —
+//            платная карта Google по кнопке.
 // Подложка — OpenFreeMap (OpenStreetMap), без ключа и без оплаты: Google за
 // эти карты не платим. MapLibre грузится, только когда карта на экране.
 import { useEffect, useRef } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { fetchHeatCells } from '@/lib/heat-overlay'
 
 const STYLE = 'https://tiles.openfreemap.org/styles/positron'
+const HEAT_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/competitors/_heat_reviews.json`
+
+type HeatData = { cells: { lat: number; lng: number; weight: number }[]; max: number }
+let heatCache: Promise<HeatData> | null = null
+const loadHeat = () => (heatCache ??= fetch(HEAT_URL).then(r => r.ok ? r.json() as Promise<HeatData> : { cells: [], max: 1 }).catch(() => ({ cells: [], max: 1 })))
 
 export type MapRoute = { key: string; color: string; label: string; line: number[][] }
 export type MapPoint = { lng: number; lat: number; color: string }
@@ -69,7 +74,7 @@ export function ListingMap({ lat, lng, name, routes, points, heat = false, class
           m.addLayer({ id: 'bx-pts', type: 'circle', source: 'bx-pts', paint: { 'circle-radius': 5, 'circle-color': ['get', 'c'], 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 1.5 } })
         }
         if (heat) {
-          fetchHeatCells().then(({ cells, max }) => {
+          loadHeat().then(({ cells, max }) => {
             if (!cells.length || !m.getStyle()) return
             m.addSource('bx-heat', {
               type: 'geojson',
