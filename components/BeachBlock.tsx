@@ -122,13 +122,15 @@ export function BeachBlock({ beach: b, km, google, lang }: { beach: BeachProfile
           {/* Телефон — лента вбок, компьютер — до трёх в ряд. */}
           <div className="-mx-5 flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
             {photos.map((p, i) => (
-              <a key={p.src} href={p.page} target="_blank" rel="noopener noreferrer"
-                className="relative aspect-[4/3] w-[78%] shrink-0 snap-start overflow-hidden rounded-[12px] bg-[var(--color-search-bg)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] md:w-auto">
+              // Фото не ссылка (владелец 23.10.2026): уводило на страницу Wikimedia.
+              // Автор и лицензия — подписью ниже, как требует CC BY-SA.
+              <div key={p.src}
+                className="relative aspect-[4/3] w-[78%] shrink-0 snap-start overflow-hidden rounded-[12px] bg-[var(--color-search-bg)] md:w-auto">
                 <Image src={p.src} alt={p.kind === 'promenade' ? `${c.promPhoto} - ${name}` : name} fill sizes="(min-width: 768px) 260px, 78vw" className="object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
                 {p.kind === 'promenade' && (
                   <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[13px] font-medium text-white">{c.promPhoto}</span>
                 )}
-              </a>
+              </div>
             ))}
           </div>
           <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">
