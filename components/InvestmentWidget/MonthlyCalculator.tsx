@@ -1,5 +1,6 @@
 'use client'
 
+import { InfoTip } from '../InfoTip'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
 import { useMemo, useRef, useState } from 'react'
@@ -257,12 +258,17 @@ export function MonthlyCalculator({ snap, lang, price, setPrice }: { snap: Snaps
 
   return (
     <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.title}</div>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        {/* Пояснение и откуда ставки — под значком i, как у посуточного (владелец 23.10.2026). */}
+        <div className="flex items-center gap-1">
+          <div className="text-[18px] font-semibold text-[var(--color-text)]">{t.title}</div>
+          <InfoTip label={lang === 'ru' ? 'Как считаем' : 'How we calculate'} align="start">
+            {restricted ? t.sub : t.subCompare}{' '}
+            {m.ownN && m.ownDistrict && t.sampleMixed ? t.sampleMixed(m.n, m.ownN, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}.
+          </InfoTip>
+        </div>
         <ResetButton onClick={reset} lang={lang} show={changed} />
       </div>
-      <div className="mt-2 max-w-[68ch] text-[14px] leading-relaxed text-[var(--color-text-muted)]">{restricted ? t.sub : t.subCompare}</div>
-      <div className="mt-1 mb-8 text-[13px] text-[var(--color-text-muted)]">{m.ownN && m.ownDistrict && t.sampleMixed ? t.sampleMixed(m.n, m.ownN, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : t.sample(m.n, m.radiusKm, m.bedroomsRelaxed)}</div>
 
       {/* Слева ползунки в одну колонку, справа итог — как у посуточной. */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
