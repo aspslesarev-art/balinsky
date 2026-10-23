@@ -92,7 +92,7 @@ export function LivingList({ facts: f, lang, hideBeach = false, map }: {
       <h3 className="pt-5 text-[15px] font-semibold text-[var(--color-text)]">{c.title}</h3>
       {/* С картой — полосой: список слева, карта с легендой справа (макет «Удобно ли
           там жить?», B — владелец 23.10.2026). */}
-      <div className={near && near.points.length > 0 ? 'mt-3 grid grid-cols-1 gap-4 pb-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-8' : ''}>
+      <div className={near && near.points.length > 0 ? 'mt-3 grid grid-cols-1 gap-4 pb-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-start lg:gap-8' : ''}>
       {near && near.points.length > 0 && (
         <div className="flex flex-col gap-3 lg:order-last">
           <LazyMount fallback={<div className="h-[320px] rounded-xl bg-[var(--color-search-bg)]" />}>
