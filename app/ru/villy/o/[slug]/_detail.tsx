@@ -2,6 +2,7 @@
 // /en/villas/o/[slug]. Layout, data fetching and section order live
 // here; locale-specific copy is in the COPY table below.
 
+import { TouristHeatMap } from '@/components/TouristHeatMap'
 import { ProPendingNote } from '@/components/ProPendingNote'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import type { ReactNode } from 'react'
@@ -63,7 +64,6 @@ import { GoalSwitch } from '@/components/GoalSwitch'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
-import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
@@ -1477,10 +1477,8 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               </GatedBlock>
             )}
             {/* Карта туристов — сразу под «Что рядом»: вместе отвечают, оживлённо ли вокруг. */}
-            {lat != null && lng != null && GMAPS_KEY && (
-              <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <NeighborhoodHeatMap apiKey={GMAPS_KEY} lat={lat} lng={lng} title={title} lang={lang} />
-              </LazyMount>
+            {lat != null && lng != null && (
+              <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
             )}
             {districtCopy && districtSlug && (
               <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />

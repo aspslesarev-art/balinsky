@@ -1,6 +1,7 @@
 // Shared apartment-detail renderer for both /ru/apartamenty/o/[slug]
 // and /en/apartments/o/[slug]. Layout / data fetching live here only.
 
+import { TouristHeatMap } from '@/components/TouristHeatMap'
 import { ProPendingNote } from '@/components/ProPendingNote'
 import type { ReactNode } from 'react'
 import { notFound, permanentRedirect } from 'next/navigation'
@@ -52,7 +53,6 @@ import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { ListingVerdict, SafetyCards, DemandSummary, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
-import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
@@ -1334,10 +1334,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
               </GatedBlock>
             )}
-            {lat != null && lng != null && GMAPS_KEY && (
-              <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <NeighborhoodHeatMap apiKey={GMAPS_KEY} lat={lat} lng={lng} title={title} lang={lang} />
-              </LazyMount>
+            {lat != null && lng != null && (
+              <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
             )}
             {districtCopy && districtSlug && (
               <DistrictAboutCard copy={districtCopy} lang={lang} kind="apartment" hubHref={`${apartmentsRoot}/${districtSlug}`} />
