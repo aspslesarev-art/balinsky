@@ -5,6 +5,8 @@
 // Pure presentation — copy comes from getDistrictCopy(), the href is
 // pre-built by the caller from a DISTRICT_TO_SLUG-validated slug.
 
+import { ListingMap } from './ListingMap'
+import { LazyMount } from './LazyMount'
 import Link from 'next/link'
 import { MapPin, ArrowRight } from 'lucide-react'
 import type { DistrictCopy } from '@/lib/districts'
@@ -15,6 +17,7 @@ type Kind = 'villa' | 'apartment' | 'complex'
 const LABELS = {
   ru: {
     eyebrow: 'О районе',
+    aerialCaption: 'Спутник Esri, Maxar · вид под углом',
     cta: (kind: Kind, name: string) =>
       kind === 'villa' ? `Все виллы в районе ${name}`
       : kind === 'apartment' ? `Все апартаменты в районе ${name}`
@@ -22,6 +25,7 @@ const LABELS = {
   },
   en: {
     eyebrow: 'About the district',
+    aerialCaption: 'Esri, Maxar satellite · angled view',
     cta: (kind: Kind, name: string) =>
       kind === 'villa' ? `All villas in ${name}`
       : kind === 'apartment' ? `All apartments in ${name}`
@@ -90,16 +94,20 @@ export function DistrictAboutCard({
   lang,
   kind,
   hubHref,
+  aerial,
 }: {
   copy: DistrictCopy
   lang: Lang
   kind: Kind
   hubHref: string
+  /** Вид района «как с дрона» справа от текста (макет «О районе», B — 23.10.2026). */
+  aerial?: { lat: number; lng: number } | null
 }) {
   const L = pickCopy(LABELS, lang)
   return (
     <section className="mb-10">
-      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6">
+      <div className={`rounded-2xl border border-[var(--color-border)] bg-white p-5 md:p-6 ${aerial ? 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-center lg:gap-8' : ''}`}>
+        <div className="min-w-0">
         <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
           <MapPin size={14} className="text-[var(--color-primary)]" /> {L.eyebrow} · {copy.name}
         </div>
@@ -122,6 +130,15 @@ export function DistrictAboutCard({
         >
           {L.cta(kind, copy.name)} <ArrowRight size={15} />
         </Link>
+        </div>
+        {aerial && (
+          <div className="flex flex-col gap-1.5">
+            <LazyMount fallback={<div className="h-[300px] rounded-xl bg-[var(--color-search-bg)]" />}>
+              <ListingMap lat={aerial.lat} lng={aerial.lng} name={copy.name} aerial className="h-[300px]" />
+            </LazyMount>
+            <span className="text-[12px] text-[var(--color-text-muted)]">{L.aerialCaption}</span>
+          </div>
+        )}
       </div>
     </section>
   )

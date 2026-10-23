@@ -1477,7 +1477,7 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
               <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
             )}
             {districtCopy && districtSlug && (
-              <DistrictAboutCard copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
+              <DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} />
             )}
           </DataChapter>
         )}

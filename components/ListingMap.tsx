@@ -13,6 +13,18 @@ import { useEffect, useRef } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 const STYLE = 'https://tiles.openfreemap.org/styles/positron'
+// Вид района под углом, «как с дрона» (блок «О районе», макет B — владелец
+// 23.10.2026): снимки Esri World Imagery, как у карты ветра, и рельеф
+// AWS Terrain Tiles — оба бесплатно, без ключа.
+const AERIAL_STYLE = {
+  version: 8 as const,
+  sources: {
+    sat: { type: 'raster' as const, tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19, attribution: 'Esri, Maxar' },
+    dem: { type: 'raster-dem' as const, tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium' as const, tileSize: 256, maxzoom: 14 },
+  },
+  layers: [{ id: 'sat', type: 'raster' as const, source: 'sat' }],
+  terrain: { source: 'dem', exaggeration: 1 },
+}
 const HEAT_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/competitors/_heat_reviews.json`
 
 type HeatData = { cells: { lat: number; lng: number; weight: number }[]; max: number }
@@ -22,7 +34,7 @@ const loadHeat = () => (heatCache ??= fetch(HEAT_URL).then(r => r.ok ? r.json() 
 export type MapRoute = { key: string; color: string; label: string; line: number[][] }
 export type MapPoint = { lng: number; lat: number; color: string }
 
-export function ListingMap({ lat, lng, name, routes, points, heat = false, className = 'h-[320px]' }: {
+export function ListingMap({ lat, lng, name, routes, points, heat = false, aerial = false, className = 'h-[320px]' }: {
   lat: number
   lng: number
   name: string
@@ -30,6 +42,8 @@ export function ListingMap({ lat, lng, name, routes, points, heat = false, class
   points?: MapPoint[]
   /** Слой «где бывают иностранные туристы». */
   heat?: boolean
+  /** Спутник под углом, без управления — картинка района. */
+  aerial?: boolean
   className?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -42,9 +56,10 @@ export function ListingMap({ lat, lng, name, routes, points, heat = false, class
       const center: [number, number] = [lng, lat]
       map = new ml.Map({
         container: ref.current,
-        style: STYLE,
+        style: aerial ? AERIAL_STYLE : STYLE,
         center,
-        zoom: routes ? 9.5 : heat ? 13 : 15,
+        zoom: routes ? 9.5 : heat ? 13 : aerial ? 14.6 : 15,
+        ...(aerial ? { pitch: 62, maxPitch: 85, interactive: false } : {}),
         // Колесо и один палец листают страницу, а не карту.
         cooperativeGestures: true,
         attributionControl: { compact: true },
@@ -104,7 +119,7 @@ export function ListingMap({ lat, lng, name, routes, points, heat = false, class
       })
     })
     return () => { cancelled = true; map?.remove() }
-  }, [lat, lng, name, routes, points, heat])
+  }, [lat, lng, name, routes, points, heat, aerial])
 
   return <div ref={ref} className={`w-full overflow-hidden rounded-xl bg-[var(--color-search-bg)] ${className}`} role="img" aria-label={name} />
 }
