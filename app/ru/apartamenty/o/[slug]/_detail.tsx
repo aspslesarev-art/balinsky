@@ -50,7 +50,6 @@ import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
-import { AreaBlock } from '@/components/AreaBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { ListingVerdict, SafetyCards, DemandSummary, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
@@ -1300,7 +1299,8 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
           <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
-            dev={devStats ? { name: devName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite} lang={lang} />
+            dev={devStats ? { name: devName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
+            coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
           {landOk && (
             <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
               <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
@@ -1311,21 +1311,19 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {hasPlace && (
           <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {/* Сверху две карты рядом: «Как добраться» и «Главное рядом» (макет «Карты», A —
-                владелец 23.10.2026). Ниже: район и берег слева, солнце, погода и ветер справа.
+            {/* Сверху две карты рядом одной высоты: «Как добраться» и «Главное рядом»;
+                под ними «Солнце и погода» широкой полосой (макет «Удобно ли там жить?», A —
+                владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли это?».
                 Пляж — ниже, во всю ширину. */}
             {(livingFacts || geoFacts) && (
               <div className="mb-4 flex flex-col gap-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch [&>*]:mb-0 [&>*]:h-full">
                   {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
                     map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
                   {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
                     map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                  {geoFacts && <AreaBlock climate={geoFacts.climate} elevationM={geoFacts.elevation_m} lang={lang} />}
-                  {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
-                </div>
+                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
               </div>
             )}
             {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}

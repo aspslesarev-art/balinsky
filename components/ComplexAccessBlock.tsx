@@ -92,6 +92,26 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes, map }: Pr
           </LazyMount>
         </div>
       )}
+      {map && mapRoutes.length > 0 ? (
+        // Под картой — списком: цвет линии, куда, сколько ехать (макет «Удобно ли там жить?», A).
+        <dl className="divide-y divide-[var(--color-border)]">
+          {rows.map(({ key, label, text }) => (
+            <div key={key} className="flex items-center justify-between gap-4 py-2.5">
+              <dt className="flex items-center gap-2.5 text-[15px] text-[var(--color-text)]">
+                <span aria-hidden className="h-1 w-5 shrink-0 rounded-full" style={{ background: color(key) }} />
+                {label}
+              </dt>
+              <dd className="shrink-0 text-[15px] font-semibold text-[var(--color-text)]">{text} {t.min}</dd>
+            </div>
+          ))}
+          {hasElevation && (
+            <div className="flex items-center justify-between gap-4 py-2.5">
+              <dt className="flex items-center gap-2.5 text-[15px] text-[var(--color-text)]"><Mountain size={16} className="shrink-0 text-[var(--color-primary)]" />{t.elevation}</dt>
+              <dd className="shrink-0 text-[15px] font-semibold text-[var(--color-text)]">{Math.round(elevationM)} {t.m}</dd>
+            </div>
+          )}
+        </dl>
+      ) : (
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
         {rows.map(({ key, label, text, Icon }) => (
           <div key={key} className="flex min-w-0 items-center gap-1.5">
@@ -127,6 +147,7 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes, map }: Pr
           </div>
         )}
       </div>
+      )}
 
     </div>
   )

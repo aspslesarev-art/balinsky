@@ -423,7 +423,7 @@ export function ListingVerdict({ verdict: v, yields: y, monthly, saleDiff, under
 type Plot = NonNullable<import('@/lib/complex-access').Climate['plot']>
 const DOT: Record<Tone, string> = { plus: 'bg-[var(--color-primary)]', warn: 'bg-[#D08A1C]', minus: 'bg-[#C0392B]' }
 
-export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, landYellow, dev, plot, lang }: {
+export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, landYellow, dev, plot, coast, lang }: {
   verdict: Verdict
   permit: string | null
   status: string | null
@@ -434,6 +434,8 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
   dev: { name: string | null; total: number; ready: number } | null
   /** Подъезд и уклон участка (listing_geo_facts.climate.plot). */
   plot?: Plot | null
+  /** Высота над морем и океан (climate.sea / coast_m) — раньше в блоке «Район и берег» (убран 23.10.2026). */
+  coast?: { coastM: number | null; elevationM: number | null; marginM: number | null } | null
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
@@ -454,6 +456,20 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
     : { k: c.leaseRow, v: c.permitUnknown, tone: 'warn' })
   if (landYellow) rows.push({ k: c.zoneRow, v: c.zoneHousing, tone: 'warn' })
   if (dev && dev.total > 0) rows.push({ k: c.devT(dev.name), v: ru ? `сдано ${dev.ready} из ${dev.total} ${pluralRu(dev.total, ['проекта', 'проектов', 'проектов'])}` : `${dev.ready} of ${dev.total} projects completed`, tone: dev.ready === 0 ? 'minus' : 'plus' })
+  // Высота и океан — прямо над риском цунами и наводнений: конкретика к нему.
+  if (coast && coast.elevationM != null) {
+    const h = Math.round(coast.elevationM)
+    const nearSea = coast.marginM != null
+    const lvl = coast.marginM == null ? null : coast.marginM >= 8 ? 'high' : coast.marginM >= 3 ? 'mid' : 'low'
+    rows.push({
+      k: nearSea ? (ru ? 'Высота и океан' : 'Elevation and ocean') : (ru ? 'Высота над морем' : 'Elevation'),
+      v: [ru ? `участок на ${h} м над морем` : `plot ${h} m above sea level`, nearSea && coast.coastM != null ? (ru ? `${m(coast.coastM)} до океана` : `${m(coast.coastM)} to the ocean`) : null].filter(Boolean).join(', ').replace(/^./, x => x.toUpperCase()),
+      tone: lvl === 'low' ? 'minus' : lvl === 'mid' ? 'warn' : 'plus',
+      note: lvl == null ? undefined : ru
+        ? { high: 'Запас от самой высокой воды до 2050 года большой.', mid: 'Запас от самой высокой воды до 2050 года небольшой.', low: 'Участок низкий - спросите застройщика о защите от воды.' }[lvl]
+        : { high: 'A large margin above the highest water expected by 2050.', mid: 'A small margin above the highest water expected by 2050.', low: 'A low plot - ask the developer about flood protection.' }[lvl],
+    })
+  }
   const hz = v.safety.hazards.filter(h => h.key !== 'flash_flood')
   if (hz.length) {
     const bad = hz.filter(h => h.level === 'medium' || h.level === 'high')
@@ -496,7 +512,7 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
           </div>
         ))}
       </dl>
-      <p className="pb-4 pt-1 text-[12px] text-[var(--color-text-muted)]">{ru ? 'Риски - InaRISK, дороги - OpenStreetMap, уклон - Copernicus' : 'Hazards - InaRISK, roads - OpenStreetMap, slope - Copernicus'}</p>
+      <p className="pb-4 pt-1 text-[12px] text-[var(--color-text-muted)]">{ru ? 'Риски - InaRISK, дороги - OpenStreetMap, уклон и уровень моря - Copernicus' : 'Hazards - InaRISK, roads - OpenStreetMap, slope and sea level - Copernicus'}</p>
     </div>
   )
 }
