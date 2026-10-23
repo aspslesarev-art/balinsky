@@ -5,23 +5,14 @@
 // зоны. Лента идёт от дорогих к дешёвым, так что «хорошо» в начале.
 import { useRef, useState, type ReactNode } from 'react'
 import { CardRail } from './CardRail'
+import { BAND_SURFACE, BAND_TEXT, type Band } from '@/lib/band-colors'
 
-export type Band = 'bad' | 'mid' | 'good'
+export type { Band }
 
-/** Полупрозрачные фон и рамка зоны — у плашки и у карточки соседа. */
-export const BAND_SURFACE: Record<Band, string> = {
-  bad: 'border-[rgb(209_67_52/.35)] bg-[rgb(209_67_52/.08)]',
-  mid: 'border-[rgb(232_160_40/.45)] bg-[rgb(232_160_40/.12)]',
-  good: 'border-[rgb(31_139_95/.40)] bg-[rgb(31_139_95/.08)]',
-}
-export const BAND_TEXT: Record<Band, string> = {
-  bad: 'text-[#8A1F14]',
-  mid: 'text-[#7A4B0B]',
-  good: 'text-[var(--color-primary-pressed)]',
-}
-
-export function BandedRail({ heading, chips, items, prevLabel, nextLabel }: {
+export function BandedRail({ heading, chips, items, note, prevLabel, nextLabel }: {
   heading: string
+  /** Строка под плашками — например, что даже «хорошо» не возвращает вложенное. */
+  note?: ReactNode
   chips: { band: Band; title: string; range: ReactNode; money: ReactNode }[]
   items: { band: Band; node: ReactNode }[]
   prevLabel: string
@@ -54,6 +45,7 @@ export function BandedRail({ heading, chips, items, prevLabel, nextLabel }: {
           </button>
         ))}
       </div>
+      {note && <p className="max-w-[68ch] text-[15px] leading-relaxed text-[#8A1F14]">{note}</p>}
       <CardRail prevLabel={prevLabel} nextLabel={nextLabel}>
         {items.map((x, i) => <div key={i} data-band={x.band} className="h-full">{x.node}</div>)}
       </CardRail>

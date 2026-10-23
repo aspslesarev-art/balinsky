@@ -10,10 +10,10 @@ import { districtRu } from '@/lib/district-ru'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import type { InvestmentSnapshot, NearbyMatchCard } from '@/lib/investment/snapshot'
-import { NightCost, type NightCostSnap } from './InvestmentWidget/NightCost'
 import { NightReceiptBlock } from './NightReceiptBlock'
-import { BandedRail, type Band } from './BandedRail'
-import { nightReceipt, monthlyNetAt } from '@/lib/investment/night-economics'
+import { BandedRail } from './BandedRail'
+import { BAND_SURFACE, BAND_TEXT, type Band } from '@/lib/band-colors'
+import { nightReceipt, monthReceipt, monthlyNetAt } from '@/lib/investment/night-economics'
 import type { AirbnbComp } from '@/lib/airbnb-nearby'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
@@ -538,6 +538,7 @@ const BANDS_COPY = {
     moneyGood: (x: ReactNode) => <>От {x} в месяц</>,
     tag: { bad: 'Плохо', mid: 'Средне', good: 'Хорошо' } as Record<Band, string>,
     loss: 'В минус',
+    allLoss: (be: ReactNode, unit: 'night' | 'month') => <>Даже по цене дорогих соседей вложенное за срок лизхолда не вернётся: для этого нужно сдавать от {be} {unit === 'night' ? 'за ночь' : 'в месяц'}.</>,
   },
   en: {
     heading: 'What if you rent like the neighbours',
@@ -550,6 +551,7 @@ const BANDS_COPY = {
     moneyGood: (x: ReactNode) => <>From {x} a month</>,
     tag: { bad: 'Poor', mid: 'Typical', good: 'Good' } as Record<Band, string>,
     loss: 'At a loss',
+    allLoss: (be: ReactNode, unit: 'night' | 'month') => <>Even at the pricier neighbours’ rate the investment does not pay back within the leasehold: that takes from {be} a {unit}.</>,
   },
 }
 
@@ -564,20 +566,13 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   airbnbComps?: AirbnbComp[]
   /** Лента «Продаются в этом районе» — третьей вкладкой. */
   sale?: ReactNode
-  /** Снимок калькулятора — для «Сколько стоит вам ночь / месяц» (владелец 23.10.2026). */
+  /** Снимок калькулятора — для чеков ночи и месяца и зон соседей (владелец 23.10.2026). */
   snap?: InvestmentSnapshot | null
   lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
-  // В клиентский блок — только нужные поля, не весь снимок с соседями.
-  const cost: NightCostSnap | null = snap ? {
-    villa: { askingPrice: snap.villa.askingPrice, leaseholdYearsLeft: snap.villa.leaseholdYearsLeft, buildYearsLeft: snap.villa.buildYearsLeft },
-    scenarios: snap.scenarios ? { median: { adrAsking: snap.scenarios.median.adrAsking } } : null,
-    monthly: snap.monthly ? { p50: snap.monthly.p50 } : null,
-    ownBooking: snap.ownBooking ? { adr: snap.ownBooking.adr, occupancy: snap.ownBooking.occupancy } : null,
-    region: { occupancyByScenario: { median: snap.region.occupancyByScenario.median } },
-  } : null
   const receipt = snap ? nightReceipt(snap) : null
+  const mReceipt = snap ? monthReceipt(snap) : null
   const dec = (x: number) => (lang === 'en' || lang === 'zh' ? x.toFixed(1) : x.toFixed(1).replace('.', ','))
   const cardCls = 'flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
   const dq = quartiles(dailyComps.map(x => x.adr))
@@ -676,6 +671,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             const month = (p: number) => monthlyNetAt(snap, p) ?? 0
             return (
               <BandedRail heading={b.heading} prevLabel={c.prev} nextLabel={c.next}
+                note={receipt?.breakeven != null && bq.p75 < receipt.breakeven ? b.allLoss(P(receipt.breakeven), 'night') : undefined}
                 chips={[
                   { band: 'bad', title: b.bad, range: <>{b.upTo} {P(bq.p25)}</>, money: b.moneyBad(P(month(bq.p25))) },
                   { band: 'mid', title: b.mid, range: <>{P(bq.p25)} – {P(bq.p75)}</>, money: b.moneyMid(P(month(bq.p50))) },
@@ -695,10 +691,12 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
           <p className="mb-4 text-[16px] text-[var(--color-text)]">
             {m.ownN && m.ownDistrict ? c.whoDistrict(m.bedroomsRelaxed ? null : bedrooms, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
           </p>
-          {cost && <div className="mb-8"><NightCost snap={cost} lang={lang} mode="monthly" bare /></div>}
-          <CardRail prevLabel={c.prev} nextLabel={c.next}>
-            {[...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd).map(comp => (
-              <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer" className={cardCls}>
+          {mReceipt && <div className="mb-10"><NightReceiptBlock r={mReceipt} marketMedian={m.p50} lang={lang} /></div>}
+          {(() => {
+            // Зоны — те же, что посуточно: дешёвая четверть, середина, дорогая четверть.
+            const card = (comp: typeof m.comps[number], tone?: Band, tag?: string) => (
+              <a key={`${comp.url}-${comp.rentMonthUsd}`} href={comp.url ?? undefined} target="_blank" rel="nofollow noopener noreferrer"
+                className={tone ? cardCls.replace('border-[var(--color-border)] bg-white', BAND_SURFACE[tone]) : cardCls}>
                 {comp.photo && (
                   // Фото из объявления rumah123 — видно, что именно сдают по соседству.
                   // eslint-disable-next-line @next/next/no-img-element
@@ -706,6 +704,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                     className="aspect-[3/2] w-full bg-[var(--color-search-bg)] object-cover" />
                 )}
                 <span className="flex flex-1 flex-col gap-1 p-5">
+                  {tone && tag && <span className={`mb-1 self-start rounded-full bg-white px-2.5 py-0.5 text-[12px] font-semibold ${BAND_TEXT[tone]}`}>{tag}</span>}
                   <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
                   <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
                   <span className="text-[14px] text-[var(--color-text-muted)]">
@@ -713,8 +712,28 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                   </span>
                 </span>
               </a>
-            ))}
-          </CardRail>
+            )
+            const sorted = [...m.comps].sort((a, b) => b.rentMonthUsd - a.rentMonthUsd)
+            if (!mReceipt || !snap) return <CardRail prevLabel={c.prev} nextLabel={c.next}>{sorted.map(comp => card(comp))}</CardRail>
+            const b = pickCopy(BANDS_COPY, lang)
+            const P = (usd: number) => <span className="whitespace-nowrap"><InlinePrice usd={usd} lang={lang} approx={false} /></span>
+            const band = (p: number): Band => p < m.p25 ? 'bad' : p > m.p75 ? 'good' : 'mid'
+            const month = (p: number) => monthlyNetAt(snap, p, 'month') ?? 0
+            return (
+              <BandedRail heading={b.heading} prevLabel={c.prev} nextLabel={c.next}
+                note={mReceipt.breakeven != null && m.p75 < mReceipt.breakeven ? b.allLoss(P(mReceipt.breakeven), 'month') : undefined}
+                chips={[
+                  { band: 'bad', title: b.bad, range: <>{b.upTo} {P(m.p25)}</>, money: b.moneyBad(P(month(m.p25))) },
+                  { band: 'mid', title: b.mid, range: <>{P(m.p25)} – {P(m.p75)}</>, money: b.moneyMid(P(month(m.p50))) },
+                  { band: 'good', title: b.good, range: <>{b.from} {P(m.p75)}</>, money: b.moneyGood(P(month(m.p75))) },
+                ]}
+                items={sorted.map(comp => {
+                  const t = band(comp.rentMonthUsd)
+                  const loss = mReceipt.breakeven != null && comp.rentMonthUsd < mReceipt.breakeven
+                  return { band: t, node: card(comp, loss ? 'bad' : t, loss ? b.loss : b.tag[t]) }
+                })} />
+            )
+          })()}
         </div>
   ) })
   if (sale) tabs.push({ key: 'sale', label: c.tabSale, content: sale })

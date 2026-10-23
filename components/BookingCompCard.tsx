@@ -5,7 +5,7 @@ import { BedDouble, Building2, ChartNoAxesColumn, MessageSquare, Ruler, Star } f
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { InlinePrice } from './InlinePrice'
-import { BAND_SURFACE, BAND_TEXT, type Band } from './BandedRail'
+import { BAND_SURFACE, BAND_TEXT, type Band } from '@/lib/band-colors'
 
 // Карточка соседа на Booking — одна для «Будет ли спрос → Посуточно» и для
 // ленты «Что рядом сдают за эти же деньги» в калькуляторе.
