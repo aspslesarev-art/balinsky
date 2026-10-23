@@ -11,6 +11,9 @@ import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, 
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import type { InvestmentSnapshot, NearbyMatchCard } from '@/lib/investment/snapshot'
 import { NightCost, type NightCostSnap } from './InvestmentWidget/NightCost'
+import { NightReceiptBlock } from './NightReceiptBlock'
+import { BandedRail, type Band } from './BandedRail'
+import { nightReceipt, monthlyNetAt } from '@/lib/investment/night-economics'
 import type { AirbnbComp } from '@/lib/airbnb-nearby'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
@@ -521,6 +524,35 @@ function plausibleArea(m2: number | null): number | null {
   return m2 != null && m2 >= 20 ? m2 : null
 }
 
+// Зоны цен соседей (владелец 23.10.2026): дешёвая четверть / середина /
+// дорогая четверть, и сколько на руки в месяц, если сдавать по такой цене.
+const BANDS_COPY = {
+  ru: {
+    heading: 'Что будет, если сдавать как соседи',
+    bad: 'Плохо: сдавать как дешёвые',
+    mid: 'Средне: как большинство',
+    good: 'Хорошо: как дорогие',
+    upTo: 'до', from: 'от',
+    moneyBad: (x: ReactNode) => <>Вам на руки до {x} в месяц</>,
+    moneyMid: (x: ReactNode) => <>Около {x} в месяц</>,
+    moneyGood: (x: ReactNode) => <>От {x} в месяц</>,
+    tag: { bad: 'Плохо', mid: 'Средне', good: 'Хорошо' } as Record<Band, string>,
+    loss: 'В минус',
+  },
+  en: {
+    heading: 'What if you rent like the neighbours',
+    bad: 'Poor: priced like the cheap ones',
+    mid: 'Typical: like most',
+    good: 'Good: like the pricey ones',
+    upTo: 'up to', from: 'from',
+    moneyBad: (x: ReactNode) => <>Up to {x} a month in hand</>,
+    moneyMid: (x: ReactNode) => <>About {x} a month</>,
+    moneyGood: (x: ReactNode) => <>From {x} a month</>,
+    tag: { bad: 'Poor', mid: 'Typical', good: 'Good' } as Record<Band, string>,
+    loss: 'At a loss',
+  },
+}
+
 export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyComps = [], airbnbComps = [], sale, snap, lang }: {
   verdict: Verdict
   monthly: MonthlyBundle | null
@@ -545,6 +577,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
     ownBooking: snap.ownBooking ? { adr: snap.ownBooking.adr, occupancy: snap.ownBooking.occupancy } : null,
     region: { occupancyByScenario: { median: snap.region.occupancyByScenario.median } },
   } : null
+  const receipt = snap ? nightReceipt(snap) : null
   const dec = (x: number) => (lang === 'en' || lang === 'zh' ? x.toFixed(1) : x.toFixed(1).replace('.', ','))
   const cardCls = 'flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
   const dq = quartiles(dailyComps.map(x => x.adr))
@@ -587,11 +620,11 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             </InfoTip>
           )}
           </div>
-          {cost && <div className="mb-8"><NightCost snap={cost} lang={lang} bare /></div>}
+          {receipt && <div className="mb-10"><NightReceiptBlock r={receipt} marketMedian={dq?.p50 ?? null} lang={lang} /></div>}
           {/* Booking и Airbnb одной лентой, от дорогих к дешёвым (владелец 21.10.2026). */}
-          <CardRail prevLabel={c.prev} nextLabel={c.next}>
-            {[
-              ...[...dailyComps].sort((a, b) => b.adr - a.adr).slice(0, 12).map(comp => ({ price: comp.adr, node: (
+          {(() => {
+            const all = [
+              ...[...dailyComps].sort((a, b) => b.adr - a.adr).slice(0, 12).map(comp => ({ price: comp.adr, node: (t?: { tone: Band; toneLabel: string }) => (
               <BookingCompCard
                 key={`b-${comp.id}`}
                 source="booking"
@@ -610,9 +643,10 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                 variantOcc={comp.facts?.roomOcc ?? null}
                 propertyOcc={comp.facts?.occ ?? null}
                 lang={lang}
+                {...t}
               />
               ) })),
-              ...airbnbComps.map(comp => ({ price: comp.priceUsd, node: (
+              ...airbnbComps.map(comp => ({ price: comp.priceUsd, node: (t?: { tone: Band; toneLabel: string }) => (
               <BookingCompCard
                 key={`a-${comp.id}`}
                 source="airbnb"
@@ -627,10 +661,33 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                 areaSqm={null}
                 distance={`${c.approx} ${dec(comp.distanceKm)} ${c.km}`}
                 lang={lang}
+                {...t}
               />
               ) })),
-            ].sort((a, b) => b.price - a.price).map(x => x.node)}
-          </CardRail>
+            ].sort((a, b) => b.price - a.price)
+            // Зоны — только когда соседей хватает на четверти и считается чек.
+            const bq = receipt ? quartiles(all.map(x => x.price)) : null
+            if (!bq || !snap) return (
+              <CardRail prevLabel={c.prev} nextLabel={c.next}>{all.map(x => x.node(undefined))}</CardRail>
+            )
+            const b = pickCopy(BANDS_COPY, lang)
+            const P = (usd: number) => <span className="whitespace-nowrap"><InlinePrice usd={usd} lang={lang} approx={false} /></span>
+            const band = (p: number): Band => p < bq.p25 ? 'bad' : p > bq.p75 ? 'good' : 'mid'
+            const month = (p: number) => monthlyNetAt(snap, p) ?? 0
+            return (
+              <BandedRail heading={b.heading} prevLabel={c.prev} nextLabel={c.next}
+                chips={[
+                  { band: 'bad', title: b.bad, range: <>{b.upTo} {P(bq.p25)}</>, money: b.moneyBad(P(month(bq.p25))) },
+                  { band: 'mid', title: b.mid, range: <>{P(bq.p25)} – {P(bq.p75)}</>, money: b.moneyMid(P(month(bq.p50))) },
+                  { band: 'good', title: b.good, range: <>{b.from} {P(bq.p75)}</>, money: b.moneyGood(P(month(bq.p75))) },
+                ]}
+                items={all.map(x => {
+                  const t = band(x.price)
+                  const loss = receipt?.breakeven != null && x.price < receipt.breakeven
+                  return { band: t, node: x.node({ tone: loss ? 'bad' : t, toneLabel: loss ? b.loss : b.tag[t] }) }
+                })} />
+            )
+          })()}
         </div>
   ) })
   if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (

@@ -5,6 +5,7 @@ import { BedDouble, Building2, ChartNoAxesColumn, MessageSquare, Ruler, Star } f
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import { InlinePrice } from './InlinePrice'
+import { BAND_SURFACE, BAND_TEXT, type Band } from './BandedRail'
 
 // Карточка соседа на Booking — одна для «Будет ли спрос → Посуточно» и для
 // ленты «Что рядом сдают за эти же деньги» в калькуляторе.
@@ -73,7 +74,7 @@ function occColor(p: number): string {
 export function BookingCompCard({
   href, photo, fallbackPhoto, priceUsd, name, variant, bedrooms, areaSqm, distance,
   mix, variantOcc, propertyOcc, compare = [], lang, size = 'md',
-  source, rating, reviews,
+  source, rating, reviews, tone, toneLabel,
 }: {
   href: string | null
   photo: string | null
@@ -101,6 +102,9 @@ export function BookingCompCard({
   /** Оценка гостей как на площадке: Booking из 10, Airbnb из 5. */
   rating?: number | null
   reviews?: number | null
+  /** Зона «плохо / средне / хорошо» в «Будет ли спрос?» — полупрозрачный фон и метка. */
+  tone?: Band
+  toneLabel?: string
 }) {
   const c = pickCopy(COPY, lang)
   // Ссылки на фото у Booking со временем умирают: тогда пробуем запасное,
@@ -131,7 +135,7 @@ export function BookingCompCard({
       href={href ?? undefined}
       target="_blank"
       rel="nofollow noopener noreferrer"
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] no-underline transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+      className={`group flex h-full flex-col overflow-hidden rounded-xl border ${tone ? BAND_SURFACE[tone] : 'border-[var(--color-border)] bg-white'} text-[var(--color-text)] no-underline transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]`}
     >
       <span className="relative block aspect-[3/2] bg-[var(--color-search-bg)]">
         {src && (
@@ -169,6 +173,9 @@ export function BookingCompCard({
       </span>
 
       <span className={`flex flex-1 flex-col ${pad}`}>
+        {tone && toneLabel && (
+          <span className={`mb-2 self-start rounded-full bg-white px-2.5 py-0.5 text-[12px] font-semibold ${BAND_TEXT[tone]}`}>{toneLabel}</span>
+        )}
         {priceUsd != null && (
           <span className="text-[20px] font-semibold leading-tight tracking-tight">
             <InlinePrice usd={priceUsd} lang={lang} approx={false} />{' '}
