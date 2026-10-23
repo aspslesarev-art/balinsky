@@ -1311,26 +1311,20 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
 
         {hasPlace && (
           <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {/* Сверху две карты рядом одной высоты: «Как добраться» и «Главное рядом»;
-                под ними «Солнце и погода» и ближайший пляж рядом (макет «Удобно ли там жить?», A —
-                владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли это?».
-                */}
+            {/* Три полосы друг под другом: карта слева, текст справа — «Как добраться»,
+                «Главное рядом», «Солнце и погода» (макет «Удобно ли там жить?», B —
+                владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли
+                это?». Пляж — ниже, во всю ширину. */}
             {(livingFacts || geoFacts) && (
-              <div className="mb-4 flex flex-col gap-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch [&>*]:mb-0 [&>*]:h-full">
-                  {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
-                    map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
-                  {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
-                    map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
-                </div>
-                {/* «Солнце и погода» и ближайший пляж — рядом (владелец 23.10.2026). */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch [&>*]:mb-0 [&>*]:h-full">
-                  {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
-                  {beach && beachPick && <BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} />}
-                </div>
+              <div className="mb-4 flex flex-col gap-4 [&>*]:mb-0">
+                {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
+                  map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
+                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
+                  map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
+                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
               </div>
             )}
-            {beach && beachPick && !(livingFacts || geoFacts) && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
+            {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
             {nearby && (
               <GatedBlock kind="nearby" lang={lang}>
                 <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />

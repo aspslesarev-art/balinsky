@@ -90,24 +90,28 @@ export function LivingList({ facts: f, lang, hideBeach = false, map }: {
   return (
     <div className="rounded-[20px] border border-[var(--color-border)] bg-white px-5 md:px-6">
       <h3 className="pt-5 text-[15px] font-semibold text-[var(--color-text)]">{c.title}</h3>
+      {/* С картой — полосой: карта слева, легенда и список справа (макет «Удобно ли
+          там жить?», B — владелец 23.10.2026). */}
+      <div className={near && near.points.length > 0 ? 'mt-3 grid grid-cols-1 gap-4 pb-2 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-8' : ''}>
       {near && near.points.length > 0 && (
-        <div className="mt-3 flex flex-col gap-3">
-          <LazyMount fallback={<div className="h-[320px] rounded-xl bg-[var(--color-search-bg)]" />}>
-            <ListingMap lat={map!.lat} lng={map!.lng} name={map!.name} points={near.points} />
-          </LazyMount>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[var(--color-text-muted)]">
-            {near.groups.map(g => (
-              <span key={g.key} className="flex items-center gap-1.5">
-                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />
-                {lang === 'ru' ? g.ru : g.en}
-              </span>
-            ))}
-          </div>
+        <LazyMount fallback={<div className="h-[320px] rounded-xl bg-[var(--color-search-bg)]" />}>
+          <ListingMap lat={map!.lat} lng={map!.lng} name={map!.name} points={near.points} />
+        </LazyMount>
+      )}
+      <div className="min-w-0">
+      {near && near.points.length > 0 && (
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[var(--color-text-muted)]">
+          {near.groups.map(g => (
+            <span key={g.key} className="flex items-center gap-1.5">
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />
+              {lang === 'ru' ? g.ru : g.en}
+            </span>
+          ))}
         </div>
       )}
       <dl className="mt-2 divide-y divide-[var(--color-border)]">
         {lines.map(l => (
-          <div key={l.key} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-6">
+          <div key={l.key} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:gap-6">
             <dt className="flex items-center gap-2 text-[15px] text-[var(--color-text-muted)]">
               <span className={`h-2 w-2 shrink-0 rounded-full ${TONE_DOT[l.tone]}`} aria-hidden />
               {l.label}
@@ -116,6 +120,8 @@ export function LivingList({ facts: f, lang, hideBeach = false, map }: {
           </div>
         ))}
       </dl>
+      </div>
+      </div>
     </div>
   )
 }
