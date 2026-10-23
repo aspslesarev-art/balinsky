@@ -85,11 +85,11 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes, map }: Pr
   return (
     <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
       <h3 className="mb-3 text-[15px] font-semibold text-[var(--color-text)]">{t.title}</h3>
-      {/* С картой — полосой: карта слева, куда сколько ехать справа (макет «Удобно ли
+      {/* С картой — полосой: куда сколько ехать слева, карта справа (макет «Удобно ли
           там жить?», B — владелец 23.10.2026). */}
-      <div className={map && mapRoutes.length > 0 ? 'grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-8' : ''}>
+      <div className={map && mapRoutes.length > 0 ? 'grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-8' : ''}>
       {map && mapRoutes.length > 0 && (
-        <div>
+        <div className="lg:order-last">
           <LazyMount fallback={<div className="h-[320px] rounded-xl bg-[var(--color-search-bg)]" />}>
             <ListingMap lat={map.lat} lng={map.lng} name={map.name} routes={mapRoutes} />
           </LazyMount>
