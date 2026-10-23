@@ -131,8 +131,37 @@ export function ClimateBlock({ climate, air, lang, lat, lng, footer, wide = fals
 
       {/* По строке на факт (владелец 21.10.2026): в две колонки «лучшие месяцы»
           обрезались многоточием. */}
+      {wide && (
+        // По месяцам — 12 плиток: солнечные дни, температура днём, дни с дождём
+        // (макет «Солнце и погода по месяцам», C — владелец 23.10.2026).
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-6">
+          {Array.from({ length: 12 }, (_, i) => {
+            const mo = climate[String(i + 1).padStart(2, '0')]
+            if (!mo) return null
+            const name: string = (MONTHS[lang as keyof typeof MONTHS] ?? MONTHS.en)[i]
+            const tone = mo.sunny >= 21 ? 'bg-[rgb(245_165_36/.14)]' : mo.sunny >= 14 ? 'bg-[var(--color-surface-alt)]' : 'bg-[rgb(80_140_255/.10)]'
+            return (
+              <div key={i} className={`flex flex-col gap-0.5 rounded-lg px-2.5 py-2 ${tone}`}>
+                <span className="text-[12px] text-[var(--color-text-muted)]">{name.charAt(0).toUpperCase() + name.slice(1, 3)}</span>
+                <span className="flex items-center gap-1 text-[17px] font-semibold tabular-nums"><Sun size={14} className="shrink-0 text-[#F59E0B]" aria-hidden />{mo.sunny}</span>
+                <span className="flex items-center gap-2 text-[12px] leading-tight text-[var(--color-text-muted)] tabular-nums">
+                  {mo.t_max != null && <span>{Math.round(mo.t_max)}°</span>}
+                  <span className="flex items-center gap-0.5"><CloudRain size={12} className="shrink-0 text-[#3B82F6]" aria-hidden />{mo.wet}</span>
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      {wide && (
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--color-text-muted)]">
+          <span className="flex items-center gap-1"><Sun size={12} className="text-[#F59E0B]" aria-hidden />{lang === 'ru' ? 'солнечных дней' : 'sunny days'}</span>
+          <span className="flex items-center gap-1"><CloudRain size={12} className="text-[#3B82F6]" aria-hidden />{lang === 'ru' ? 'дней с дождём' : 'rainy days'}</span>
+          <span>{lang === 'ru' ? '° - температура днём' : '° - daytime temperature'}</span>
+        </p>
+      )}
       <div className="mt-3 flex flex-col gap-2">
-        {bestLabel && (
+        {!wide && bestLabel && (
           <div className="flex min-w-0 items-start gap-1.5">
             <Sun size={15} className="mt-0.5 shrink-0 text-[#F59E0B]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.best}:</span>
@@ -142,7 +171,7 @@ export function ClimateBlock({ climate, air, lang, lat, lng, footer, wide = fals
             </span>
           </div>
         )}
-        {worstLabel && (
+        {!wide && worstLabel && (
           <div className="flex min-w-0 items-start gap-1.5">
             <CloudRain size={15} className="mt-0.5 shrink-0 text-[#3B82F6]" />
             <span className="shrink-0 text-[13px] text-[var(--color-text-muted)]">{t.worst}:</span>
