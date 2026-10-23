@@ -86,9 +86,10 @@ export function ListingMap({ lat, lng, name, routes, points, heat = false, class
                 'heatmap-weight': ['get', 'w'],
                 'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 10, 20, 13, 45, 16, 90],
                 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 15, 2.5],
-                // Только тёплые тона: от прозрачного через оранжевый к красному.
+                // Как пламя: от прозрачного через светло-жёлтый к оранжевому, без
+                // тёмно-красного — тот читался как «кровавые пятна» (владелец 23.10.2026).
                 'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-                  0, 'rgba(255,170,0,0)', 0.15, 'rgba(255,170,0,0.4)', 0.45, 'rgba(255,90,0,0.65)', 1, 'rgba(215,25,25,0.9)'],
+                  0, 'rgba(255,214,102,0)', 0.15, 'rgba(255,214,102,0.35)', 0.4, 'rgba(255,176,59,0.55)', 0.7, 'rgba(255,138,20,0.7)', 1, 'rgba(245,101,20,0.8)'],
               },
             })
           }).catch(() => {})
