@@ -597,7 +597,8 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   const aq = quartiles(airbnbComps.map(x => x.priceUsd))
   const hasOcc = dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null)
   if (dailyComps.length > 0 || airbnbComps.length > 0) tabs.push({ key: 'daily', label: c.tabDaily, content: (
-        <div>
+        // Всё содержимое вкладки — одной карточкой (макет «Будет ли спрос → Посуточно», A).
+        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6">
           {v.demand.monthlyOnly && <p className="mb-2 text-[15px] font-medium text-[var(--color-text)]">{c.dailyHRestricted}</p>}
           {/* Сводка слева, пояснение «откуда цифры» — под значком i справа (владелец 22.10.2026). */}
           <div className="mb-4 flex items-start justify-between gap-3">
@@ -631,7 +632,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             </InfoTip>
           )}
           </div>
-          {receipt && <div className="mb-10"><NightReceiptBlock r={receipt} marketMedian={dq?.p50 ?? null} lang={lang} /></div>}
+          {receipt && <div className="mb-6 border-b border-[var(--color-border)] pb-6"><NightReceiptBlock r={receipt} marketMedian={dq?.p50 ?? null} lang={lang} /></div>}
           {/* Booking и Airbnb одной лентой, от дорогих к дешёвым (владелец 21.10.2026). */}
           {(() => {
             const all = [
@@ -703,11 +704,11 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
         </div>
   ) })
   if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (
-        <div>
+        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6">
           <p className="mb-4 text-[16px] text-[var(--color-text)]">
             {m.ownN && m.ownDistrict ? c.whoDistrict(m.bedroomsRelaxed ? null : bedrooms, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
           </p>
-          {mReceipt && <div className="mb-10"><NightReceiptBlock r={mReceipt} marketMedian={m.p50} lang={lang} /></div>}
+          {mReceipt && <div className="mb-6 border-b border-[var(--color-border)] pb-6"><NightReceiptBlock r={mReceipt} marketMedian={m.p50} lang={lang} /></div>}
           {(() => {
             // Зоны — те же, что посуточно: дешёвая четверть, середина, дорогая четверть.
             const card = (comp: typeof m.comps[number], tone?: Band, tag?: string) => (
