@@ -20,6 +20,8 @@ export const MIN_FOR_VERDICT = 5
 /** Меньше — это ориентир, а не рыночная цифра. */
 export const SOLID_N = 30
 const SHOW = 6
+/** Докуда показываем виллы каталога, даже если сравнение собралось в меньшем радиусе. */
+export const CATALOG_FAR_KM = 3
 
 type RawItem = [number, number, number, number, number | null, number | null, 0 | 1 | null, number | null, string | null, string, string | null, string | null]
 type Index = {
@@ -42,6 +44,16 @@ export type SaleComp = {
   /** Цена за м²; для лизхолда со сроком — ещё и за м² на год. */
   ppm: number | null
   ppmYear: number | null
+  /** Объект из каталога Balinsky (не rumah123): ссылка внутри сайта, есть название. */
+  catalog?: boolean
+  name?: string | null
+}
+
+/** Вилла каталога Balinsky на продаже — подмешивается к объявлениям rumah123. */
+export type CatalogSale = {
+  lat: number; lng: number; bedrooms: number; priceUsd: number
+  buildingM2: number | null; landM2: number | null; leaseYears: number | null
+  url: string; photo: string | null; district: string | null; name: string | null
 }
 
 export type SaleCompsBundle = {
@@ -53,6 +65,10 @@ export type SaleCompsBundle = {
   diffPct: number | null
   /** Сколько объявлений в сравнении. */
   n: number
+  /** Из них — вилл каталога Balinsky. */
+  catalogN: number
+  /** Виллы каталога дальше радиуса сравнения (до CATALOG_FAR_KM): в ленте, но не в медиане. */
+  catalogFar: number
   radiusKm: number
   bedroomsRelaxed: boolean
   comps: SaleComp[]
@@ -115,21 +131,40 @@ export type SaleCompsInput = {
   priceUsd: number | null
   /** Срок лизхолда в годах; null — фрихолд или не указан. */
   leaseYears: number | null
+  /** Виллы каталога Balinsky (без самой виллы и её застройщика). */
+  catalog?: CatalogSale[]
 }
 
 export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle | null> {
   const idx = await loadIndex()
-  if (!idx) return null
-  const ty = Math.floor(i.lat / idx.tile), tx = Math.floor(i.lng / idx.tile)
   const keys: string[] = []
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-    const k = `${ty + dy}_${tx + dx}`
-    if (idx.tiles[k]) keys.push(k)
+  if (idx) {
+    const ty = Math.floor(i.lat / idx.tile), tx = Math.floor(i.lng / idx.tile)
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const k = `${ty + dy}_${tx + dx}`
+      if (idx.tiles[k]) keys.push(k)
+    }
   }
-  if (!keys.length) return null
-  const raw = (await Promise.all(keys.map(loadTile))).flat()
+  const raw = idx ? (await Promise.all(keys.map(loadTile))).flat() : []
 
-  const all: SaleComp[] = raw.map(r => {
+  const fromCatalog: SaleComp[] = (i.catalog ?? []).map(c => {
+    const ppm = c.buildingM2 ? c.priceUsd / c.buildingM2 : null
+    return {
+      bedrooms: c.bedrooms, priceUsd: c.priceUsd, buildingM2: c.buildingM2, landM2: c.landM2,
+      leasehold: c.leaseYears != null ? true : null, leaseYears: c.leaseYears, posted: null,
+      url: c.url, photo: c.photo, district: c.district, name: c.name, catalog: true,
+      distanceKm: km(i.lat, i.lng, c.lat, c.lng),
+      ppm, ppmYear: ppm != null && c.leaseYears ? ppm / c.leaseYears : null,
+    }
+  }).filter(c => c.distanceKm <= RADII_KM[RADII_KM.length - 1])
+  // Застройщики выставляют свои виллы и на rumah123 — такое объявление
+  // (те же спальни, площадь ±3 м², цена ±3%) считаем дублем каталожной.
+  const isDup = (c: SaleComp) => fromCatalog.some(b => b.bedrooms === c.bedrooms &&
+    Math.abs(b.priceUsd - c.priceUsd) <= b.priceUsd * 0.03 &&
+    (b.buildingM2 == null || c.buildingM2 == null || Math.abs(b.buildingM2 - c.buildingM2) <= 3))
+
+  if (!idx && !fromCatalog.length) return null
+  const fromRumah: SaleComp[] = !idx ? [] : raw.map(r => {
     const [lat, lng, bedrooms, priceUsd, buildingM2, landM2, tenure, leaseYears, posted, url, photo, district] = r
     const ppm = buildingM2 ? priceUsd / buildingM2 : null
     return {
@@ -141,6 +176,7 @@ export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle 
       ppm, ppmYear: ppm != null && leaseYears ? ppm / leaseYears : null,
     }
   })
+  const all = [...fromCatalog, ...fromRumah.filter(c => !isDup(c))]
 
   const beds = i.bedrooms ?? 2
   const isLease = i.leaseYears != null
@@ -173,8 +209,9 @@ export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle 
   const self = selfPpm == null ? null : metric === 'year' ? selfPpm / i.leaseYears! : selfPpm
   const diffPct = med && self ? Math.round((self / med - 1) * 100) : null
 
-  // Карточки: сначала с фото и площадью, ближние — выше.
-  const byQuality = (a: SaleComp, b: SaleComp) => Number(!!b.photo && !!b.buildingM2) - Number(!!a.photo && !!a.buildingM2) || a.distanceKm - b.distanceKm
+  // Карточки: сначала каталог Balinsky (владелец 23.10.2026 — видеть
+  // конкурентов из своего каталога), потом с фото и площадью, ближние — выше.
+  const byQuality = (a: SaleComp, b: SaleComp) => Number(!!b.catalog) - Number(!!a.catalog) || Number(!!b.photo && !!b.buildingM2) - Number(!!a.photo && !!a.buildingM2) || a.distanceKm - b.distanceKm
   const sortedVals = [...vals].sort((a, b) => a - b)
   const qt = (p: number) => sortedVals[Math.min(sortedVals.length - 1, Math.floor((sortedVals.length - 1) * p))]
   const q = vals.length >= MIN_FOR_VERDICT ? { p25: qt(0.25), p50: qt(0.5), p75: qt(0.75), min: sortedVals[0], max: sortedVals[sortedVals.length - 1] } : null
@@ -192,9 +229,16 @@ export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle 
     comps = [...chosen].sort(byQuality).slice(0, SHOW)
   }
 
+  // Конкуренты из каталога чуть дальше радиуса — карточками, без влияния на цифры.
+  const inChosen = new Set(chosen)
+  const far = all.filter(c => c.catalog && !inChosen.has(c) && c.distanceKm <= Math.max(radiusKm, CATALOG_FAR_KM) &&
+    sameRight(c) && sameSize(c) && (relaxed ? Math.abs(c.bedrooms - beds) <= 1 : c.bedrooms === beds))
+    .sort((a, b) => a.distanceKm - b.distanceKm).slice(0, SHOW)
+  comps = [...comps, ...far]
+
   return {
-    metric, median: med, self, diffPct,
-    n: chosen.length, radiusKm, bedroomsRelaxed: relaxed, comps, q, counts,
-    source: idx.source, asOf: idx.asOf ?? idx.generatedAt,
+    metric, median: med, self, diffPct, catalogFar: far.length,
+    n: chosen.length, catalogN: chosen.filter(c => c.catalog).length, radiusKm, bedroomsRelaxed: relaxed, comps, q, counts,
+    source: idx?.source ?? 'balinsky', asOf: idx ? idx.asOf ?? idx.generatedAt : new Date().toISOString(),
   }
 }

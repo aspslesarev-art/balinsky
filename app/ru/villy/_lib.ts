@@ -665,6 +665,7 @@ const SLIM_VILLA_FIELDS = [
   ['ИИ Имя EN', 'ai_name_en'],
   ['Имя ENG', 'imya_eng'],
   ['Name', 'name'],
+  ['Комплекс 1', 'complex1'],
   ['Notes', 'notes'],
   ['Year of completion', 'year'],
   ['Location', 'loc'],

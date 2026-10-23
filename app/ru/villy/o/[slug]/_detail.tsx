@@ -51,7 +51,8 @@ const InvestmentWidget = dynamic(
 const LandProfileBlock = dynamic(
   () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
 )
-import { saleCompsNear } from '@/lib/sale-comps'
+import { saleCompsNear, type CatalogSale } from '@/lib/sale-comps'
+import { loadAll as loadVillaCatalog } from '@/app/ru/villy/_lib'
 import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
@@ -885,6 +886,31 @@ function findDeveloperByName(targetName: string | null, list: DeveloperLite[]): 
     ?? null
 }
 
+// Виллы каталога для «Что продаётся рядом»: только чужие застройщики —
+// владелец хочет видеть конкурентов (23.10.2026). Каталог уже в кэше страниц.
+async function loadCatalogSales(exceptId: string, developer: string | null, lang: Lang): Promise<CatalogSale[]> {
+  const { enriched, manifest } = await loadVillaCatalog().catch(() => ({ enriched: [], manifest: {} as Record<string, string[]> }))
+  const dev = developer?.toLowerCase().trim() ?? null
+  const out: CatalogSale[] = []
+  for (const e of enriched) {
+    if (e.id === exceptId || !e.slug || e.lat == null || e.lng == null || !e.priceUsd) continue
+    if (dev && e.developerName?.toLowerCase().trim() === dev) continue
+    const beds = e.bedrooms && /^\d+$/.test(e.bedrooms.trim()) ? Number(e.bedrooms.trim()) : null
+    if (beds == null) continue
+    const lease = firstString(e.data['Leasehold']) ?? firstString(e.data['Leashold'])
+    out.push({
+      lat: e.lat, lng: e.lng, bedrooms: beds, priceUsd: e.priceUsd,
+      buildingM2: e.area, landM2: e.land,
+      leaseYears: lease && /^\d+(\.\d+)?$/.test(lease.trim()) ? Number(lease.trim()) : null,
+      url: switchLangPath(`/ru/villy/o/${e.slug}`, lang),
+      photo: manifest[e.id]?.[0] ?? null,
+      district: e.district,
+      name: firstString(e.data['Комплекс 1']) ?? e.developerName,
+    })
+  }
+  return out
+}
+
 async function loadOtherVillasInDistrict(district: string | null, exceptId: string, lang: Lang = 'ru') {
   if (!district) return []
   const [idx, manifest] = await Promise.all([_loadVillaIndex(), _loadManifest()])
@@ -1091,7 +1117,9 @@ export async function VillaDetail({ slug, lang }: { slug: string; lang: Lang }) 
     loadGeoFacts('villa', v.airtable_id).catch(() => null),
     loadOneUnitDemand('villa', v.airtable_id, lang).catch(() => null),
     lat != null && lng != null
-      ? saleCompsNear({ lat, lng, bedrooms, areaM2: area, priceUsd: priceNum, leaseYears }).catch(() => null)
+      ? loadCatalogSales(v.airtable_id, developerName, lang)
+          .then(catalog => saleCompsNear({ lat, lng, bedrooms, areaM2: area, priceUsd: priceNum, leaseYears, catalog }))
+          .catch(() => null)
       : null,
     loadVerdictSnapshot(v.airtable_id),
     loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),

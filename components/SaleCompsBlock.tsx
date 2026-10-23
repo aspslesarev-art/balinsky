@@ -6,7 +6,7 @@
 
 import Image from 'next/image'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import { type SaleCompsBundle, type SaleComp } from '@/lib/sale-comps'
+import { type SaleCompsBundle, type SaleComp, CATALOG_FAR_KM } from '@/lib/sale-comps'
 import { InlinePrice } from './InlinePrice'
 import { CardRail } from './CardRail'
 import { BandedRail } from './BandedRail'
@@ -44,7 +44,9 @@ const COPY = {
     verdict: (diff: number, year: boolean) => `${Math.abs(diff) <= 5 ? 'Эта вилла на уровне рынка' : `Эта вилла ${diff > 0 ? 'дороже' : 'дешевле'} рынка на ${Math.abs(diff)}%`} - если сравнивать цену ${year ? 'за м² на год владения' : 'за м²'}`,
     midMark: 'середина рынка',
     selfMark: 'эта вилла',
-    note: (n: number, r: number, year: boolean) => `${year ? 'За м² в год = цена ÷ площадь дома ÷ срок лизхолда. Так честно сравниваются виллы с разным сроком. ' : 'За м² = цена ÷ площадь дома. '}${n} ${plural(n, ['похожая вилла', 'похожие виллы', 'похожих вилл'])} в ${String(r).replace('.', ',')} км, объявления rumah123.com.`,
+    note: (n: number, r: number, year: boolean, cat: number) => `${year ? 'За м² в год = цена ÷ площадь дома ÷ срок лизхолда. Так честно сравниваются виллы с разным сроком. ' : 'За м² = цена ÷ площадь дома. '}${n} ${plural(n, ['похожая вилла', 'похожие виллы', 'похожих вилл'])} в ${String(r).replace('.', ',')} км: ${cat ? `${cat} из каталога Balinsky, остальные - ` : ''}объявления rumah123.com.`,
+    catalog: 'В каталоге Balinsky',
+    far: (n: number, km: number) => `Ещё ${n} ${plural(n, ['вилла', 'виллы', 'вилл'])} из каталога Balinsky - чуть дальше, до ${km} км, в среднюю цену не ${n === 1 ? 'входит' : 'входят'}.`,
     heading: 'Что продаётся рядом',
     zone: { good: 'Дешевле рынка', mid: 'Середина рынка', bad: 'Дороже рынка' } as Record<Band, string>,
     tag: { good: 'Дешевле', mid: 'Середина', bad: 'Дороже' } as Record<Band, string>,
@@ -82,7 +84,9 @@ const COPY = {
     verdict: (diff: number, year: boolean) => `${Math.abs(diff) <= 5 ? 'This villa is in line with the market' : `This villa is ${Math.abs(diff)}% ${diff > 0 ? 'above' : 'below'} the market`} - comparing price per m² ${year ? 'per year of ownership' : ''}`.trim(),
     midMark: 'market midpoint',
     selfMark: 'this villa',
-    note: (n: number, r: number, year: boolean) => `${year ? 'Per m² per year = price ÷ floor area ÷ lease term, so different lease terms compare fairly. ' : 'Per m² = price ÷ floor area. '}${n} similar ${n === 1 ? 'villa' : 'villas'} within ${r} km, rumah123.com listings.`,
+    note: (n: number, r: number, year: boolean, cat: number) => `${year ? 'Per m² per year = price ÷ floor area ÷ lease term, so different lease terms compare fairly. ' : 'Per m² = price ÷ floor area. '}${n} similar ${n === 1 ? 'villa' : 'villas'} within ${r} km: ${cat ? `${cat} from the Balinsky catalog, the rest ` : ''}rumah123.com listings.`,
+    catalog: 'In the Balinsky catalog',
+    far: (n: number, km: number) => `${n} more from the Balinsky catalog, a bit further out (up to ${km} km), not included in the average.`,
     heading: 'For sale nearby',
     zone: { good: 'Below market', mid: 'Market midpoint', bad: 'Above market' } as Record<Band, string>,
     tag: { good: 'Cheaper', mid: 'Midpoint', bad: 'Pricier' } as Record<Band, string>,
@@ -140,7 +144,7 @@ export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundl
             </div>
           </div>
           <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-            {c.note(data.n, data.radiusKm, isYear)}{data.n < 30 ? ` ${c.few}` : ''}
+            {c.note(data.n, data.radiusKm, isYear, data.catalogN ?? 0)}{data.n < 30 ? ` ${c.few}` : ''}{data.catalogFar ? ` ${c.far(data.catalogFar, Math.max(data.radiusKm, CATALOG_FAR_KM))}` : ''}
           </p>
         </section>
       )}
@@ -168,7 +172,7 @@ export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundl
 function CompCard({ comp, isYear, lang, tone, tag }: { comp: SaleComp; isYear: boolean; lang: Lang; tone?: Band; tag?: string }) {
   const c = pickCopy(COPY, lang)
   // rumah123 отдаёт картинку в нужном размере сам — большую не тянем.
-  const photo = comp.photo?.replace('/1080x720-fit/', '/720x480-fit/') ?? null
+  const photo = comp.catalog ? comp.photo : comp.photo?.replace('/1080x720-fit/', '/720x480-fit/') ?? null
   const right = comp.leasehold === true && comp.leaseYears ? c.lease(comp.leaseYears) : comp.leasehold === false ? c.freehold : null
   const metric = isYear ? comp.ppmYear : comp.ppm
   const facts = [comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.bedShort}`, comp.buildingM2 && `${comp.buildingM2} ${c.m2}`, right].filter(Boolean).join(' · ')
@@ -176,7 +180,7 @@ function CompCard({ comp, isYear, lang, tone, tag }: { comp: SaleComp; isYear: b
       <a
         href={comp.url}
         target="_blank"
-        rel="nofollow noopener noreferrer"
+        rel={comp.catalog ? 'noopener' : 'nofollow noopener noreferrer'}
         className={`group flex h-full flex-col overflow-hidden rounded-2xl border ${tone ? BAND_SURFACE[tone] : 'border-[var(--color-border)] bg-white'} transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]`}
       >
         <div className="relative aspect-[3/2] bg-[var(--color-search-bg)]">
@@ -185,10 +189,16 @@ function CompCard({ comp, isYear, lang, tone, tag }: { comp: SaleComp; isYear: b
           )}
         </div>
         <div className="flex flex-1 flex-col gap-1 p-5">
-          {tone && tag && <span className={`mb-1 self-start rounded-full bg-white px-2.5 py-0.5 text-[12px] font-semibold ${BAND_TEXT[tone]}`}>{tag}</span>}
+          {((tone && tag) || comp.catalog) && (
+            <div className="mb-1 flex flex-wrap gap-1.5">
+              {tone && tag && <span className={`rounded-full bg-white px-2.5 py-0.5 text-[12px] font-semibold ${BAND_TEXT[tone]}`}>{tag}</span>}
+              {comp.catalog && <span className="rounded-full bg-[var(--color-primary)] px-2.5 py-0.5 text-[12px] font-semibold text-white">{c.catalog}</span>}
+            </div>
+          )}
           <div className="text-[20px] font-semibold text-[var(--color-text)] leading-tight">
             <InlinePrice usd={comp.priceUsd} lang={lang} />
           </div>
+          {comp.name && <div className="line-clamp-1 text-[15px] font-semibold text-[var(--color-text)]">{comp.name}</div>}
           <div className="text-[15px] font-medium text-[var(--color-text)]">{facts}</div>
           {metric != null && (
             <div className="text-[13px] text-[var(--color-text-muted)]">
