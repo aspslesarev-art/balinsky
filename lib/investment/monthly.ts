@@ -222,7 +222,7 @@ export function computeMonthlyEconomics(i: MonthlyInput): MonthlyEconomics {
   // уборку и расходники платит жилец.
   const opex = Math.max((i.area ?? 0) * region.opexPerSqmMonth * 12,
     region.opexFloorBase + region.opexFloorPerBedroom * (i.bedrooms ?? 2))
-  const upkeep = opex * (region.opexBreakdown.poolGarden + region.opexBreakdown.other)
+  const upkeep = opex * region.monthlyOwnerOpexShare
   const ffeReserve = revenue * region.ffeReservePct
   const pbbTax = i.askingPrice != null ? i.askingPrice * region.pbbAnnualPctOfPrice : 0
   // Налог с аренды в Индонезии финальный и берётся с валовой суммы.
