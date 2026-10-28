@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import NextImage from 'next/image'
-import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound, FileText } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound, FileText, Check, Coffee, Image as ImageIcon, LayoutGrid, ListChecks } from 'lucide-react'
 import type { Snapshot as BaseSnapshot } from '@/components/InvestmentWidget/types'
 import type { YieldFacts } from '@/lib/listing-verdict'
 
@@ -614,14 +614,43 @@ function InvestSlide({ snap, data }: { snap: Snapshot | null; data: VillaPresent
   )
 }
 
+// Блоки PDF в порядке страниц. Обложка и последняя страница — всегда.
+type PickBlock = 'photos' | 'facts' | 'about' | 'map' | 'nearby'
+const PICK_ORDER: PickBlock[] = ['photos', 'facts', 'about', 'map', 'nearby']
+const PRESETS: { id: 'short' | 'life' | 'all'; blocks: PickBlock[] | null }[] = [
+  { id: 'short', blocks: ['photos', 'facts'] },
+  { id: 'life', blocks: ['photos', 'about', 'map', 'nearby'] },
+  { id: 'all', blocks: null },
+]
+const BLOCK_ICONS = { cover: ImageIcon, photos: LayoutGrid, facts: ListChecks, about: FileText, map: MapPin, nearby: Coffee, last: UserRound }
+const AGENT_KEY = 'bx_pdf_agent'
+
+// Сколько страниц фото — так же, как их раскладывает VillaPresentationPdf.
+function photoPages(photos: string[]): number {
+  const pool = photos.slice(1, 12)
+  if (pool.length >= 5) return pool.length >= 6 ? 2 : 1
+  return pool.length > 0 ? 1 : 0
+}
+
 function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; snap: Snapshot | null; onClose: () => void }) {
   // Currency at download time. Threaded through to the PDF builder
   // so price/scenarios print in whichever currency the visitor was
   // browsing in (USD/EUR/RUB/UAH/IDR via lib/currency).
   const c = presentationCopy(data.lang)
   const { currency } = useCurrency()
-  const [mode, setMode] = useState<'choose' | 'agent'>('choose')
-  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape')
+  // Блоки, для которых у объекта есть данные. Пустые не предлагаем.
+  const available = PICK_ORDER.filter(b => {
+    if (b === 'photos') return photoPages(data.photos) > 0
+    if (b === 'about') return !!data.seoText
+    if (b === 'map') return data.lat != null && data.lng != null
+    if (b === 'nearby') return !!snap && Object.values(snap.nearbyByCategory ?? {}).some(arr => arr.length > 0)
+    return true
+  })
+  const [picked, setPicked] = useState<PickBlock[]>(() => available.filter(b => b !== 'about' && b !== 'nearby'))
+  // На телефоне по умолчанию вертикальный PDF — его удобнее листать в мессенджере.
+  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 'portrait' : 'landscape')
+  const [withAgent, setWithAgent] = useState(false)
   const [name, setName] = useState('')
   const [telegram, setTelegram] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
@@ -630,7 +659,19 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
   const trimmedName = name.trim()
   const trimmedTg = telegram.trim()
   const trimmedWa = whatsapp.trim()
-  const canSubmitAgent = trimmedName.length > 0 && (trimmedTg.length > 0 || trimmedWa.length > 0) && !busy
+  const agentOk = trimmedName.length > 0 && (trimmedTg.length > 0 || trimmedWa.length > 0)
+  const canDownload = !busy && (!withAgent || agentOk)
+
+  // Контакты агента помним в этом браузере, чтобы не вводить каждый раз.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(AGENT_KEY) ?? 'null')
+      if (saved && typeof saved === 'object') {
+        setName(saved.name ?? ''); setTelegram(saved.telegram ?? ''); setWhatsapp(saved.whatsapp ?? '')
+        setWithAgent(!!saved.on)
+      }
+    } catch {}
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) onClose() }
@@ -638,12 +679,24 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, busy])
 
-  const downloadSimple = async () => {
+  const toggle = (b: PickBlock) =>
+    setPicked(prev => prev.includes(b) ? prev.filter(x => x !== b) : PICK_ORDER.filter(x => x === b || prev.includes(x)))
+  const presetBlocks = (p: (typeof PRESETS)[number]) => (p.blocks ?? available).filter(b => available.includes(b))
+  const sameSet = (a: PickBlock[], b: PickBlock[]) => a.length === b.length && a.every(x => b.includes(x))
+  const pageCount = 2 + picked.reduce((n, b) => n + (b === 'photos' ? photoPages(data.photos) : 1), 0)
+  const presetLabel = { short: c.presetShort, life: c.presetLife, all: c.presetAll }
+
+  const download = async () => {
+    if (!canDownload) return
     setBusy(true)
     setError(null)
     try {
+      try {
+        localStorage.setItem(AGENT_KEY, JSON.stringify({ on: withAgent, name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }))
+      } catch {}
       const { downloadVillaPdf } = await import('./VillaPresentationPdf')
-      await downloadVillaPdf(data, snap, null, orientation, currency)
+      const agent = withAgent ? { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa } : null
+      await downloadVillaPdf(data, snap, agent, orientation, currency, picked)
       onClose()
     } catch (e) {
       console.error(e)
@@ -653,55 +706,163 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     }
   }
 
-  const submitAgent = async () => {
-    if (!canSubmitAgent) return
-    setBusy(true)
-    setError(null)
-    try {
-      const { downloadVillaPdf } = await import('./VillaPresentationPdf')
-      await downloadVillaPdf(data, snap, { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }, orientation, currency)
-      onClose()
-    } catch (e) {
-      console.error(e)
-      setError(c.pdfError)
-    } finally {
-      setBusy(false)
-    }
-  }
+  const rows: { id: 'cover' | PickBlock | 'last'; locked: boolean; on: boolean }[] = [
+    { id: 'cover', locked: true, on: true },
+    ...available.map(b => ({ id: b, locked: false, on: picked.includes(b) })),
+    { id: 'last', locked: true, on: true },
+  ]
+  const thumbFor = (id: string) => id === 'cover' ? data.photos[0] : id === 'photos' ? (data.photos[1] ?? data.photos[0]) : null
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4"
+      className="fixed inset-0 z-[110] flex items-end md:items-center justify-center bg-black/60 md:px-4"
       onClick={() => { if (!busy) onClose() }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="download-modal-title"
     >
       <div
-        className="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-xl"
+        className="w-full md:max-w-[960px] max-h-[88dvh] flex flex-col rounded-t-2xl md:rounded-xl bg-white shadow-[0_1px_2px_rgb(0_0_0/.04),0_12px_32px_rgb(0_0_0/.12)]"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 mb-1">
-          <h3 id="download-modal-title" className="text-[20px] md:text-[22px] font-semibold tracking-tight text-[var(--color-text)]">
-            {c.dlTitle}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={busy}
-            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-[var(--color-text)] disabled:opacity-50"
-            aria-label={c.close}
-          >
-            <X size={16} />
-          </button>
+        <div aria-hidden="true" className="md:hidden mx-auto mt-2 h-1 w-10 rounded-full bg-[var(--color-neutral-300)]" />
+
+        <div className="px-4 md:px-8 pt-3 md:pt-6 pb-3 md:pb-6">
+          <div className="flex items-center gap-3">
+            <h3 id="download-modal-title" className="text-[20px] font-semibold tracking-tight text-[var(--color-text)]">
+              {c.pickTitle}
+            </h3>
+            <span className="rounded-full bg-[var(--color-primary-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-primary-pressed)]">Pro</span>
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={busy}
+              className="shrink-0 inline-flex items-center justify-center w-11 h-11 -mr-2 rounded-lg hover:bg-black/5 text-[var(--color-text-muted)] disabled:opacity-50"
+              aria-label={c.close}
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <p className="mt-1 text-[14px] text-[var(--color-text-muted)]">
+            <span className="hidden md:inline">{c.pickSub}</span>
+            <span className="md:hidden">{c.pickSubMobile}</span>
+          </p>
+          <div role="radiogroup" aria-label={c.presetsAria} className="hidden md:flex flex-wrap gap-2 mt-3">
+            {PRESETS.map(p => {
+              const blocks = presetBlocks(p)
+              // Подсвечиваем только первый совпавший набор: у объекта без
+              // части данных «Для жизни» и «Всё» могут совпасть.
+              const active = PRESETS.find(q => sameSet(picked, presetBlocks(q)))?.id === p.id
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setPicked(blocks)}
+                  disabled={busy}
+                  className={`min-h-10 rounded-full border px-4 text-[14px] transition-colors ${
+                    active
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] font-semibold text-[var(--color-primary-pressed)]'
+                      : 'border-[var(--color-border)] bg-white text-[var(--color-text)] hover:border-[var(--color-text-muted)]'
+                  }`}
+                >
+                  {presetLabel[p.id]}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        {mode === 'choose' ? (
-          <>
-            <p className="text-[13px] text-[var(--color-text-muted)] mb-4">
-              {c.dlChoose}
-            </p>
-            <div className="mb-4 inline-flex w-full rounded-full border border-[var(--color-border)] p-1 bg-[var(--color-search-bg)]">
+        <div className="flex-1 min-h-0 overflow-y-auto border-t border-[var(--color-border)] md:bg-[var(--color-surface-alt)] px-4 md:px-8 md:py-6">
+          {/* Компьютер: плитки-страницы */}
+          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {rows.map(r => {
+              const [title] = c.blk[r.id]
+              const Icon = BLOCK_ICONS[r.id]
+              const thumb = thumbFor(r.id)
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  aria-pressed={r.on}
+                  disabled={r.locked || busy}
+                  onClick={() => { if (!r.locked) toggle(r.id as PickBlock) }}
+                  className={`flex flex-col gap-3 rounded-xl border-2 bg-white p-3 text-left transition-[border-color,opacity] duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
+                    r.on ? 'border-[var(--color-primary)]' : 'border-[var(--color-border)] opacity-60 hover:opacity-100'
+                  } ${r.locked ? 'cursor-default' : 'cursor-pointer'}`}
+                >
+                  <span className="relative block aspect-[297/210] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+                    {thumb
+                      ? <NextImage src={thumb} alt="" fill sizes="200px" className="object-cover" />
+                      : <span className="absolute inset-0 flex items-center justify-center text-[var(--color-text-muted)]"><Icon size={24} strokeWidth={1.6} /></span>}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <CheckDot on={r.on} locked={r.locked} round />
+                    <span className="text-[14px] font-semibold text-[var(--color-text)]">{title}</span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Телефон: список с переключателями */}
+          <div className="md:hidden">
+            {rows.map(r => {
+              const [title, sub] = c.blk[r.id]
+              return (
+                <label key={r.id} className={`flex items-center gap-3 min-h-14 py-2 border-b border-[var(--color-neutral-100)] ${r.locked ? '' : 'cursor-pointer'}`}>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[15px] font-semibold text-[var(--color-text)]">{title}</span>
+                    <span className="block text-[13px] text-[var(--color-text-muted)]">{r.locked ? c.always : sub}</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    className="peer sr-only"
+                    checked={r.on}
+                    disabled={r.locked || busy}
+                    onChange={() => toggle(r.id as PickBlock)}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-[120ms] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-primary)] ${
+                      r.on ? (r.locked ? 'bg-[var(--color-neutral-400)]' : 'bg-[var(--color-primary)]') : 'bg-[var(--color-neutral-300)]'
+                    }`}
+                  >
+                    <span className={`absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow-[0_1px_2px_rgb(0_0_0/.2)] transition-transform duration-[120ms] ${r.on ? 'translate-x-[23px]' : 'translate-x-[3px]'}`} />
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--color-border)] px-4 md:px-8 pt-3 md:pt-4 pb-6 md:pb-4 flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-[14px] text-[var(--color-text)] cursor-pointer min-h-11">
+            <input
+              type="checkbox"
+              checked={withAgent}
+              onChange={e => setWithAgent(e.target.checked)}
+              disabled={busy}
+              className="h-[18px] w-[18px] accent-[var(--color-primary)]"
+            />
+            {c.withContacts}
+          </label>
+          {withAgent && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Field id="dl-name" label={c.name} value={name} onChange={setName} placeholder={c.namePlaceholder} required />
+              <Field id="dl-telegram" label="Telegram" value={telegram} onChange={setTelegram} placeholder="@username" />
+              <Field id="dl-whatsapp" label="WhatsApp" value={whatsapp} onChange={setWhatsapp} placeholder="+62 812 345 67 89" inputMode="tel" />
+            </div>
+          )}
+          {withAgent && trimmedName.length > 0 && !trimmedTg && !trimmedWa && (
+            <p className="text-[13px] text-[var(--color-text-muted)]">{c.needContact}</p>
+          )}
+          {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+            <div role="radiogroup" aria-label={c.formatAria} className="grid grid-cols-2 rounded-lg bg-[var(--color-neutral-100)] p-1">
               {([
                 { v: 'landscape', label: c.landscape },
                 { v: 'portrait',  label: c.portrait },
@@ -711,11 +872,13 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
                   <button
                     key={opt.v}
                     type="button"
+                    role="radio"
+                    aria-checked={isActive}
                     onClick={() => setOrientation(opt.v)}
                     disabled={busy}
-                    className={`flex-1 rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
+                    className={`min-h-10 rounded-md px-4 text-[14px] transition-colors ${
                       isActive
-                        ? 'bg-white text-[var(--color-text)] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                        ? 'bg-white font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06)]'
                         : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                     } disabled:opacity-50`}
                   >
@@ -724,94 +887,34 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
                 )
               })}
             </div>
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={downloadSimple}
-                disabled={busy}
-                className="w-full text-left rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] bg-white px-4 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-search-bg)] flex items-center justify-center">
-                    {busy ? <Loader2 size={18} className="animate-spin text-[var(--color-text-muted)]" /> : <Download size={18} className="text-[var(--color-text)]" />}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[var(--color-text)]">{c.download}</div>
-                    <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">
-                      {c.dlSimpleSub(data.kind)}
-                    </div>
-                  </div>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('agent')}
-                disabled={busy}
-                className="w-full text-left rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] bg-white px-4 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--color-primary-soft)] flex items-center justify-center">
-                    <UserRound size={18} className="text-[var(--color-primary-pressed)]" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[var(--color-text)]">{c.dlAgent}</div>
-                    <div className="text-[12px] text-[var(--color-text-muted)] mt-0.5">
-                      {c.dlAgentSub}
-                    </div>
-                  </div>
-                </div>
-              </button>
+            <div className="hidden md:block flex-1 text-[14px] text-[var(--color-text-muted)]">
+              {c.summary(pageCount, orientation === 'portrait', withAgent)}
             </div>
-            {error && <p className="mt-3 text-[13px] text-[#B91C1C]">{error}</p>}
-          </>
-        ) : (
-          <>
             <button
               type="button"
-              onClick={() => setMode('choose')}
-              disabled={busy}
-              className="text-[12px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] inline-flex items-center gap-1 mb-3 disabled:opacity-50"
+              onClick={download}
+              disabled={!canDownload}
+              className="inline-flex min-h-[52px] md:min-h-12 items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] px-6 text-[16px] md:text-[15px] font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ChevronLeft size={13} /> {c.backToChoice}
+              {busy
+                ? <><Loader2 size={18} className="animate-spin" />{c.building}</>
+                : <><Download size={18} />{c.downloadPdf}<span className="md:hidden"> · {c.pages(pageCount)}</span></>}
             </button>
-            <p className="text-[13px] text-[var(--color-text-muted)] mb-5">
-              {c.agentNote}
-            </p>
-            <form
-              onSubmit={e => { e.preventDefault(); submitAgent() }}
-              className="space-y-3"
-            >
-              <Field id="dl-name" label={c.name} value={name} onChange={setName} placeholder={c.namePlaceholder} autoFocus required />
-              <Field id="dl-telegram" label="Telegram" value={telegram} onChange={setTelegram} placeholder="@username" />
-              <Field id="dl-whatsapp" label="WhatsApp" value={whatsapp} onChange={setWhatsapp} placeholder="+62 812 345 67 89" inputMode="tel" />
-              {!canSubmitAgent && trimmedName.length > 0 && trimmedTg.length === 0 && trimmedWa.length === 0 && !busy && (
-                <p className="text-[12px] text-[var(--color-text-muted)]">
-                  {c.needContact}
-                </p>
-              )}
-              {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
-              <button
-                type="submit"
-                disabled={!canSubmitAgent}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[15px] font-medium px-5 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {busy ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    {c.building}
-                  </>
-                ) : (
-                  <>
-                    <Download size={16} />
-                    {c.downloadPdf}
-                  </>
-                )}
-              </button>
-            </form>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
+  )
+}
+
+function CheckDot({ on, locked, round }: { on: boolean; locked: boolean; round?: boolean }) {
+  const shape = round ? 'rounded-full' : 'rounded-md'
+  return on ? (
+    <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center ${shape} ${locked ? 'bg-[var(--color-neutral-400)]' : 'bg-[var(--color-primary)]'}`}>
+      <Check size={12} strokeWidth={3} className="text-white" />
+    </span>
+  ) : (
+    <span className={`inline-block h-5 w-5 shrink-0 border-2 border-[var(--color-neutral-300)] ${shape}`} />
   )
 }
 

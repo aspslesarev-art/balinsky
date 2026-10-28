@@ -275,8 +275,13 @@ function PhotoSetPdf({ photos, layout }: { photos: string[]; layout: 'mosaic5' |
 
 const SITE_URL = 'https://balinsky.info'
 
-export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape', currency = 'USD' }: {
+// Блоки, которые человек выбрал в окне скачивания. Обложка и последняя
+// страница (контакты или ссылка) есть всегда. Нет списка — все блоки.
+export type PdfBlock = 'photos' | 'facts' | 'about' | 'map' | 'nearby'
+
+export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape', currency = 'USD', blocks }: {
   data: VillaPresentationData;
+  blocks?: PdfBlock[];
   snap: Snapshot | null;
   agent: AgentContact | null;
   orientation?: PdfOrientation;
@@ -309,8 +314,9 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
   } else if (photosetPool.length > 0) {
     photosetGroups.push({ layout: 'small', photos: photosetPool })
   }
-  const hasMap = data.lat != null && data.lng != null
-  const hasNearby = !!snap && Object.values(snap.nearbyByCategory ?? {}).some(arr => arr.length > 0)
+  const want = (b: PdfBlock) => !blocks || blocks.includes(b)
+  const hasMap = want('map') && data.lat != null && data.lng != null
+  const hasNearby = want('nearby') && !!snap && Object.values(snap.nearbyByCategory ?? {}).some(arr => arr.length > 0)
 
   const factsItems = [
     data.bedrooms != null && { label: c.bedrooms, value: `${data.bedrooms} BR` },
@@ -379,13 +385,14 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
       {/* Photo compositions. Mosaic5 / grid4 are designed for landscape;
           in portrait we degrade to the simple stacked "small" layout so
           tall pictures get full width instead of being cropped. */}
-      {photosetGroups.map((group, gIdx) => (
+      {want('photos') && photosetGroups.map((group, gIdx) => (
         <Page key={`photoset-${gIdx}`} {...pageProps} style={[styles.page, styles.pagePadded]}>
           <PhotoSetPdf photos={group.photos} layout={isPortrait ? 'small' : group.layout} />
         </Page>
       ))}
 
       {/* Facts */}
+      {want('facts') && (
       <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
         <Text style={styles.h2}>{c.factsTitle}</Text>
         <Text style={styles.subtitle}>{c.factsSub}</Text>
@@ -404,9 +411,10 @@ export function VillaPdfDocument({ data, snap, agent, orientation = 'landscape',
         </View>
         <PageFooter title={data.title} />
       </Page>
+      )}
 
       {/* Description */}
-      {data.seoText && (
+      {want('about') && data.seoText && (
         <Page {...pageProps} style={[styles.page, styles.pagePadded]}>
           <Text style={styles.h2}>{c.about(data.kind)}</Text>
           <Text style={styles.descBody}>{data.seoText}</Text>
@@ -518,8 +526,9 @@ export async function downloadVillaPdf(
   agent: AgentContact | null,
   orientation: PdfOrientation = 'landscape',
   currency: Currency = 'USD',
+  blocks?: PdfBlock[],
 ): Promise<void> {
-  const blob = await pdf(<VillaPdfDocument data={data} snap={snap} agent={agent} orientation={orientation} currency={currency} />).toBlob()
+  const blob = await pdf(<VillaPdfDocument data={data} snap={snap} agent={agent} orientation={orientation} currency={currency} blocks={blocks} />).toBlob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -546,6 +555,7 @@ export async function downloadVillaPdf(
       agent: agent ? { name: agent.name, telegram: agent.telegram, whatsapp: agent.whatsapp } : null,
       orientation,
       hasAgent: !!agent,
+      blocks: blocks ?? null,
       lang: data.lang ?? 'ru',
     }),
     keepalive: true,

@@ -388,6 +388,16 @@ html[data-pro='1'] .bx-auth-block {
   display: block;
 }
 
+/* Кнопка PDF-презентации — только Pro (28.10.2026). contents: кнопка
+   встаёт в ряд кнопок карточки цены, как будто обёртки нет. */
+.bx-pro-only {
+  display: none;
+}
+
+html[data-pro='1'] .bx-pro-only {
+  display: contents;
+}
+
 /* Вошёл, но Pro ещё не открыт — плашка «Доступ на проверке». */
 .bx-pending-only {
   display: none;

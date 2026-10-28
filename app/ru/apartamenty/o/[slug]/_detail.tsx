@@ -62,6 +62,7 @@ import { loadOneUnitDemand } from '@/lib/unit-demand'
 import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { permitLabel } from '@/components/presentation-copy'
+import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
@@ -1234,7 +1235,32 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
               listingSlug={slug}
               listingTitle={title}
               reservedUntil={activeReservation?.expires_at ?? null}
-              presentationButton={null}
+              presentationButton={
+                // PDF-презентация — только для Pro (.bx-pro-only в globals.css).
+                <span className="bx-pro-only">
+                <VillaPresentationButton
+                  variant="outline"
+                  lang={lang}
+                  villaId={a.airtable_id}
+                  slug={slug}
+                  kind="apartment"
+                  title={title}
+                  district={district}
+                  photos={photos}
+                  priceUsd={priceNum}
+                  pricePerM2={priceM2}
+                  bedrooms={bedrooms}
+                  area={area}
+                  land={null}
+                  yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
+                  lease={lease}
+                  permit={permit}
+                  lat={lat}
+                  lng={lng}
+                  seoText={seoText}
+                />
+                </span>
+              }
             />
           )}
         </section>
