@@ -90,7 +90,7 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
     const calc = (taxStatus: TaxStatus) => computeMonthlyEconomics({
       rentMonth: m.p50, monthsRented: MONTHS_RENTED.median, agentFeePct: AGENT_FEE_PCT,
       area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice,
-      leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus, region: snap.region,
+      leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus, furnished: v.furnished, landRentYear: v.landRentYear, region: snap.region,
     })
     const b = calc('beforeTax')
     if (b.capRate == null || b.entryPrice == null) return null
@@ -112,7 +112,7 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
     adrRealization: snap.region.adrRealizationByScenario.median,
     phrOwnerShare: snap.region.phrOwnerShareByScenario.median,
     area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice,
-    leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus, region: snap.region,
+    leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus, furnished: v.furnished, landRentYear: v.landRentYear, region: snap.region,
   })
   const b = calc('beforeTax')
   if (b.capRate == null || b.entryPrice == null) return null
@@ -277,7 +277,7 @@ export function yieldScenarios(
   const out: YieldScenarios = { daily: null, monthly: null, resale: null }
   if (!snap || snap.villa.askingPrice == null) return out
   const v = snap.villa
-  const base = { area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice, leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus: 'beforeTax' as TaxStatus, region: snap.region }
+  const base = { area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice, leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus: 'beforeTax' as TaxStatus, furnished: v.furnished, landRentYear: v.landRentYear, region: snap.region }
 
   const sc = snap.scenarios
   if (sc && !snap.flags.rentalRestricted && sc.median.adrAsking > 0) {

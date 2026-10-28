@@ -60,7 +60,7 @@ function setupDaily(snap: Snap) {
     phrOwnerShare: r.phrOwnerShareByScenario.median,
     area: snap.villa.area, bedrooms: snap.villa.bedrooms,
     askingPrice: b.price, leaseholdYearsLeft: b.lease,
-    taxStatus: 'nonResident', region: r,
+    taxStatus: 'nonResident', furnished: snap.villa.furnished, landRentYear: snap.villa.landRentYear, region: r,
   })
   return { ...b, econ, occupancy, sold: 365 * occupancy }
 }
@@ -73,7 +73,7 @@ function setupMonthly(snap: Snap) {
     rentMonth: rent, monthsRented: months, agentFeePct: AGENT_FEE_PCT,
     area: snap.villa.area, bedrooms: snap.villa.bedrooms,
     askingPrice: b.price, leaseholdYearsLeft: b.lease,
-    taxStatus: 'nonResident', region: snap.region,
+    taxStatus: 'nonResident', furnished: snap.villa.furnished, landRentYear: snap.villa.landRentYear, region: snap.region,
   })
   return { ...b, econ, months }
 }

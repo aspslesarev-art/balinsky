@@ -22,6 +22,7 @@ export type Economics = {
   opexAtFloor: boolean
   /** Ежегодный налог на землю и здание. */
   pbbTax: number
+  landRent: number
   ffeReserve: number
   preTaxProfit: number
   tax: number
@@ -102,13 +103,16 @@ export type EconomicsInput = {
    *  Не задано — считаем меблированным: так продаётся почти весь каталог
    *  (по фото 599 вилл из 601, 28.10.2026). */
   furnished?: boolean
+  /** Аренда земли, которую владелец платит каждый год (как в Maison Boheme).
+   *  У обычного лизхолда она оплачена вперёд и входит в цену — тогда 0. */
+  landRentYear?: number | null
   region: RegionDefaults
 }
 
 export function computeEconomics(input: EconomicsInput): Economics {
   const {
     adr: adrAsking, occupancy, adrRealization, phrOwnerShare,
-    area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus, furnished, region,
+    area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus, furnished, landRentYear, region,
   } = input
 
   const adr = adrAsking * adrRealization
@@ -138,7 +142,8 @@ export function computeEconomics(input: EconomicsInput): Economics {
   const ffeReserve = revenue * region.ffeReservePct
   const pbbTax = askingPrice != null ? askingPrice * region.pbbAnnualPctOfPrice : 0
 
-  const preTaxProfit = revenue - platformFee - phrTax - mgmtFee - opex - ffeReserve - pbbTax
+  const landRent = landRentYear != null && landRentYear > 0 ? landRentYear : 0
+  const preTaxProfit = revenue - platformFee - phrTax - mgmtFee - opex - ffeReserve - pbbTax - landRent
   const taxRate = taxStatus === 'beforeTax' ? 0
     : taxStatus === 'resident' ? region.taxRateResident : region.taxRateNonResident
   const tax = Math.max(0, preTaxProfit) * taxRate
@@ -175,6 +180,7 @@ export function computeEconomics(input: EconomicsInput): Economics {
     opexParts,
     opexAtFloor,
     pbbTax: Math.round(pbbTax),
+    landRent: Math.round(landRent),
     ffeReserve: Math.round(ffeReserve),
     preTaxProfit: Math.round(preTaxProfit),
     tax: Math.round(tax),

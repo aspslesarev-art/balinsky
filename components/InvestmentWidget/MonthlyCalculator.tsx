@@ -26,7 +26,7 @@ type Copy = {
   perYearNoi: string; payback: string; capRate: string; irr: string
   taxLabel: string; taxBefore: string; resident: string; nonResident: string
   howCalced: string
-  revenue: string; agentFee: string; upkeep: string; upkeepHint: string; ffe: string; pbb: string
+  revenue: string; agentFee: string; upkeep: string; upkeepHint: string; ffe: string; pbb: string; landRent: string
   tax: string; taxHintRes: string; taxHintNonRes: string; noi: string
   entry: string; closing: string; furnishing: string
   noCapital: string
@@ -49,7 +49,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Налоговый статус', taxBefore: 'До налогов', resident: 'Резидент', nonResident: 'Нерезидент',
     howCalced: 'Как считалось',
     revenue: 'Аренда за год', agentFee: 'Комиссия агента', upkeep: 'Бассейн, сад, мелкий ремонт',
-    upkeepHint: 'коммунальные, уборку и расходники платит жилец', ffe: 'Износ мебели', pbb: 'Налог на землю и здание (PBB)',
+    upkeepHint: 'коммунальные, уборку и расходники платит жилец', ffe: 'Износ мебели', pbb: 'Налог на землю и здание (PBB)', landRent: 'Аренда земли за год',
     tax: 'Налог с аренды', taxHintRes: 'финальный, с валовой суммы', taxHintNonRes: 'для нерезидента, с валовой суммы', noi: 'Чистыми',
     entry: 'Вход', closing: 'нотариус', furnishing: 'мебель',
     noCapital: 'За срок лизхолда вложения не возвращаются',
@@ -69,7 +69,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Tax status', taxBefore: 'Before tax', resident: 'Resident', nonResident: 'Non-resident',
     howCalced: 'How it is calculated',
     revenue: 'Rent per year', agentFee: 'Agent commission', upkeep: 'Pool, garden, small repairs',
-    upkeepHint: 'the tenant pays utilities, cleaning and supplies', ffe: 'Furniture wear', pbb: 'Land and building tax (PBB)',
+    upkeepHint: 'the tenant pays utilities, cleaning and supplies', ffe: 'Furniture wear', pbb: 'Land and building tax (PBB)', landRent: 'Annual land lease',
     tax: 'Rental tax', taxHintRes: 'final, on gross rent', taxHintNonRes: 'non-resident rate, on gross rent', noi: 'Net',
     entry: 'Entry cost', closing: 'notary', furnishing: 'furniture',
     noCapital: 'The investment is not recovered within the leasehold',
@@ -89,7 +89,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Status pajak', taxBefore: 'Sebelum pajak', resident: 'Residen', nonResident: 'Non-residen',
     howCalced: 'Cara perhitungan',
     revenue: 'Sewa per tahun', agentFee: 'Komisi agen', upkeep: 'Kolam, taman, perbaikan kecil',
-    upkeepHint: 'penyewa membayar listrik, air, kebersihan', ffe: 'Penyusutan perabot', pbb: 'Pajak bumi dan bangunan (PBB)',
+    upkeepHint: 'penyewa membayar listrik, air, kebersihan', ffe: 'Penyusutan perabot', pbb: 'Pajak bumi dan bangunan (PBB)', landRent: 'Sewa tanah per tahun',
     tax: 'Pajak sewa', taxHintRes: 'final, dari sewa bruto', taxHintNonRes: 'tarif non-residen, dari sewa bruto', noi: 'Bersih',
     entry: 'Biaya masuk', closing: 'notaris', furnishing: 'perabot',
     noCapital: 'Modal tidak kembali selama masa leasehold',
@@ -107,7 +107,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Statut fiscal', taxBefore: 'Avant impôt', resident: 'Résident', nonResident: 'Non-résident',
     howCalced: 'Méthode de calcul',
     revenue: 'Loyer annuel', agentFee: 'Commission d’agent', upkeep: 'Piscine, jardin, petites réparations',
-    upkeepHint: 'le locataire paie les charges, le ménage et les fournitures', ffe: 'Usure du mobilier', pbb: 'Taxe foncière (PBB)',
+    upkeepHint: 'le locataire paie les charges, le ménage et les fournitures', ffe: 'Usure du mobilier', pbb: 'Taxe foncière (PBB)', landRent: 'Loyer annuel du terrain',
     tax: 'Impôt sur les loyers', taxHintRes: 'libératoire, sur le loyer brut', taxHintNonRes: 'taux non-résident, sur le loyer brut', noi: 'Net',
     entry: 'Coût d’entrée', closing: 'frais de notaire', furnishing: 'mobilier',
     noCapital: 'L’investissement n’est pas récupéré pendant la durée du bail',
@@ -125,7 +125,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Steuerstatus', taxBefore: 'Vor Steuern', resident: 'Resident', nonResident: 'Nicht-Resident',
     howCalced: 'Berechnung',
     revenue: 'Jahresmiete', agentFee: 'Maklerprovision', upkeep: 'Pool, Garten, kleine Reparaturen',
-    upkeepHint: 'Nebenkosten, Reinigung und Verbrauchsmaterial zahlt der Mieter', ffe: 'Möbelverschleiß', pbb: 'Grund- und Gebäudesteuer (PBB)',
+    upkeepHint: 'Nebenkosten, Reinigung und Verbrauchsmaterial zahlt der Mieter', ffe: 'Möbelverschleiß', pbb: 'Grund- und Gebäudesteuer (PBB)', landRent: 'Jährliche Grundstückspacht',
     tax: 'Mietsteuer', taxHintRes: 'Abgeltungssteuer auf die Bruttomiete', taxHintNonRes: 'Satz für Nicht-Residenten, auf die Bruttomiete', noi: 'Netto',
     entry: 'Einstiegskosten', closing: 'Notar', furnishing: 'Möbel',
     noCapital: 'Die Investition wird innerhalb der Pachtdauer nicht zurückverdient',
@@ -143,7 +143,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: '税务身份', taxBefore: '税前', resident: '居民', nonResident: '非居民',
     howCalced: '计算方式',
     revenue: '年租金', agentFee: '中介佣金', upkeep: '泳池、花园、小修',
-    upkeepHint: '水电、清洁和日用品由租客承担', ffe: '家具折旧', pbb: '土地和建筑税 (PBB)',
+    upkeepHint: '水电、清洁和日用品由租客承担', ffe: '家具折旧', pbb: '土地和建筑税 (PBB)', landRent: '年度土地租金',
     tax: '租金税', taxHintRes: '按租金总额最终征收', taxHintNonRes: '非居民税率，按租金总额', noi: '净收入',
     entry: '入手成本', closing: '公证费', furnishing: '家具',
     noCapital: '在租赁期内无法收回投资',
@@ -161,7 +161,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Fiscale status', taxBefore: 'Vóór belasting', resident: 'Ingezetene', nonResident: 'Niet-ingezetene',
     howCalced: 'Zo is het berekend',
     revenue: 'Huur per jaar', agentFee: 'Makelaarscommissie', upkeep: 'Zwembad, tuin, kleine reparaties',
-    upkeepHint: 'de huurder betaalt nutsvoorzieningen, schoonmaak en benodigdheden', ffe: 'Slijtage meubels', pbb: 'Grond- en gebouwbelasting (PBB)',
+    upkeepHint: 'de huurder betaalt nutsvoorzieningen, schoonmaak en benodigdheden', ffe: 'Slijtage meubels', pbb: 'Grond- en gebouwbelasting (PBB)', landRent: 'Jaarlijkse grondhuur',
     tax: 'Huurbelasting', taxHintRes: 'eindheffing over de bruto huur', taxHintNonRes: 'tarief niet-ingezetene, over de bruto huur', noi: 'Netto',
     entry: 'Instapkosten', closing: 'notaris', furnishing: 'meubels',
     noCapital: 'De investering wordt binnen de leasetermijn niet terugverdiend',
@@ -179,7 +179,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Status pajak', taxBefore: 'Sebelum pajak', resident: 'Residen', nonResident: 'Non-residen',
     howCalced: 'Sapunapi ngitung',
     revenue: 'Sewa setaun', agentFee: 'Komisi agen', upkeep: 'Kolam, taman, perbaikan alit',
-    upkeepHint: 'penyewa sane mayah listrik, toya, kebersihan', ffe: 'Penyusutan perabot', pbb: 'Pajak bumi miwah wangunan (PBB)',
+    upkeepHint: 'penyewa sane mayah listrik, toya, kebersihan', ffe: 'Penyusutan perabot', pbb: 'Pajak bumi miwah wangunan (PBB)', landRent: 'Sewa tanah per tiban',
     tax: 'Pajak sewa', taxHintRes: 'final, saking sewa bruto', taxHintNonRes: 'tarif non-residen, saking sewa bruto', noi: 'Bersih',
     entry: 'Biaya ngranjing', closing: 'notaris', furnishing: 'perabot',
     noCapital: 'Modal nenten mawali selami leasehold',
@@ -197,7 +197,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Status podatkowy', taxBefore: 'Przed podatkiem', resident: 'Rezydent', nonResident: 'Nierezydent',
     howCalced: 'Jak liczymy',
     revenue: 'Czynsz roczny', agentFee: 'Prowizja agenta', upkeep: 'Basen, ogród, drobne naprawy',
-    upkeepHint: 'media, sprzątanie i materiały opłaca najemca', ffe: 'Zużycie mebli', pbb: 'Podatek od gruntu i budynku (PBB)',
+    upkeepHint: 'media, sprzątanie i materiały opłaca najemca', ffe: 'Zużycie mebli', pbb: 'Podatek od gruntu i budynku (PBB)', landRent: 'Roczna dzierżawa gruntu',
     tax: 'Podatek od najmu', taxHintRes: 'zryczałtowany, od czynszu brutto', taxHintNonRes: 'stawka dla nierezydenta, od czynszu brutto', noi: 'Netto',
     entry: 'Koszt wejścia', closing: 'notariusz', furnishing: 'meble',
     noCapital: 'Inwestycja nie zwraca się w okresie leasehold',
@@ -215,7 +215,7 @@ const COPY: Record<Lang, Copy> = {
     taxLabel: 'Податковий статус', taxBefore: 'До податків', resident: 'Резидент', nonResident: 'Нерезидент',
     howCalced: 'Як пораховано',
     revenue: 'Оренда за рік', agentFee: 'Комісія агента', upkeep: 'Басейн, сад, дрібний ремонт',
-    upkeepHint: 'комунальні, прибирання й витратні матеріали сплачує орендар', ffe: 'Знос меблів', pbb: 'Податок на землю та будівлю (PBB)',
+    upkeepHint: 'комунальні, прибирання й витратні матеріали сплачує орендар', ffe: 'Знос меблів', pbb: 'Податок на землю та будівлю (PBB)', landRent: 'Оренда землі за рік',
     tax: 'Податок з оренди', taxHintRes: 'фінальний, з валової суми', taxHintNonRes: 'для нерезидента, з валової суми', noi: 'Чистими',
     entry: 'Вхід', closing: 'нотаріус', furnishing: 'меблі',
     noCapital: 'За строк лізхолду вкладення не повертаються',
@@ -248,7 +248,7 @@ export function MonthlyCalculator({ snap, lang, price, setPrice }: { snap: Snaps
     rentMonth: rent, monthsRented: months, agentFeePct: agent / 100,
     area: snap.villa.area, bedrooms: snap.villa.bedrooms,
     askingPrice: basePrice != null ? price : null,
-    leaseholdYearsLeft: snap.villa.leaseholdYearsLeft, taxStatus, furnished: snap.villa.furnished, region: snap.region,
+    leaseholdYearsLeft: snap.villa.leaseholdYearsLeft, taxStatus, furnished: snap.villa.furnished, landRentYear: snap.villa.landRentYear, region: snap.region,
   }), [rent, months, agent, price, basePrice, taxStatus, snap])
 
   return (
@@ -323,11 +323,12 @@ export function MonthlyCalculator({ snap, lang, price, setPrice }: { snap: Snaps
           <li>− {t.upkeep}: {fmt(e.upkeep)}<span className="text-[var(--color-text-muted)]"> · {t.upkeepHint}</span></li>
           <li>− {t.ffe} ({Math.round(snap.region.ffeReservePct * 100)}%): {fmt(e.ffeReserve)}</li>
           {e.pbbTax > 0 && <li>− {t.pbb}: {fmt(e.pbbTax)}</li>}
+          {e.landRent > 0 && <li>− {t.landRent}: {fmt(e.landRent)}</li>}
           {taxStatus !== 'beforeTax' && <li>− {t.tax} ({Math.round(e.taxRate * 100)}%): {fmt(e.tax)}<span className="text-[var(--color-text-muted)]"> · {taxStatus === 'resident' ? t.taxHintRes : t.taxHintNonRes}</span></li>}
           <li className="mt-1 border-t border-[var(--color-border)] pt-1 font-medium">= {t.noi}: {fmt(e.noi)}</li>
           {e.entryPrice != null && (
             <li className="mt-1 border-t border-[var(--color-border)] pt-2 text-[var(--color-text-muted)]">
-              {t.entry}: {fmt(e.entryPrice)} · {fmt(Math.round(price))} + {t.closing} {fmt(e.closingCost)}{e.furnishing > 0 ? ` + ${t.furnishing} ${fmt(e.furnishing)}` : ''}
+              {t.entry}: {fmt(e.entryPrice)}{e.closingCost > 0 ? ` · ${fmt(Math.round(price))} + ${t.closing} ${fmt(e.closingCost)}` : ''}{e.furnishing > 0 ? ` + ${t.furnishing} ${fmt(e.furnishing)}` : ''}
             </li>
           )}
         </ul>

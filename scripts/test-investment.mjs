@@ -149,8 +149,8 @@ test('Ставка идёт в выручку с коэффициентом ре
 
 test('Доходность считается от цены входа, а не от прайса', () => {
   const price = 400_000
-  const e = econ({ askingPrice: price, area: 150 })
-  assert.ok(e.entryPrice > price, 'цена входа должна быть выше прайса')
+  const e = econ({ askingPrice: price, area: 150, furnished: false })
+  assert.ok(e.entryPrice > price, 'без мебели цена входа выше прайса')
   assert.equal(e.entryPrice, price + e.closingCost + e.furnishing)
   assert.ok(Math.abs(e.capRate - e.noi / e.entryPrice) < 1e-9)
   assert.ok(e.capRate < e.noi / price, 'доходность от входа обязана быть ниже, чем от прайса')

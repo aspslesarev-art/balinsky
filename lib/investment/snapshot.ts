@@ -54,6 +54,8 @@ export type InvestmentSnapshot = {
     hasPool: boolean | null
     /** false — на фото без мебели; иначе не задано. */
     furnished?: boolean
+    /** Аренда земли за год, которую платит владелец; null — оплачена вперёд. */
+    landRentYear?: number | null
     district: string | null
     photo: string | null
   }
@@ -487,6 +489,8 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const leaseholdYearsLeft = yearsLeft(numberOrNull(d['Leasehold'] ?? d['Leashold']), d['Leasehold до'])
   const buildYearsLeft = yearsToCompletion(d['Year of completion'] ?? d['Year of completion '])
   const hasPool = detectPool(d)
+  // Аренда земли за год, если её платит владелец (поле объекта в /admin/data).
+  const landRentYear = numberOrNull(d['Аренда земли в год, $'])
   const district = firstString(d['Location 2']) ?? firstString(d['Location'])
 
   const baseRegion = regionFor(lat, lng)
@@ -599,7 +603,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
       // Налоговый статус по умолчанию — нерезидент: большинство покупателей
       // не имеют индонезийского NPWP, и это консервативная сторона.
       // В виджете статус переключается.
-      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', furnished, region },
+      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', furnished, landRentYear, region },
       region.occupancyByScenario,
     )
   }
@@ -643,7 +647,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   return {
     villaId,
     generatedAt: new Date().toISOString(),
-    villa: { title, lat, lng, bedrooms, area, land, askingPrice, leaseholdYearsLeft, buildYearsLeft, hasPool, furnished, district, photo },
+    villa: { title, lat, lng, bedrooms, area, land, askingPrice, leaseholdYearsLeft, buildYearsLeft, hasPool, furnished, landRentYear, district, photo },
     region,
     zone: {
       applied: matchResult.appliedZone,

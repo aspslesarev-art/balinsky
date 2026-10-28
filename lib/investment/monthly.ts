@@ -187,6 +187,7 @@ export type MonthlyEconomics = {
   upkeep: number
   ffeReserve: number
   pbbTax: number
+  landRent: number
   tax: number
   taxRate: number
   noi: number
@@ -210,6 +211,8 @@ export type MonthlyInput = {
   taxStatus: TaxStatus
   /** Как в посуточной модели: мебель докупаем, только если на фото её нет. */
   furnished?: boolean
+  /** Ежегодная аренда земли (см. EconomicsInput.landRentYear). */
+  landRentYear?: number | null
   region: RegionDefaults
 }
 
@@ -229,7 +232,8 @@ export function computeMonthlyEconomics(i: MonthlyInput): MonthlyEconomics {
   const taxRate = i.taxStatus === 'beforeTax' ? 0
     : i.taxStatus === 'resident' ? region.taxRateResident : region.taxRateNonResident
   const tax = revenue * taxRate
-  const noi = Math.round(revenue - agentFee - upkeep - ffeReserve - pbbTax - tax)
+  const landRent = i.landRentYear != null && i.landRentYear > 0 ? i.landRentYear : 0
+  const noi = Math.round(revenue - agentFee - upkeep - ffeReserve - pbbTax - landRent - tax)
 
   const closingCost = i.askingPrice != null ? i.askingPrice * region.closingCostPct : 0
   const furnishing = i.furnished === false ? (i.area ?? 0) * region.furnishingPerSqm : 0
@@ -244,7 +248,7 @@ export function computeMonthlyEconomics(i: MonthlyInput): MonthlyEconomics {
   return {
     rentMonth: i.rentMonth, monthsRented: i.monthsRented,
     revenue: Math.round(revenue), agentFee: Math.round(agentFee), upkeep: Math.round(upkeep),
-    ffeReserve: Math.round(ffeReserve), pbbTax: Math.round(pbbTax), tax: Math.round(tax), taxRate,
+    ffeReserve: Math.round(ffeReserve), pbbTax: Math.round(pbbTax), landRent: Math.round(landRent), tax: Math.round(tax), taxRate,
     noi, entryPrice, closingCost: Math.round(closingCost), furnishing: Math.round(furnishing),
     payback, capRate, leaseholdIrr: irr, capitalReturned,
   }

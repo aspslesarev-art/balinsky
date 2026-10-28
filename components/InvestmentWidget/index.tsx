@@ -70,6 +70,7 @@ const COPY = {
     poolGarden: 'Бассейн, сад, мусор, дезинсекция',
     otherOpex: 'Админ, маркетинг, церемонии, мелкий ремонт',
     pbb: 'Налог на землю и здание (PBB)',
+    landRent: 'Аренда земли за год',
     assumptions: 'Допущения расчёта',
     occupancyNote: 'Загрузка',
     occupancyHint: 'отраслевой ориентир по Бали 55–65% годовых',
@@ -161,6 +162,7 @@ const COPY = {
     poolGarden: 'Pool, garden, waste, pest control',
     otherOpex: 'Admin, marketing, ceremonies, small repairs',
     pbb: 'Land and building tax (PBB)',
+    landRent: 'Annual land lease',
     assumptions: 'Assumptions',
     occupancyNote: 'Occupancy',
     occupancyHint: 'industry benchmark for Bali is 55–65% a year',
@@ -252,6 +254,7 @@ const COPY = {
     poolGarden: 'Kolam, taman, sampah, pest control',
     otherOpex: 'Admin, pemasaran, upacara, perbaikan kecil',
     pbb: 'Pajak bumi dan bangunan (PBB)',
+    landRent: 'Sewa tanah per tahun',
     assumptions: 'Asumsi perhitungan',
     occupancyNote: 'Tingkat hunian',
     occupancyHint: 'acuan industri Bali 55–65% per tahun',
@@ -343,6 +346,7 @@ const COPY = {
     poolGarden: 'Piscine, jardin, déchets, désinsectisation',
     otherOpex: 'Administration, marketing, cérémonies, petites réparations',
     pbb: 'Taxe foncière (PBB)',
+    landRent: 'Loyer annuel du terrain',
     assumptions: 'Hypothèses de calcul',
     occupancyNote: 'Taux d’occupation',
     occupancyHint: 'référence du marché balinais : 55–65% par an',
@@ -434,6 +438,7 @@ const COPY = {
     poolGarden: 'Pool, Garten, Müll, Schädlingsbekämpfung',
     otherOpex: 'Verwaltung, Marketing, Zeremonien, kleine Reparaturen',
     pbb: 'Grundsteuer (PBB)',
+    landRent: 'Jährliche Grundstückspacht',
     assumptions: 'Annahmen der Rechnung',
     occupancyNote: 'Auslastung',
     occupancyHint: 'Branchenwert für Bali: 55–65% pro Jahr',
@@ -525,6 +530,7 @@ const COPY = {
     poolGarden: '泳池、花园、垃圾、除虫',
     otherOpex: '行政、营销、仪式、小修',
     pbb: '土地与房产税（PBB）',
+    landRent: '年度土地租金',
     assumptions: '计算假设',
     occupancyNote: '入住率',
     occupancyHint: '巴厘岛行业基准为每年55–65%',
@@ -616,6 +622,7 @@ const COPY = {
     poolGarden: 'Zwembad, tuin, afval, ongediertebestrijding',
     otherOpex: 'Administratie, marketing, ceremonies, klein onderhoud',
     pbb: 'Grond- en gebouwbelasting (PBB)',
+    landRent: 'Jaarlijkse grondhuur',
     assumptions: 'Aannames',
     occupancyNote: 'Bezetting',
     occupancyHint: 'branchemaatstaf voor Bali: 55–65% per jaar',
@@ -707,6 +714,7 @@ const COPY = {
     poolGarden: 'Kolam, taman, luu, pest control',
     otherOpex: 'Admin, pemasaran, upacara, perbaikan alit',
     pbb: 'Pajak bumi lan wangunan (PBB)',
+    landRent: 'Sewa tanah per tiban',
     assumptions: 'Asumsi pitungan',
     occupancyNote: 'Tingkat hunian',
     occupancyHint: 'acuan industri Bali 55–65% saben warsa',
@@ -798,6 +806,7 @@ const COPY = {
     poolGarden: 'Basen, ogród, śmieci, dezynsekcja',
     otherOpex: 'Administracja, marketing, ceremonie, drobne naprawy',
     pbb: 'Podatek od gruntu i budynku (PBB)',
+    landRent: 'Roczna dzierżawa gruntu',
     assumptions: 'Założenia obliczeń',
     occupancyNote: 'Obłożenie',
     occupancyHint: 'benchmark rynku Bali: 55–65% rocznie',
@@ -889,6 +898,7 @@ const COPY = {
     poolGarden: 'Басейн, сад, сміття, дезінсекція',
     otherOpex: 'Адмін, маркетинг, церемонії, дрібний ремонт',
     pbb: 'Податок на землю і будівлю (PBB)',
+    landRent: 'Оренда землі за рік',
     assumptions: 'Припущення розрахунку',
     occupancyNote: 'Завантаження',
     occupancyHint: 'галузевий орієнтир Балі 55–65% на рік',
@@ -1154,6 +1164,7 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
     leaseholdYearsLeft: snap.villa.leaseholdYearsLeft,
     taxStatus,
     furnished: snap.villa.furnished,
+    landRentYear: snap.villa.landRentYear,
     region: { ...snap.region, mgmtFeePct: mgmt / 100 },
   }), [adr, occ, mgmt, price, basePrice, taxStatus, snap])
 
@@ -1295,6 +1306,7 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
               <span className="text-[var(--color-text-muted)]"> · {t.pbbHint}</span>
             </li>
           )}
+          {e.landRent > 0 && <li>− {t.landRent}: {fmtUsd(e.landRent)}</li>}
           <li className="pt-1 border-t border-[var(--color-border)] mt-1">= {t.preTax}: {fmtUsd(e.preTaxProfit)}</li>
           {taxStatus !== 'beforeTax' && <li>
             − {t.tax} ({Math.round((taxStatus === 'resident' ? snap.region.taxRateResident : snap.region.taxRateNonResident) * 100)}%): {fmtUsd(e.tax)}
@@ -1303,7 +1315,7 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
           <li className="pt-1 border-t border-[var(--color-border)] mt-1 font-medium">= {t.noi}: {fmtUsd(e.noi)}</li>
           {e.entryPrice != null && (
             <li className="pt-2 mt-1 border-t border-[var(--color-border)] text-[var(--color-text-muted)]">
-              {t.entryPrice}: {fmtUsd(Math.round(e.entryPrice))} · {fmtUsd(Math.round(price))} + {t.closing} {fmtUsd(Math.round(e.closingCost))}
+              {t.entryPrice}: {fmtUsd(Math.round(e.entryPrice))}{e.closingCost > 0 ? ` · ${fmtUsd(Math.round(price))} + ${t.closing} ${fmtUsd(Math.round(e.closingCost))}` : ''}
               {e.furnishing > 0 ? ` + ${t.furnishing} ${fmtUsd(Math.round(e.furnishing))}` : ''}
             </li>
           )}
