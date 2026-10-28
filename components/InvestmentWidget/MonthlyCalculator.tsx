@@ -3,7 +3,8 @@
 import { InfoTip } from '../InfoTip'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { saveCalc } from '@/lib/calc-settings'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Slider, ResetButton } from './Slider'
 import { fmtMoney, fmtPct, fmtYears } from './utils'
@@ -243,6 +244,9 @@ export function MonthlyCalculator({ snap, lang, price, setPrice }: { snap: Snaps
   const reset = () => { setPrice(def.price); setRent(def.rent); setMonths(def.months); setAgent(def.agent) }
   const [taxStatus, setTaxStatus] = useState<TaxStatus>('beforeTax')
   const [open, setOpen] = useState(false)
+  useEffect(() => {
+    saveCalc(snap.villaId, { mode: 'monthly', price, rent, months, agent, tax: taxStatus })
+  }, [snap.villaId, price, rent, months, agent, taxStatus])
 
   const e = useMemo(() => computeMonthlyEconomics({
     rentMonth: rent, monthsRented: months, agentFeePct: agent / 100,

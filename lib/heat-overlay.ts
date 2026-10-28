@@ -5,9 +5,9 @@
 // OverlayView: accumulate per-point density in screen space, then colourise.
 export type HeatCell = { lat: number; lng: number; weight: number }
 
-const BLOB = 42 // on-screen blob radius (px)
+export const BLOB = 42 // on-screen blob radius (px)
 
-function makeBrush(): HTMLCanvasElement {
+export function makeBrush(): HTMLCanvasElement {
   const c = document.createElement('canvas')
   c.width = c.height = BLOB * 2
   const ctx = c.getContext('2d')!
@@ -19,7 +19,7 @@ function makeBrush(): HTMLCanvasElement {
   return c
 }
 
-function makePalette(): Uint8ClampedArray {
+export function makePalette(): Uint8ClampedArray {
   const c = document.createElement('canvas')
   c.width = 1
   c.height = 256

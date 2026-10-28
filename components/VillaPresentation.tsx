@@ -13,6 +13,9 @@ import { formatPrice } from '@/lib/currency'
 import { useCurrency } from '@/components/CurrencyContext'
 import type { Lang } from '@/lib/i18n'
 import { permitLabel, placeVisible, presentationCopy, presentationDistance } from './presentation-copy'
+import { PDF_BLOCKS, type PdfBlock } from '@/lib/pdf-blocks'
+import { calcToQuery, readCalc } from '@/lib/calc-settings'
+import { trackEvent } from '@/lib/analytics'
 
 export type VillaPresentationData = {
   villaId: string
@@ -93,8 +96,6 @@ export function VillaPresentationButton({
   )
 }
 
-// Снимок нужен окну, чтобы знать, есть ли «Что вокруг»; блок появится,
-// как только данные придут.
 function useSnapshot(villaId: string, kind: VillaPresentationData['kind']) {
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [snapTried, setSnapTried] = useState(false)
@@ -111,13 +112,12 @@ function useSnapshot(villaId: string, kind: VillaPresentationData['kind']) {
 }
 
 function DirectDownload({ data, onClose }: { data: VillaPresentationData; onClose: () => void }) {
-  const { snap } = useSnapshot(data.villaId, data.kind)
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = prev }
   }, [])
-  return <DownloadModal data={data} snap={snap} onClose={onClose} />
+  return <DownloadModal data={data} onClose={onClose} />
 }
 
 function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onClose: () => void }) {
@@ -230,7 +230,6 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
       {downloadOpen && (
         <DownloadModal
           data={data}
-          snap={snap}
           onClose={() => setDownloadOpen(false)}
         />
       )}
@@ -633,14 +632,21 @@ function InvestSlide({ snap, data }: { snap: Snapshot | null; data: VillaPresent
 }
 
 // Блоки PDF в порядке страниц. Обложка и последняя страница — всегда.
-type PickBlock = 'photos' | 'facts' | 'about' | 'map' | 'nearby'
-const PICK_ORDER: PickBlock[] = ['photos', 'facts', 'about', 'map', 'nearby']
-const PRESETS: { id: 'short' | 'life' | 'all'; blocks: PickBlock[] | null }[] = [
-  { id: 'short', blocks: ['photos', 'facts'] },
-  { id: 'life', blocks: ['photos', 'about', 'map', 'nearby'] },
+// Блоки печатной презентации (components/pdf/PdfDocument.tsx), в порядке листов.
+type PickBlock = PdfBlock
+const PICK_ORDER: PickBlock[] = PDF_BLOCKS
+const PRESETS: { id: 'short' | 'invest' | 'life' | 'all'; blocks: PickBlock[] | null }[] = [
+  { id: 'short', blocks: ['verdict', 'photos', 'facts'] },
+  { id: 'invest', blocks: ['verdict', 'photos', 'safety', 'daily', 'monthly', 'sale', 'calc'] },
+  { id: 'life', blocks: ['photos', 'safety', 'near', 'living', 'heat'] },
   { id: 'all', blocks: null },
 ]
-const BLOCK_ICONS = { cover: ImageIcon, photos: LayoutGrid, facts: ListChecks, about: FileText, map: MapPin, nearby: Coffee, last: UserRound }
+const BLOCK_ICONS = {
+  cover: ImageIcon, verdict: ListChecks, photos: LayoutGrid, facts: ListChecks, about: FileText, safety: FileCheck2,
+  near: MapPin, living: Coffee, heat: MapPin, daily: BedDouble, monthly: Calendar, sale: Square, calc: FileText, last: UserRound,
+}
+// Сколько листов даёт блок: «дорога и погода» — два.
+const BLOCK_PAGES: Partial<Record<PickBlock, number>> = { living: 2 }
 const AGENT_KEY = 'bx_pdf_agent'
 
 // Сколько страниц фото — так же, как их раскладывает VillaPresentationPdf.
@@ -650,24 +656,19 @@ function photoPages(photos: string[]): number {
   return pool.length > 0 ? 1 : 0
 }
 
-function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; snap: Snapshot | null; onClose: () => void }) {
-  // Currency at download time. Threaded through to the PDF builder
-  // so price/scenarios print in whichever currency the visitor was
-  // browsing in (USD/EUR/RUB/UAH/IDR via lib/currency).
+function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose: () => void }) {
   const c = presentationCopy(data.lang)
-  const { currency } = useCurrency()
   // Блоки, для которых у объекта есть данные. Пустые не предлагаем.
+  // Чего у объекта точно нет — не предлагаем; остальное печатная страница
+  // пропустит сама, если данных не окажется.
+  const hasMap = data.lat != null && data.lng != null
   const available = PICK_ORDER.filter(b => {
     if (b === 'photos') return photoPages(data.photos) > 0
     if (b === 'about') return !!data.seoText
-    if (b === 'map') return data.lat != null && data.lng != null
-    if (b === 'nearby') return !!snap && Object.values(snap.nearbyByCategory ?? {}).some(arr => arr.length > 0)
+    if (b === 'near' || b === 'heat') return hasMap
     return true
   })
-  const [picked, setPicked] = useState<PickBlock[]>(() => available.filter(b => b !== 'about' && b !== 'nearby'))
-  // На телефоне по умолчанию вертикальный PDF — его удобнее листать в мессенджере.
-  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>(() =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 'portrait' : 'landscape')
+  const [picked, setPicked] = useState<PickBlock[]>(() => presetBlocks(PRESETS[1]))
   const [withAgent, setWithAgent] = useState(false)
   const [name, setName] = useState('')
   const [telegram, setTelegram] = useState('')
@@ -691,6 +692,8 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
     } catch {}
   }, [])
 
+  function presetBlocks(p: (typeof PRESETS)[number]) { return (p.blocks ?? available).filter(b => available.includes(b)) }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) onClose() }
     window.addEventListener('keydown', onKey)
@@ -699,10 +702,9 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
 
   const toggle = (b: PickBlock) =>
     setPicked(prev => prev.includes(b) ? prev.filter(x => x !== b) : PICK_ORDER.filter(x => x === b || prev.includes(x)))
-  const presetBlocks = (p: (typeof PRESETS)[number]) => (p.blocks ?? available).filter(b => available.includes(b))
   const sameSet = (a: PickBlock[], b: PickBlock[]) => a.length === b.length && a.every(x => b.includes(x))
-  const pageCount = 2 + picked.reduce((n, b) => n + (b === 'photos' ? photoPages(data.photos) : 1), 0)
-  const presetLabel = { short: c.presetShort, life: c.presetLife, all: c.presetAll }
+  const pageCount = 2 + picked.reduce((n, b) => n + (BLOCK_PAGES[b] ?? 1), 0)
+  const presetLabel = { short: c.presetShort, invest: c.presetInvest, life: c.presetLife, all: c.presetAll }
 
   const download = async () => {
     if (!canDownload) return
@@ -712,9 +714,29 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
       try {
         localStorage.setItem(AGENT_KEY, JSON.stringify({ on: withAgent, name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }))
       } catch {}
-      const { downloadVillaPdf } = await import('./VillaPresentationPdf')
-      const agent = withAgent ? { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa } : null
-      await downloadVillaPdf(data, snap, agent, orientation, currency, picked)
+      // Печатная страница собирает презентацию из тех же данных, что страница
+      // объекта; окно печати откроется само — там «Сохранить как PDF».
+      const q = new URLSearchParams({ b: picked.join(','), lang: data.lang ?? 'ru', print: '1' })
+      if (withAgent) {
+        q.set('n', trimmedName)
+        if (trimmedTg) q.set('t', trimmedTg)
+        if (trimmedWa) q.set('w', trimmedWa)
+      }
+      const calc = readCalc(data.villaId)
+      if (calc) for (const [k, v] of Object.entries(calcToQuery(calc))) q.set(k, v)
+      const section = data.kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
+      window.open(`${section}${data.slug}/pdf?${q.toString()}`, '_blank', 'noopener')
+      trackEvent('presentation_open', { page_path: window.location.pathname })
+      fetch('/api/track/presentation', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'object', objectKind: data.kind ?? 'villa', objectId: data.villaId, slug: data.slug, title: data.title,
+          agent: withAgent ? { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa } : null,
+          orientation: 'landscape', hasAgent: withAgent, lang: data.lang ?? 'ru', blocks: picked,
+        }),
+        keepalive: true,
+      }).catch(() => {})
       onClose()
     } catch (e) {
       console.error(e)
@@ -795,7 +817,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
 
         <div className="flex-1 min-h-0 overflow-y-auto border-t border-[var(--color-border)] md:bg-[var(--color-surface-alt)] px-4 md:px-8 md:py-6">
           {/* Компьютер: плитки-страницы */}
-          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 gap-3">
             {rows.map(r => {
               const [title] = c.blk[r.id]
               const Icon = BLOCK_ICONS[r.id]
@@ -811,7 +833,7 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
                     r.on ? 'border-[var(--color-primary)]' : 'border-[var(--color-border)] opacity-60 hover:opacity-100'
                   } ${r.locked ? 'cursor-default' : 'cursor-pointer'}`}
                 >
-                  <span className="relative block aspect-[297/210] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+                  <span className="relative block aspect-[16/9] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface-alt)]">
                     {thumb
                       ? <NextImage src={thumb} alt="" fill sizes="200px" className="object-cover" />
                       : <span className="absolute inset-0 flex items-center justify-center text-[var(--color-text-muted)]"><Icon size={24} strokeWidth={1.6} /></span>}
@@ -880,33 +902,8 @@ function DownloadModal({ data, snap, onClose }: { data: VillaPresentationData; s
           )}
           {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-            <div role="radiogroup" aria-label={c.formatAria} className="grid grid-cols-2 rounded-lg bg-[var(--color-neutral-100)] p-1">
-              {([
-                { v: 'landscape', label: c.landscape },
-                { v: 'portrait',  label: c.portrait },
-              ] as const).map(opt => {
-                const isActive = orientation === opt.v
-                return (
-                  <button
-                    key={opt.v}
-                    type="button"
-                    role="radio"
-                    aria-checked={isActive}
-                    onClick={() => setOrientation(opt.v)}
-                    disabled={busy}
-                    className={`min-h-10 rounded-md px-4 text-[14px] transition-colors ${
-                      isActive
-                        ? 'bg-white font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06)]'
-                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-                    } disabled:opacity-50`}
-                  >
-                    {opt.label}
-                  </button>
-                )
-              })}
-            </div>
             <div className="hidden md:block flex-1 text-[14px] text-[var(--color-text-muted)]">
-              {c.summary(pageCount, orientation === 'portrait', withAgent)}
+              {c.summary(pageCount, false, withAgent)}
             </div>
             <button
               type="button"

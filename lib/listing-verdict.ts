@@ -22,7 +22,8 @@ export type Tone = 'plus' | 'warn' | 'minus'
 // обновляются раз в день), правка объекта сбрасывает тег content:villas.
 export const loadVerdictSnapshot = (id: string, kind: 'villa' | 'apartment' = 'villa') => unstable_cache(
   async () => buildSnapshot(id, kind),
-  ['verdict-snapshot-v14', kind, id],
+  // v15: мебель, нотариус, аренда земли, статьи расходов (28.10.2026).
+  ['verdict-snapshot-v15', kind, id],
   // content:rental — новые объявления Facebook/Telegram попадают в «Помесячно».
   { revalidate: 86400, tags: [kind === 'apartment' ? 'content:apartments' : 'content:villas', 'content:rental'] },
 )().catch(() => null)

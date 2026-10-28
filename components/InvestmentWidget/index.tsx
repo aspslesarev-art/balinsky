@@ -13,6 +13,7 @@ import { fmtMoney, fmtPct, fmtYears, fmtDistance, pluralRu, pluralEn } from './u
 import type { Snapshot } from './types'
 import { useCurrency } from '../CurrencyContext'
 import { computeEconomics, type Economics, type TaxStatus } from '@/lib/investment/economics'
+import { saveCalc } from '@/lib/calc-settings'
 import { pickCopy, type Lang, detectLang } from '@/lib/i18n'
 
 // Сколько промежутков рисуем прямо в дорожке ползунка ADR.
@@ -1152,6 +1153,10 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
   const reset = () => { setPrice(def.price); setAdr(def.adr); setOcc(def.occ); setMgmt(def.mgmt) }
   const [taxStatus, setTaxStatus] = useState<TaxStatus>('beforeTax')
   const [open, setOpen] = useState(false)
+  // Последние настройки — в PDF-презентацию (lib/calc-settings.ts).
+  useEffect(() => {
+    saveCalc(snap.villaId, { mode: 'daily', price, adr, occ, mgmt, tax: taxStatus })
+  }, [snap.villaId, price, adr, occ, mgmt, taxStatus])
 
   const e: Economics = useMemo(() => computeEconomics({
     adr,

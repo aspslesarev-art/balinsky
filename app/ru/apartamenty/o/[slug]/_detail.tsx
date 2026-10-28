@@ -50,7 +50,9 @@ import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
-import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
+import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPdf, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
+import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
+import type { PdfRequest } from '@/lib/pdf-request'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
@@ -923,7 +925,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   }
 }
 
-export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang }) {
+export async function ApartmentDetail({ slug, lang, pdf }: { slug: string; lang: Lang; pdf?: PdfRequest }) {
   const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). Resolve resolves either form and
@@ -1161,6 +1163,49 @@ export async function ApartmentDetail({ slug, lang }: { slug: string; lang: Lang
   })
   const qh = questionHeaders(verdict, yields, monthly, null, underConstruction, lang)
   const asQuestion = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, status: h.status, pillClass: TONE_PILL_CLASS[h.tone], lead: h.lead })
+
+  // Печатная презентация для Pro — как у виллы (components/pdf/PdfDocument.tsx).
+  if (pdf) {
+    const head = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, lead: h.lead })
+    const nearPoints = Object.entries(nearby?.byCategory ?? {}).flatMap(([cat, list]) =>
+      NEAR_COLORS[cat] ? list.filter(p => p.distanceKm <= 1.1).map(p => ({ lat: p.lat, lng: p.lng, color: NEAR_COLORS[cat], size: cat === 'restaurant' || cat === 'cafe' ? 4 : 6 })) : [])
+    return (
+      <PdfDocument lang={lang} title={title} district={district} photos={photos} priceUsd={priceNum} pricePerM2={priceM2}
+        chips={[bedrooms != null ? `${bedrooms} BR` : '', area != null ? `${area} ${c.sqm}` : '', lease ? c.factLeaseValue(lease) : ''].filter(Boolean)}
+        facts={facts.filter(f => typeof f.value === 'string').map(f => ({ label: f.label, value: f.value as string }))}
+        about={seoText} lat={lat} lng={lng} url={`${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${slug}`, lang)}`}
+        blocks={pdf.blocks} agent={pdf.agent} autoPrint={pdf.autoPrint} snap={verdictSnap} calcSettings={pdf.calc}
+        heads={{ safety: head(qh.safety), comfort: head(qh.comfort), demand: head(qh.demand), money: head(qh.money) }}
+        nearPoints={nearPoints}
+        nearLegend={livingFacts ? <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest} map={null} /> : null}
+        nodes={{
+          verdict: <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={null}
+            underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
+            neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
+            dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
+            anchors={{ safety: 'uchastok', comfort: 'mesto', demand: 'arenda', money: 'dokhodnost' }} />,
+          safety: (
+            <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'grid-cols-2' : ''}`}>
+              <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
+                leaseYears={leaseYears} landYellow={rentalRestricted}
+                dev={devStats ? { name: devName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
+                coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
+              {landOk && <div className="flex flex-col gap-6"><LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} /><SafetyChecks verdict={verdict} lang={lang} /></div>}
+            </div>
+          ),
+          living: (geoFacts || beach) ? (
+            <div className="flex flex-col gap-4 [&>*]:mb-0">
+              {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes} map={null} />}
+              {beach && beachPick && <BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} />}
+            </div>
+          ) : null,
+          climate: geoFacts ? <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide /> : null,
+          daily: verdictSnap ? <DemandBandsPdf kind="daily" snap={verdictSnap} dailyComps={verdictSnap.competitors ?? []} airbnbComps={airbnbComps} lang={lang} /> : null,
+          monthly: verdictSnap?.monthly ? <DemandBandsPdf kind="monthly" snap={verdictSnap} monthly={verdictSnap.monthly} lang={lang} /> : null,
+          calc: hasYield ? <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} /> : null,
+        }} />
+    )
+  }
   const hasDemand = hasRent || !!monthly
 
   return (

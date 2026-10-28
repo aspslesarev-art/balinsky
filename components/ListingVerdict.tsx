@@ -871,3 +871,86 @@ export function YieldScenariosTable({ data, verified, lang }: { data: YieldScena
     </div>
   )
 }
+
+/** Печатная презентация: соседи тремя колонками «плохо / средне / хорошо»,
+ *  по два в каждой (макет PDF, владелец 28.10.2026). Те же зоны и деньги,
+ *  что в «Будет ли спрос?», только без ленты-карусели. */
+export function DemandBandsPdf({ kind, snap, dailyComps = [], airbnbComps = [], monthly: m, perBand = 2, lang }: {
+  kind: 'daily' | 'monthly'
+  snap: InvestmentSnapshot
+  dailyComps?: NearbyMatchCard[]
+  airbnbComps?: AirbnbComp[]
+  monthly?: MonthlyBundle | null
+  perBand?: number
+  lang: Lang
+}) {
+  const c = pickCopy(COPY, lang)
+  const b = pickCopy(BANDS_COPY, lang)
+  const dec = (x: number) => (lang === 'en' || lang === 'zh' ? x.toFixed(1) : x.toFixed(1).replace('.', ','))
+  const P = (usd: number) => <span className="whitespace-nowrap"><InlinePrice usd={usd} lang={lang} approx={false} /></span>
+  type Item = { price: number; node: ReactNode }
+  let items: Item[] = []
+  let q: { p25: number; p50: number; p75: number } | null = null
+  if (kind === 'daily') {
+    items = [
+      ...dailyComps.map(comp => ({ price: comp.adr, node: (
+        <BookingCompCard key={`b-${comp.id}`} source="booking"
+          rating={comp.facts?.score ?? comp.rating ?? null} reviews={comp.facts?.reviewCount ?? comp.reviews ?? null}
+          href={comp.url} photo={comp.facts?.roomPhoto ?? comp.photo} fallbackPhoto={comp.photo}
+          priceUsd={comp.adr} name={comp.complex ?? comp.name} variant={variant(comp)} bedrooms={comp.bedrooms}
+          areaSqm={comp.facts ? comp.facts.roomArea : plausibleArea(comp.area)} distance={`${dec(comp.distanceKm)} ${c.km}`}
+          mix={comp.facts} variantOcc={comp.facts?.roomOcc ?? null} propertyOcc={comp.facts?.occ ?? null} lang={lang} />
+      ) })),
+      ...airbnbComps.map(comp => ({ price: comp.priceUsd, node: (
+        <BookingCompCard key={`a-${comp.id}`} source="airbnb" rating={comp.rating} reviews={comp.reviews}
+          href={comp.url} photo={comp.photo} priceUsd={comp.priceUsd} name={comp.name} variant={null}
+          bedrooms={comp.bedrooms} areaSqm={null} distance={`${c.approx} ${dec(comp.distanceKm)} ${c.km}`} lang={lang} />
+      ) })),
+    ]
+    q = quartiles(items.map(x => x.price))
+  } else if (m && m.comps.length) {
+    q = { p25: m.p25, p50: m.p50, p75: m.p75 }
+    items = m.comps.map(comp => ({ price: comp.rentMonthUsd, node: (
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white">
+        {comp.photo && (
+          // eslint-disable-next-line @next/next/no-img-element -- фото объявления для печати
+          <img src={comp.photo} alt={comp.title} referrerPolicy="no-referrer" width={480} height={320} className="aspect-[3/2] w-full bg-[var(--color-search-bg)] object-cover" />
+        )}
+        <span className="flex flex-1 flex-col gap-1 p-4">
+          <span className="text-[18px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[13px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
+          <span className="line-clamp-2 text-[14px] font-medium leading-snug text-[var(--color-text)]">{comp.title}</span>
+        </span>
+      </div>
+    ) }))
+  }
+  if (!items.length || !q) return null
+  const qq = q
+  const band = (p: number): Band => p < qq.p25 ? 'bad' : p > qq.p75 ? 'good' : 'mid'
+  const month = (p: number) => monthlyNetAt(snap, p, kind === 'monthly' ? 'month' : undefined) ?? 0
+  const cols: { band: Band; title: string; range: ReactNode; money: ReactNode }[] = [
+    { band: 'bad', title: b.bad, range: <>{b.upTo} {P(qq.p25)}</>, money: b.moneyBad(P(month(qq.p25))) },
+    { band: 'mid', title: b.mid, range: <>{P(qq.p25)} – {P(qq.p75)}</>, money: b.moneyMid(P(month(qq.p50))) },
+    { band: 'good', title: b.good, range: <>{b.from} {P(qq.p75)}</>, money: b.moneyGood(P(month(qq.p75))) },
+  ]
+  // Внутри колонки — самые типичные: ближе к середине своей зоны.
+  const pick = (bd: Band) => {
+    const xs = items.filter(x => band(x.price) === bd).sort((a, z) => z.price - a.price)
+    if (xs.length <= perBand) return xs
+    const step = (xs.length - 1) / Math.max(1, perBand - 1)
+    return Array.from({ length: perBand }, (_, i) => xs[Math.round(i * step)])
+  }
+  return (
+    <div className="pdf-bands grid grid-cols-3 items-start gap-4">
+      {cols.map(col => (
+        <div key={col.band} className="flex flex-col gap-3">
+          <div className={`flex flex-col gap-1 rounded-xl border px-4 py-3 ${BAND_SURFACE[col.band]} ${BAND_TEXT[col.band]}`}>
+            <span className="text-[14px] font-semibold">{col.title}</span>
+            <span className="text-[20px] font-semibold leading-tight text-[var(--color-text)]">{col.range}</span>
+            <span className="text-[13px]">{col.money}</span>
+          </div>
+          {pick(col.band).map((x, i) => <div key={i}>{x.node}</div>)}
+        </div>
+      ))}
+    </div>
+  )
+}
