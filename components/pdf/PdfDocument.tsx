@@ -60,14 +60,14 @@ export const NEAR_COLORS: Record<string, string> = {
   international_school: '#9366E6', school: '#9366E6', restaurant: '#FFFFFF', cafe: '#FFFFFF',
 }
 
-function Page({ head, footer, children, bleed = false }: { head?: PdfHead; footer: string; children: ReactNode; bleed?: boolean }) {
+function Page({ head, footer, children, bleed = false, portrait = false }: { head?: PdfHead; footer: string; children: ReactNode; bleed?: boolean; portrait?: boolean }) {
   return (
     <section className="pdf-page">
-      <div className={`pdf-inner ${bleed ? '' : 'px-12 pt-10 pb-6'}`}>
+      <div className={`pdf-inner ${bleed ? '' : portrait ? 'px-5 pt-2' : 'px-12 pt-10 pb-6'}`}>
         {head && (
           <header className="mb-5 flex flex-col gap-1">
             <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary-pressed)]">{head.kicker}</div>
-            <h2 className="text-[26px] font-semibold leading-tight tracking-tight">{head.title}</h2>
+            <h2 className={`${portrait ? 'text-[22px]' : 'text-[26px]'} font-semibold leading-tight tracking-tight`}>{head.title}</h2>
             {head.lead && <p className="max-w-[90ch] text-[15px] leading-relaxed text-[var(--color-text-muted)]">{head.lead}</p>}
           </header>
         )}
@@ -100,21 +100,23 @@ export function PdfDocument(p: {
   snap: InvestmentSnapshot | null
   calcSettings: CalcSettings | null
   autoPrint: boolean
+  portrait?: boolean
 }) {
   const c = pickCopy(COPY, p.lang)
+  const P = !!p.portrait
   const calc = calcRows(p.snap, p.calcSettings, p.lang, c)
   const want = (b: PdfBlock) => p.blocks.includes(b)
   const foot = `${p.title} · balinsky.info`
   const hasMap = p.lat != null && p.lng != null
   const pool = p.photos.slice(1, 10)
   return (
-    <PdfShell autoPrint={p.autoPrint} printLabel={c.print} printHint={c.printHint}>
+    <PdfShell autoPrint={p.autoPrint} printLabel={c.print} printHint={c.printHint} portrait={P}>
       {/* Обложка — всегда. */}
       <section className="pdf-page">
-        <div className="pdf-inner" style={{ flexDirection: 'row', bottom: 0 }}>
-          <div className="flex w-[46%] flex-col justify-center gap-4 px-12">
+        <div className="pdf-inner" style={{ flexDirection: P ? 'column-reverse' : 'row', bottom: 0 }}>
+          <div className={`flex flex-col justify-center gap-4 ${P ? 'px-5 py-6' : 'w-[46%] px-12'}`}>
             {p.district && <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary-pressed)]">{p.district}, {c.bali}</div>}
-            <h1 className="text-[34px] font-semibold leading-[1.15] tracking-tight">{p.title}</h1>
+            <h1 className={`${P ? 'text-[26px]' : 'text-[34px]'} font-semibold leading-[1.15] tracking-tight`}>{p.title}</h1>
             <div className="flex flex-wrap gap-2">
               {p.chips.map(x => <span key={x} className="rounded-full bg-[var(--color-search-bg)] px-3 py-1 text-[13px]">{x}</span>)}
             </div>
@@ -127,27 +129,27 @@ export function PdfDocument(p: {
           </div>
           {p.photos[0] && (
             // eslint-disable-next-line @next/next/no-img-element -- печатная страница
-            <img src={p.photos[0]} alt={p.title} className="h-full w-[54%] object-cover" />
+            <img src={p.photos[0]} alt={p.title} className={P ? 'h-[105mm] w-full object-cover' : 'h-full w-[54%] object-cover'} />
           )}
         </div>
       </section>
 
-      {want('verdict') && p.nodes.verdict && <Page head={p.heads.verdict} footer={foot}>{p.nodes.verdict}</Page>}
+      {want('verdict') && p.nodes.verdict && <Page portrait={P} head={p.heads.verdict} footer={foot}>{p.nodes.verdict}</Page>}
 
       {want('photos') && pool.length > 0 && (
-        <Page footer={foot} head={{ kicker: c.photos, title: p.title }}>
-          <div className="grid h-[150mm] grid-cols-3 grid-rows-2 gap-2">
+        <Page portrait={P} footer={foot} head={{ kicker: c.photos, title: p.title }}>
+          <div className={P ? 'grid grid-cols-2 gap-2' : 'grid h-[150mm] grid-cols-3 grid-rows-2 gap-2'}>
             {pool.slice(0, 6).map((src, i) => (
               // eslint-disable-next-line @next/next/no-img-element -- печатная страница
-              <img key={i} src={src} alt="" className={`h-full w-full rounded-lg object-cover ${i === 0 ? 'col-span-2 row-span-2' : ''}`} />
+              <img key={i} src={src} alt="" className={P ? `pdf-keep aspect-[4/3] w-full rounded-lg object-cover ${i === 0 ? 'col-span-2' : ''}` : `h-full w-full rounded-lg object-cover ${i === 0 ? 'col-span-2 row-span-2' : ''}`} />
             ))}
           </div>
         </Page>
       )}
 
       {want('facts') && p.facts.length > 0 && (
-        <Page footer={foot} head={{ kicker: p.title, title: c.facts }}>
-          <div className="grid grid-cols-4 gap-3">
+        <Page portrait={P} footer={foot} head={{ kicker: p.title, title: c.facts }}>
+          <div className={`grid gap-3 ${P ? 'grid-cols-2' : 'grid-cols-4'}`}>
             {p.facts.map(f => (
               <div key={f.label} className="rounded-xl border border-[var(--color-border)] p-4">
                 <div className="text-[13px] uppercase tracking-wide text-[var(--color-text-muted)]">{f.label}</div>
@@ -159,20 +161,20 @@ export function PdfDocument(p: {
       )}
 
       {want('about') && p.about && (
-        <Page footer={foot} head={{ kicker: p.title, title: c.about }}>
+        <Page portrait={P} footer={foot} head={{ kicker: p.title, title: c.about }}>
           <p className="max-w-[100ch] whitespace-pre-line text-[15px] leading-relaxed">{p.about}</p>
         </Page>
       )}
 
-      {want('safety') && p.nodes.safety && <Page head={p.heads.safety} footer={foot}>{p.nodes.safety}</Page>}
+      {want('safety') && p.nodes.safety && <Page portrait={P} head={p.heads.safety} footer={foot}>{p.nodes.safety}</Page>}
 
       {want('near') && hasMap && (
-        <Page footer={foot} bleed>
-          <div className="flex h-full">
-            <StaticMap lat={p.lat!} lng={p.lng!} zoom={15} width={620} height={756} dim={0.22} label="Esri, Maxar"
+        <Page portrait={P} footer={foot} bleed>
+          <div className={P ? 'flex flex-col' : 'flex h-full'}>
+            <StaticMap lat={p.lat!} lng={p.lng!} zoom={15} width={P ? 408 : 620} height={P ? 440 : 756} dim={0.22} label="Esri, Maxar"
               rings={[{ m: 1000, label: '1 км' }, { m: 500, label: '500 м' }, { m: 100, label: '100 м' }]}
               points={p.nearPoints} />
-            <div className="flex min-w-0 flex-1 flex-col gap-4 px-8 pt-10">
+            <div className={`flex min-w-0 flex-1 flex-col gap-4 ${P ? 'px-5 pt-5' : 'px-8 pt-10'}`}>
               {p.heads.comfort && <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary-pressed)]">{p.heads.comfort.kicker}</div>}
               <h2 className="text-[26px] font-semibold leading-tight tracking-tight">{c.near}</h2>
               <p className="text-[13px] text-[var(--color-text-muted)]">{c.nearSub}</p>
@@ -181,32 +183,32 @@ export function PdfDocument(p: {
                   <span key={k} className="inline-flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-full border-2 border-[#0F1A15]" style={{ background: col }} />{c.legend[k]}</span>
                 ))}
               </div>
-              <div className="pdf-fit min-h-0 flex-1">{p.nearLegend}</div>
+              <div className={P ? '' : 'pdf-fit min-h-0 flex-1'}>{p.nearLegend}</div>
             </div>
           </div>
         </Page>
       )}
 
-      {want('living') && p.nodes.living && <Page head={p.heads.comfort} footer={foot}>{p.nodes.living}</Page>}
-      {want('living') && p.nodes.climate && <Page head={p.heads.comfort ? { kicker: p.heads.comfort.kicker, title: p.heads.comfort.title } : undefined} footer={foot}>{p.nodes.climate}</Page>}
+      {want('living') && p.nodes.living && <Page portrait={P} head={p.heads.comfort} footer={foot}>{p.nodes.living}</Page>}
+      {want('living') && p.nodes.climate && <Page portrait={P} head={p.heads.comfort ? { kicker: p.heads.comfort.kicker, title: p.heads.comfort.title } : undefined} footer={foot}>{p.nodes.climate}</Page>}
 
       {want('heat') && hasMap && (
-        <Page footer={foot} head={{ kicker: p.heads.comfort?.kicker ?? '', title: c.heat, lead: c.heatSub }}>
+        <Page portrait={P} footer={foot} head={{ kicker: p.heads.comfort?.kicker ?? '', title: c.heat, lead: c.heatSub }}>
           <div className="overflow-hidden rounded-xl">
-            <StaticMap lat={p.lat!} lng={p.lng!} zoom={15} width={1027} height={540} heat dim={0.1} label="Esri, Maxar" />
+            <StaticMap lat={p.lat!} lng={p.lng!} zoom={15} width={P ? 368 : 1027} height={P ? 520 : 540} heat dim={0.1} label="Esri, Maxar" />
           </div>
         </Page>
       )}
 
-      {want('daily') && p.nodes.daily && <Page head={{ kicker: p.heads.demand?.kicker ?? '', title: c.daily, lead: p.heads.demand?.lead }} footer={foot}>{p.nodes.daily}</Page>}
-      {want('monthly') && p.nodes.monthly && <Page head={{ kicker: p.heads.demand?.kicker ?? '', title: c.monthly }} footer={foot}>{p.nodes.monthly}</Page>}
-      {want('sale') && p.nodes.sale && <Page head={{ kicker: p.heads.money?.kicker ?? '', title: c.sale }} footer={foot}>{p.nodes.sale}</Page>}
+      {want('daily') && p.nodes.daily && <Page portrait={P} head={{ kicker: p.heads.demand?.kicker ?? '', title: c.daily, lead: p.heads.demand?.lead }} footer={foot}>{p.nodes.daily}</Page>}
+      {want('monthly') && p.nodes.monthly && <Page portrait={P} head={{ kicker: p.heads.demand?.kicker ?? '', title: c.monthly }} footer={foot}>{p.nodes.monthly}</Page>}
+      {want('sale') && p.nodes.sale && <Page portrait={P} head={{ kicker: p.heads.money?.kicker ?? '', title: c.sale }} footer={foot}>{p.nodes.sale}</Page>}
 
       {want('calc') && (calc || p.nodes.calc) && (
-        <Page head={p.heads.money ? { ...p.heads.money, lead: c.calcSub } : { kicker: '', title: c.calc, lead: c.calcSub }} footer={foot}>
+        <Page portrait={P} head={p.heads.money ? { ...p.heads.money, lead: c.calcSub } : { kicker: '', title: c.calc, lead: c.calcSub }} footer={foot}>
           <div className="flex flex-col gap-6">
             {calc && (
-              <div className="grid grid-cols-2 gap-6">
+              <div className={`grid gap-6 ${P ? 'grid-cols-1' : 'grid-cols-2'}`}>
                 {([[c.settings, calc.settings], [c.result, calc.result]] as const).map(([h, rows]) => (
                   <div key={h} className="rounded-xl border border-[var(--color-border)] p-5">
                     <div className="mb-3 text-[15px] font-semibold">{h}</div>
@@ -227,7 +229,7 @@ export function PdfDocument(p: {
 
       {/* Последняя страница — всегда: контакты агента или ссылка на объект. */}
       <section className="pdf-page">
-        <div className="pdf-inner flex flex-col items-start justify-center gap-4 px-16">
+        <div className={`pdf-inner flex flex-col items-start justify-center gap-4 ${P ? 'min-h-[160mm] px-5' : 'px-16'}`}>
           <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary-pressed)]">{p.agent ? c.agent : c.more}</div>
           <div className="text-[34px] font-semibold tracking-tight">{p.agent ? p.agent.name : p.title}</div>
           <p className="text-[16px] text-[var(--color-text-muted)]">{p.agent ? c.agentSub : c.moreSub}</p>

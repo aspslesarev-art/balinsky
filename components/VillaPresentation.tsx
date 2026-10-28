@@ -658,6 +658,11 @@ function photoPages(photos: string[]): number {
 
 function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose: () => void }) {
   const c = presentationCopy(data.lang)
+  // Валюта, которую человек выбрал на сайте, — в цены презентации.
+  const { currency } = useCurrency()
+  // На телефоне по умолчанию вертикальный PDF — его удобнее листать в мессенджере.
+  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 'portrait' : 'landscape')
   // Блоки, для которых у объекта есть данные. Пустые не предлагаем.
   // Чего у объекта точно нет — не предлагаем; остальное печатная страница
   // пропустит сама, если данных не окажется.
@@ -681,15 +686,27 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
   const agentOk = trimmedName.length > 0 && (trimmedTg.length > 0 || trimmedWa.length > 0)
   const canDownload = !busy && (!withAgent || agentOk)
 
-  // Контакты агента помним в этом браузере, чтобы не вводить каждый раз.
+  // Контакты: что человек уже правил здесь — из этого браузера, иначе из
+  // аккаунта (имя, Telegram, телефон). Поменять можно прямо в окне.
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(AGENT_KEY) ?? 'null')
-      if (saved && typeof saved === 'object') {
-        setName(saved.name ?? ''); setTelegram(saved.telegram ?? ''); setWhatsapp(saved.whatsapp ?? '')
-        setWithAgent(!!saved.on)
-      }
-    } catch {}
+    let saved: { on?: boolean; name?: string; telegram?: string; whatsapp?: string } | null = null
+    try { saved = JSON.parse(localStorage.getItem(AGENT_KEY) ?? 'null') } catch {}
+    if (saved && typeof saved === 'object' && (saved.name || saved.telegram || saved.whatsapp)) {
+      setName(saved.name ?? ''); setTelegram(saved.telegram ?? ''); setWhatsapp(saved.whatsapp ?? '')
+      setWithAgent(!!saved.on)
+      return
+    }
+    let alive = true
+    fetch('/api/account/contacts', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then((j: { contacts?: { name: string; telegram: string; whatsapp: string } | null } | null) => {
+        const a = j?.contacts
+        if (!alive || !a) return
+        setName(a.name); setTelegram(a.telegram); setWhatsapp(a.whatsapp)
+        setWithAgent(!!a.name && !!(a.telegram || a.whatsapp))
+      })
+      .catch(() => {})
+    return () => { alive = false }
   }, [])
 
   function presetBlocks(p: (typeof PRESETS)[number]) { return (p.blocks ?? available).filter(b => available.includes(b)) }
@@ -715,8 +732,8 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
         localStorage.setItem(AGENT_KEY, JSON.stringify({ on: withAgent, name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }))
       } catch {}
       // Печатная страница собирает презентацию из тех же данных, что страница
-      // объекта; окно печати откроется само — там «Сохранить как PDF».
-      const q = new URLSearchParams({ b: picked.join(','), lang: data.lang ?? 'ru', print: '1' })
+      // объекта; сервер (app/api/pdf) превращает её в файл — без окна печати.
+      const q = new URLSearchParams({ b: picked.join(','), lang: data.lang ?? 'ru', o: orientation === 'portrait' ? 'p' : 'l' })
       if (withAgent) {
         q.set('n', trimmedName)
         if (trimmedTg) q.set('t', trimmedTg)
@@ -725,7 +742,18 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
       const calc = readCalc(data.villaId)
       if (calc) for (const [k, v] of Object.entries(calcToQuery(calc))) q.set(k, v)
       const section = data.kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
-      window.open(`${section}${data.slug}/pdf?${q.toString()}`, '_blank', 'noopener')
+      const target = `${section}${data.slug}/pdf?${q.toString()}`
+      const r = await fetch(`/api/pdf?cur=${currency}&u=${encodeURIComponent(target)}`)
+      if (!r.ok) throw new Error(`pdf ${r.status}`)
+      const blob = await r.blob()
+      const href = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = href
+      a.download = `${data.kind === 'apartment' ? 'apartament' : 'villa'}-${data.slug}${orientation === 'portrait' ? '-phone' : ''}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(href), 60_000)
       trackEvent('presentation_open', { page_path: window.location.pathname })
       fetch('/api/track/presentation', {
         method: 'POST',
@@ -733,7 +761,7 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
         body: JSON.stringify({
           kind: 'object', objectKind: data.kind ?? 'villa', objectId: data.villaId, slug: data.slug, title: data.title,
           agent: withAgent ? { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa } : null,
-          orientation: 'landscape', hasAgent: withAgent, lang: data.lang ?? 'ru', blocks: picked,
+          orientation, hasAgent: withAgent, lang: data.lang ?? 'ru', blocks: picked,
         }),
         keepalive: true,
       }).catch(() => {})
@@ -902,8 +930,22 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
           )}
           {error && <p className="text-[13px] text-[#B91C1C]">{error}</p>}
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+            <div role="radiogroup" aria-label={c.formatAria} className="grid grid-cols-2 rounded-lg bg-[var(--color-neutral-100)] p-1">
+              {([
+                { v: 'landscape', label: c.landscape },
+                { v: 'portrait', label: c.portrait },
+              ] as const).map(opt => {
+                const isActive = orientation === opt.v
+                return (
+                  <button key={opt.v} type="button" role="radio" aria-checked={isActive} onClick={() => setOrientation(opt.v)} disabled={busy}
+                    className={`min-h-10 rounded-md px-4 text-[14px] transition-colors ${isActive ? 'bg-white font-semibold text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.06)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'} disabled:opacity-50`}>
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
             <div className="hidden md:block flex-1 text-[14px] text-[var(--color-text-muted)]">
-              {c.summary(pageCount, false, withAgent)}
+              {orientation === 'landscape' && c.summary(pageCount, false, withAgent)}
             </div>
             <button
               type="button"
@@ -913,7 +955,7 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
             >
               {busy
                 ? <><Loader2 size={18} className="animate-spin" />{c.building}</>
-                : <><Download size={18} />{c.downloadPdf}<span className="md:hidden"> · {c.pages(pageCount)}</span></>}
+                : <><Download size={18} />{c.downloadPdf}{orientation === 'landscape' && <span className="md:hidden"> · {c.pages(pageCount)}</span>}</>}
             </button>
           </div>
         </div>

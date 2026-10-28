@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   // Several root layouts (one per locale, see app/_root/shell.tsx), so the
   // catch-all 404 lives in app/global-not-found.tsx.
   experimental: { globalNotFound: true },
+  // Сборка PDF на сервере (app/api/pdf): Chromium не бандлится, грузится как есть.
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
   // Шаблон эксплорера отделки читается с диска в рантайме — без этого
   // Vercel не положит его в бандл функции.
   outputFileTracingIncludes: {

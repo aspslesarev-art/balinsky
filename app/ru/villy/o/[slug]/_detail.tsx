@@ -1318,7 +1318,7 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
         chips={[bedrooms != null ? `${c.factBedrooms}: ${bedrooms}` : '', area != null ? `${area} ${c.sqm}` : '', land != null ? `${land} ${c.sqm} ${c.factLand.toLowerCase()}` : '', lease ? c.factLeaseValue(lease) : ''].filter(Boolean)}
         facts={facts.filter(f => typeof f.value === 'string').map(f => ({ label: f.label, value: f.value as string }))}
         about={seoText} lat={lat} lng={lng} url={`${SITE_URL}${switchLangPath(`/ru/villy/o/${slug}`, lang)}`}
-        blocks={pdf.blocks} agent={pdf.agent} autoPrint={pdf.autoPrint} snap={verdictSnap} calcSettings={pdf.calc}
+        blocks={pdf.blocks} agent={pdf.agent} autoPrint={pdf.autoPrint} portrait={pdf.portrait} snap={verdictSnap} calcSettings={pdf.calc}
         heads={{ safety: head(qh.safety), comfort: head(qh.comfort), demand: head(qh.demand), money: head(qh.money) }}
         nearPoints={nearPoints}
         nearLegend={livingFacts ? <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest} map={null} /> : null}
@@ -1329,7 +1329,7 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
             dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
             anchors={{ safety: 'uchastok', comfort: 'mesto', demand: 'arenda', money: 'dokhodnost' }} />,
           safety: (
-            <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'grid-cols-2' : ''}`}>
+            <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
               <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
                 leaseYears={leaseYears} landYellow={rentalRestricted}
                 dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}

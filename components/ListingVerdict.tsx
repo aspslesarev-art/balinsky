@@ -940,15 +940,15 @@ export function DemandBandsPdf({ kind, snap, dailyComps = [], airbnbComps = [], 
     return Array.from({ length: perBand }, (_, i) => xs[Math.round(i * step)])
   }
   return (
-    <div className="pdf-bands grid grid-cols-3 items-start gap-4">
+    <div className="pdf-bands grid grid-cols-1 items-start gap-4 sm:grid-cols-3">
       {cols.map(col => (
-        <div key={col.band} className="flex flex-col gap-3">
+        <div key={col.band} className="pdf-keep flex flex-col gap-3">
           <div className={`flex flex-col gap-1 rounded-xl border px-4 py-3 ${BAND_SURFACE[col.band]} ${BAND_TEXT[col.band]}`}>
             <span className="text-[14px] font-semibold">{col.title}</span>
             <span className="text-[20px] font-semibold leading-tight text-[var(--color-text)]">{col.range}</span>
             <span className="text-[13px]">{col.money}</span>
           </div>
-          {pick(col.band).map((x, i) => <div key={i}>{x.node}</div>)}
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-col">{pick(col.band).map((x, i) => <div key={i}>{x.node}</div>)}</div>
         </div>
       ))}
     </div>

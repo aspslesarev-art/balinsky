@@ -9,6 +9,7 @@ export type PdfRequest = {
   agent: { name: string; telegram: string; whatsapp: string } | null
   calc: CalcSettings | null
   autoPrint: boolean
+  portrait: boolean
 }
 
 export function parsePdfRequest(q: Record<string, string | string[] | undefined>): PdfRequest {
@@ -25,5 +26,6 @@ export function parsePdfRequest(q: Record<string, string | string[] | undefined>
     agent: name && (telegram || whatsapp) ? { name, telegram, whatsapp } : null,
     calc: calcFromQuery(flat),
     autoPrint: one('print') === '1',
+    portrait: one('o') === 'p',
   }
 }
