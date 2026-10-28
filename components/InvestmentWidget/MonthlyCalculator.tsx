@@ -248,7 +248,7 @@ export function MonthlyCalculator({ snap, lang, price, setPrice }: { snap: Snaps
     rentMonth: rent, monthsRented: months, agentFeePct: agent / 100,
     area: snap.villa.area, bedrooms: snap.villa.bedrooms,
     askingPrice: basePrice != null ? price : null,
-    leaseholdYearsLeft: snap.villa.leaseholdYearsLeft, taxStatus, region: snap.region,
+    leaseholdYearsLeft: snap.villa.leaseholdYearsLeft, taxStatus, furnished: snap.villa.furnished, region: snap.region,
   }), [rent, months, agent, price, basePrice, taxStatus, snap])
 
   return (

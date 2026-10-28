@@ -156,12 +156,14 @@ test('Доходность считается от цены входа, а не 
   assert.ok(e.capRate < e.noi / price, 'доходность от входа обязана быть ниже, чем от прайса')
 })
 
-test('Меблированный застройщиком объект не платит за мебель дважды', () => {
+test('Мебель докупаем, только если объект без мебели', () => {
   const base = econ({ askingPrice: 400_000, area: 150 })
   const furnished = econ({ askingPrice: 400_000, area: 150, furnished: true })
-  assert.ok(base.furnishing > 0)
+  const bare = econ({ askingPrice: 400_000, area: 150, furnished: false })
+  assert.equal(base.furnishing, 0)
   assert.equal(furnished.furnishing, 0)
-  assert.ok(furnished.capRate > base.capRate)
+  assert.ok(bare.furnishing > 0)
+  assert.ok(furnished.capRate > bare.capRate)
 })
 
 test('Расходы не опускаются ниже базового минимума на компактных объектах', () => {

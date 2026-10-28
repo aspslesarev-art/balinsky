@@ -208,6 +208,8 @@ export type MonthlyInput = {
   askingPrice: number | null
   leaseholdYearsLeft: number | null
   taxStatus: TaxStatus
+  /** Как в посуточной модели: мебель докупаем, только если на фото её нет. */
+  furnished?: boolean
   region: RegionDefaults
 }
 
@@ -230,7 +232,7 @@ export function computeMonthlyEconomics(i: MonthlyInput): MonthlyEconomics {
   const noi = Math.round(revenue - agentFee - upkeep - ffeReserve - pbbTax - tax)
 
   const closingCost = i.askingPrice != null ? i.askingPrice * region.closingCostPct : 0
-  const furnishing = (i.area ?? 0) * region.furnishingPerSqm
+  const furnishing = i.furnished === false ? (i.area ?? 0) * region.furnishingPerSqm : 0
   const entryPrice = i.askingPrice != null ? Math.round(i.askingPrice + closingCost + furnishing) : null
   const payback = entryPrice != null && noi > 0 ? entryPrice / noi : null
   const capRate = entryPrice != null && entryPrice > 0 ? noi / entryPrice : null

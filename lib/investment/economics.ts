@@ -98,7 +98,9 @@ export type EconomicsInput = {
   askingPrice: number | null
   leaseholdYearsLeft: number | null
   taxStatus: TaxStatus
-  /** Объект меблирован застройщиком — меблировка не входит в цену входа. */
+  /** false — на фото объект без мебели, меблировку добавляем к цене входа.
+   *  Не задано — считаем меблированным: так продаётся почти весь каталог
+   *  (по фото 599 вилл из 601, 28.10.2026). */
   furnished?: boolean
   region: RegionDefaults
 }
@@ -143,7 +145,7 @@ export function computeEconomics(input: EconomicsInput): Economics {
   const noi = preTaxProfit - tax
 
   const closingCost = askingPrice != null ? askingPrice * region.closingCostPct : 0
-  const furnishing = furnished ? 0 : (area ?? 0) * region.furnishingPerSqm
+  const furnishing = furnished === false ? (area ?? 0) * region.furnishingPerSqm : 0
 
   // Доходность считается от тех же округлённых чисел, которые виджет
   // показывает в разбивке: иначе покупатель делит одно на другое вручную

@@ -8,6 +8,7 @@ import { matchCompetitors, type MatchMode } from './matching'
 import { adrPercentiles, buildScenarios, type ScenarioBundle } from './economics'
 import { scoreInfra, type InfraScore } from './infra-score'
 import { isDailyRentalRestricted } from '@/lib/land-use'
+import { loadListingVision } from '@/lib/listing-features'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -51,6 +52,8 @@ export type InvestmentSnapshot = {
     /** Сколько лет осталось до сдачи по «Year of completion»; 0 — уже сдан. */
     buildYearsLeft: number | null
     hasPool: boolean | null
+    /** false — на фото без мебели; иначе не задано. */
+    furnished?: boolean
     district: string | null
     photo: string | null
   }
@@ -503,11 +506,14 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   const ownBookingP = loadOwnBooking(complexId, firstString(d['Комплекс 1']), title, bedrooms, kind, region).catch(() => null)
 
   // Pull data: 2km competitors + nearby places + baliforum curated places
-  const [allInRadius, places, baliforum] = await Promise.all([
+  const [allInRadius, places, baliforum, vision] = await Promise.all([
     loadNearby(lat, lng, 2),
     loadNearbyPlaces(villaId),
     loadBaliforumNearby(lat, lng, 1.5),
+    loadListingVision(kind, villaId).catch(() => null),
   ])
+  // Мебель по фото: false — без мебели, её стоимость добавится к цене входа.
+  const furnished = vision?.features.furnished === false ? false : undefined
   const beaches = places?.byCategory.beach ?? []
   const zoneInfo = classifyZone(beaches)
   const target = { lat, lng, bedrooms, area, hasPool }
@@ -593,7 +599,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
       // Налоговый статус по умолчанию — нерезидент: большинство покупателей
       // не имеют индонезийского NPWP, и это консервативная сторона.
       // В виджете статус переключается.
-      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', region },
+      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', furnished, region },
       region.occupancyByScenario,
     )
   }
@@ -637,7 +643,7 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
   return {
     villaId,
     generatedAt: new Date().toISOString(),
-    villa: { title, lat, lng, bedrooms, area, land, askingPrice, leaseholdYearsLeft, buildYearsLeft, hasPool, district, photo },
+    villa: { title, lat, lng, bedrooms, area, land, askingPrice, leaseholdYearsLeft, buildYearsLeft, hasPool, furnished, district, photo },
     region,
     zone: {
       applied: matchResult.appliedZone,

@@ -1153,6 +1153,7 @@ function Calculator({ snap, lang, price, setPrice }: { snap: Snapshot; lang: Lan
     askingPrice: basePrice != null ? price : null,
     leaseholdYearsLeft: snap.villa.leaseholdYearsLeft,
     taxStatus,
+    furnished: snap.villa.furnished,
     region: { ...snap.region, mgmtFeePct: mgmt / 100 },
   }), [adr, occ, mgmt, price, basePrice, taxStatus, snap])
 
