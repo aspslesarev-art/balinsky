@@ -85,29 +85,47 @@ export function VillaPresentationButton({
           : <Play size={15} fill="currentColor" />}
         {variant === 'outline' ? t.outline : t.primary}
       </button>
-      {open && <VillaPresentation data={{ ...props, lang }} onClose={() => setOpen(false)} />}
+      {/* «Скачать PDF» сразу открывает окно выбора блоков, без слайдов. */}
+      {open && (variant === 'outline'
+        ? <DirectDownload data={{ ...props, lang }} onClose={() => setOpen(false)} />
+        : <VillaPresentation data={{ ...props, lang }} onClose={() => setOpen(false)} />)}
     </>
   )
 }
 
-function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onClose: () => void }) {
+// Снимок нужен окну, чтобы знать, есть ли «Что вокруг»; блок появится,
+// как только данные придут.
+function useSnapshot(villaId: string, kind: VillaPresentationData['kind']) {
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [snapTried, setSnapTried] = useState(false)
-  const [i, setI] = useState(0)
-  const [downloadOpen, setDownloadOpen] = useState(false)
-  const touchX = useRef<number | null>(null)
-  const c = presentationCopy(data.lang)
-
-  // Fetch investment snapshot once
   useEffect(() => {
     let cancelled = false
-    const apiBase = data.kind === 'apartment' ? '/api/apartament' : '/api/villa'
-    fetch(`${apiBase}/${data.villaId}/investment-snapshot`)
+    const apiBase = kind === 'apartment' ? '/api/apartament' : '/api/villa'
+    fetch(`${apiBase}/${villaId}/investment-snapshot`)
       .then(r => (r.ok ? r.json() : null))
       .then(s => { if (!cancelled) { setSnap(s); setSnapTried(true) } })
       .catch(() => { if (!cancelled) setSnapTried(true) })
     return () => { cancelled = true }
-  }, [data.villaId, data.kind])
+  }, [villaId, kind])
+  return { snap, snapTried }
+}
+
+function DirectDownload({ data, onClose }: { data: VillaPresentationData; onClose: () => void }) {
+  const { snap } = useSnapshot(data.villaId, data.kind)
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+  return <DownloadModal data={data} snap={snap} onClose={onClose} />
+}
+
+function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onClose: () => void }) {
+  const { snap, snapTried } = useSnapshot(data.villaId, data.kind)
+  const [i, setI] = useState(0)
+  const [downloadOpen, setDownloadOpen] = useState(false)
+  const touchX = useRef<number | null>(null)
+  const c = presentationCopy(data.lang)
 
   // Build photoset slides: cover already shows photos[0], so distribute photos[1..] into compositions
   const allPhotos = data.photos.slice(0, 12)
