@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { MessageCircle, Phone } from 'lucide-react'
 import type { PublicAgent } from '@/lib/collections'
-import { useCurrency } from '@/components/CurrencyContext'
+import { CurrencyToggle, useCurrency } from '@/components/CurrencyContext'
+import { LANGS, type Lang } from '@/lib/i18n'
+import { clientCopy } from '@/lib/collections-copy'
 import { formatPrice } from '@/lib/currency'
-import { objectsRu } from './format'
 import { CompareTable } from './CompareTable'
 
 // Страница подборки для клиента. Заход пишется в историю агента
@@ -29,6 +31,8 @@ function visitorId(): string {
   }
 }
 
+const LANG_NAME: Record<Lang, string> = { ru: 'Русский', en: 'English', id: 'Indonesia', fr: 'Français', de: 'Deutsch', zh: '中文', nl: 'Nederlands', ban: 'Bali', pl: 'Polski', uk: 'Українська' }
+
 /** Объект для клиента: без адреса на сайте и без названия комплекса. */
 export type ClientItem = {
   n: number
@@ -49,13 +53,27 @@ export type ClientItem = {
   yieldPct: number | null
 }
 
-export function ClientCollection({ token, title, intro, items, agent, track }: {
-  token: string; title: string; intro: string | null; items: ClientItem[]; agent: PublicAgent; track: boolean
+export function ClientCollection({ token, lang, title, intro, items, agent, track }: {
+  token: string; lang: Lang; title: string; intro: string | null; items: ClientItem[]; agent: PublicAgent; track: boolean
 }) {
   const { currency } = useCurrency()
+  const c = clientCopy(lang)
+  const router = useRouter()
+  const pathname = usePathname() ?? `/p/${token}`
+  const search = useSearchParams()
+  // Объекты открываются на том же языке, что выбран здесь.
+  const q = `?lang=${lang}`
   const visit = useRef<number | null>(null)
   const [view, setView] = useState<'cards' | 'compare'>('cards')
   const api = `/api/p/${token}/visit`
+
+  useEffect(() => { document.documentElement.lang = lang === 'uk' ? 'uk' : lang }, [lang])
+
+  function pickLang(next: Lang) {
+    const sp = new URLSearchParams(search?.toString() ?? '')
+    sp.set('lang', next)
+    router.replace(`${pathname}?${sp.toString()}`)
+  }
 
   useEffect(() => {
     if (!track) return
@@ -93,25 +111,36 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[15px] font-semibold text-[var(--color-primary-pressed)] md:h-12 md:w-12 md:text-[18px]" aria-hidden>{initials}</span>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-[15px] font-semibold md:text-[16px]">{agent.name}</span>
-            <span className="truncate text-[13px] text-[var(--color-text-muted)] md:text-[14px]">{agent.agency ? `${agent.agency} · ` : ''}ваш агент на Бали</span>
+            <span className="truncate text-[13px] text-[var(--color-text-muted)] md:text-[14px]">{agent.agency ? `${agent.agency} · ` : ''}{c.agentSub}</span>
           </div>
-          <div className="ml-auto hidden gap-2 md:flex">
+          <div className="ml-auto flex items-center gap-2">
+            <label className="relative inline-flex items-center">
+              <span className="sr-only">{c.langLabel}</span>
+              <select value={lang} onChange={e => pickLang(e.target.value as Lang)} aria-label={c.langLabel}
+                className="cursor-pointer appearance-none rounded-full border border-[var(--color-border)] bg-white py-1.5 pl-3 pr-7 text-[12px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] focus:border-[var(--color-primary)] focus:outline-none">
+                {LANGS.map(l => <option key={l} value={l}>{LANG_NAME[l]}</option>)}
+              </select>
+              <svg aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+            </label>
+            <CurrencyToggle />
+          </div>
+          <div className="hidden gap-2 md:flex">
             {wa && <a href={wa} target="_blank" rel="noopener" className="flex h-11 items-center rounded-xl border border-[var(--color-border)] px-4 text-[15px] font-medium text-[var(--color-text)] no-underline hover:bg-[var(--color-surface-alt)]">WhatsApp</a>}
-            {tg && <a href={tg} target="_blank" rel="noopener" className="flex h-11 items-center rounded-xl bg-[var(--color-primary)] px-5 text-[15px] font-semibold text-white no-underline hover:bg-[var(--color-primary-hover)]">Написать в Telegram</a>}
+            {tg && <a href={tg} target="_blank" rel="noopener" className="flex h-11 items-center rounded-xl bg-[var(--color-primary)] px-5 text-[15px] font-semibold text-white no-underline hover:bg-[var(--color-primary-hover)]">{c.telegram}</a>}
           </div>
         </div>
       </header>
 
       <main className="mx-auto flex w-full min-w-0 max-w-[1184px] flex-col gap-6 px-4 py-6 sm:px-6 md:gap-8 md:py-12">
         <div className="flex max-w-[68ch] flex-col gap-2 md:gap-3">
-          <span className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">Подборка · {objectsRu(items.length)}</span>
+          <span className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">{c.collection} · {c.objects(items.length)}</span>
           <h1 className="text-[28px] font-semibold leading-[1.15] tracking-tight md:text-[44px]">{title}</h1>
           {intro && <p className="whitespace-pre-line text-[15px] leading-relaxed text-[var(--color-text-muted)] md:text-[17px]">{intro}</p>}
         </div>
 
         {items.length > 1 && (
-          <div role="tablist" aria-label="Как показать объекты" className="flex gap-1 self-stretch rounded-xl border border-[var(--color-border)] bg-white p-1 sm:self-start">
-            {([['cards', 'Карточки'], ['compare', 'Сравнение']] as const).map(([k, label]) => (
+          <div role="tablist" aria-label={c.tabsAria} className="flex gap-1 self-stretch rounded-xl border border-[var(--color-border)] bg-white p-1 sm:self-start">
+            {([['cards', c.cards], ['compare', c.compare]] as const).map(([k, label]) => (
               <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)}
                 className={`h-11 flex-1 cursor-pointer rounded-lg px-5 text-[15px] transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] sm:flex-none ${view === k ? 'bg-[var(--color-primary)] font-semibold text-white' : 'font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-surface-alt)]'}`}>
                 {label}
@@ -121,18 +150,18 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
         )}
 
         {view === 'compare' && items.length > 1 ? (
-          <CompareTable items={items} token={token} onOpen={opened} />
+          <CompareTable items={items} token={token} lang={lang} onOpen={opened} />
         ) : items.length === 0 ? (
-          <p className="rounded-xl bg-white p-6 text-[15px] text-[var(--color-text-muted)]">Агент ещё собирает объекты - загляните чуть позже.</p>
+          <p className="rounded-xl bg-white p-6 text-[15px] text-[var(--color-text-muted)]">{c.empty}</p>
         ) : (
           <ol className="grid gap-4 md:grid-cols-2 md:gap-6">
             {items.map((s, i) => {
               const it = s
-              const href = `/p/${token}/${s.n}`
-              const chips = [s.leaseYears ? `Лизхолд ${s.leaseYears} лет` : null, s.status].filter((x): x is string => !!x)
+              const href = `/p/${token}/${s.n}${q}`
+              const chips = [s.leaseYears ? c.lease(s.leaseYears) : null, s.status].filter((x): x is string => !!x)
               return (
                 <li key={s.n} className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
-                  <a href={href} onClick={() => opened(it)} className="relative block" aria-label={`${s.title} - подробнее`}>
+                  <a href={href} onClick={() => opened(it)} className="relative block" aria-label={`${s.title} - ${c.more}`}>
                     {s.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element -- фото из снимка объекта
                       <img src={s.photo} alt={s.title} loading={i < 2 ? 'eager' : 'lazy'} className="block h-[220px] w-full object-cover md:h-[300px]" />
@@ -142,7 +171,7 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
                   <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
                     <div className="flex items-baseline gap-3">
                       <h2 className="text-[18px] font-semibold leading-snug md:text-[20px]">{s.title}</h2>
-                      {s.priceUsd != null && <span className="ml-auto shrink-0 text-[18px] font-semibold md:text-[20px]">{formatPrice(s.priceUsd, currency, 'ru')}</span>}
+                      {s.priceUsd != null && <span className="ml-auto shrink-0 text-[18px] font-semibold md:text-[20px]">{formatPrice(s.priceUsd, currency, lang)}</span>}
                     </div>
                     {chips.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -152,15 +181,15 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
                     {it.note && (
                       <div className="flex items-start gap-3 rounded-lg bg-[var(--color-primary-soft)] p-3">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[12px] font-semibold text-[var(--color-primary-pressed)]" aria-hidden>{initials}</span>
-                        <p className="whitespace-pre-line text-[15px] leading-relaxed text-[var(--color-primary-pressed)]"><span className="sr-only">Заметка агента: </span>{it.note}</p>
+                        <p className="whitespace-pre-line text-[15px] leading-relaxed text-[var(--color-primary-pressed)]"><span className="sr-only">{c.noteSr}</span>{it.note}</p>
                       </div>
                     )}
                     <div className="mt-auto flex gap-2 pt-2">
                       <a href={href} onClick={() => opened(it)}
-                        className="flex h-11 flex-1 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[15px] font-semibold text-[var(--color-primary-pressed)] no-underline hover:bg-[#d3e8dc]">Подробнее об объекте</a>
+                        className="flex h-11 flex-1 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[15px] font-semibold text-[var(--color-primary-pressed)] no-underline hover:bg-[#d3e8dc]">{c.more}</a>
                       {main && (
                         <a href={main} target="_blank" rel="noopener"
-                          className="hidden h-11 items-center rounded-xl border border-[var(--color-border)] px-4 text-[15px] font-medium text-[var(--color-text)] no-underline hover:bg-[var(--color-surface-alt)] md:flex">Спросить агента</a>
+                          className="hidden h-11 items-center rounded-xl border border-[var(--color-border)] px-4 text-[15px] font-medium text-[var(--color-text)] no-underline hover:bg-[var(--color-surface-alt)] md:flex">{c.ask}</a>
                       )}
                     </div>
                   </div>
@@ -173,19 +202,19 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
         {main && (
           <section className="hidden items-center gap-6 rounded-xl bg-[var(--color-text)] p-8 text-white md:flex">
             <div className="flex flex-col gap-2">
-              <h2 className="text-[24px] font-semibold tracking-tight">Понравилось что-то?</h2>
-              <p className="text-[15px] leading-relaxed text-[#C9D1CD]">Напишите номер объекта - агент организует онлайн-показ или встречу на месте.</p>
+              <h2 className="text-[24px] font-semibold tracking-tight">{c.likeTitle}</h2>
+              <p className="text-[15px] leading-relaxed text-[#C9D1CD]">{c.likeSub}</p>
             </div>
-            <a href={main} target="_blank" rel="noopener" className="ml-auto flex h-[52px] shrink-0 items-center rounded-xl bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white no-underline hover:bg-[var(--color-primary-hover)]">Написать агенту</a>
+            <a href={main} target="_blank" rel="noopener" className="ml-auto flex h-[52px] shrink-0 items-center rounded-xl bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white no-underline hover:bg-[var(--color-primary-hover)]">{c.write}</a>
           </section>
         )}
-        <p className="text-center text-[13px] text-[var(--color-text-muted)]">Данные по объектам - balinsky.info, аналитика недвижимости Бали</p>
+        <p className="text-center text-[13px] text-[var(--color-text-muted)]">{c.source}</p>
       </main>
 
       {main && (
         <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-[var(--color-border)] bg-white px-4 pb-6 pt-3 md:hidden">
           <a href={main} target="_blank" rel="noopener" className="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] text-[16px] font-semibold text-white no-underline">
-            <MessageCircle size={18} aria-hidden /> Написать агенту
+            <MessageCircle size={18} aria-hidden /> {c.write}
           </a>
           {tg && wa && (
             <a href={wa} target="_blank" rel="noopener" aria-label="WhatsApp" className="flex h-[52px] w-[52px] items-center justify-center rounded-xl border border-[var(--color-border)] text-[var(--color-text)]">

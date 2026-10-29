@@ -103,7 +103,7 @@ export function PdfDocument(p: {
   portrait?: boolean
   /** Слова, которых не должно быть в тексте (подборка для клиента). */
   scrub?: string[]
-  back?: string
+  back?: { href: string; label: string }
 }) {
   const c = pickCopy(COPY, p.lang)
   const P = !!p.portrait

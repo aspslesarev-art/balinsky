@@ -13,7 +13,7 @@ export type PdfRequest = {
   /** Подборка агента для клиента (/p/…): без названия комплекса и застройщика. Только с сервера, не из адреса. */
   anon?: boolean
   /** Ссылка «← Вся подборка» над листами (подборка для клиента). */
-  back?: string
+  back?: { href: string; label: string }
 }
 
 export function parsePdfRequest(q: Record<string, string | string[] | undefined>): PdfRequest {

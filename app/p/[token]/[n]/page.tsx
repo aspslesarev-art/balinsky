@@ -5,6 +5,7 @@ import { VillaDetail } from '@/app/ru/villy/o/[slug]/_detail'
 import { ApartmentDetail } from '@/app/ru/apartamenty/o/[slug]/_detail'
 import { getByToken, listItems, publicAgent } from '@/lib/collections'
 import { PDF_BLOCKS } from '@/lib/pdf-blocks'
+import { clientCopy, resolveClientLang } from '@/lib/collections-copy'
 
 // Объект из подборки для клиента — та же презентация, что PDF для Pro, но без
 // названия комплекса, застройщика и описания (их клиенту знать не нужно). В
@@ -12,10 +13,16 @@ import { PDF_BLOCKS } from '@/lib/pdf-blocks'
 // комплекс. С телефона — вертикальные листы.
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Объект из подборки', robots: { index: false, follow: false } }
+type Props = { params: Promise<{ token: string; n: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 
-export default async function Page({ params }: { params: Promise<{ token: string; n: string }> }) {
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const lang = resolveClientLang((await searchParams).lang, (await headers()).get('accept-language'))
+  return { title: clientCopy(lang).itemTitle, robots: { index: false, follow: false } }
+}
+
+export default async function Page({ params, searchParams }: Props) {
   const { token, n } = await params
+  const lang = resolveClientLang((await searchParams).lang, (await headers()).get('accept-language'))
   const idx = /^\d{1,3}$/.test(n) ? Number(n) - 1 : -1
   const found = await getByToken(token)
   if (!found || !found.collection.active || idx < 0) notFound()
@@ -31,9 +38,9 @@ export default async function Page({ params }: { params: Promise<{ token: string
     autoPrint: false,
     portrait: /iPhone|iPod|Android.+Mobile/.test(ua),
     anon: true,
-    back: `/p/${token}`,
+    back: { href: `/p/${token}?lang=${lang}`, label: clientCopy(lang).back },
   }
   return it.kind === 'villa'
-    ? <VillaDetail slug={it.slug} lang="ru" pdf={pdf} />
-    : <ApartmentDetail slug={it.slug} lang="ru" pdf={pdf} />
+    ? <VillaDetail slug={it.slug} lang={lang} pdf={pdf} />
+    : <ApartmentDetail slug={it.slug} lang={lang} pdf={pdf} />
 }

@@ -114,7 +114,7 @@ function scrubText(words: string[]) {
   }
 }
 
-export function PdfShell({ children, autoPrint, printLabel, printHint, portrait = false, scrub = [], back }: { children: ReactNode; autoPrint: boolean; printLabel: string; printHint: string; portrait?: boolean; scrub?: string[]; back?: string }) {
+export function PdfShell({ children, autoPrint, printLabel, printHint, portrait = false, scrub = [], back }: { children: ReactNode; autoPrint: boolean; printLabel: string; printHint: string; portrait?: boolean; scrub?: string[]; back?: { href: string; label: string } }) {
   const scrubKey = scrub.join('|')
   useEffect(() => {
     let cancelled = false
@@ -157,7 +157,7 @@ export function PdfShell({ children, autoPrint, printLabel, printHint, portrait 
     <div className={`pdf-root ${portrait ? 'port' : 'land'}`}>
       <style>{(portrait ? '@page { size: 108mm 192mm; margin: 8mm 0; }\n' : '@page { size: A4 landscape; margin: 0; }\n') + CSS}</style>
       <div className="pdf-bar py-3">
-        {back && <a href={back} className="mr-auto rounded-lg px-1 py-3 text-[15px] font-medium text-[var(--color-text)] no-underline hover:underline">← Вся подборка</a>}
+        {back && <a href={back.href} className="mr-auto rounded-lg px-1 py-3 text-[15px] font-medium text-[var(--color-text)] no-underline hover:underline">{back.label}</a>}
         {/* Клиент подборки с телефона: печать браузера ломает вертикальные листы — кнопку не показываем. */}
         {!(portrait && back) && (<>
         <button type="button" onClick={() => { if (!portrait) fitAll(); window.print() }}

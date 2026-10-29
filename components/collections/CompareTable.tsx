@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useCurrency } from '@/components/CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import type { ClientItem } from './ClientCollection'
-import { objectsRu } from './format'
+import type { Lang } from '@/lib/i18n'
+import { clientCopy } from '@/lib/collections-copy'
 
 // Сравнение объектов подборки для клиента (макет
 // https://claude.ai/artifact/TEUDdpFWhCUY4aDcWN3N5K, экраны 7–8). Строки — как
@@ -14,26 +15,27 @@ import { objectsRu } from './format'
 type Best = 'min' | 'max' | null
 type Row = { group?: string; label: string; best: Best; num: (i: ClientItem) => number | null; text: (i: ClientItem) => string | null }
 
-const KIND: Record<ClientItem['kind'], string> = { villa: 'Вилла', apartment: 'Апартаменты' }
-const pct = (x: number) => `${(Math.round(x * 1000) / 10).toFixed(1).replace('.', ',')}%`
+const pct = (x: number, lang: Lang) => `${(Math.round(x * 1000) / 10).toFixed(1).replace('.', lang === 'en' || lang === 'zh' ? '.' : ',')}%`
 
-export function CompareTable({ items, token, onOpen }: { items: ClientItem[]; token: string; onOpen: (it: ClientItem) => void }) {
+export function CompareTable({ items, token, lang, onOpen }: { items: ClientItem[]; token: string; lang: Lang; onOpen: (it: ClientItem) => void }) {
+  const c = clientCopy(lang)
+  const m2 = lang === 'ru' || lang === 'uk' ? 'м²' : 'm²'
   const { currency } = useCurrency()
   const [diffOnly, setDiffOnly] = useState(false)
-  const money = (v: number | null) => (v != null ? formatPrice(v, currency, 'ru') : null)
+  const money = (v: number | null) => (v != null ? formatPrice(v, currency, lang) : null)
 
   const rows: Row[] = [
-    { group: 'Цена', label: 'Цена', best: 'min', num: i => i.priceUsd, text: i => money(i.priceUsd) },
-    { label: 'Цена за м²', best: 'min', num: i => i.pricePerSqmUsd, text: i => money(i.pricePerSqmUsd) },
-    { group: 'Объект', label: 'Тип', best: null, num: () => null, text: i => KIND[i.kind] },
-    { label: 'Район', best: null, num: () => null, text: i => i.district },
-    { label: 'Спальни', best: 'max', num: i => i.bedrooms, text: i => (i.bedrooms != null ? String(i.bedrooms) : null) },
-    { label: 'Площадь', best: 'max', num: i => i.area, text: i => (i.area != null ? `${i.area} м²` : null) },
-    { label: 'Земля', best: 'max', num: i => (i.kind === 'villa' ? i.land : null), text: i => (i.kind === 'apartment' ? '—' : i.land != null ? `${i.land} м²` : null) },
-    { group: 'Документы и стройка', label: 'Лизхолд', best: 'max', num: i => i.leaseYears, text: i => (i.leaseYears != null ? `${i.leaseYears} лет` : null) },
-    { label: 'Разрешение', best: null, num: () => null, text: i => i.permit },
-    { label: 'Стройка', best: null, num: () => null, text: i => i.status },
-    { group: 'Доход', label: 'Доходность до налогов', best: 'max', num: i => i.yieldPct, text: i => (i.yieldPct != null ? pct(i.yieldPct) : null) },
+    { group: c.gPrice, label: c.rPrice, best: 'min', num: i => i.priceUsd, text: i => money(i.priceUsd) },
+    { label: c.rPriceM2, best: 'min', num: i => i.pricePerSqmUsd, text: i => money(i.pricePerSqmUsd) },
+    { group: c.gObject, label: c.rKind, best: null, num: () => null, text: i => c.kind[i.kind] },
+    { label: c.rDistrict, best: null, num: () => null, text: i => i.district },
+    { label: c.rBedrooms, best: 'max', num: i => i.bedrooms, text: i => (i.bedrooms != null ? String(i.bedrooms) : null) },
+    { label: c.rArea, best: 'max', num: i => i.area, text: i => (i.area != null ? `${i.area} ${m2}` : null) },
+    { label: c.rLand, best: 'max', num: i => (i.kind === 'villa' ? i.land : null), text: i => (i.kind === 'apartment' ? '—' : i.land != null ? `${i.land} ${m2}` : null) },
+    { group: c.gDocs, label: c.rLease, best: 'max', num: i => i.leaseYears, text: i => (i.leaseYears != null ? c.years(i.leaseYears) : null) },
+    { label: c.rPermit, best: null, num: () => null, text: i => i.permit },
+    { label: c.rBuild, best: null, num: () => null, text: i => i.status },
+    { group: c.gIncome, label: c.rYield, best: 'max', num: i => i.yieldPct, text: i => (i.yieldPct != null ? pct(i.yieldPct, lang) : null) },
   ]
 
   const cells = rows.map(r => {
@@ -57,12 +59,12 @@ export function CompareTable({ items, token, onOpen }: { items: ClientItem[]; to
     <section className="flex flex-col gap-4" aria-labelledby="compare-h">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <h2 id="compare-h" className="text-[24px] font-semibold tracking-tight md:text-[32px]">Сравниваем {objectsRu(items.length)}</h2>
-          <p className="text-[14px] text-[var(--color-text-muted)] md:text-[15px]">Зелёным - лучшее в строке.<span className="md:hidden"> Листайте таблицу вбок →</span></p>
+          <h2 id="compare-h" className="text-[24px] font-semibold tracking-tight md:text-[32px]">{c.cmpTitle(items.length)}</h2>
+          <p className="text-[14px] text-[var(--color-text-muted)] md:text-[15px]">{c.cmpBest}<span className="md:hidden">{c.cmpScroll}</span></p>
         </div>
         <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] sm:ml-auto">
           <input type="checkbox" checked={diffOnly} onChange={e => setDiffOnly(e.target.checked)} className="h-[18px] w-[18px] accent-[var(--color-primary)]" />
-          Только различия
+          {c.cmpDiff}
         </label>
       </div>
 
@@ -74,10 +76,10 @@ export function CompareTable({ items, token, onOpen }: { items: ClientItem[]; to
           </colgroup>
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-white p-3 text-left align-bottom text-[12px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] shadow-[4px_0_8px_rgb(0_0_0/.04)] md:static md:px-6 md:py-4 md:text-[13px] md:shadow-none">Объект</th>
+              <th className="sticky left-0 z-10 bg-white p-3 text-left align-bottom text-[12px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] shadow-[4px_0_8px_rgb(0_0_0/.04)] md:static md:px-6 md:py-4 md:text-[13px] md:shadow-none">{c.cmpObject}</th>
               {items.map(i => (
                 <th key={i.n} className="p-3 text-left align-top font-normal md:py-4 md:pl-0 md:pr-4">
-                  <a href={`/p/${token}/${i.n}`} onClick={() => onOpen(i)} className="flex flex-col gap-2 text-[var(--color-text)] no-underline md:gap-3">
+                  <a href={`/p/${token}/${i.n}?lang=${lang}`} onClick={() => onOpen(i)} className="flex flex-col gap-2 text-[var(--color-text)] no-underline md:gap-3">
                     <span className="relative block">
                       {i.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element -- фото из снимка объекта
@@ -92,8 +94,8 @@ export function CompareTable({ items, token, onOpen }: { items: ClientItem[]; to
             </tr>
           </thead>
           <tbody>
-            {visible.map(c => {
-              const idx = rows.indexOf(c.r)
+            {visible.map(row => {
+              const idx = rows.indexOf(row.r)
               const g = groupOf(idx)
               const showGroup = g !== lastGroup
               lastGroup = g
@@ -103,11 +105,11 @@ export function CompareTable({ items, token, onOpen }: { items: ClientItem[]; to
                     <td colSpan={items.length + 1} className="border-t border-[var(--color-border)] bg-[var(--color-surface-alt)] px-6 pb-2 pt-5 text-[13px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">{g}</td>
                   </tr>
                 ),
-                <tr key={c.r.label}>
-                  <th scope="row" className="sticky left-0 z-10 border-t border-[var(--color-border)] bg-white px-3 py-3 text-left text-[13px] font-normal leading-snug text-[var(--color-text-muted)] shadow-[4px_0_8px_rgb(0_0_0/.04)] md:static md:px-6 md:text-[15px] md:shadow-none">{c.r.label}</th>
-                  {c.texts.map((t, k) => (
+                <tr key={row.r.label}>
+                  <th scope="row" className="sticky left-0 z-10 border-t border-[var(--color-border)] bg-white px-3 py-3 text-left text-[13px] font-normal leading-snug text-[var(--color-text-muted)] shadow-[4px_0_8px_rgb(0_0_0/.04)] md:static md:px-6 md:text-[15px] md:shadow-none">{row.r.label}</th>
+                  {row.texts.map((t, k) => (
                     <td key={k} className="border-t border-[var(--color-border)] px-3 py-3 md:py-2.5 md:pl-0 md:pr-4">
-                      <span className={cellCls(c.best[k], t)}>{t ?? 'нет данных'}</span>
+                      <span className={cellCls(row.best[k], t)}>{t ?? c.noData}</span>
                     </td>
                   ))}
                 </tr>,
@@ -119,8 +121,8 @@ export function CompareTable({ items, token, onOpen }: { items: ClientItem[]; to
               <td className="border-t border-[var(--color-border)]" />
               {items.map(i => (
                 <td key={i.n} className="border-t border-[var(--color-border)] py-4 pr-4">
-                  <a href={`/p/${token}/${i.n}`} onClick={() => onOpen(i)}
-                    className="flex h-11 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[15px] font-semibold text-[var(--color-primary-pressed)] no-underline hover:bg-[#d3e8dc]">Подробнее</a>
+                  <a href={`/p/${token}/${i.n}?lang=${lang}`} onClick={() => onOpen(i)}
+                    className="flex h-11 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[15px] font-semibold text-[var(--color-primary-pressed)] no-underline hover:bg-[#d3e8dc]">{c.moreShort}</a>
                 </td>
               ))}
             </tr>
@@ -128,7 +130,7 @@ export function CompareTable({ items, token, onOpen }: { items: ClientItem[]; to
         </table>
       </div>
       {items.some(i => i.yieldPct != null) && (
-        <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">Доходность - наш расчёт по реальным ставкам соседей на Booking и Airbnb, до налогов. Это оценка, а не обещание дохода.</p>
+        <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">{c.yieldNote}</p>
       )}
     </section>
   )
