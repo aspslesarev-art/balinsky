@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, Phone } from 'lucide-react'
 import type { PublicAgent } from '@/lib/collections'
 import { useCurrency } from '@/components/CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { objectsRu } from './format'
+import { CompareTable } from './CompareTable'
 
 // Страница подборки для клиента. Заход пишется в историю агента
 // (/api/p/<token>/visit): устройство и страна — на сервере, здесь только
@@ -38,6 +39,14 @@ export type ClientItem = {
   leaseYears: number | null
   status: string | null
   note: string | null
+  district: string | null
+  bedrooms: number | null
+  area: number | null
+  land: number | null
+  permit: string | null
+  pricePerSqmUsd: number | null
+  /** Доходность до налогов, доля (0.119) — наш расчёт. */
+  yieldPct: number | null
 }
 
 export function ClientCollection({ token, title, intro, items, agent, track }: {
@@ -45,6 +54,7 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
 }) {
   const { currency } = useCurrency()
   const visit = useRef<number | null>(null)
+  const [view, setView] = useState<'cards' | 'compare'>('cards')
   const api = `/api/p/${token}/visit`
 
   useEffect(() => {
@@ -99,7 +109,20 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
           {intro && <p className="whitespace-pre-line text-[15px] leading-relaxed text-[var(--color-text-muted)] md:text-[17px]">{intro}</p>}
         </div>
 
-        {items.length === 0 ? (
+        {items.length > 1 && (
+          <div role="tablist" aria-label="Как показать объекты" className="flex gap-1 self-stretch rounded-xl border border-[var(--color-border)] bg-white p-1 sm:self-start">
+            {([['cards', 'Карточки'], ['compare', 'Сравнение']] as const).map(([k, label]) => (
+              <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)}
+                className={`h-11 flex-1 cursor-pointer rounded-lg px-5 text-[15px] transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] sm:flex-none ${view === k ? 'bg-[var(--color-primary)] font-semibold text-white' : 'font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-surface-alt)]'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {view === 'compare' && items.length > 1 ? (
+          <CompareTable items={items} token={token} onOpen={opened} />
+        ) : items.length === 0 ? (
           <p className="rounded-xl bg-white p-6 text-[15px] text-[var(--color-text-muted)]">Агент ещё собирает объекты - загляните чуть позже.</p>
         ) : (
           <ol className="grid gap-4 md:grid-cols-2 md:gap-6">

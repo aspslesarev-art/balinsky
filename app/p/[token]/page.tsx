@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSessionTelegramId } from '@/lib/site-auth'
 import { getByToken, listItems, publicAgent } from '@/lib/collections'
+import { computeYieldFacts, loadVerdictSnapshot } from '@/lib/listing-verdict'
 import { ClientCollection, type ClientItem } from '@/components/collections/ClientCollection'
 import { anonListingTitle } from '@/lib/listing-title'
 
@@ -41,6 +42,10 @@ export default async function Page({ params, searchParams }: Params) {
   const track = viewer !== found.owner && q.preview !== '1'
   // Клиенту — ни названия комплекса, ни адреса объекта на сайте: заголовок из
   // района, площади и спален, ссылка — по номеру в подборке.
+  // Доходность для сравнения — тот же расчёт, что на странице объекта (до налогов).
+  const yields = await Promise.all(items.map(it => it.snapshot.id
+    ? loadVerdictSnapshot(it.snapshot.id, it.kind).then(computeYieldFacts).then(y => y?.pct.beforeTax ?? null).catch(() => null)
+    : Promise.resolve(null)))
   const shown: ClientItem[] = items.map((it, i) => ({
     n: i + 1,
     kind: it.kind,
@@ -50,6 +55,13 @@ export default async function Page({ params, searchParams }: Params) {
     leaseYears: it.snapshot.leaseYears,
     status: it.snapshot.status,
     note: it.note,
+    district: it.snapshot.district,
+    bedrooms: it.snapshot.bedrooms,
+    area: it.snapshot.area,
+    land: it.snapshot.land ?? null,
+    permit: it.snapshot.permit ?? null,
+    pricePerSqmUsd: it.snapshot.pricePerSqmUsd ?? (it.snapshot.priceUsd && it.snapshot.area ? Math.round(it.snapshot.priceUsd / it.snapshot.area) : null),
+    yieldPct: yields[i],
   }))
   return <ClientCollection token={token} title={found.collection.title} intro={found.collection.intro} items={shown} agent={agent} track={track} />
 }

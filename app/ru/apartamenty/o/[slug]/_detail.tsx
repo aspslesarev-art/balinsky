@@ -1295,6 +1295,7 @@ export async function ApartmentDetail({ slug, lang, pdf }: { slug: string; lang:
                   title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
                   district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
                   leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+                  id: a.airtable_id, land: null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
                 }} />
                 <VillaPresentationButton
                   variant="outline"

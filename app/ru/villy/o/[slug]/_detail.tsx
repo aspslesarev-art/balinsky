@@ -1459,6 +1459,7 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
                   title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
                   district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
                   leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+                  id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
                 }} />
                 <VillaPresentationButton
                   variant="outline"

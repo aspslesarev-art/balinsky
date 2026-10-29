@@ -24,6 +24,11 @@ export type ItemSnapshot = {
   area: number | null
   leaseYears: number | null
   status: string | null
+  /** Для сравнения у клиента; в старых снимках их нет. id — запись в базе, клиенту не отдаём. */
+  id?: string | null
+  land?: number | null
+  pricePerSqmUsd?: number | null
+  permit?: string | null
 }
 
 export type CollectionItem = { kind: CollectionKind; slug: string; position: number; note: string | null; snapshot: ItemSnapshot }
@@ -76,6 +81,10 @@ export function cleanSnapshot(raw: unknown): ItemSnapshot | null {
     area: num(r.area),
     leaseYears: num(r.leaseYears),
     status: str(r.status, 80),
+    id: typeof r.id === 'string' && /^rec[A-Za-z0-9]{10,20}$/.test(r.id) ? r.id : null,
+    land: num(r.land),
+    pricePerSqmUsd: num(r.pricePerSqmUsd),
+    permit: str(r.permit, 80),
   }
   return out
 }
