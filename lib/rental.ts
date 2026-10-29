@@ -54,7 +54,7 @@ async function loadRawRental(): Promise<RentalItem[]> {
   try {
     // Served via CDN edge cache (the 2MB file exceeds Next's fetch-cache
     // limit, so without this every render re-pulls it from Supabase egress).
-    const r = await fetch(cdnManifestUrl(MANIFEST_URL, 600), { next: { revalidate: 86400, tags: ['content:rental'] } })
+    const r = await fetch(cdnManifestUrl(MANIFEST_URL, 600), { next: { revalidate: 604800, tags: ['content:rental'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     if (!Array.isArray(j.items)) return []
@@ -77,13 +77,13 @@ async function loadRawRental(): Promise<RentalItem[]> {
 const loadSlimRental = unstable_cache(
   async (): Promise<RentalItem[]> => (await loadRawRental()).map(it => ({ ...it, notes: null })),
   ['rental-slim-v1'],
-  { revalidate: 86400, tags: ['content:rental'] },
+  { revalidate: 604800, tags: ['content:rental'] },
 )
 
 const loadFullRentalBySlug = unstable_cache(
   async (slug: string): Promise<RentalItem | null> => (await loadRawRental()).find(r => r.slug === slug) ?? null,
   ['rental-item-v1'],
-  { revalidate: 86400, tags: ['content:rental'] },
+  { revalidate: 604800, tags: ['content:rental'] },
 )
 
 // Returns every rental in the manifest, including ones added long ago —

@@ -50,7 +50,7 @@ const FAQ = [
     a: 'Ja. De zakelijke infrastructuur is degelijk: glasvezel 200-1000 Mbps in Canggu, Berawa, Umalas, Sanur en de meeste Bukit-complexen. 24/7 coworking (Outpost, Tropical Nomad, Dojo, Soul & Surf). De stroom is stabiel, storingen zijn zeldzaam. KITAS Investor of B211A (met het nieuwe E33G digital nomad-visum vanaf oktober 2025) dekken werken op afstand legaal.' },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

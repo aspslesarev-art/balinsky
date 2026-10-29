@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   }
 }
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 // Empty list = render on first request, then ISR-cache (without it every hit
 // is server-rendered with no-store).

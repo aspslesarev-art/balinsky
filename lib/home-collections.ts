@@ -102,7 +102,7 @@ async function build(lang: Lang): Promise<CollTier[]> {
 
 export async function loadHomeCollections(lang: Lang): Promise<CollTier[]> {
   return unstable_cache(() => build(lang), ['home-collections-v3', lang], {
-    revalidate: 86400,
+    revalidate: 604800,
     tags: ['content:villas', 'content:apartments'],
   })()
 }

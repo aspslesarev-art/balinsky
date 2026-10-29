@@ -50,7 +50,7 @@ const FAQ = [
     a: 'Ja. Die Geschäftsinfrastruktur ist solide: Glasfaser 200-1000 Mbit/s in Canggu, Berawa, Umalas, Sanur und den meisten Bukit-Anlagen. Coworking rund um die Uhr (Outpost, Tropical Nomad, Dojo, Soul & Surf). Der Strom ist stabil, Ausfälle sind selten. KITAS Investor oder B211A (mit dem neuen E33G-Digital-Nomad-Visum seit Oktober 2025) decken Remote-Arbeit rechtlich ab.' },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

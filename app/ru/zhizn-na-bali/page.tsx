@@ -52,7 +52,7 @@ const FAQ = [
     a: 'Можно. Биз-инфраструктура — на уровне развитых тропических стран: оптика 200-1000 Мбит/с есть в Чангу, Берава, Умалас, Сануре, многих ЖК Букита. Коворкинги (Outpost, Tropical Nomad, Dojo, Soul & Surf) с круглосуточным доступом. Электричество стабильно, перебои редко. Виза KITAS Investor или B211A (с E33G визой digital nomad с октября 2025) легально покрывают удалённую работу.' },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

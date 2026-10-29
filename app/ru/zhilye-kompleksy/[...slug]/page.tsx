@@ -12,7 +12,7 @@ import { hubLanguages } from '@/lib/hub-routes'
 
 type Params = Promise<{ slug: string[] }>
 
-export const revalidate = 86400
+export const revalidate = 604800
 export function generateStaticParams() { return [] }
 
 export async function generateMetadata({ params }: { params: Params }) {

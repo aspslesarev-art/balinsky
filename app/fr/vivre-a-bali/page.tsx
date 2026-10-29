@@ -50,7 +50,7 @@ const FAQ = [
     a: "Oui. L'infrastructure professionnelle est solide : fibre 200-1000 Mbps à Canggu, Berawa, Umalas, Sanur, dans la plupart des complexes de Bukit. Coworking 24h/24 (Outpost, Tropical Nomad, Dojo, Soul & Surf). L'électricité est stable, les coupures rares. Le KITAS Investor ou le B211A (avec le nouveau visa nomade digital E33G depuis octobre 2025) couvrent légalement le télétravail." },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

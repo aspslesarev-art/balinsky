@@ -25,7 +25,7 @@ export const loadVerdictSnapshot = (id: string, kind: 'villa' | 'apartment' = 'v
   // v15: мебель, нотариус, аренда земли, статьи расходов (28.10.2026).
   ['verdict-snapshot-v15', kind, id],
   // content:rental — новые объявления Facebook/Telegram попадают в «Помесячно».
-  { revalidate: 86400, tags: [kind === 'apartment' ? 'content:apartments' : 'content:villas', 'content:rental'] },
+  { revalidate: 604800, tags: [kind === 'apartment' ? 'content:apartments' : 'content:villas', 'content:rental'] },
 )().catch(() => null)
 
 export type ComplexFacts = {

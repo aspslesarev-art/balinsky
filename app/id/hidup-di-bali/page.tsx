@@ -50,7 +50,7 @@ const FAQ = [
     a: 'Bisa. Infrastruktur bisnisnya solid: fiber 200-1000 Mbps di Canggu, Berawa, Umalas, Sanur, sebagian besar kompleks Bukit. Coworking 24/7 (Outpost, Tropical Nomad, Dojo, Soul & Surf). Listrik stabil, pemadaman jarang. KITAS Investor atau B211A (dengan visa digital nomad E33G baru sejak Oktober 2025) secara legal mencakup pekerjaan jarak jauh.' },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

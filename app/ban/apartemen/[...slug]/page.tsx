@@ -4,7 +4,7 @@ import { apartmentHub } from '@/app/ru/apartamenty/_hub'
 // Catalog hub, e.g. /ban/apartemen/canggu — see lib/hub-page.tsx.
 const hub = makeHubPage(apartmentHub, 'ban')
 
-export const revalidate = 86400
+export const revalidate = 604800
 export function generateStaticParams() { return [] }
 export const generateMetadata = hub.generateMetadata
 export default hub.Page

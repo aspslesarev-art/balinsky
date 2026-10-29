@@ -17,7 +17,7 @@ import {
 // это полный обход списков в Supabase. Свежесть теперь держит точечная
 // инвалидация — KIND_TO_PATHS добавляет /sitemap/[id] в каждый вид
 // контента, так что новая вилла попадает в карту сразу после правки.
-export const revalidate = 86400
+export const revalidate = 604800
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 

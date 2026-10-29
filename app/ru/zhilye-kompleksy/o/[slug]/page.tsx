@@ -4,7 +4,7 @@ import { ComplexDetail, generateComplexMetadata } from './_detail'
 // colours, polygon shapes, target swaps) already propagate instantly via
 // the targeted revalidatePath in the hotspot API endpoints, so a short TTL
 // bought nothing and cost ISR writes on every crawler hit.
-export const revalidate = 86400
+export const revalidate = 604800
 export function generateStaticParams() { return [] }
 
 type Params = Promise<{ slug: string }>

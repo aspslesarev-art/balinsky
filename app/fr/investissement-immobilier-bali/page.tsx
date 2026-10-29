@@ -2,7 +2,7 @@
 // and lib/investment-guide/ (one source for all ten locales).
 import { InvestmentGuide, investmentGuideMetadata } from '@/components/InvestmentGuide'
 
-export const revalidate = 86400
+export const revalidate = 604800
 export const metadata = investmentGuideMetadata('fr')
 
 export default function Page() {

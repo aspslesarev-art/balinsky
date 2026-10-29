@@ -41,6 +41,6 @@ async function fetchReport(): Promise<PremiumReport | null> {
 
 // Сутки — данные меняются прогоном vision, а не по запросу пользователя.
 export const loadPremiumReport = unstable_cache(fetchReport, ['product-premium-v1'], {
-  revalidate: 86_400,
+  revalidate: 604800,
   tags: ['content:product-premium'],
 })

@@ -37,7 +37,7 @@ const loadVillaYieldsByDistrict = unstable_cache(async (): Promise<Record<string
     }
   }
   return out
-}, ['district-villa-yields-v1'], { revalidate: 86400, tags: ['content:villas'] })
+}, ['district-villa-yields-v1'], { revalidate: 604800, tags: ['content:villas'] })
 
 /** Медиана по району; null — данных мало или загрузка не удалась. */
 export async function districtVillaYield(district: string): Promise<DistrictYield | null> {

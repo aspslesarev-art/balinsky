@@ -50,7 +50,7 @@ const FAQ = [
     a: 'Yes. Business infrastructure is solid: fibre 200-1000 Mbps in Canggu, Berawa, Umalas, Sanur, most Bukit complexes. 24/7 coworking (Outpost, Tropical Nomad, Dojo, Soul & Surf). Electricity is stable, outages rare. KITAS Investor or B211A (with the new E33G digital nomad visa from October 2025) legally cover remote work.' },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

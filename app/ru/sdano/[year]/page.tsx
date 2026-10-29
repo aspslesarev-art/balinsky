@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   }
 }
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export const generateStaticParams = yearParams
 

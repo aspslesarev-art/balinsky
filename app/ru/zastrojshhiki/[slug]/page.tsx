@@ -1,6 +1,6 @@
 import { DeveloperDetail, generateDeveloperMetadata } from './_detail'
 
-export const revalidate = 86400
+export const revalidate = 604800
 export function generateStaticParams() { return [] }
 
 type Params = Promise<{ slug: string }>

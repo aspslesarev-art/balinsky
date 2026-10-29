@@ -42,7 +42,7 @@ function normalize(item: PromoItem): PromoItem {
 
 async function loadRawPromo(): Promise<PromoItem[]> {
   try {
-    const r = await fetch(MANIFEST_URL, { next: { revalidate: 86400, tags: ['content:promo'] } })
+    const r = await fetch(MANIFEST_URL, { next: { revalidate: 604800, tags: ['content:promo'] } })
     if (!r.ok) return []
     const j = (await r.json()) as Manifest
     return Array.isArray(j.items) ? j.items.map(normalize) : []

@@ -195,7 +195,7 @@ export async function loadDistrictOccupancyMedians(): Promise<Map<string, Distri
 
   const [{ data: rows }, index] = await Promise.all([
     sb.from('complex_market_stats').select('airtable_id, villa_occupancy_pct, apartment_occupancy_pct'),
-    fetch(COMPLEX_INDEX_URL, { next: { revalidate: 86400 } })
+    fetch(COMPLEX_INDEX_URL, { next: { revalidate: 604800 } })
       .then((r) => (r.ok ? r.json() : { items: [] }))
       .then((j: { items?: IndexEntry[] }) => j.items ?? [])
       .catch(() => [] as IndexEntry[]),

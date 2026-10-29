@@ -50,7 +50,7 @@ const FAQ = [
     a: 'Tak. Infrastruktura biznesowa jest solidna: światłowód 200-1000 Mbps w Canggu, Berawa, Umalas, Sanur, większości kompleksów na Bukit. Coworking 24/7 (Outpost, Tropical Nomad, Dojo, Soul & Surf). Prąd jest stabilny, przerwy rzadkie. KITAS Investor lub B211A (z nową wizą cyfrowego nomada E33G od października 2025) legalnie obejmują pracę zdalną.' },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

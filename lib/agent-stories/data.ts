@@ -70,7 +70,7 @@ function strList(v: unknown): string[] {
 
 async function loadManifest(kind: StoryKind): Promise<Record<string, string[]>> {
   const url = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET[kind]}/_manifest.json`
-  const r = await fetch(cdnManifestUrl(url, 600), { next: { revalidate: 86400, tags: [`content:${kind === 'complex' ? 'complexes' : kind + 's'}`] } })
+  const r = await fetch(cdnManifestUrl(url, 600), { next: { revalidate: 604800, tags: [`content:${kind === 'complex' ? 'complexes' : kind + 's'}`] } })
   if (!r.ok) throw new Error(`${kind} manifest: ${r.status}`)
   return (await r.json()) as Record<string, string[]>
 }

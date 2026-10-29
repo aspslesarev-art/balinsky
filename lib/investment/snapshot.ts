@@ -795,7 +795,7 @@ async function firstPhoto(villaId: string, kind: ListingKind): Promise<string | 
   const cached = _photoCache[kind]
   if (!cached || Date.now() - cached.ts > 60 * 60 * 1000) {
     try {
-      const r = await fetch(PHOTO_MANIFEST_URLS[kind], { next: { revalidate: 86400 } })
+      const r = await fetch(PHOTO_MANIFEST_URLS[kind], { next: { revalidate: 604800 } })
       if (r.ok) _photoCache[kind] = { ts: Date.now(), data: await r.json() }
     } catch { /* ignore */ }
   }

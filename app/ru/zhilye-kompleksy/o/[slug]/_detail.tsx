@@ -865,7 +865,7 @@ const _loadDevelopersIndex = unstable_cache(
     return out
   },
   ['complex-developers-index-v3'],
-  { revalidate: 86400, tags: ['content:developers'] },
+  { revalidate: 604800, tags: ['content:developers'] },
 )
 
 async function findDeveloperLink(name: string | null): Promise<DeveloperLink | null> {
@@ -1090,7 +1090,7 @@ let _lastGoodComplexIndex: ComplexIndexEntry[] = []
 // away instead of 404'ing until the 30-min TTL lapses.
 const _loadComplexIndex = revisionedCache(['complexes'], COMPLEX_INDEX_TTL_MS, async (): Promise<ComplexIndexEntry[]> => {
   try {
-    const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 86400, tags: ['content:complexes'] } })
+    const r = await fetch(COMPLEX_INDEX_URL, { next: { revalidate: 604800, tags: ['content:complexes'] } })
     if (!r.ok) throw new Error(`complex index: ${r.status}`)
     const j = await r.json() as { items: ComplexIndexEntry[] }
     const items = j.items ?? []
@@ -1135,7 +1135,7 @@ const _loadComplexPhotos = unstable_cache(
     } catch { return {} }
   },
   ['complex-photo-manifest-detail-v2'],
-  { revalidate: 86400, tags: ['content:complexes'] },
+  { revalidate: 604800, tags: ['content:complexes'] },
 )
 
 // Slim-проекция + DB-фильтр по подстроке в SEO:Title.

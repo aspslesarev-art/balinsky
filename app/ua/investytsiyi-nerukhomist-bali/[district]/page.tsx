@@ -7,7 +7,7 @@ import { districtParams } from '@/lib/static-params'
 
 type Params = Promise<{ district: string }>
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export const generateStaticParams = districtParams
 

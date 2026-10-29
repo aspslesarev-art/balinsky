@@ -50,7 +50,7 @@ const FAQ = [
     a: '可以。商务基础设施完善：Canggu、Berawa、Umalas、Sanur以及Bukit大多数项目都有200-1000 Mbps光纤。24小时联合办公空间（Outpost、Tropical Nomad、Dojo、Soul & Surf）。电力稳定，停电罕见。KITAS投资签证或B211A（配合2025年10月起推出的E33G数字游民签证）可合法覆盖远程办公。' },
 ]
 
-export const revalidate = 86400
+export const revalidate = 604800
 
 export default function Page() {
   const breadcrumbJsonLd = {

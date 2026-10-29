@@ -4,7 +4,7 @@ import { complexHub } from '@/app/ru/zhilye-kompleksy/_hub'
 // Catalog hub, e.g. /zh/zhuzhaiqu/canggu — see lib/hub-page.tsx.
 const hub = makeHubPage(complexHub, 'zh')
 
-export const revalidate = 86400
+export const revalidate = 604800
 export function generateStaticParams() { return [] }
 export const generateMetadata = hub.generateMetadata
 export default hub.Page
