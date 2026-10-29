@@ -24,7 +24,7 @@ html, body { background: #E9ECEA !important; }
 .pdf-page ul.snap-x .aspect-\\[3\\/2\\] { aspect-ratio: 16 / 7; }
 /* Карточки соседей в листах аренды — фото пониже, чтобы два ряда влезли без мелкого текста. */
 .pdf-page .pdf-bands .aspect-\\[3\\/2\\] { aspect-ratio: 16 / 8; }
-.pdf-bar { position: sticky; top: 0; z-index: 10; width: 297mm; display: flex; align-items: center; gap: 16px; }
+.pdf-bar { position: sticky; top: 0; z-index: 10; width: 297mm; display: flex; align-items: center; gap: 16px; background: #E9ECEA; }
 /* Телефон: листы 9:16, блоки идут потоком и сами переносятся на следующий лист. */
 .pdf-root.port .pdf-page { width: 408px; height: auto; overflow: visible; box-shadow: none; }
 .pdf-root.port .pdf-inner { position: static; overflow: visible; }
@@ -32,7 +32,7 @@ html, body { background: #E9ECEA !important; }
 .pdf-root.port .pdf-foot { display: none; }
 .pdf-root.port ul.snap-x > li { flex-basis: calc((100% - 16px) / 2) !important; }
 .pdf-root.port .pdf-page { padding-bottom: 16px; }
-.pdf-root.port .pdf-bar { width: 408px; flex-wrap: wrap; padding-left: 16px; padding-right: 16px; }
+.pdf-root.port .pdf-bar { position: static; width: 408px; flex-wrap: wrap; padding-left: 16px; padding-right: 16px; }
 .pdf-root.port { gap: 0; padding-top: 0; }
 .pdf-root.port .pdf-page section, .pdf-root.port li, .pdf-root.port .pdf-keep { break-inside: avoid; }
 @media print {
@@ -92,7 +92,30 @@ function portraitCuts(pageH: number): { y: number; h: number }[] {
   return out
 }
 
-export function PdfShell({ children, autoPrint, printLabel, printHint, portrait = false }: { children: ReactNode; autoPrint: boolean; printLabel: string; printHint: string; portrait?: boolean }) {
+// Подборка для клиента: названия комплекса и застройщика вычищаем из всего
+// текста и подписей листов — на случай, если они всплыли внутри блоков сайта.
+function scrubText(words: string[]) {
+  if (!words.length) return
+  const esc = words.map(w => w.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).sort((a, b) => b.length - a.length)
+  const re = new RegExp(`[«"“]?(?:${esc.join('|')})[»"”]?`, 'gi')
+  const clean = (t: string) => t.replace(re, '').replace(/\s{2,}/g, ' ').replace(/\s+([,.:;)»])/g, '$1').replace(/\(\s*\)/g, '')
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const v = n.nodeValue ?? ''
+    re.lastIndex = 0
+    if (re.test(v)) n.nodeValue = clean(v)
+  }
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('[alt], [title], [aria-label]'))) {
+    for (const a of ['alt', 'title', 'aria-label']) {
+      const v = el.getAttribute(a)
+      re.lastIndex = 0
+      if (v && re.test(v)) el.setAttribute(a, clean(v))
+    }
+  }
+}
+
+export function PdfShell({ children, autoPrint, printLabel, printHint, portrait = false, scrub = [], back }: { children: ReactNode; autoPrint: boolean; printLabel: string; printHint: string; portrait?: boolean; scrub?: string[]; back?: string }) {
+  const scrubKey = scrub.join('|')
   useEffect(() => {
     let cancelled = false
     // Ленивые картинки за экраном сами не грузятся — в печать они бы ушли пустыми.
@@ -103,6 +126,8 @@ export function PdfShell({ children, autoPrint, printLabel, printHint, portrait 
       img.loading = 'eager'
       img.addEventListener('load', refit)
     }
+    const words = scrubKey ? scrubKey.split('|').map(b => { try { return new TextDecoder().decode(Uint8Array.from(atob(b), ch => ch.charCodeAt(0))) } catch { return '' } }).filter(Boolean) : []
+    scrubText(words)
     const ready = async () => {
       await document.fonts?.ready
       const imgs = Array.from(document.images)
@@ -114,6 +139,7 @@ export function PdfShell({ children, autoPrint, printLabel, printHint, portrait 
       // Подменённые после ошибки фото и поздние картинки — ещё один проход.
       await new Promise(r => setTimeout(r, 1200))
       if (cancelled) return
+      scrubText(words)
       if (!portrait) fitAll()
       // Метка для серверной сборки PDF (app/api/pdf): можно печатать.
       // Сервер прячет кнопку «Сохранить» и спрашивает разрезы заново.
@@ -125,17 +151,21 @@ export function PdfShell({ children, autoPrint, printLabel, printHint, portrait 
     const before = () => { if (!portrait) fitAll() }
     window.addEventListener('beforeprint', before)
     return () => { cancelled = true; if (t) clearTimeout(t); window.removeEventListener('beforeprint', before) }
-  }, [autoPrint, portrait])
+  }, [autoPrint, portrait, scrubKey])
 
   return (
     <div className={`pdf-root ${portrait ? 'port' : 'land'}`}>
       <style>{(portrait ? '@page { size: 108mm 192mm; margin: 8mm 0; }\n' : '@page { size: A4 landscape; margin: 0; }\n') + CSS}</style>
       <div className="pdf-bar py-3">
+        {back && <a href={back} className="mr-auto rounded-lg px-1 py-3 text-[15px] font-medium text-[var(--color-text)] no-underline hover:underline">← Вся подборка</a>}
+        {/* Клиент подборки с телефона: печать браузера ломает вертикальные листы — кнопку не показываем. */}
+        {!(portrait && back) && (<>
         <button type="button" onClick={() => { if (!portrait) fitAll(); window.print() }}
           className="rounded-lg bg-[var(--color-primary)] px-5 py-3 text-[15px] font-semibold text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
           {printLabel}
         </button>
         <span className="text-[14px] text-[var(--color-text-muted)]">{printHint}</span>
+        </>)}
       </div>
       {children}
     </div>

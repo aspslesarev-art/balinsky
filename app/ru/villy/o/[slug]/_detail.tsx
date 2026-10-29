@@ -88,7 +88,7 @@ import { VillaPresentationButton } from '@/components/VillaPresentation'
 import { AddToCollection } from '@/components/collections/AddToCollection'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
-import { resolveListingTitle } from '@/lib/listing-title'
+import { resolveListingTitle, anonListingTitle } from '@/lib/listing-title'
 import { loadAllTranslations, mergeAllTranslations, loadTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu } from '@/lib/district-ru'
@@ -1314,11 +1314,17 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
     const head = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, lead: h.lead })
     const nearPoints = Object.entries(nearby?.byCategory ?? {}).flatMap(([cat, list]) =>
       NEAR_COLORS[cat] ? list.filter(p => p.distanceKm <= 1.1).map(p => ({ lat: p.lat, lng: p.lng, color: NEAR_COLORS[cat], size: cat === 'restaurant' || cat === 'cafe' ? 4 : 6 })) : [])
+    // Подборка агента для клиента (/p/…): клиент не должен узнать ни комплекс,
+    // ни застройщика — заголовок собираем из района, площади и спален, описание
+    // не берём, а имена, если всплывут в блоках, PdfShell вычищает из текста.
+    const anon = pdf.anon === true
+    const pdfTitle = anon ? anonListingTitle({ kind: 'villa', district: district ?? null, area: area ?? null, bedrooms: bedrooms != null ? String(bedrooms) : null, lang }) : title
+    const secret = anon ? [firstString(d['Комплекс 1']), parentComplex?.name, developerName].filter((x): x is string => !!x && x.trim().length > 2) : []
     return (
-      <PdfDocument lang={lang} title={title} district={district} photos={photos} priceUsd={priceNum} pricePerM2={priceM2}
+      <PdfDocument lang={lang} title={pdfTitle} scrub={secret} back={pdf.back} district={district} photos={photos} priceUsd={priceNum} pricePerM2={priceM2}
         chips={[bedrooms != null ? `${c.factBedrooms}: ${bedrooms}` : '', area != null ? `${area} ${c.sqm}` : '', land != null ? `${land} ${c.sqm} ${c.factLand.toLowerCase()}` : '', lease ? c.factLeaseValue(lease) : ''].filter(Boolean)}
         facts={facts.filter(f => typeof f.value === 'string').map(f => ({ label: f.label, value: f.value as string }))}
-        about={seoText} lat={lat} lng={lng} url={`${SITE_URL}${switchLangPath(`/ru/villy/o/${slug}`, lang)}`}
+        about={anon ? null : seoText} lat={lat} lng={lng} url={anon ? '' : `${SITE_URL}${switchLangPath(`/ru/villy/o/${slug}`, lang)}`}
         blocks={pdf.blocks} agent={pdf.agent} autoPrint={pdf.autoPrint} portrait={pdf.portrait} snap={verdictSnap} calcSettings={pdf.calc}
         heads={{ safety: head(qh.safety), comfort: head(qh.comfort), demand: head(qh.demand), money: head(qh.money) }}
         nearPoints={nearPoints}
@@ -1333,7 +1339,7 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
             <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
               <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
                 leaseYears={leaseYears} landYellow={rentalRestricted}
-                dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
+                dev={devStats ? { name: anon ? null : developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
                 coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
               {landOk && <div className="flex flex-col gap-6"><LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} /><SafetyChecks verdict={verdict} lang={lang} /></div>}
             </div>

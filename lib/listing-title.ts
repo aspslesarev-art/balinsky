@@ -79,6 +79,13 @@ export function fallbackListingTitle(args: {
   return [head.join(' '), tail.join(', ')].filter(Boolean).join(' — ')
 }
 
+/** Заголовок без названия комплекса (подборка агента для клиента). Район —
+ *  «в районе Санур»: склонять названия районов по-русски не умеем. */
+export function anonListingTitle(args: Parameters<typeof fallbackListingTitle>[0]): string {
+  const district = args.district && args.lang === 'ru' ? `районе ${args.district}` : args.district
+  return fallbackListingTitle({ ...args, district })
+}
+
 // Формула заголовка в базе пишет «спальни» при любом числе: «1 спальни»,
 // «5 спальни». Чиним согласование при выводе — для русского и украинского.
 export function fixBedroomPlural(s: string): string {

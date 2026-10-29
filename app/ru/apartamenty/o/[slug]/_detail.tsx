@@ -53,6 +53,7 @@ import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict,
 import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPdf, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
+import { anonListingTitle } from '@/lib/listing-title'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
@@ -1170,11 +1171,17 @@ export async function ApartmentDetail({ slug, lang, pdf }: { slug: string; lang:
     const head = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, lead: h.lead })
     const nearPoints = Object.entries(nearby?.byCategory ?? {}).flatMap(([cat, list]) =>
       NEAR_COLORS[cat] ? list.filter(p => p.distanceKm <= 1.1).map(p => ({ lat: p.lat, lng: p.lng, color: NEAR_COLORS[cat], size: cat === 'restaurant' || cat === 'cafe' ? 4 : 6 })) : [])
+    // Подборка агента для клиента (/p/…): клиент не должен узнать ни комплекс,
+    // ни застройщика — заголовок собираем из района, площади и спален, описание
+    // не берём, а имена, если всплывут в блоках, PdfShell вычищает из текста.
+    const anon = pdf.anon === true
+    const pdfTitle = anon ? anonListingTitle({ kind: 'apartment', district: district ?? null, area: area ?? null, bedrooms: bedrooms != null ? String(bedrooms) : null, lang }) : title
+    const secret = anon ? [firstString(d['Комплекс 1']), parentComplex?.name, devName].filter((x): x is string => !!x && x.trim().length > 2) : []
     return (
-      <PdfDocument lang={lang} title={title} district={district} photos={photos} priceUsd={priceNum} pricePerM2={priceM2}
+      <PdfDocument lang={lang} title={pdfTitle} scrub={secret} back={pdf.back} district={district} photos={photos} priceUsd={priceNum} pricePerM2={priceM2}
         chips={[bedrooms != null ? `${bedrooms} BR` : '', area != null ? `${area} ${c.sqm}` : '', lease ? c.factLeaseValue(lease) : ''].filter(Boolean)}
         facts={facts.filter(f => typeof f.value === 'string').map(f => ({ label: f.label, value: f.value as string }))}
-        about={seoText} lat={lat} lng={lng} url={`${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${slug}`, lang)}`}
+        about={anon ? null : seoText} lat={lat} lng={lng} url={anon ? '' : `${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${slug}`, lang)}`}
         blocks={pdf.blocks} agent={pdf.agent} autoPrint={pdf.autoPrint} portrait={pdf.portrait} snap={verdictSnap} calcSettings={pdf.calc}
         heads={{ safety: head(qh.safety), comfort: head(qh.comfort), demand: head(qh.demand), money: head(qh.money) }}
         nearPoints={nearPoints}
@@ -1189,7 +1196,7 @@ export async function ApartmentDetail({ slug, lang, pdf }: { slug: string; lang:
             <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
               <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
                 leaseYears={leaseYears} landYellow={rentalRestricted}
-                dev={devStats ? { name: devName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
+                dev={devStats ? { name: anon ? null : devName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
                 coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
               {landOk && <div className="flex flex-col gap-6"><LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} /><SafetyChecks verdict={verdict} lang={lang} /></div>}
             </div>

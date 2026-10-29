@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { geoFromHeaders, getByToken, isFreshVisit, notifyAgent, parseUa, pingVisit, startVisit } from '@/lib/collections'
+import { geoFromHeaders, getByToken, isFreshVisit, listItems, notifyAgent, parseUa, pingVisit, startVisit } from '@/lib/collections'
 
 // История открытий подборки клиентом: POST — новый заход (устройство и
 // страна по IP), PATCH — «ещё здесь» и какой объект открыл.
@@ -37,8 +37,13 @@ export async function PATCH(req: Request, { params }: Params) {
   if (!found) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   const body = await req.json().catch(() => null) as { id?: unknown; viewed?: unknown } | null
   const id = typeof body?.id === 'number' && Number.isInteger(body.id) ? body.id : null
-  const viewed = typeof body?.viewed === 'string' && /^(villa|apartment):[a-z0-9-]{1,160}$/.test(body.viewed) ? body.viewed : null
   if (id == null) return NextResponse.json({ error: 'bad_id' }, { status: 400 })
+  // Клиент знает только номер объекта в подборке — ключ объекта находим здесь.
+  let viewed: string | null = null
+  if (typeof body?.viewed === 'number' && Number.isInteger(body.viewed) && body.viewed >= 1 && body.viewed <= 200) {
+    const it = (await listItems(found.collection.id).catch(() => []))[body.viewed - 1]
+    viewed = it ? `${it.kind}:${it.slug}` : null
+  }
   await pingVisit(found.collection.id, id, viewed).catch(e => console.error('[p/visit] ping', e instanceof Error ? e.message : e))
   return NextResponse.json({ ok: true })
 }

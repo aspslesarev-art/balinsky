@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { MessageCircle, Phone } from 'lucide-react'
-import type { CollectionItem, PublicAgent } from '@/lib/collections'
+import type { PublicAgent } from '@/lib/collections'
 import { useCurrency } from '@/components/CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { objectsRu } from './format'
@@ -28,11 +28,20 @@ function visitorId(): string {
   }
 }
 
-const key = (i: { kind: string; slug: string }) => `${i.kind}:${i.slug}`
-const href = (i: { kind: string; slug: string }) => `/ru/${i.kind === 'villa' ? 'villy' : 'apartamenty'}/o/${i.slug}`
+/** Объект для клиента: без адреса на сайте и без названия комплекса. */
+export type ClientItem = {
+  n: number
+  kind: 'villa' | 'apartment'
+  title: string
+  photo: string | null
+  priceUsd: number | null
+  leaseYears: number | null
+  status: string | null
+  note: string | null
+}
 
 export function ClientCollection({ token, title, intro, items, agent, track }: {
-  token: string; title: string; intro: string | null; items: CollectionItem[]; agent: PublicAgent; track: boolean
+  token: string; title: string; intro: string | null; items: ClientItem[]; agent: PublicAgent; track: boolean
 }) {
   const { currency } = useCurrency()
   const visit = useRef<number | null>(null)
@@ -56,9 +65,9 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
     return () => { if (timer) clearInterval(timer) }
   }, [api, track])
 
-  function opened(it: CollectionItem) {
+  function opened(it: ClientItem) {
     if (visit.current == null) return
-    fetch(api, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: visit.current, viewed: key(it) }), keepalive: true }).catch(() => {})
+    fetch(api, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: visit.current, viewed: it.n }), keepalive: true }).catch(() => {})
   }
 
   const tg = agent.username ? `https://t.me/${agent.username}` : null
@@ -94,25 +103,24 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
           <p className="rounded-xl bg-white p-6 text-[15px] text-[var(--color-text-muted)]">Агент ещё собирает объекты - загляните чуть позже.</p>
         ) : (
           <ol className="grid gap-4 md:grid-cols-2 md:gap-6">
-            {items.map((it, i) => {
-              const s = it.snapshot
-              const meta = [it.kind === 'villa' ? 'Вилла' : 'Апартаменты', s.district, s.bedrooms ? `${s.bedrooms} ${s.bedrooms === 1 ? 'спальня' : s.bedrooms < 5 ? 'спальни' : 'спален'}` : null, s.area ? `${s.area} м²` : null].filter(Boolean).join(' · ')
+            {items.map((s, i) => {
+              const it = s
+              const href = `/p/${token}/${s.n}`
               const chips = [s.leaseYears ? `Лизхолд ${s.leaseYears} лет` : null, s.status].filter((x): x is string => !!x)
               return (
-                <li key={key(it)} className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
-                  <a href={href(it)} onClick={() => opened(it)} className="relative block" aria-label={`${s.title} - подробнее`}>
+                <li key={s.n} className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+                  <a href={href} onClick={() => opened(it)} className="relative block" aria-label={`${s.title} - подробнее`}>
                     {s.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element -- фото из снимка объекта
                       <img src={s.photo} alt={s.title} loading={i < 2 ? 'eager' : 'lazy'} className="block h-[220px] w-full object-cover md:h-[300px]" />
                     ) : <span className="block h-[220px] w-full bg-[var(--color-search-bg)] md:h-[300px]" />}
-                    <span className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-[14px] font-semibold text-[var(--color-text)]">{i + 1}</span>
+                    <span className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-[14px] font-semibold text-[var(--color-text)]">{s.n}</span>
                   </a>
                   <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
                     <div className="flex items-baseline gap-3">
                       <h2 className="text-[18px] font-semibold leading-snug md:text-[20px]">{s.title}</h2>
                       {s.priceUsd != null && <span className="ml-auto shrink-0 text-[18px] font-semibold md:text-[20px]">{formatPrice(s.priceUsd, currency, 'ru')}</span>}
                     </div>
-                    {meta && <p className="text-[14px] text-[var(--color-text-muted)] md:text-[15px]">{meta}</p>}
                     {chips.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {chips.map(c => <span key={c} className="rounded-lg bg-[var(--color-surface-alt)] px-2.5 py-1 text-[13px] font-medium">{c}</span>)}
@@ -125,7 +133,7 @@ export function ClientCollection({ token, title, intro, items, agent, track }: {
                       </div>
                     )}
                     <div className="mt-auto flex gap-2 pt-2">
-                      <a href={href(it)} onClick={() => opened(it)}
+                      <a href={href} onClick={() => opened(it)}
                         className="flex h-11 flex-1 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[15px] font-semibold text-[var(--color-primary-pressed)] no-underline hover:bg-[#d3e8dc]">Подробнее об объекте</a>
                       {main && (
                         <a href={main} target="_blank" rel="noopener"

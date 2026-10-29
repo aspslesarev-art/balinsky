@@ -101,6 +101,9 @@ export function PdfDocument(p: {
   calcSettings: CalcSettings | null
   autoPrint: boolean
   portrait?: boolean
+  /** Слова, которых не должно быть в тексте (подборка для клиента). */
+  scrub?: string[]
+  back?: string
 }) {
   const c = pickCopy(COPY, p.lang)
   const P = !!p.portrait
@@ -110,7 +113,9 @@ export function PdfDocument(p: {
   const hasMap = p.lat != null && p.lng != null
   const pool = p.photos.slice(1, 10)
   return (
-    <PdfShell autoPrint={p.autoPrint} printLabel={c.print} printHint={c.printHint} portrait={P}>
+    <PdfShell autoPrint={p.autoPrint} printLabel={c.print} printHint={c.printHint} portrait={P} back={p.back}
+      // В коде страницы — не открытым текстом: клиент не должен прочитать имена и там.
+      scrub={p.scrub?.map(w => Buffer.from(w, 'utf8').toString('base64'))}>
       {/* Обложка — всегда. */}
       <section className="pdf-page">
         <div className="pdf-inner" style={{ flexDirection: P ? 'column-reverse' : 'row', bottom: 0 }}>
@@ -238,9 +243,9 @@ export function PdfDocument(p: {
               {p.agent.telegram && <a href={`https://t.me/${p.agent.telegram.replace(/^@/, '')}`}>Telegram: {p.agent.telegram}</a>}
               {p.agent.whatsapp && <a href={`https://wa.me/${p.agent.whatsapp.replace(/\D/g, '')}`}>WhatsApp: {p.agent.whatsapp}</a>}
             </div>
-          ) : (
+          ) : p.url ? (
             <a href={p.url} className="break-all text-[18px] text-[var(--color-primary-pressed)]">{p.url}</a>
-          )}
+          ) : null}
         </div>
       </section>
     </PdfShell>

@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSessionTelegramId } from '@/lib/site-auth'
 import { getByToken, listItems, publicAgent } from '@/lib/collections'
-import { ClientCollection } from '@/components/collections/ClientCollection'
+import { ClientCollection, type ClientItem } from '@/components/collections/ClientCollection'
+import { anonListingTitle } from '@/lib/listing-title'
 
 // Подборка агента для клиента по личной ссылке, без входа. Экраны 5–6 макета
 // https://claude.ai/artifact/TEUDdpFWhCUY4aDcWN3N5K. Сверху агент и его
@@ -38,5 +39,17 @@ export default async function Page({ params, searchParams }: Params) {
   // Агент смотрит свою подборку — в историю открытий это не пишем.
   const viewer = await getSessionTelegramId()
   const track = viewer !== found.owner && q.preview !== '1'
-  return <ClientCollection token={token} title={found.collection.title} intro={found.collection.intro} items={items} agent={agent} track={track} />
+  // Клиенту — ни названия комплекса, ни адреса объекта на сайте: заголовок из
+  // района, площади и спален, ссылка — по номеру в подборке.
+  const shown: ClientItem[] = items.map((it, i) => ({
+    n: i + 1,
+    kind: it.kind,
+    title: anonListingTitle({ kind: it.kind, district: it.snapshot.district, area: it.snapshot.area, bedrooms: it.snapshot.bedrooms != null ? String(it.snapshot.bedrooms) : null, lang: 'ru' }),
+    photo: it.snapshot.photo,
+    priceUsd: it.snapshot.priceUsd,
+    leaseYears: it.snapshot.leaseYears,
+    status: it.snapshot.status,
+    note: it.note,
+  }))
+  return <ClientCollection token={token} title={found.collection.title} intro={found.collection.intro} items={shown} agent={agent} track={track} />
 }
