@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Home, UserRound, CreditCard, ChevronRight, Check } from 'lucide-react'
+import { Home, UserRound, CreditCard, ChevronRight, Check, ListChecks } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { WishlistRow } from '@/components/kabinet/WishlistRow'
 import { getSiteUser, getProStatus } from '@/lib/site-auth'
@@ -68,6 +68,16 @@ export default async function KabinetPage() {
 
         <section className="divide-y divide-[var(--color-border)] overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
           <WishlistRow className={ROW} />
+          {pro === 'granted' && (
+            <Link href="/kabinet/podborki" className={ROW}>
+              <span className={ICON}><ListChecks size={20} strokeWidth={2} aria-hidden /></span>
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-[16px] font-semibold">Подборки для клиентов</span>
+                <span className="text-[14px] text-[var(--color-text-muted)]">Соберите объекты под клиента и отправьте одну ссылку</span>
+              </span>
+              <ChevronRight size={18} strokeWidth={2} className="shrink-0 text-[var(--color-text-muted)]" aria-hidden />
+            </Link>
+          )}
           <Link href="/kabinet/objekty" className={ROW}>
             <span className={ICON}><Home size={20} strokeWidth={2} aria-hidden /></span>
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">

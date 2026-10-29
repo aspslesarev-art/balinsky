@@ -65,6 +65,7 @@ import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { permitLabel } from '@/components/presentation-copy'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
+import { AddToCollection } from '@/components/collections/AddToCollection'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
@@ -1283,6 +1284,11 @@ export async function ApartmentDetail({ slug, lang, pdf }: { slug: string; lang:
               presentationButton={
                 // PDF-презентация — только для Pro (.bx-pro-only в globals.css).
                 <span className="bx-pro-only">
+                <AddToCollection kind="apartment" slug={slug} snapshot={{
+                  title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+                  district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+                  leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+                }} />
                 <VillaPresentationButton
                   variant="outline"
                   lang={lang}

@@ -85,6 +85,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { PageEditButton } from '@/components/page-edit/PageEditButton'
 import { permitLabel } from '@/components/presentation-copy'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
+import { AddToCollection } from '@/components/collections/AddToCollection'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { resolveListingTitle } from '@/lib/listing-title'
@@ -1448,6 +1449,11 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
               presentationButton={
                 // PDF-презентация — только для Pro (.bx-pro-only в globals.css).
                 <span className="bx-pro-only">
+                <AddToCollection kind="villa" slug={slug} snapshot={{
+                  title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+                  district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+                  leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+                }} />
                 <VillaPresentationButton
                   variant="outline"
                   lang={lang}

@@ -39,6 +39,8 @@ export function SiteChrome() {
   if (pathname === '/plan') return null
   // Вход в Pro — окно на весь экран поверх размытой аналитики, футер лишний.
   if (pathname === '/pro') return null
+  // Подборка агента для клиента — страница агента, не витрина сайта.
+  if (pathname.startsWith('/p/')) return null
   const lang: Lang = detectLang(pathname)
   return (
     <>

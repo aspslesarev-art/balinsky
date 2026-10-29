@@ -26,6 +26,8 @@ const DISALLOW = [
   '/rynok',
   // Личный трекер квартального плана — видит только владелец.
   '/plan',
+  // Подборки агентов для клиентов — личные ссылки.
+  '/p/',
 ]
 
 // Modern AI-search crawlers we want to explicitly green-light. Without
