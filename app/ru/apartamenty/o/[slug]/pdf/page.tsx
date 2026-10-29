@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { ApartmentDetail } from '../_detail'
 import { parsePdfRequest } from '@/lib/pdf-request'
 import type { Lang } from '@/lib/i18n'
+import { isProSession } from '@/lib/site-auth'
 
 // Печатная презентация апартаментов (Pro). Не для поиска: каждый раз собирается
 // заново по выбранным блокам и настройкам калькулятора из адреса.
@@ -14,6 +16,8 @@ type Params = Promise<{ slug: string }>
 type Search = Promise<Record<string, string | string[] | undefined>>
 
 export default async function Page({ params, searchParams }: { params: Params; searchParams: Search }) {
+  // Аналитика объекта в презентации — только для Pro.
+  if (!(await isProSession())) notFound()
   const { slug } = await params
   const q = await searchParams
   const l = Array.isArray(q.lang) ? q.lang[0] : q.lang

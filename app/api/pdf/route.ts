@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getProStatus, getSessionTelegramId } from '@/lib/site-auth'
+import { cookies } from 'next/headers'
+import { isProSession, SESSION_COOKIE_NAME } from '@/lib/site-auth'
 
 // PDF-презентация файлом (Pro): открываем печатную страницу объекта в
 // Chromium без экрана и отдаём готовый PDF — без окна печати, одинаково в
@@ -50,12 +51,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   // Сборка стоит серверного времени — только для вошедших с Pro
   // (на локальной копии без входа, чтобы проверять).
-  if (process.env.NODE_ENV !== 'development') {
-    const id = await getSessionTelegramId()
-    if (id == null || (await getProStatus(id)) !== 'granted') {
-      return NextResponse.json({ error: 'pro_required' }, { status: 403 })
-    }
-  }
+  if (!(await isProSession())) return NextResponse.json({ error: 'pro_required' }, { status: 403 })
   const target = new URL(url.searchParams.get('u') ?? '', url.origin)
   const m = target.origin === url.origin ? target.pathname.match(PATH_RE) : null
   if (!m) return NextResponse.json({ error: 'bad_target' }, { status: 400 })
@@ -68,6 +64,9 @@ export async function GET(req: Request) {
     browser = await launch()
     const page = await browser.newPage()
     await page.setUserAgent(UA)
+    // Печатная страница тоже только для Pro — открываем её с входом того, кто скачивает.
+    const session = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+    if (session) await browser.setCookie({ name: SESSION_COOKIE_NAME, value: session, domain: target.hostname, path: '/', httpOnly: true, secure: target.protocol === 'https:' })
     await page.setViewport({ ...VIEWPORT[portrait ? 'portrait' : 'landscape'], deviceScaleFactor: 1 })
     if (currency && CURRENCIES.has(currency)) {
       await page.evaluateOnNewDocument((c: string) => { try { localStorage.setItem('balinsky.currency', c) } catch {} }, currency)

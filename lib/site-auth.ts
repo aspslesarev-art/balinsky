@@ -190,6 +190,16 @@ export async function getProStatus(telegramId: number): Promise<ProStatus | null
   return (data as { pro: ProStatus } | null)?.pro ?? null
 }
 
+/** Вошёл и Pro одобрен (на локальной копии — всегда да, чтобы проверять). */
+export async function isProSession(): Promise<boolean> {
+  if (process.env.NODE_ENV === 'development') return true
+  const id = await getSessionTelegramId()
+  return id != null && (await getProStatus(id)) === 'granted'
+}
+
+/** Имя куки входа — сборщик PDF (app/api/pdf) передаёт её своему браузеру. */
+export const SESSION_COOKIE_NAME = SESSION_COOKIE
+
 // ----------------------------------------------------------- login tokens
 
 export type TelegramIdentity = {
