@@ -388,6 +388,12 @@ html[data-pro='1'] .bx-auth-block {
   display: block;
 }
 
+/* Окошко «Почему?» на карточке каталога (CardYieldPro). */
+@keyframes bx-pop-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* Карточка каталога без Pro: заглушка вместо вилки дохода (CardYieldPro). */
 html[data-pro='1'] .bx-nopro-block {
   display: none;

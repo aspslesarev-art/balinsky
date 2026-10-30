@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { pickCopy, type Lang } from '@/lib/i18n'
@@ -11,7 +12,8 @@ import { CardYield } from './CardYield'
 // Pro-блок карточки каталога (макет «Pro: доход от и до + вероятность»,
 // утверждён 30.10.2026): полоса во всю ширину карточки с бледно-зелёным
 // фоном — доход «от и до» в % и в деньгах, пять точек «Вероятность N%» и
-// «Почему?», которое раскрывает причины прямо в карточке. Без Pro — серые
+// «Почему?»: на компьютере причины всплывают окошком при наведении, на
+// телефоне — окном снизу по нажатию (владелец 30.10.2026). Без Pro — серые
 // полоски вместо цифр, без кнопки (Pro открывают в шапке). Разметка одна для
 // всех, видимость — по метке data-pro (.bx-auth-block / .bx-nopro-block в
 // globals.css), как остальная аналитика сайта. Суммы — только в валюте,
@@ -20,7 +22,7 @@ import { CardYield } from './CardYield'
 const COPY = {
   ru: {
     daily: 'Доход до налогов, в год', monthly: 'Доход при помесячной сдаче, в год',
-    perYear: 'в год', chance: (n: number) => `Вероятность ${n}%`, why: 'Почему?', hide: 'Скрыть',
+    perYear: 'в год', chance: (n: number) => `Вероятность ${n}%`, why: 'Почему?', close: 'Закрыть',
     locked: 'Доход от и до и вероятность — в Pro',
     note: 'Нижняя граница — плохой год: цена ночи как у дешёвых соседей, загрузка ниже обычной. Верхняя — хороший год. Середина — как на странице объекта.',
     noteMonthly: 'Нижняя граница — аренда как у дешёвых соседей и 10 месяцев в году. Верхняя — как у дорогих и весь год.',
@@ -29,7 +31,7 @@ const COPY = {
   },
   en: {
     daily: 'Income before tax, per year', monthly: 'Income from monthly rental, per year',
-    perYear: 'a year', chance: (n: number) => `Likelihood ${n}%`, why: 'Why?', hide: 'Hide',
+    perYear: 'a year', chance: (n: number) => `Likelihood ${n}%`, why: 'Why?', close: 'Close',
     locked: 'Income range and likelihood — in Pro',
     note: 'Low end — a bad year: nightly rate like the cheaper neighbours, occupancy below usual. High end — a good year. The middle matches the listing page.',
     noteMonthly: 'Low end — rent like the cheaper neighbours, 10 months a year. High end — like the pricier ones, all year.',
@@ -127,6 +129,153 @@ const ARROW_TONE = {
 // полосу по ширине содержимого, и правый край не доходит до рамки.
 const BAND = 'mx-[-24px] max-w-none px-6 py-5 bg-[rgb(31_139_95/0.07)]'
 
+const POP_W = 360
+const GAP = 8
+
+/** Причины вероятности: список и пояснение к вилке. */
+function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
+  const c = pickCopy(COPY, lang)
+  const en = lang !== 'ru'
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="m-0 flex list-none flex-col p-0">
+        {range.factors.map((f, i) => {
+          const { k, v } = factorText(f, en)
+          return (
+            <li key={i} className={`grid grid-cols-[24px_1fr] items-start gap-3 py-3 ${i ? 'border-t border-[var(--color-border)]' : ''}`}>
+              <span aria-hidden className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[13px] font-semibold ${ARROW_TONE[f.d]}`}>{ARROW[f.d]}</span>
+              <span>
+                <span className="block text-[14px] font-medium text-[var(--color-text)]">{k}</span>
+                {v && <span className="mt-0.5 block text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{v}</span>}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="m-0 rounded-xl bg-[var(--color-surface-alt)] p-3 text-[13px] leading-[1.55] text-[var(--color-text-muted)]">
+        {range.mode === 'monthly' ? c.noteMonthly : c.note}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * «Почему?». Компьютер (есть наведение) — окошко у кнопки при наведении или
+ * фокусе; телефон — окно снизу по нажатию. Окно — в портале: карточка
+ * обрезает всё, что выходит за её края (overflow-hidden), а сеть
+ * «main * { max-width: 100% }» сжала бы его по ширине. Карточка целиком —
+ * ссылка, поэтому клики внутри не всплывают до неё (React ведёт события из
+ * портала через дерево компонентов).
+ */
+function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
+  const c = pickCopy(COPY, lang)
+  const btn = useRef<HTMLButtonElement>(null)
+  const closeTimer = useRef<number | null>(null)
+  const [mode, setMode] = useState<'pop' | 'sheet' | null>(null)
+  const [pos, setPos] = useState<{ left: number; top?: number; bottom?: number }>({ left: 0 })
+
+  const canHover = () => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+  const cancelClose = () => { if (closeTimer.current) { window.clearTimeout(closeTimer.current); closeTimer.current = null } }
+  // Пауза, чтобы курсор успел дойти от кнопки до окошка.
+  const closeSoon = () => { cancelClose(); closeTimer.current = window.setTimeout(() => setMode(m => (m === 'pop' ? null : m)), 160) }
+
+  const openPop = () => {
+    const r = btn.current?.getBoundingClientRect()
+    if (!r) return
+    cancelClose()
+    const left = Math.max(16, Math.min(r.right - POP_W, window.innerWidth - POP_W - 16)) + window.scrollX
+    // В нижней половине экрана окошко открывается вверх, чтобы не уйти за край.
+    setPos(r.top > window.innerHeight / 2
+      ? { left, bottom: document.documentElement.clientHeight - r.top - window.scrollY + GAP }
+      : { left, top: r.bottom + window.scrollY + GAP })
+    setMode('pop')
+  }
+
+  useEffect(() => {
+    if (!mode) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMode(null) }
+    window.addEventListener('keydown', onKey)
+    // Окно снизу на телефоне — страница под ним не прокручивается.
+    const prev = document.body.style.overflow
+    if (mode === 'sheet') document.body.style.overflow = 'hidden'
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
+  }, [mode])
+  useEffect(() => cancelClose, [])
+
+  const stop = (e: React.SyntheticEvent) => { e.stopPropagation() }
+
+  return (
+    <>
+      <button
+        ref={btn}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={mode != null}
+        onMouseEnter={() => { if (canHover()) openPop() }}
+        onMouseLeave={() => { if (canHover()) closeSoon() }}
+        onFocus={() => { if (canHover()) openPop() }}
+        onBlur={() => { if (canHover()) closeSoon() }}
+        onClick={e => {
+          // Карточка целиком — ссылка на объект: «Почему?» её не открывает.
+          e.preventDefault()
+          e.stopPropagation()
+          if (canHover()) { if (mode) setMode(null); else openPop() } else setMode('sheet')
+        }}
+        className="inline-flex h-8 items-center rounded text-[14px] text-[var(--color-primary-hover)] underline decoration-dotted underline-offset-4 hover:text-[var(--color-primary-pressed)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+      >
+        {c.why}
+      </button>
+
+      {mode === 'pop' && createPortal(
+        <div
+          role="dialog"
+          aria-label={c.chance(range.chance)}
+          onClick={stop}
+          onMouseEnter={cancelClose}
+          onMouseLeave={closeSoon}
+          style={{ position: 'absolute', left: pos.left, top: pos.top, bottom: pos.bottom, width: POP_W }}
+          className="z-50 max-h-[70vh] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-[0_1px_2px_rgb(15_26_21/0.04),0_8px_24px_rgb(15_26_21/0.10)] animate-[bx-pop-in_200ms_cubic-bezier(.2,.8,.2,1)] motion-reduce:animate-none"
+        >
+          <div className="mb-1 flex items-center gap-2 text-[15px] font-semibold text-[var(--color-text)]">
+            <Dots chance={range.chance} />{c.chance(range.chance)}
+          </div>
+          <Reasons range={range} lang={lang} />
+        </div>,
+        document.body,
+      )}
+
+      {mode === 'sheet' && createPortal(
+        <div className="fixed inset-0 z-50 flex items-end" onClick={e => { stop(e); setMode(null) }}>
+          <div aria-hidden className="absolute inset-0 bg-[rgb(15_26_21/0.45)]" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={c.chance(range.chance)}
+            onClick={stop}
+            className="relative max-h-[85vh] w-full overflow-y-auto rounded-t-2xl bg-white px-6 pb-8 pt-4 shadow-[0_-8px_24px_rgb(15_26_21/0.12)]"
+          >
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-2 text-[16px] font-semibold text-[var(--color-text)]">
+                <Dots chance={range.chance} />{c.chance(range.chance)}
+              </span>
+              <button
+                type="button"
+                aria-label={c.close}
+                onClick={() => setMode(null)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-surface-alt)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+              >
+                <X size={18} strokeWidth={2} aria-hidden />
+              </button>
+            </div>
+            <Reasons range={range} lang={lang} />
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  )
+}
+
 export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '' }: {
   range: YieldRange | null | undefined
   /** Цифра без вилки (старые данные) — прежняя строка «≈N% в год». */
@@ -135,21 +284,12 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
   className?: string
 }) {
   const { currency } = useCurrency()
-  const [open, setOpen] = useState(false)
   const c = pickCopy(COPY, lang)
-  const en = lang !== 'ru'
   if (!range) return <CardYield pct={legacyPct} lang={lang} className={className} />
 
   const money = range.entryUsd != null && range.entryUsd > 0
     ? `${formatPrice(range.entryUsd * range.low / 100, currency, lang)} – ${formatPrice(range.entryUsd * range.high / 100, currency, lang)}`
     : null
-  const toggle = (e: React.MouseEvent) => {
-    // Карточка целиком — ссылка на объект: «Почему?» её не открывает.
-    e.preventDefault()
-    e.stopPropagation()
-    setOpen(o => !o)
-  }
-
   return (
     <div className={className}>
       <div className={`bx-auth-block ${BAND}`}>
@@ -167,37 +307,8 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
             <span className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-text)]">
               <Dots chance={range.chance} />{c.chance(range.chance)}
             </span>
-            <button
-              type="button"
-              onClick={toggle}
-              aria-expanded={open}
-              className="inline-flex h-8 items-center gap-1 rounded text-[14px] text-[var(--color-primary-hover)] hover:text-[var(--color-primary-pressed)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-            >
-              {open ? c.hide : c.why}
-              <ChevronDown size={14} strokeWidth={2} aria-hidden className={`transition-transform duration-200 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`} />
-            </button>
+            <WhyButton range={range} lang={lang} />
           </div>
-          {open && (
-            <div className="flex flex-col gap-3">
-              <ul className="flex flex-col">
-                {range.factors.map((f, i) => {
-                  const { k, v } = factorText(f, en)
-                  return (
-                    <li key={i} className="grid grid-cols-[24px_1fr] items-start gap-3 border-t border-[var(--color-border)] py-3">
-                      <span aria-hidden className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[13px] font-semibold ${ARROW_TONE[f.d]}`}>{ARROW[f.d]}</span>
-                      <span>
-                        <span className="block text-[14px] font-medium text-[var(--color-text)]">{k}</span>
-                        {v && <span className="mt-0.5 block text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{v}</span>}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-              <p className="m-0 rounded-xl bg-white p-3 text-[13px] leading-[1.55] text-[var(--color-text-muted)]">
-                {range.mode === 'monthly' ? c.noteMonthly : c.note}
-              </p>
-            </div>
-          )}
         </div>
       </div>
       <div className={`bx-nopro-block ${BAND}`}>
