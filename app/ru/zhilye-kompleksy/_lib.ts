@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { ComplexYieldRange } from '@/lib/investment/chance'
 import { districtRu } from '@/lib/district-ru'
 import { searchCatalog } from '@/lib/catalog-search'
 import { hasVerifiedYield } from '@/lib/verified-yield'
@@ -424,6 +425,7 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   prices?: Map<string, ComplexPrices>,
+  yields?: Map<string, ComplexYieldRange>,
 ): ComplexCard | null {
   if (!e.slug || !e.name) return null
   const photos = manifest[e.id] ?? []
@@ -447,6 +449,7 @@ export function toCard(
     aptPriceFrom: p?.apartments?.from ?? null,
     aptPriceTo: p?.apartments?.to ?? null,
     isSold: e.salesStatus === 'Продано',
+    yieldRange: yields?.get(e.id) ?? null,
     isTop: e.isTop,
     topRank: e.topRank,
     views: e.views ?? 0,
@@ -462,6 +465,7 @@ type CachedAll = {
   enriched: EnrichedRow[]
   manifest: Record<string, string[]>
   prices: Map<string, ComplexPrices>
+  yields: Map<string, ComplexYieldRange>
 }
 // 10 мин (раньше 60с) — 10x reduction. Module cache живёт ~15 мин на
 // инстанс Vercel, поэтому 10 мин ≈ один fetch за процесс. Свежесть
@@ -630,8 +634,41 @@ const _loadAptPriceRows = unstable_cache(
   { revalidate: 604800, tags: ['content:apartments'] },
 )
 
+// Pro-вилка комплекса: доход его юнитов «от и до» (listing_yields, пишет
+// scripts/build-listing-yields.ts раз в сутки). Сбой — комплекс без вилки,
+// каталог не падает.
+type UnitYieldRow = { kind: 'villa' | 'apartment'; complex_id: string; cap_low: number; cap_high: number; chance: number }
+const _loadUnitYieldRows = unstable_cache(
+  async (): Promise<UnitYieldRow[]> => {
+    const { data, error } = await sb.from('listing_yields')
+      .select('kind, complex_id, cap_low, cap_high, chance')
+      .not('complex_id', 'is', null).not('cap_low', 'is', null).limit(5000)
+    if (error) { console.error('[zhilye] listing_yields:', error.message); return [] }
+    return (data ?? []) as UnitYieldRow[]
+  },
+  ['zhilye-unit-yields-v1'],
+  { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
+)
+
+function buildYieldIndex(rows: UnitYieldRow[]): Map<string, ComplexYieldRange> {
+  const out = new Map<string, ComplexYieldRange>()
+  for (const r of rows) {
+    const low = Number(r.cap_low) * 100, high = Number(r.cap_high) * 100, ch = Number(r.chance)
+    const cur = out.get(r.complex_id) ?? { low, high, chanceMin: ch, chanceMax: ch, groups: [] }
+    cur.low = Math.min(cur.low, low); cur.high = Math.max(cur.high, high)
+    cur.chanceMin = Math.min(cur.chanceMin, ch); cur.chanceMax = Math.max(cur.chanceMax, ch)
+    const g = cur.groups.find(x => x.kind === r.kind)
+    if (g) { g.n++; g.low = Math.min(g.low, low); g.high = Math.max(g.high, high) }
+    else cur.groups.push({ kind: r.kind, n: 1, low, high })
+    out.set(r.complex_id, cur)
+  }
+  // Апартаменты первыми, как в строке цен карточки.
+  for (const v of out.values()) v.groups.sort((a, b) => (a.kind === 'apartment' ? -1 : 1) - (b.kind === 'apartment' ? -1 : 1))
+  return out
+}
+
 async function _loadAllInternal(): Promise<CachedAll> {
-  const [rows, manifestRaw, villas, apts, enCache, viewCounts, visionMap] = await Promise.all([
+  const [rows, manifestRaw, villas, apts, enCache, viewCounts, visionMap, unitYields] = await Promise.all([
     _loadComplexCardRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:complexes']),
     _loadVillaPriceRows(),
@@ -639,6 +676,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     loadAllTranslations('complexes'),
     loadViewCounts('complex'),
     loadVisionManifest('complex').catch(() => ({})),
+    _loadUnitYieldRows(),
   ])
   // Фото-аудит, как в каталогах вилл и апартаментов: выбранная обложка
   // встаёт первой, брак выкидывается.
@@ -649,7 +687,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     .map(enrich)
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0 }))
   const prices = buildPriceIndex(enriched, villas, apts)
-  return { enriched, manifest, prices }
+  return { enriched, manifest, prices, yields: buildYieldIndex(unitYields) }
 }
 
 // Цены каталога складываются из вилл и апартаментов, поэтому правка в любой
@@ -662,12 +700,13 @@ export function buildAllCards(
   manifest: Record<string, string[]>,
   filters: ComplexFilterState,
   prices?: Map<string, ComplexPrices>,
+  yields?: Map<string, ComplexYieldRange>,
 ): ComplexCard[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
   if (isSearch) filtered = applySearch(filtered, filters.q)
   const mapped = filtered
-    .map(e => toCard(e, manifest, prices))
+    .map(e => toCard(e, manifest, prices, yields))
     .filter((c): c is ComplexCard => c !== null)
   if (isSearch) return mapped
   // Default ordering: TOP-pinned first (Airtable `ТОП` checkbox or
@@ -695,9 +734,9 @@ export async function loadCatalogPage(
   lang: Lang = 'ru',
 ): Promise<CatalogPage> {
   const safePage = Math.max(1, Math.floor(page))
-  const { enriched, manifest, prices } = await loadAll()
+  const { enriched, manifest, prices, yields } = await loadAll()
   const options = buildOptions(enriched, filters, lang)
-  const all = buildAllCards(enriched, manifest, filters, prices)
+  const all = buildAllCards(enriched, manifest, filters, prices, yields)
   const totalCount = all.length
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const start = (safePage - 1) * PAGE_SIZE

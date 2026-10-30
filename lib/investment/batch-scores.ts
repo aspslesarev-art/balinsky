@@ -9,6 +9,7 @@ import { matchCompetitors, type MatchResult } from './matching'
 import { adrPercentiles, buildScenarios } from './economics'
 import { scoreInfra } from './infra-score'
 import { isDailyRentalRestricted } from '@/lib/land-use'
+import type { YieldRange, ChanceFactor } from './chance'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -118,6 +119,8 @@ export type VillaScore = {
   // daily-rental investment score. Callers use this to drop it out of the
   // yield-ranked catalog ordering.
   rentalRestricted: boolean
+  /** Pro-карточка: доход «от и до» и вероятность (listing_yields). */
+  range: YieldRange | null
 }
 
 const TTL_MS = 60 * 60 * 1000
@@ -131,6 +134,7 @@ function buildOneScore(
   loadCompForVilla: (lat: number, lng: number) => CompetitorWithDistance[],
   byPlaces: Record<string, NearbyPlace[]> | null,
   pageCapRate?: number,
+  range: YieldRange | null = null,
 ): VillaScore | null {
   const d = row.data
   if (d?.['Опубликовать'] !== true) return null
@@ -215,16 +219,33 @@ function buildOneScore(
     hasScenarios,
     leaseholdRisk,
     rentalRestricted,
+    range,
   }
 }
 
 // Доходность посуточной сдачи до налогов — первая цифра на странице объекта
 // (scripts/build-listing-yields.ts, раз в сутки). Не загрузилась — каталог
-// живёт на упрощённой формуле, а не падает.
-async function loadPageCapRates(kind: 'villa' | 'apartment'): Promise<Map<string, number>> {
-  const { data, error } = await sb.from('listing_yields').select('airtable_id, cap_before').eq('kind', kind).eq('mode', 'daily').limit(5000)
-  if (error) { console.error('[batch-scores] listing_yields:', error.message); return new Map() }
-  return new Map((data ?? []).filter(r => r.cap_before != null).map(r => [String(r.airtable_id), Number(r.cap_before)]))
+// живёт на упрощённой формуле, а не падает. Там же вилка «от и до» и
+// вероятность для Pro-карточки — и у помесячных (жёлтая земля) тоже.
+type PageYields = { caps: Map<string, number>; ranges: Map<string, YieldRange> }
+
+async function loadPageYields(kind: 'villa' | 'apartment'): Promise<PageYields> {
+  const { data, error } = await sb.from('listing_yields')
+    .select('airtable_id, mode, cap_before, cap_low, cap_high, chance, factors, entry_usd').eq('kind', kind).limit(5000)
+  if (error) { console.error('[batch-scores] listing_yields:', error.message); return { caps: new Map(), ranges: new Map() } }
+  const caps = new Map<string, number>()
+  const ranges = new Map<string, YieldRange>()
+  for (const r of data ?? []) {
+    const id = String(r.airtable_id)
+    if (r.mode === 'daily' && r.cap_before != null) caps.set(id, Number(r.cap_before))
+    if (r.cap_before != null && r.cap_low != null && r.cap_high != null && r.chance != null) ranges.set(id, {
+      low: Number(r.cap_low) * 100, high: Number(r.cap_high) * 100, mid: Number(r.cap_before) * 100,
+      chance: Number(r.chance), mode: r.mode === 'monthly' ? 'monthly' : 'daily',
+      entryUsd: r.entry_usd != null ? Number(r.entry_usd) : null,
+      factors: (r.factors ?? []) as ChanceFactor[],
+    })
+  }
+  return { caps, ranges }
 }
 
 async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Promise<Map<string, VillaScore>> {
@@ -271,10 +292,10 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 
   const map = new Map<string, VillaScore>()
   const placesFor = kind === 'villa' ? placesManifest?.villas : placesManifest?.apartments
-  const pageCaps = await loadPageCapRates(kind)
+  const page = await loadPageYields(kind)
   for (const row of (rows ?? []) as Row[]) {
     const places = placesFor?.[row.airtable_id] ?? null
-    const score = buildOneScore(row, loadCompForVilla, places, pageCaps.get(row.airtable_id))
+    const score = buildOneScore(row, loadCompForVilla, places, page.caps.get(row.airtable_id), page.ranges.get(row.airtable_id) ?? null)
     if (score) map.set(row.airtable_id, score)
   }
   return map
@@ -286,12 +307,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 // instance. Map isn't serializable — entries go through the cache.
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
-  ['villa-scores-v5'],
+  ['villa-scores-v6'],
   { revalidate: 604800, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
-  ['apartment-scores-v5'],
+  ['apartment-scores-v6'],
   { revalidate: 604800, tags: ['content:apartments'] },
 )
 

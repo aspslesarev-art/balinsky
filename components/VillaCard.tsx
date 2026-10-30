@@ -10,7 +10,8 @@ import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { UnitDemandBadge } from './UnitDemandBadge'
-import { CardYield } from './CardYield'
+import { CardYieldPro } from './CardYieldPro'
+import type { YieldRange } from '@/lib/investment/chance'
 import { CardLiving, type CardLivingData } from './CardLiving'
 import { districtRu } from '@/lib/district-ru'
 import type { UnitDemandView } from '@/lib/unit-demand-view'
@@ -61,6 +62,8 @@ export type VillaCardData = {
   // Доходность сайта до налогов при посуточной сдаче, % (как на странице
   // объекта). Нет или жёлтая земля — строку не показываем.
   yieldPct?: number | null
+  /** Pro: доход «от и до», вероятность и её причины (CardYieldPro). */
+  yieldRange?: YieldRange | null
 }
 
 const COPY = {
@@ -144,7 +147,9 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
 
         {a.living
           ? <CardLiving data={a.living} lang={lang} className="-mt-1 mb-3" />
-          : <CardYield pct={a.yieldPct} lang={lang} className="-mt-1 mb-3" />}
+          : a.yieldRange
+            ? <CardYieldPro range={a.yieldRange} lang={lang} className="mb-4" />
+            : <CardYieldPro range={null} pct={a.yieldPct} lang={lang} className="-mt-1 mb-3" />}
 
         {/* Балл востребованности прижат к правому краю нижней строки: это
             последнее, что читает глаз, и он не конкурирует с ценой. */}

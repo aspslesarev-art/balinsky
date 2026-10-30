@@ -1,4 +1,5 @@
 import { pluralRu } from '@/lib/plural-ru'
+import type { YieldRange } from '@/lib/investment/chance'
 import { createClient } from '@supabase/supabase-js'
 import { districtRu } from '@/lib/district-ru'
 import { searchCatalog } from '@/lib/catalog-search'
@@ -131,6 +132,8 @@ export type VillaCard = {
   // цифра, что первой стоит на странице объекта). null — не посчитана или
   // жёлтая земля.
   yieldPct?: number | null
+  /** Pro: доход «от и до» и вероятность (listing_yields). */
+  yieldRange?: YieldRange | null
   /** Режим «Для жизни»: расстояния до школы и пляжа вместо доходности. */
   living?: { school_km: number | null; beach_km: number | null } | null
 }
@@ -742,7 +745,7 @@ export function buildAllCards(
   enriched: EnrichedRow[],
   manifest: Record<string, string[]>,
   filters: VillaFilterState,
-  scores?: Map<string, { composite: number; capRate: number | null; goodCapRate: number | null; rentalRestricted?: boolean }>,
+  scores?: Map<string, { composite: number; capRate: number | null; goodCapRate: number | null; rentalRestricted?: boolean; range?: YieldRange | null }>,
   sort: SortOrder = 'investment-desc',
   devStats?: Map<string, { ready: number; total: number }>,
   lang: Lang = 'ru',
@@ -769,6 +772,7 @@ export function buildAllCards(
     c.bestCapRate = s?.goodCapRate ?? null
     const cap = capRateOf.get(c.id)
     c.yieldPct = cap != null && Number.isFinite(cap) ? cap * 100 : null
+    c.yieldRange = s?.range ?? null
   }
   let sorted: VillaCard[]
   if (isSearch) sorted = mapped

@@ -3,6 +3,8 @@
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
 import { ProgressBar } from './ProgressBar'
+import { ComplexYieldPro } from './CardYieldPro'
+import type { ComplexYieldRange } from '@/lib/investment/chance'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
@@ -30,6 +32,8 @@ export type ComplexCardData = {
   // Editor-flagged: every unit in the complex is sold. Renders a red
   // "Продано" / "Sold" pill on the cover photo.
   isSold?: boolean
+  /** Pro: доход юнитов «от и до» и разброс вероятности (CardYieldPro). */
+  yieldRange?: ComplexYieldRange | null
 }
 
 const COPY = {
@@ -134,6 +138,7 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
             )}
           </div>
         )}
+        {c.yieldRange && <ComplexYieldPro range={c.yieldRange} lang={lang} className="mb-4" />}
         <div className="text-[14px] text-[var(--color-text-muted)]">
           {permitLine(c.permit, copy, lang)}
         </div>

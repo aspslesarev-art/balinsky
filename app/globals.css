@@ -388,6 +388,11 @@ html[data-pro='1'] .bx-auth-block {
   display: block;
 }
 
+/* Карточка каталога без Pro: заглушка вместо вилки дохода (CardYieldPro). */
+html[data-pro='1'] .bx-nopro-block {
+  display: none;
+}
+
 /* Кнопка PDF-презентации — только Pro (28.10.2026). contents: кнопка
    встаёт в ряд кнопок карточки цены, как будто обёртки нет. */
 .bx-pro-only {

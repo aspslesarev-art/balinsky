@@ -76,6 +76,8 @@ export type YieldFacts = {
   rateUsd: number
   pct: Record<TaxStatus, number>
   noiBeforeTaxUsd: number
+  /** Цена входа: объект + оформление + мебель, USD — база доли «в год». */
+  entryUsd: number
   paybackYears: number | null
   /** Сколько вложений вернёт аренда за весь срок лизхолда, до налогов. */
   leaseMultiple: number | null
@@ -99,6 +101,7 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
       mode: 'monthly', rateUsd: m.p50,
       pct: { beforeTax: b.capRate, resident: calc('resident').capRate ?? 0, nonResident: calc('nonResident').capRate ?? 0 },
       noiBeforeTaxUsd: b.noi,
+      entryUsd: b.entryPrice,
       paybackYears: b.payback,
       leaseMultiple: v.leaseholdYearsLeft != null && b.entryPrice > 0 ? (b.noi * v.leaseholdYearsLeft) / b.entryPrice : null,
     }
@@ -121,6 +124,7 @@ export function computeYieldFacts(snap: InvestmentSnapshot | null): YieldFacts |
     mode: 'daily', rateUsd: rate, ownBooking: own?.adr != null, ownSource: own?.source, ownMonths: own?.period?.months, ownRevenue: own?.adrSource === 'revenue',
     pct: { beforeTax: b.capRate, resident: calc('resident').capRate ?? 0, nonResident: calc('nonResident').capRate ?? 0 },
     noiBeforeTaxUsd: b.noi,
+    entryUsd: b.entryPrice,
     paybackYears: b.payback,
     leaseMultiple: v.leaseholdYearsLeft != null && b.entryPrice > 0 ? (b.noi * v.leaseholdYearsLeft) / b.entryPrice : null,
   }

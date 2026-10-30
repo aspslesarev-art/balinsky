@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { YieldRange } from '@/lib/investment/chance'
 import { districtRu } from '@/lib/district-ru'
 import { searchCatalog } from '@/lib/catalog-search'
 import { hasVerifiedYield } from '@/lib/verified-yield'
@@ -611,7 +612,7 @@ export function buildAllCards(
   filters: FilterState,
   devStats?: Map<string, { ready: number; total: number }>,
   lang: Lang = 'ru',
-  scores?: Map<string, { capRate: number | null; rentalRestricted?: boolean }>,
+  scores?: Map<string, { capRate: number | null; rentalRestricted?: boolean; range?: YieldRange | null }>,
 ): Card[] {
   let filtered = enriched.filter(e => passes(e, filters))
   const isSearch = filters.q.trim().length > 0
@@ -653,6 +654,7 @@ export function buildAllCards(
     const s = scores.get(c.id)
     const cap = s && !s.rentalRestricted ? s.capRate : null
     c.yieldPct = cap != null && Number.isFinite(cap) ? cap * 100 : null
+    c.yieldRange = s?.range ?? null
   }
   // «Для жизни»: на карточке — школа и пляж вместо доходности, порядок — по
   // удобству жизни (listing_living), пока человек не выбрал сортировку сам.
