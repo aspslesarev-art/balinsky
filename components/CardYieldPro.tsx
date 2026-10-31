@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
-import { formatPrice } from '@/lib/currency'
+import { formatMoney, formatPrice } from '@/lib/currency'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
 import type { ChanceFactor, ComplexYieldRange, Match, YieldRange } from '@/lib/investment/chance'
@@ -33,7 +33,7 @@ const COPY = {
     how: (n: number, km: number, what: string, likely: string) => `Взяли ${n} похожих на Booking в ${km} км: ${what}. Цену ночи и загрузку каждого пересчитали на этот объект — его цену, расходы и комиссии. Половина дала бы больше ${likely}%, половина — меньше.`,
     areaHow: (likely: string, n: number) => `По округе 10 км самая вероятная — ${likely}% (${n} похожих).`,
     oddsBasis: 'Цена и загрузка — медиана за всё время наблюдений, с 5 августа 2026. Сетевые отели не считаем.',
-    noOdds: 'Сравнить с соседями не удалось: в 10 км мало похожих объектов с историей на Booking. Цифры — расчёт сайта.',
+    noOdds: 'Сравнить с соседями не удалось: в 10 км мало похожих объектов того же класса с историей на Booking. Цифры — расчёт сайта.',
     noOddsMonthly: 'Соседи на Booking сдаются посуточно, а здесь — помесячно, поэтому цифры — расчёт сайта.',
     badGood: (low: string, high: string) => `Плохой год — ${low}%, хороший — ${high}%`,
     whyTitle: 'Почему такой доход',
@@ -52,7 +52,7 @@ const COPY = {
     how: (n: number, km: number, what: string, likely: string) => `We took ${n} similar Booking rentals within ${km} km: ${what}. Each one's nightly rate and occupancy were applied to this property — its price, costs and fees. Half would give more than ${likely}%, half less.`,
     areaHow: (likely: string, n: number) => `Within 10 km the most likely is ${likely}% (${n} similar).`,
     oddsBasis: 'Rate and occupancy are medians over everything observed since 5 August 2026. Chain hotels are left out.',
-    noOdds: 'No neighbour comparison: too few similar rentals with a Booking history within 10 km. Figures are the site estimate.',
+    noOdds: 'No neighbour comparison: too few similar rentals of the same class with a Booking history within 10 km. Figures are the site estimate.',
     noOddsMonthly: 'Booking neighbours rent nightly and this one rents monthly, so figures are the site estimate.',
     badGood: (low: string, high: string) => `Bad year ${low}%, good year ${high}%`,
     whyTitle: 'Why this income',
@@ -89,14 +89,16 @@ const VIEW_NOTE: Record<string, { ru: string; en: string }> = {
 
 const fmtKm = (m: number, en: boolean) => (m < 1000 ? `${m} ${en ? 'm' : 'м'}` : `${(m / 1000).toFixed(1).replace('.', en ? '.' : ',')} ${en ? 'km' : 'км'}`)
 
-/** «виллы на 2 спальни с частным бассейном, 100–260 м²» — с кем сравнивали. */
-function matchText(m: Match, en: boolean): string {
+/** «виллы на 2 спальни с частным бассейном, 100–260 м², ночь $130–520» — с кем
+ *  сравнивали. Цена ночи — в валюте, выбранной на сайте. */
+function matchText(m: Match, en: boolean, money: (usd: number) => string): string {
   const r10 = (x: number) => Math.round(x / 10) * 10
   const kind = m.k === 'villa' ? (en ? 'villas' : 'виллы') : (en ? 'apartments' : 'апартаменты')
   const br = m.b == null ? '' : m.b === 0 ? (en ? ' (studios)' : '-студии') : en ? ` with ${m.b} bedroom${m.b > 1 ? 's' : ''}` : ` на ${m.b} ${pluralRu(m.b, ['спальню', 'спальни', 'спален'])}`
   const pool = m.l === 'type' || m.l === 'area' || m.p == null ? '' : m.p ? (en ? ', private pool' : ' с частным бассейном') : (en ? ', no private pool' : ' без своего бассейна')
   const area = (m.l === 'pool_area' || m.l === 'area') && m.a != null ? `, ${r10(m.a * 0.6)}–${r10(m.a * 1.6)} ${en ? 'm²' : 'м²'}` : ''
-  return `${kind}${br}${pool}${area}`
+  const cls = m.c ? `, ${en ? 'night' : 'ночь'} ${money(m.c[0])}–${money(m.c[1])}` : `, ${en ? 'any price class (too few of the same class)' : 'любого класса (своего класса мало)'}`
+  return `${kind}${br}${pool}${area}${cls}`
 }
 
 function factorText(f: ChanceFactor, en: boolean): { k: string; v: string | null } {
@@ -172,10 +174,11 @@ const GAP = 8
 /** Причины вероятности: список и пояснение к вилке. */
 function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
   const c = pickCopy(COPY, lang)
+  const { currency } = useCurrency()
   const en = lang !== 'ru'
   const o = range.odds
   const top = o
-    ? c.how(o.n, o.radiusM / 1000, range.match ? matchText(range.match, en) : '', pct(o.likely, lang))
+    ? c.how(o.n, o.radiusM / 1000, range.match ? matchText(range.match, en, usd => formatMoney(usd, currency, lang)) : '', pct(o.likely, lang))
     : range.mode === 'monthly' ? c.noOddsMonthly : c.noOdds
   const area = o && range.area && o.radiusM !== 10000 ? c.areaHow(pct(range.area.likely, lang), range.area.n) : null
   return (
@@ -354,15 +357,14 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
               {o ? c.half(pct(o.q25, lang), pct(o.q75, lang), o.radiusM / 1000) : c.badGood(pct(range.low, lang), pct(range.high, lang))}
             </span>
           </div>
-          <div className="flex items-end justify-between gap-3">
-            {o ? (
-              <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[14px] text-[var(--color-text)]">
-                <li className="flex items-center gap-2"><Dots chance={share(o.kLow, o.n)} />{c.atLeast(pct(range.low, lang), o.kLow, o.n)}</li>
-                <li className="flex items-center gap-2"><Dots chance={share(o.kHigh, o.n)} even />{c.atLeast(pct(range.high, lang), o.kHigh, o.n)}</li>
-              </ul>
-            ) : <span />}
-            <WhyButton range={range} lang={lang} />
-          </div>
+          {o && (
+            <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[14px] text-[var(--color-text)]">
+              <li className="flex items-center gap-2"><Dots chance={share(o.kLow, o.n)} />{c.atLeast(pct(range.low, lang), o.kLow, o.n)}</li>
+              <li className="flex items-center gap-2"><Dots chance={share(o.kHigh, o.n)} even />{c.atLeast(pct(range.high, lang), o.kHigh, o.n)}</li>
+            </ul>
+          )}
+          {/* Своей строкой: рядом со строками шансов на телефоне они рвались. */}
+          <div className="-mt-1 flex justify-end"><WhyButton range={range} lang={lang} /></div>
         </div>
       </div>
       <div className={`bx-nopro-block ${BAND}`}>

@@ -151,6 +151,7 @@ async function main() {
         const profile: UnitProfile = {
           unitKind: u.kind, bedrooms: snap.villa.bedrooms, areaM2: snap.villa.area,
           privatePool: privatePool(u.kind, vf, u.pool),
+          classAdr: y.mode === 'daily' ? y.rateUsd : null,
         }
         const fromPhotos = photoView(vf)
         const coastM = coastOf.get(key) ?? null
@@ -173,6 +174,9 @@ async function main() {
         const low = range ? Math.min(range.bad, y.pct.beforeTax) : null
         // Самая вероятная по соседям — только у посуточной: соседи на Booking
         // сдаются посуточно. Рядом 2 км, мало — 3 км, мало и там — округа 10 км.
+        // Только соседи своего класса (match.c): чужой класс — не «самая
+        // вероятная», а случайная цифра (у Oceaniq 2 выходило 3,5% по виллам
+        // за $28 за ночь); нет своего класса — карточка показывает расчёт сайта.
         const high = range ? Math.max(range.good, y.pct.beforeTax) : null
         const pct = (x: number) => Math.round(x * 1000) / 10
         let odds: Record<string, number> | null = null
@@ -186,11 +190,11 @@ async function main() {
           for (const r of NEAR_RADII_M) {
             const picked = pickSimilar(await neighbours(lat, lng, r, u.kind, bedrooms), profile)
             const st = neighbourStats(snap, low, high, picked.rows)
-            if (st) { odds = pack(st, r); match = picked.match; break }
+            if (st && picked.match.c) { odds = pack(st, r); match = picked.match; break }
           }
           const wide = pickSimilar(await neighbours(lat, lng, AREA_RADIUS_M, u.kind, bedrooms), profile)
           const st = neighbourStats(snap, low, high, wide.rows)
-          if (st) {
+          if (st && wide.match.c) {
             areaOdds = pack(st, AREA_RADIUS_M)
             if (!odds) { odds = areaOdds; match = wide.match }
           }

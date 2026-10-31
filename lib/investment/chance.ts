@@ -88,25 +88,44 @@ export type ChanceInput = {
 export type NeighbourPerf = { price: number; occupancy: number; privatePool: boolean | null; sizeM2: number | null }
 
 /** Юнит в формате Booking — то, по чему его сравнивают (listing_profile). */
-export type UnitProfile = { unitKind: 'villa' | 'apartment'; bedrooms: number | null; areaM2: number | null; privatePool: boolean | null }
+export type UnitProfile = {
+  unitKind: 'villa' | 'apartment'; bedrooms: number | null; areaM2: number | null; privatePool: boolean | null
+  /** Цена ночи объекта по расчёту сайта, $ — мерило класса (см. CLASS_MIN/MAX). */
+  classAdr: number | null
+}
 
 /** Каких соседей взяли: только тип и спальни; + площадь; + бассейн; + оба. */
 export type MatchLevel = 'type' | 'area' | 'pool' | 'pool_area'
-export type Match = { l: MatchLevel; k: 'villa' | 'apartment'; b: number | null; p: boolean | null; a: number | null }
+/** c — коридор цены ночи соседей «того же класса», $; null — класс не отбирали
+ *  (таких соседей меньше пяти, сравнили со всеми). */
+export type Match = { l: MatchLevel; k: 'villa' | 'apartment'; b: number | null; p: boolean | null; a: number | null; c: [number, number] | null }
 
 // Площадь «похожая» — от 0,6 до 1,6 раза: у вилл в Booking часто вписан дом с
 // участком, у нас — дом, поэтому окно широкое.
 const AREA_MIN = 0.6
 const AREA_MAX = 1.6
+// Тот же класс — цена ночи соседа от половины до двух цен ночи объекта
+// (владелец 31.10.2026: у Oceaniq 2 за $263 в соседях были виллы за $28 —
+// другой класс тянул «самую вероятную» вниз). Мерило — цена ночи из расчёта
+// сайта; середина внутри коридора — уже по реальным соседям.
+const CLASS_MIN = 0.5
+const CLASS_MAX = 2
 
 /**
- * Самые похожие соседи, которых хватает для расчёта (не меньше пяти):
- * тот же бассейн и похожая площадь → тот же бассейн → похожая площадь →
+ * Самые похожие соседи, которых хватает для расчёта (не меньше пяти). Сначала
+ * тот же класс (цена ночи), внутри него — тот же бассейн и похожая площадь → тот же бассейн → похожая площадь →
  * просто тип и спальни. Неизвестный бассейн или площадь у нас — ступень
  * пропускаем (у большинства вилл бассейн не указан и не виден на фото).
  */
-export function pickSimilar(rows: NeighbourPerf[], u: UnitProfile): { rows: NeighbourPerf[]; match: Match } {
-  const m = (l: MatchLevel): Match => ({ l, k: u.unitKind, b: u.bedrooms, p: u.privatePool, a: u.areaM2 })
+export function pickSimilar(all: NeighbourPerf[], u: UnitProfile): { rows: NeighbourPerf[]; match: Match } {
+  let rows = all
+  let band: [number, number] | null = null
+  if (u.classAdr != null && u.classAdr > 0) {
+    const lo = u.classAdr * CLASS_MIN, hi = u.classAdr * CLASS_MAX
+    const same = all.filter(r => r.price >= lo && r.price <= hi)
+    if (same.length >= MIN_NEIGHBOURS) { rows = same; band = [Math.round(lo), Math.round(hi)] }
+  }
+  const m = (l: MatchLevel): Match => ({ l, k: u.unitKind, b: u.bedrooms, p: u.privatePool, a: u.areaM2, c: band })
   const area = u.areaM2
   const closeArea = (xs: NeighbourPerf[]) => area == null ? [] : xs.filter(r => r.sizeM2 != null && r.sizeM2 >= area * AREA_MIN && r.sizeM2 <= area * AREA_MAX)
   if (u.privatePool != null) {
