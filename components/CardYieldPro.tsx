@@ -29,6 +29,10 @@ const COPY = {
     likelyHead: (x: string) => `Скорее всего ${x}%`,
     half: (a: string, b: string, km: number) => `У половины похожих в ${km} км — от ${a} до ${b}%`,
     atLeast: (x: string, k: number, n: number) => `${x}% и больше — у ${k} из ${n}`,
+    basedOn: (n: number, km: number) => `По ${n} похожим объектам в ${km} км на Booking`,
+    siteEstimate: 'Расчёт сайта: своего класса рядом мало для сравнения',
+    siteMonthly: 'Расчёт сайта по помесячной аренде у соседей',
+    siteOwn: 'По броням самого комплекса на Booking',
     why: 'Почему?', close: 'Закрыть', perYear: 'в год',
     how: (n: number, km: number, what: string, likely: string) => `Взяли ${n} похожих на Booking в ${km} км: ${what}. Цену ночи и загрузку каждого пересчитали на этот объект — его цену, расходы и комиссии. Половина дала бы больше ${likely}%, половина — меньше.`,
     areaHow: (likely: string, n: number) => `По округе 10 км самая вероятная — ${likely}% (${n} похожих).`,
@@ -48,6 +52,10 @@ const COPY = {
     likelyHead: (x: string) => `Most likely ${x}%`,
     half: (a: string, b: string, km: number) => `Half of similar rentals within ${km} km: ${a}–${b}%`,
     atLeast: (x: string, k: number, n: number) => `${x}% or more — ${k} of ${n}`,
+    basedOn: (n: number, km: number) => `Based on ${n} similar Booking rentals within ${km} km`,
+    siteEstimate: 'Site estimate: too few rentals of the same class nearby',
+    siteMonthly: 'Site estimate from monthly rents nearby',
+    siteOwn: 'From the complex’s own Booking reservations',
     why: 'Why?', close: 'Close', perYear: 'a year',
     how: (n: number, km: number, what: string, likely: string) => `We took ${n} similar Booking rentals within ${km} km: ${what}. Each one's nightly rate and occupancy were applied to this property — its price, costs and fees. Half would give more than ${likely}%, half less.`,
     areaHow: (likely: string, n: number) => `Within 10 km the most likely is ${likely}% (${n} similar).`,
@@ -185,6 +193,15 @@ function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{top}{area ? ` ${area}` : ''}</p>
+        {o ? (
+          <ul className="m-0 my-1 flex list-none flex-col gap-1 p-0 text-[13px] text-[var(--color-text)]">
+            <li>{c.half(pct(o.q25, lang), pct(o.q75, lang), o.radiusM / 1000)}</li>
+            <li className="flex items-center gap-2"><Dots chance={Math.round((o.kLow / o.n) * 100)} />{c.atLeast(pct(range.low, lang), o.kLow, o.n)}</li>
+            <li className="flex items-center gap-2"><Dots chance={Math.round((o.kHigh / o.n) * 100)} even />{c.atLeast(pct(range.high, lang), o.kHigh, o.n)}</li>
+          </ul>
+        ) : (
+          <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{c.badGood(pct(range.low, lang), pct(range.high, lang))}</p>
+        )}
         {o && <p className="m-0 text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{c.oddsBasis}</p>}
       </div>
       <ul className="m-0 flex list-none flex-col p-0">
@@ -338,7 +355,6 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
   const o = range.odds
   const big = o ? o.likely : range.mid
   const money = range.entryUsd != null && range.entryUsd > 0 ? formatPrice(range.entryUsd * big / 100, currency, lang) : null
-  const share = (k: number, n: number) => Math.round((k / n) * 100)
   return (
     <div className={className}>
       <div className={`bx-auth-block ${BAND}`}>
@@ -354,16 +370,14 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
               {money && <span className="whitespace-nowrap text-[14px] text-[var(--color-text)]">{money} {c.perYear}</span>}
             </div>
             <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
-              {o ? c.half(pct(o.q25, lang), pct(o.q75, lang), o.radiusM / 1000) : c.badGood(pct(range.low, lang), pct(range.high, lang))}
+              {o ? c.basedOn(o.n, o.radiusM / 1000)
+                : range.mode === 'monthly' ? c.siteMonthly
+                : range.factors.some(f => f.k === 'own') ? c.siteOwn
+                : c.siteEstimate}
             </span>
           </div>
-          {o && (
-            <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[14px] text-[var(--color-text)]">
-              <li className="flex items-center gap-2"><Dots chance={share(o.kLow, o.n)} />{c.atLeast(pct(range.low, lang), o.kLow, o.n)}</li>
-              <li className="flex items-center gap-2"><Dots chance={share(o.kHigh, o.n)} even />{c.atLeast(pct(range.high, lang), o.kHigh, o.n)}</li>
-            </ul>
-          )}
-          {/* Своей строкой: рядом со строками шансов на телефоне они рвались. */}
+          {/* Одна цифра на карточке (владелец 31.10.2026); разброс и шансы
+              для нижней и верхней цифры — в «Почему?». */}
           <div className="-mt-1 flex justify-end"><WhyButton range={range} lang={lang} /></div>
         </div>
       </div>
