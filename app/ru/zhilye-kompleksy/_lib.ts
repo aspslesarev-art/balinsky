@@ -637,26 +637,25 @@ const _loadAptPriceRows = unstable_cache(
 // Pro-вилка комплекса: доход его юнитов «от и до» (listing_yields, пишет
 // scripts/build-listing-yields.ts раз в сутки). Сбой — комплекс без вилки,
 // каталог не падает.
-type UnitYieldRow = { kind: 'villa' | 'apartment'; complex_id: string; cap_low: number; cap_high: number; chance: number }
+type UnitYieldRow = { kind: 'villa' | 'apartment'; complex_id: string; cap_low: number; cap_high: number }
 const _loadUnitYieldRows = unstable_cache(
   async (): Promise<UnitYieldRow[]> => {
     const { data, error } = await sb.from('listing_yields')
-      .select('kind, complex_id, cap_low, cap_high, chance')
+      .select('kind, complex_id, cap_low, cap_high')
       .not('complex_id', 'is', null).not('cap_low', 'is', null).limit(5000)
     if (error) { console.error('[zhilye] listing_yields:', error.message); return [] }
     return (data ?? []) as UnitYieldRow[]
   },
-  ['zhilye-unit-yields-v1'],
+  ['zhilye-unit-yields-v2'],
   { revalidate: 86400, tags: ['content:villas', 'content:apartments'] },
 )
 
 function buildYieldIndex(rows: UnitYieldRow[]): Map<string, ComplexYieldRange> {
   const out = new Map<string, ComplexYieldRange>()
   for (const r of rows) {
-    const low = Number(r.cap_low) * 100, high = Number(r.cap_high) * 100, ch = Number(r.chance)
-    const cur = out.get(r.complex_id) ?? { low, high, chanceMin: ch, chanceMax: ch, groups: [] }
+    const low = Number(r.cap_low) * 100, high = Number(r.cap_high) * 100
+    const cur: ComplexYieldRange = out.get(r.complex_id) ?? { low, high, groups: [] }
     cur.low = Math.min(cur.low, low); cur.high = Math.max(cur.high, high)
-    cur.chanceMin = Math.min(cur.chanceMin, ch); cur.chanceMax = Math.max(cur.chanceMax, ch)
     const g = cur.groups.find(x => x.kind === r.kind)
     if (g) { g.n++; g.low = Math.min(g.low, low); g.high = Math.max(g.high, high) }
     else cur.groups.push({ kind: r.kind, n: 1, low, high })

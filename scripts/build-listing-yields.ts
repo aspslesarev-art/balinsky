@@ -7,7 +7,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { buildSnapshot, type ListingKind } from '../lib/investment/snapshot'
 import { computeYieldFacts, yieldScenarios } from '../lib/listing-verdict'
-import { computeChance, type ViewKind } from '../lib/investment/chance'
+import { computeFactors, neighbourChance, type ViewKind } from '../lib/investment/chance'
+import { bookingSlug } from '../lib/investment/snapshot'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 const PARALLEL = 8
@@ -57,6 +58,26 @@ async function views(): Promise<Map<string, ViewKind>> {
   return new Map((data ?? []).map(r => [`${r.kind}:${r.airtable_id}`, r.view as ViewKind]))
 }
 
+// Медианная загрузка соседей на Booking за всё время сбора, по slug карточки
+// (миграция 137). Сбой — объект без шанса, а не падение всего пересчёта.
+const HISTORY_SINCE = new Date(Date.now() - 365 * 86_400_000).toISOString().slice(0, 10)
+async function neighbourOcc(urls: (string | null)[]): Promise<Map<string, number>> {
+  const slugs = [...new Set(urls.map(bookingSlug).filter((x): x is string => !!x))]
+  const out = new Map<string, number>()
+  if (!slugs.length) return out
+  const { data: cards, error } = await sb.from('booking_data_cards').select('id, slug').in('slug', slugs)
+  if (error) throw new Error(`booking_data_cards: ${error.message}`)
+  const slugOf = new Map((cards ?? []).map(c => [Number(c.id), String(c.slug)]))
+  if (!slugOf.size) return out
+  const { data, error: e2 } = await sb.rpc('booking_occ_median', { p_ids: [...slugOf.keys()], p_since: HISTORY_SINCE })
+  if (e2) throw new Error(`booking_occ_median: ${e2.message}`)
+  for (const r of (data ?? []) as { property_id: number; occupancy: number }[]) {
+    const slug = slugOf.get(Number(r.property_id))
+    if (slug) out.set(slug, Number(r.occupancy))
+  }
+  return out
+}
+
 // «нет» в поле разрешения — значение по умолчанию, а не ответ застройщика.
 const realPermit = (v: string | null) => (v && v.toLowerCase() !== 'нет' ? v : null)
 
@@ -77,12 +98,17 @@ async function main() {
         if (!snap || !y) continue
         const range = yieldScenarios(snap, null)[y.mode]
         const c = u.complex ? cx.get(cxKey(u.complex)) : undefined
-        const { chance, factors } = computeChance({
+        const factors = computeFactors({
           snap,
           permit: realPermit(u.permit) ?? realPermit(c?.permit ?? null),
           landColor: u.land ?? c?.land ?? null,
           view: viewOf.get(`${u.kind}:${u.id}`) ?? null,
         })
+        const low = range ? Math.min(range.bad, y.pct.beforeTax) : null
+        // Шанс по соседям — только у посуточной: соседи на Booking сдаются посуточно.
+        const odds = low != null && y.mode === 'daily'
+          ? neighbourChance(snap, low, await neighbourOcc(snap.competitors.map(x => x.url)))
+          : null
         const occSource = y.mode === 'monthly' ? null
           : snap.ownBooking?.occupancy != null ? snap.ownBooking.source
           : snap.marketOccupancy ? 'market' : 'default'
@@ -94,9 +120,11 @@ async function main() {
           occ_source: occSource, computed_at: new Date().toISOString(),
           // Вилка всегда охватывает середину: у комплекса со своей загрузкой
           // плохой год из сценария соседей может оказаться выше неё.
-          cap_low: range ? Math.min(range.bad, y.pct.beforeTax) : null,
+          cap_low: low,
           cap_high: range ? Math.max(range.good, y.pct.beforeTax) : null,
-          chance, factors, complex_id: c?.id ?? null,
+          chance: odds ? Math.round((odds.k / odds.n) * 100) : null,
+          chance_k: odds?.k ?? null, chance_n: odds?.n ?? null,
+          factors, complex_id: c?.id ?? null,
           entry_usd: y.entryUsd != null ? Math.round(y.entryUsd) : null,
         })
       } catch (e) {

@@ -11,7 +11,8 @@ import { CardYield } from './CardYield'
 
 // Pro-блок карточки каталога (макет «Pro: доход от и до + вероятность»,
 // утверждён 30.10.2026): полоса во всю ширину карточки с бледно-зелёным
-// фоном — доход «от и до» в % и в деньгах, пять точек «Вероятность N%» и
+// фоном — доход «от и до» в % и в деньгах, пять точек «Вероятность N%»
+// (шанс по соседям: «не меньше нижней цифры — у K из N похожих») и
 // «Почему?»: на компьютере причины всплывают окошком при наведении, на
 // телефоне — окном снизу по нажатию (владелец 30.10.2026). Без Pro — серые
 // полоски вместо цифр, без кнопки (Pro открывают в шапке). Разметка одна для
@@ -23,20 +24,28 @@ const COPY = {
   ru: {
     daily: 'Доход до налогов, в год', monthly: 'Доход при помесячной сдаче, в год',
     perYear: 'в год', chance: (n: number) => `Вероятность ${n}%`, why: 'Почему?', close: 'Закрыть',
+    odds: (low: string, k: number, n: number) => `Не меньше ${low}% в год — у ${k} из ${n} похожих соседей`,
+    oddsLong: (low: string, k: number, n: number) => `${k} из ${n} похожих объектов рядом своей реальной ценой ночи и загрузкой (медиана за всё время наблюдений на Booking, с 5 августа 2026) дали бы этому объекту не меньше ${low}% в год.`,
+    noOdds: 'Вероятность не посчитана: рядом мало похожих объектов с историей на Booking',
+    noOddsMonthly: 'Вероятность не считаем: соседи на Booking сдаются посуточно, а здесь — помесячно',
+    whyTitle: 'Почему такой доход',
     locked: 'Доход от и до и вероятность — в Pro',
     note: 'Нижняя граница — плохой год: цена ночи как у дешёвых соседей, загрузка ниже обычной. Верхняя — хороший год. Середина — как на странице объекта.',
     noteMonthly: 'Нижняя граница — аренда как у дешёвых соседей и 10 месяцев в году. Верхняя — как у дорогих и весь год.',
     units: 'Доход до налогов по юнитам, в год', villas: 'Виллы', apartments: 'Апартаменты',
-    chanceRange: (a: number, b: number) => `Вероятность ${a}–${b}%`,
   },
   en: {
     daily: 'Income before tax, per year', monthly: 'Income from monthly rental, per year',
     perYear: 'a year', chance: (n: number) => `Likelihood ${n}%`, why: 'Why?', close: 'Close',
+    odds: (low: string, k: number, n: number) => `At least ${low}% a year — for ${k} of ${n} similar neighbours`,
+    oddsLong: (low: string, k: number, n: number) => `${k} of ${n} similar rentals nearby, at their real nightly rate and occupancy (median over everything observed on Booking since 5 August 2026), would give this property at least ${low}% a year.`,
+    noOdds: 'Likelihood not calculated: too few similar rentals nearby with a Booking history',
+    noOddsMonthly: 'No likelihood: neighbours on Booking rent nightly, this one rents monthly',
+    whyTitle: 'Why this income',
     locked: 'Income range and likelihood — in Pro',
     note: 'Low end — a bad year: nightly rate like the cheaper neighbours, occupancy below usual. High end — a good year. The middle matches the listing page.',
     noteMonthly: 'Low end — rent like the cheaper neighbours, 10 months a year. High end — like the pricier ones, all year.',
     units: 'Unit income before tax, per year', villas: 'Villas', apartments: 'Apartments',
-    chanceRange: (a: number, b: number) => `Likelihood ${a}–${b}%`,
   },
 } as const
 
@@ -136,13 +145,17 @@ const GAP = 8
 function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
   const c = pickCopy(COPY, lang)
   const en = lang !== 'ru'
+  const odds = range.chance != null && range.chanceK != null && range.chanceN != null
+    ? c.oddsLong(pct(range.low, lang), range.chanceK, range.chanceN)
+    : range.mode === 'monthly' ? c.noOddsMonthly : c.noOdds
   return (
     <div className="flex flex-col gap-3">
+      <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{odds}</p>
       <ul className="m-0 flex list-none flex-col p-0">
         {range.factors.map((f, i) => {
           const { k, v } = factorText(f, en)
           return (
-            <li key={i} className={`grid grid-cols-[24px_1fr] items-start gap-3 py-3 ${i ? 'border-t border-[var(--color-border)]' : ''}`}>
+            <li key={i} className="grid grid-cols-[24px_1fr] items-start gap-3 border-t border-[var(--color-border)] py-3">
               <span aria-hidden className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[13px] font-semibold ${ARROW_TONE[f.d]}`}>{ARROW[f.d]}</span>
               <span>
                 <span className="block text-[14px] font-medium text-[var(--color-text)]">{k}</span>
@@ -229,15 +242,15 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
       {mode === 'pop' && createPortal(
         <div
           role="dialog"
-          aria-label={c.chance(range.chance)}
+          aria-label={c.whyTitle}
           onClick={stop}
           onMouseEnter={cancelClose}
           onMouseLeave={closeSoon}
           style={{ position: 'absolute', left: pos.left, top: pos.top, bottom: pos.bottom, width: POP_W }}
           className="z-50 max-h-[70vh] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-[0_1px_2px_rgb(15_26_21/0.04),0_8px_24px_rgb(15_26_21/0.10)] animate-[bx-pop-in_200ms_cubic-bezier(.2,.8,.2,1)] motion-reduce:animate-none"
         >
-          <div className="mb-1 flex items-center gap-2 text-[15px] font-semibold text-[var(--color-text)]">
-            <Dots chance={range.chance} />{c.chance(range.chance)}
+          <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-[var(--color-text)]">
+            {range.chance != null && <Dots chance={range.chance} />}{range.chance != null ? c.chance(range.chance) : c.whyTitle}
           </div>
           <Reasons range={range} lang={lang} />
         </div>,
@@ -250,13 +263,13 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label={c.chance(range.chance)}
+            aria-label={c.whyTitle}
             onClick={stop}
             className="relative max-h-[85vh] w-full overflow-y-auto rounded-t-2xl bg-white px-6 pb-8 pt-4 shadow-[0_-8px_24px_rgb(15_26_21/0.12)]"
           >
             <div className="mb-2 flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-2 text-[16px] font-semibold text-[var(--color-text)]">
-                <Dots chance={range.chance} />{c.chance(range.chance)}
+                {range.chance != null && <Dots chance={range.chance} />}{range.chance != null ? c.chance(range.chance) : c.whyTitle}
               </span>
               <button
                 type="button"
@@ -303,11 +316,19 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
             </span>
             {money && <span className="whitespace-nowrap text-[14px] text-[var(--color-text)]">{money}</span>}
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-text)]">
-              <Dots chance={range.chance} />{c.chance(range.chance)}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-3">
+              {range.chance != null
+                ? <span className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-text)]"><Dots chance={range.chance} />{c.chance(range.chance)}</span>
+                : <span />}
+              <WhyButton range={range} lang={lang} />
+            </div>
+            {/* К чему относится вероятность — сразу под ней, без наведения. */}
+            <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
+              {range.chance != null && range.chanceK != null && range.chanceN != null
+                ? c.odds(pct(range.low, lang), range.chanceK, range.chanceN)
+                : range.mode === 'monthly' ? c.noOddsMonthly : c.noOdds}
             </span>
-            <WhyButton range={range} lang={lang} />
           </div>
         </div>
       </div>
@@ -326,11 +347,10 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
 }
 
 /** Карточка комплекса: вилка от самого низкого до самого высокого дохода его
- *  юнитов, по строке на виллы и апартаменты, и разброс вероятности. Причины
- *  у каждого юнита свои — они на карточках юнитов, а не здесь. */
+ *  юнитов, по строке на виллы и апартаменты. Вероятность и причины у каждого
+ *  юнита свои — они на карточках юнитов, а не здесь. */
 export function ComplexYieldPro({ range, lang = 'ru', className = '' }: { range: ComplexYieldRange; lang?: Lang; className?: string }) {
   const c = pickCopy(COPY, lang)
-  const chance = range.chanceMin === range.chanceMax ? c.chance(range.chanceMin) : c.chanceRange(range.chanceMin, range.chanceMax)
   return (
     <div className={className}>
       <div className={`bx-auth-block ${BAND}`}>
@@ -338,9 +358,6 @@ export function ComplexYieldPro({ range, lang = 'ru', className = '' }: { range:
           <span className="text-[13px] text-[var(--color-text-muted)]">{c.units}</span>
           <span className="whitespace-nowrap text-[24px] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--color-primary)]">
             {pct(range.low, lang)} – {pct(range.high, lang)}%
-          </span>
-          <span className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-text)]">
-            <Dots chance={Math.round((range.chanceMin + range.chanceMax) / 2)} />{chance}
           </span>
           {range.groups.length > 1 && (
             <ul className="flex flex-col gap-2">

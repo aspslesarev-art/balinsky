@@ -1,14 +1,20 @@
-// «Вероятность N%» на Pro-карточке каталога: насколько уверенно объект
-// заработает в своей вилке «от и до» (макет «Pro: доход от и до +
-// вероятность», 30.10.2026). Это балл по правилам, а не статистическая
-// вероятность: старт 50, каждая причина двигает его вверх или вниз, итог
-// зажат в 15–90. Причины уходят на карточку списком «Почему?».
+// Pro-карточка каталога (макет «Pro: доход от и до + вероятность»,
+// 30.10.2026). Два расчёта:
+//
+// 1. Вероятность — шанс по соседям (решение владельца 31.10.2026, вместо
+//    прежнего балла по правилам, который не отвечал на вопрос «вероятность
+//    чего»): из похожих соседей на Booking — сколько своей реальной ценой ночи
+//    и медианной загрузкой за всё собранное время дали бы объекту не меньше
+//    нижней границы вилки. «Не меньше 6,4% — у 6 из 8 похожих рядом».
+// 2. Причины (что поднимает и что опускает доход) — список в «Почему?».
+//    Баллы у причин остались только для порядка: плюсы, нейтральные, минусы.
 //
 // Вес вида — по замеру booking_occ_drivers (3 692 виллы с разобранными фото,
 // 14–30.10.2026, разница загрузки в п.п. внутри района и числа спален):
 // джунгли +3,9, полный вид на океан +7,4, без вида −9,4, город −3,9, рисовые
 // поля −0,7 (то есть не влияют). Баллы ≈ двойные п.п.
-import type { InvestmentSnapshot } from './snapshot'
+import { bookingSlug, type InvestmentSnapshot } from './snapshot'
+import { computeEconomics } from './economics'
 import { landColorBucket } from '../land-use'
 
 export type ViewKind =
@@ -29,7 +35,11 @@ export type YieldRange = {
   low: number
   high: number
   mid: number
-  chance: number
+  /** Шанс по соседям, %: chanceK из chanceN похожих дали бы не меньше low.
+   *  null — соседей с историей загрузки меньше пяти или помесячная сдача. */
+  chance: number | null
+  chanceK: number | null
+  chanceN: number | null
   mode: 'daily' | 'monthly'
   /** Цена входа, $: доход в деньгах = доля × она. */
   entryUsd: number | null
@@ -41,8 +51,6 @@ export type YieldRange = {
 export type ComplexYieldRange = {
   low: number
   high: number
-  chanceMin: number
-  chanceMax: number
   groups: { kind: 'villa' | 'apartment'; n: number; low: number; high: number }[]
 }
 
@@ -51,9 +59,10 @@ const VIEW_POINTS: Record<ViewKind, number> = {
   mountain: 2, rice_field: 0, city: -6, none: -10,
 }
 
-const BASE = 50
-const MIN = 15
-const MAX = 90
+/** Меньше пяти соседей с историей — шанс не считаем: 2 из 3 ничего не значит. */
+const MIN_NEIGHBOURS = 5
+/** Потолок загрузки — как OWN_OCC_CAP в snapshot.ts: 100% — закрытый календарь. */
+const OCC_CAP = 0.9
 
 export type ChanceInput = {
   snap: InvestmentSnapshot
@@ -64,7 +73,35 @@ export type ChanceInput = {
   view: ViewKind | null
 }
 
-export function computeChance({ snap, permit, landColor, view }: ChanceInput): { chance: number; factors: ChanceFactor[] } {
+/**
+ * Шанс по соседям. occBySlug — медианная загрузка соседа (%) за всё время
+ * сбора, по slug его карточки Booking (booking_occ_median). Цена ночи —
+ * соседа; всё остальное (площадка, управление, расходы, цена входа) —
+ * этого объекта, как в средней колонке сценариев на странице объекта.
+ */
+export function neighbourChance(snap: InvestmentSnapshot, lowCap: number, occBySlug: Map<string, number>): { k: number; n: number } | null {
+  const v = snap.villa
+  const caps: number[] = []
+  for (const c of snap.competitors) {
+    const slug = bookingSlug(c.url)
+    const occ = slug ? occBySlug.get(slug) : undefined
+    if (occ == null || !(c.adr > 0)) continue
+    const cap = computeEconomics({
+      adr: c.adr, occupancy: Math.min(OCC_CAP, occ / 100),
+      adrRealization: snap.region.adrRealizationByScenario.median,
+      phrOwnerShare: snap.region.phrOwnerShareByScenario.median,
+      area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice,
+      leaseholdYearsLeft: v.leaseholdYearsLeft, taxStatus: 'beforeTax', furnished: v.furnished, landRentYear: v.landRentYear, region: snap.region,
+    }).capRate
+    if (cap != null) caps.push(cap)
+  }
+  if (caps.length < MIN_NEIGHBOURS) return null
+  // Сравниваем с округлённой границей — той, что видит человек на карточке.
+  const edge = Math.round(lowCap * 1000) / 1000
+  return { k: caps.filter(x => x >= edge - 1e-9).length, n: caps.length }
+}
+
+export function computeFactors({ snap, permit, landColor, view }: ChanceInput): ChanceFactor[] {
   const out: { f: ChanceFactor; p: number }[] = []
   const add = (f: Omit<ChanceFactor, 'd'>, p: number) => out.push({ f: { ...f, d: p > 0 ? 1 : p < 0 ? -1 : 0 }, p })
 
@@ -112,8 +149,7 @@ export function computeChance({ snap, permit, landColor, view }: ChanceInput): {
     else if (infra < 30) add({ k: 'place', s: 'quiet' }, -5)
   }
 
-  const chance = Math.max(MIN, Math.min(MAX, Math.round(BASE + out.reduce((a, x) => a + x.p, 0))))
   // Сначала плюсы, потом нейтральные, потом минусы; внутри — по силе.
   out.sort((a, b) => b.p - a.p)
-  return { chance, factors: out.map(x => x.f) }
+  return out.map(x => x.f)
 }
