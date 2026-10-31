@@ -24,9 +24,12 @@ const COPY = {
   ru: {
     daily: 'Доход до налогов, в год', monthly: 'Доход при помесячной сдаче, в год',
     perYear: 'в год', chance: (n: number) => `Вероятность ${n}%`, why: 'Почему?', close: 'Закрыть',
-    odds: (low: string, k: number, n: number) => `Не меньше ${low}% в год — у ${k} из ${n} похожих соседей`,
-    oddsLong: (low: string, k: number, n: number) => `${k} из ${n} похожих объектов рядом своей реальной ценой ночи и загрузкой (медиана за всё время наблюдений на Booking, с 5 августа 2026) дали бы этому объекту не меньше ${low}% в год.`,
-    noOdds: 'Вероятность не посчитана: рядом мало похожих объектов с историей на Booking',
+    odds: (low: string, k: number, n: number, km: number) => `Не меньше ${low}% в год — у ${k} из ${n} похожих в ${km} км`,
+    oddsLong: (low: string, k: number, n: number, km: number) => `Рядом, в ${km} км: ${k} из ${n} похожих объектов на Booking своей ценой ночи и загрузкой дали бы этому объекту не меньше ${low}% в год.`,
+    areaLong: (low: string, k: number, n: number) => `В округе 10 км: ${k} из ${n}.`,
+    noNear: 'В 3 км мало похожих объектов с историей на Booking.',
+    oddsBasis: 'Цена и загрузка — медиана за всё время наблюдений, с 5 августа 2026. Сетевые отели не считаем.',
+    noOdds: 'Вероятность не посчитана: в 10 км мало похожих объектов с историей на Booking',
     noOddsMonthly: 'Вероятность не считаем: соседи на Booking сдаются посуточно, а здесь — помесячно',
     whyTitle: 'Почему такой доход',
     locked: 'Доход от и до и вероятность — в Pro',
@@ -37,9 +40,12 @@ const COPY = {
   en: {
     daily: 'Income before tax, per year', monthly: 'Income from monthly rental, per year',
     perYear: 'a year', chance: (n: number) => `Likelihood ${n}%`, why: 'Why?', close: 'Close',
-    odds: (low: string, k: number, n: number) => `At least ${low}% a year — for ${k} of ${n} similar neighbours`,
-    oddsLong: (low: string, k: number, n: number) => `${k} of ${n} similar rentals nearby, at their real nightly rate and occupancy (median over everything observed on Booking since 5 August 2026), would give this property at least ${low}% a year.`,
-    noOdds: 'Likelihood not calculated: too few similar rentals nearby with a Booking history',
+    odds: (low: string, k: number, n: number, km: number) => `At least ${low}% a year — for ${k} of ${n} similar within ${km} km`,
+    oddsLong: (low: string, k: number, n: number, km: number) => `Within ${km} km: ${k} of ${n} similar Booking rentals, at their nightly rate and occupancy, would give this property at least ${low}% a year.`,
+    areaLong: (low: string, k: number, n: number) => `Within 10 km: ${k} of ${n}.`,
+    oddsBasis: 'Rate and occupancy are medians over everything observed since 5 August 2026. Chain hotels are left out.',
+    noOdds: 'Likelihood not calculated: too few similar rentals with a Booking history within 10 km',
+    noNear: 'Within 3 km there are too few similar rentals with a Booking history.',
     noOddsMonthly: 'No likelihood: neighbours on Booking rent nightly, this one rents monthly',
     whyTitle: 'Why this income',
     locked: 'Income range and likelihood — in Pro',
@@ -70,6 +76,8 @@ const VIEW_NOTE: Record<string, { ru: string; en: string }> = {
   none: { ru: 'У вилл без вида загрузка на 9% ниже (замер по 3 700 виллам на Booking)', en: 'Villas with no view are booked 9% less (3,700 villas on Booking)' },
 }
 
+const fmtKm = (m: number, en: boolean) => (m < 1000 ? `${m} ${en ? 'm' : 'м'}` : `${(m / 1000).toFixed(1).replace('.', en ? '.' : ',')} ${en ? 'km' : 'км'}`)
+
 function factorText(f: ChanceFactor, en: boolean): { k: string; v: string | null } {
   const t = (ru: string, eng: string) => (en ? eng : ru)
   switch (f.k) {
@@ -83,11 +91,6 @@ function factorText(f: ChanceFactor, en: boolean): { k: string; v: string | null
     case 'demand': return (f.d > 0)
       ? { k: t('Туристы здесь есть', 'Tourists come here'), v: t(`Рядом сдаётся ${f.n} объектов`, `${f.n} rentals nearby`) }
       : { k: t('Рядом мало кто сдаёт', 'Few rentals nearby'), v: t(`Только ${f.n} объектов поблизости`, `Only ${f.n} rentals around`) }
-    case 'format': return f.d > 0
-      ? { k: t('Формат частый в районе', 'Common format here'), v: t(`${f.n} похожих объектов рядом — цена ночи известна точно`, `${f.n} similar rentals nearby — the nightly rate is well known`) }
-      : f.d < 0
-        ? { k: t('Мало соседей для сравнения', 'Few comparable rentals'), v: t(`${f.n} похожих рядом — цена ночи известна неточно`, `${f.n} similar nearby — the nightly rate is uncertain`) }
-        : { k: t('Похожие объекты рядом есть', 'Some comparable rentals'), v: t(`${f.n} похожих рядом`, `${f.n} similar nearby`) }
     case 'permit': {
       const m: Record<string, [string, string, string, string]> = {
         slf: ['Есть SLF', 'Ввод в эксплуатацию получен', 'SLF issued', 'Occupancy certificate in place'],
@@ -105,6 +108,9 @@ function factorText(f: ChanceFactor, en: boolean): { k: string; v: string | null
       : f.s === 'later'
         ? { k: t('Сдача не скоро', 'Completion is far off'), v: t(`Ещё около ${f.n} лет стройки`, `About ${f.n} more years to build`) }
         : { k: t('Ещё строится', 'Still being built'), v: t('Доход начнётся после сдачи', 'Income starts after completion') }
+    case 'coast': return f.d > 0
+      ? { k: t(`У моря: ${f.n} м до берега`, `By the sea: ${f.n} m to the shore`), v: t('Близость к воде помогает посуточной сдаче', 'Being near the water helps nightly rentals') }
+      : { k: t(`До берега ${fmtKm(f.n ?? 0, en)}`, `${fmtKm(f.n ?? 0, en)} to the shore`), v: null }
     case 'place': return f.s === 'lively'
       ? { k: t('Оживлённое место', 'Lively area'), v: t('Рядом много мест с высокими отзывами', 'Plenty of well-reviewed places nearby') }
       : { k: t('Тихое место', 'Quiet area'), v: t('Рядом мало кафе и мест для туристов', 'Few cafes or tourist spots nearby') }
@@ -145,12 +151,17 @@ const GAP = 8
 function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
   const c = pickCopy(COPY, lang)
   const en = lang !== 'ru'
-  const odds = range.chance != null && range.chanceK != null && range.chanceN != null
-    ? c.oddsLong(pct(range.low, lang), range.chanceK, range.chanceN)
-    : range.mode === 'monthly' ? c.noOddsMonthly : c.noOdds
+  const low = pct(range.low, lang)
+  const near = range.chance != null && range.chanceK != null && range.chanceN != null
+    ? c.oddsLong(low, range.chanceK, range.chanceN, (range.chanceRadiusM ?? 2000) / 1000)
+    : range.mode === 'monthly' ? c.noOddsMonthly : range.areaK != null ? c.noNear : c.noOdds
+  const area = range.areaK != null && range.areaN != null ? c.areaLong(low, range.areaK, range.areaN) : null
   return (
     <div className="flex flex-col gap-3">
-      <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{odds}</p>
+      <div className="flex flex-col gap-1">
+        <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{near}{area ? ` ${area}` : ''}</p>
+        {(range.chance != null || area) && <p className="m-0 text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{c.oddsBasis}</p>}
+      </div>
       <ul className="m-0 flex list-none flex-col p-0">
         {range.factors.map((f, i) => {
           const { k, v } = factorText(f, en)
@@ -187,6 +198,7 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
   const [mode, setMode] = useState<'pop' | 'sheet' | null>(null)
   const [pos, setPos] = useState<{ left: number; top?: number; bottom?: number }>({ left: 0 })
 
+  const headPct = range.chance ?? (range.areaK != null && range.areaN ? Math.round((range.areaK / range.areaN) * 100) : null)
   const canHover = () => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
   const cancelClose = () => { if (closeTimer.current) { window.clearTimeout(closeTimer.current); closeTimer.current = null } }
   // Пауза, чтобы курсор успел дойти от кнопки до окошка.
@@ -250,7 +262,7 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
           className="z-50 max-h-[70vh] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-[0_1px_2px_rgb(15_26_21/0.04),0_8px_24px_rgb(15_26_21/0.10)] animate-[bx-pop-in_200ms_cubic-bezier(.2,.8,.2,1)] motion-reduce:animate-none"
         >
           <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-[var(--color-text)]">
-            {range.chance != null && <Dots chance={range.chance} />}{range.chance != null ? c.chance(range.chance) : c.whyTitle}
+            {headPct != null && <Dots chance={headPct} />}{headPct != null ? c.chance(headPct) : c.whyTitle}
           </div>
           <Reasons range={range} lang={lang} />
         </div>,
@@ -269,7 +281,7 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
           >
             <div className="mb-2 flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-2 text-[16px] font-semibold text-[var(--color-text)]">
-                {range.chance != null && <Dots chance={range.chance} />}{range.chance != null ? c.chance(range.chance) : c.whyTitle}
+                {headPct != null && <Dots chance={headPct} />}{headPct != null ? c.chance(headPct) : c.whyTitle}
               </span>
               <button
                 type="button"
@@ -300,6 +312,12 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
   const c = pickCopy(COPY, lang)
   if (!range) return <CardYield pct={legacyPct} lang={lang} className={className} />
 
+  // Вероятность на карточке — по соседям рядом (2–3 км); мало их — по округе 10 км.
+  const shown = range.chance != null && range.chanceK != null && range.chanceN != null
+    ? { pct: range.chance, k: range.chanceK, n: range.chanceN, km: (range.chanceRadiusM ?? 2000) / 1000 }
+    : range.areaK != null && range.areaN != null
+      ? { pct: Math.round((range.areaK / range.areaN) * 100), k: range.areaK, n: range.areaN, km: 10 }
+      : null
   const money = range.entryUsd != null && range.entryUsd > 0
     ? `${formatPrice(range.entryUsd * range.low / 100, currency, lang)} – ${formatPrice(range.entryUsd * range.high / 100, currency, lang)}`
     : null
@@ -318,15 +336,15 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between gap-3">
-              {range.chance != null
-                ? <span className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-text)]"><Dots chance={range.chance} />{c.chance(range.chance)}</span>
+              {shown
+                ? <span className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-text)]"><Dots chance={shown.pct} />{c.chance(shown.pct)}</span>
                 : <span />}
               <WhyButton range={range} lang={lang} />
             </div>
             {/* К чему относится вероятность — сразу под ней, без наведения. */}
             <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
-              {range.chance != null && range.chanceK != null && range.chanceN != null
-                ? c.odds(pct(range.low, lang), range.chanceK, range.chanceN)
+              {shown
+                ? c.odds(pct(range.low, lang), shown.k, shown.n, shown.km)
                 : range.mode === 'monthly' ? c.noOddsMonthly : c.noOdds}
             </span>
           </div>

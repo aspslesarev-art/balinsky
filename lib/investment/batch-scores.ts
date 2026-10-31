@@ -231,7 +231,7 @@ type PageYields = { caps: Map<string, number>; ranges: Map<string, YieldRange> }
 
 async function loadPageYields(kind: 'villa' | 'apartment'): Promise<PageYields> {
   const { data, error } = await sb.from('listing_yields')
-    .select('airtable_id, mode, cap_before, cap_low, cap_high, chance, chance_k, chance_n, factors, entry_usd').eq('kind', kind).limit(5000)
+    .select('airtable_id, mode, cap_before, cap_low, cap_high, chance, chance_k, chance_n, chance_radius_m, area_k, area_n, factors, entry_usd').eq('kind', kind).limit(5000)
   if (error) { console.error('[batch-scores] listing_yields:', error.message); return { caps: new Map(), ranges: new Map() } }
   const caps = new Map<string, number>()
   const ranges = new Map<string, YieldRange>()
@@ -243,6 +243,9 @@ async function loadPageYields(kind: 'villa' | 'apartment'): Promise<PageYields> 
       chance: r.chance != null ? Number(r.chance) : null,
       chanceK: r.chance_k != null ? Number(r.chance_k) : null,
       chanceN: r.chance_n != null ? Number(r.chance_n) : null,
+      chanceRadiusM: r.chance_radius_m != null ? Number(r.chance_radius_m) : null,
+      areaK: r.area_k != null ? Number(r.area_k) : null,
+      areaN: r.area_n != null ? Number(r.area_n) : null,
       mode: r.mode === 'monthly' ? 'monthly' : 'daily',
       entryUsd: r.entry_usd != null ? Number(r.entry_usd) : null,
       factors: (r.factors ?? []) as ChanceFactor[],
@@ -310,12 +313,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 // instance. Map isn't serializable — entries go through the cache.
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
-  ['villa-scores-v8'],
+  ['villa-scores-v11'],
   { revalidate: 604800, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
-  ['apartment-scores-v8'],
+  ['apartment-scores-v11'],
   { revalidate: 604800, tags: ['content:apartments'] },
 )
 

@@ -388,7 +388,7 @@ export type BookingFacts = {
 }
 
 /** slug карточки из ссылки вида booking.com/hotel/id/<slug>.html?… */
-export function bookingSlug(url: string | null): string | null {
+function bookingSlug(url: string | null): string | null {
   const m = url?.match(/booking\.com\/hotel\/[a-z]{2}\/([^./?#]+)/i)
   return m ? m[1] : null
 }

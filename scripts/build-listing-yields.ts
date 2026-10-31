@@ -7,8 +7,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { buildSnapshot, type ListingKind } from '../lib/investment/snapshot'
 import { computeYieldFacts, yieldScenarios } from '../lib/listing-verdict'
-import { computeFactors, neighbourChance, type ViewKind } from '../lib/investment/chance'
-import { bookingSlug } from '../lib/investment/snapshot'
+import { computeFactors, neighbourChance, type NeighbourPerf, type ViewKind } from '../lib/investment/chance'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 const PARALLEL = 8
@@ -58,31 +57,36 @@ async function views(): Promise<Map<string, ViewKind>> {
   return new Map((data ?? []).map(r => [`${r.kind}:${r.airtable_id}`, r.view as ViewKind]))
 }
 
-// Медианная загрузка соседей на Booking за всё время сбора, по slug карточки
-// (миграция 137). Сбой — объект без шанса, а не падение всего пересчёта.
+// Соседи на Booking того же типа и спальности: медиана цены ночи и загрузки
+// за всё время сбора, без сетевых отелей (миграция 138). Рядом — 2 км, если
+// там меньше пяти — 3 км (владелец 31.10.2026: «1–2 км, максимум 3»);
+// отдельно — округа 10 км. Сбой — объект без шанса, а не падение пересчёта.
 const HISTORY_SINCE = new Date(Date.now() - 365 * 86_400_000).toISOString().slice(0, 10)
-async function neighbourOcc(urls: (string | null)[]): Promise<Map<string, number>> {
-  const slugs = [...new Set(urls.map(bookingSlug).filter((x): x is string => !!x))]
+const NEAR_RADII_M = [2000, 3000]
+const AREA_RADIUS_M = 10000
+async function neighbours(lat: number, lng: number, radiusM: number, kind: ListingKind, bedrooms: number | null): Promise<NeighbourPerf[]> {
+  const { data, error } = await sb.rpc('booking_neighbour_perf', {
+    p_lat: lat, p_lng: lng, p_radius_m: radiusM, p_unit_kind: kind, p_bedrooms: bedrooms, p_since: HISTORY_SINCE,
+  })
+  if (error) throw new Error(`booking_neighbour_perf: ${error.message}`)
+  return ((data ?? []) as { price: number; occupancy: number }[]).map(r => ({ price: Number(r.price), occupancy: Number(r.occupancy) }))
+}
+
+async function coasts(): Promise<Map<string, number>> {
   const out = new Map<string, number>()
-  if (!slugs.length) return out
-  const { data: cards, error } = await sb.from('booking_data_cards').select('id, slug').in('slug', slugs)
-  if (error) throw new Error(`booking_data_cards: ${error.message}`)
-  const slugOf = new Map((cards ?? []).map(c => [Number(c.id), String(c.slug)]))
-  if (!slugOf.size) return out
-  const { data, error: e2 } = await sb.rpc('booking_occ_median', { p_ids: [...slugOf.keys()], p_since: HISTORY_SINCE })
-  if (e2) throw new Error(`booking_occ_median: ${e2.message}`)
-  for (const r of (data ?? []) as { property_id: number; occupancy: number }[]) {
-    const slug = slugOf.get(Number(r.property_id))
-    if (slug) out.set(slug, Number(r.occupancy))
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from('listing_geo_facts').select('kind, airtable_id, coast:climate->coast_m').range(from, from + 999)
+    if (error) throw new Error(`listing_geo_facts: ${error.message}`)
+    for (const r of data ?? []) if (r.coast != null && Number.isFinite(Number(r.coast))) out.set(`${r.kind}:${r.airtable_id}`, Number(r.coast))
+    if (!data || data.length < 1000) return out
   }
-  return out
 }
 
 // «нет» в поле разрешения — значение по умолчанию, а не ответ застройщика.
 const realPermit = (v: string | null) => (v && v.toLowerCase() !== 'нет' ? v : null)
 
 async function main() {
-  const [villas, apts, cx, viewOf] = await Promise.all([published('raw_villas'), published('raw_apartments'), complexFacts(), views()])
+  const [villas, apts, cx, viewOf, coastOf] = await Promise.all([published('raw_villas'), published('raw_apartments'), complexFacts(), views(), coasts()])
   const units: ({ kind: ListingKind } & Facts)[] = [
     ...villas.map(f => ({ kind: 'villa' as const, ...f })),
     ...apts.map(f => ({ kind: 'apartment' as const, ...f })),
@@ -103,12 +107,21 @@ async function main() {
           permit: realPermit(u.permit) ?? realPermit(c?.permit ?? null),
           landColor: u.land ?? c?.land ?? null,
           view: viewOf.get(`${u.kind}:${u.id}`) ?? null,
+          coastM: coastOf.get(`${u.kind}:${u.id}`) ?? null,
         })
         const low = range ? Math.min(range.bad, y.pct.beforeTax) : null
         // Шанс по соседям — только у посуточной: соседи на Booking сдаются посуточно.
-        const odds = low != null && y.mode === 'daily'
-          ? neighbourChance(snap, low, await neighbourOcc(snap.competitors.map(x => x.url)))
-          : null
+        let odds: { k: number; n: number } | null = null
+        let oddsRadius: number | null = null
+        let area: { k: number; n: number } | null = null
+        if (low != null && y.mode === 'daily') {
+          const { lat, lng, bedrooms } = snap.villa
+          for (const r of NEAR_RADII_M) {
+            odds = neighbourChance(snap, low, await neighbours(lat, lng, r, u.kind, bedrooms))
+            if (odds) { oddsRadius = r; break }
+          }
+          area = neighbourChance(snap, low, await neighbours(lat, lng, AREA_RADIUS_M, u.kind, bedrooms))
+        }
         const occSource = y.mode === 'monthly' ? null
           : snap.ownBooking?.occupancy != null ? snap.ownBooking.source
           : snap.marketOccupancy ? 'market' : 'default'
@@ -123,7 +136,8 @@ async function main() {
           cap_low: low,
           cap_high: range ? Math.max(range.good, y.pct.beforeTax) : null,
           chance: odds ? Math.round((odds.k / odds.n) * 100) : null,
-          chance_k: odds?.k ?? null, chance_n: odds?.n ?? null,
+          chance_k: odds?.k ?? null, chance_n: odds?.n ?? null, chance_radius_m: oddsRadius,
+          area_k: area?.k ?? null, area_n: area?.n ?? null,
           factors, complex_id: c?.id ?? null,
           entry_usd: y.entryUsd != null ? Math.round(y.entryUsd) : null,
         })

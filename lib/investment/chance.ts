@@ -3,9 +3,10 @@
 //
 // 1. Вероятность — шанс по соседям (решение владельца 31.10.2026, вместо
 //    прежнего балла по правилам, который не отвечал на вопрос «вероятность
-//    чего»): из похожих соседей на Booking — сколько своей реальной ценой ночи
-//    и медианной загрузкой за всё собранное время дали бы объекту не меньше
-//    нижней границы вилки. «Не меньше 6,4% — у 6 из 8 похожих рядом».
+//    чего»): из соседей на Booking того же типа и спальности — сколько своей
+//    медианной ценой ночи и загрузкой за всё собранное время дали бы объекту
+//    не меньше нижней границы вилки. Рядом — 2 км (мало — 3 км), отдельно —
+//    округа 10 км; сетевые отели исключены (booking_neighbour_perf, миграция 138).
 // 2. Причины (что поднимает и что опускает доход) — список в «Почему?».
 //    Баллы у причин остались только для порядка: плюсы, нейтральные, минусы.
 //
@@ -13,7 +14,7 @@
 // 14–30.10.2026, разница загрузки в п.п. внутри района и числа спален):
 // джунгли +3,9, полный вид на океан +7,4, без вида −9,4, город −3,9, рисовые
 // поля −0,7 (то есть не влияют). Баллы ≈ двойные п.п.
-import { bookingSlug, type InvestmentSnapshot } from './snapshot'
+import type { InvestmentSnapshot } from './snapshot'
 import { computeEconomics } from './economics'
 import { landColorBucket } from '../land-use'
 
@@ -23,7 +24,7 @@ export type ViewKind =
 
 /** k — какая причина; d — в какую сторону; n/s — число или слово для текста. */
 export type ChanceFactor = {
-  k: 'view' | 'own' | 'land' | 'demand' | 'format' | 'permit' | 'lease' | 'built' | 'place'
+  k: 'view' | 'own' | 'land' | 'demand' | 'permit' | 'lease' | 'built' | 'place' | 'coast'
   d: 1 | 0 | -1
   n?: number
   s?: string
@@ -35,11 +36,15 @@ export type YieldRange = {
   low: number
   high: number
   mid: number
-  /** Шанс по соседям, %: chanceK из chanceN похожих дали бы не меньше low.
-   *  null — соседей с историей загрузки меньше пяти или помесячная сдача. */
+  /** Шанс по соседям, %: chanceK из chanceN соседей в chanceRadiusM дали бы
+   *  не меньше low. null — соседей с историей меньше пяти или помесячная сдача. */
   chance: number | null
   chanceK: number | null
   chanceN: number | null
+  chanceRadiusM: number | null
+  /** То же по округе 10 км — «как вообще сдаются такие объекты в районе». */
+  areaK: number | null
+  areaN: number | null
   mode: 'daily' | 'monthly'
   /** Цена входа, $: доход в деньгах = доля × она. */
   entryUsd: number | null
@@ -71,23 +76,25 @@ export type ChanceInput = {
   /** Сырой «Land color» объекта (у апартаментов — комплекса). */
   landColor: string | null
   view: ViewKind | null
+  /** До береговой линии, м (listing_geo_facts). На Буките берег — это часто
+   *  скалы, а не пляж, поэтому пишем «до берега», без обещаний про пляж. */
+  coastM: number | null
 }
 
+/** Сосед на Booking: медианная цена ночи ($) и загрузка (%) за всё время сбора. */
+export type NeighbourPerf = { price: number; occupancy: number }
+
 /**
- * Шанс по соседям. occBySlug — медианная загрузка соседа (%) за всё время
- * сбора, по slug его карточки Booking (booking_occ_median). Цена ночи —
- * соседа; всё остальное (площадка, управление, расходы, цена входа) —
- * этого объекта, как в средней колонке сценариев на странице объекта.
+ * Сколько соседей своей ценой ночи и загрузкой дали бы объекту не меньше
+ * lowCap. Всё остальное (площадка, управление, расходы, цена входа) — этого
+ * объекта, как в средней колонке сценариев на странице объекта.
  */
-export function neighbourChance(snap: InvestmentSnapshot, lowCap: number, occBySlug: Map<string, number>): { k: number; n: number } | null {
+export function neighbourChance(snap: InvestmentSnapshot, lowCap: number, rows: NeighbourPerf[]): { k: number; n: number } | null {
   const v = snap.villa
   const caps: number[] = []
-  for (const c of snap.competitors) {
-    const slug = bookingSlug(c.url)
-    const occ = slug ? occBySlug.get(slug) : undefined
-    if (occ == null || !(c.adr > 0)) continue
+  for (const r of rows) {
     const cap = computeEconomics({
-      adr: c.adr, occupancy: Math.min(OCC_CAP, occ / 100),
+      adr: r.price, occupancy: Math.min(OCC_CAP, r.occupancy / 100),
       adrRealization: snap.region.adrRealizationByScenario.median,
       phrOwnerShare: snap.region.phrOwnerShareByScenario.median,
       area: v.area, bedrooms: v.bedrooms, askingPrice: v.askingPrice,
@@ -101,7 +108,7 @@ export function neighbourChance(snap: InvestmentSnapshot, lowCap: number, occByS
   return { k: caps.filter(x => x >= edge - 1e-9).length, n: caps.length }
 }
 
-export function computeFactors({ snap, permit, landColor, view }: ChanceInput): ChanceFactor[] {
+export function computeFactors({ snap, permit, landColor, view, coastM }: ChanceInput): ChanceFactor[] {
   const out: { f: ChanceFactor; p: number }[] = []
   const add = (f: Omit<ChanceFactor, 'd'>, p: number) => out.push({ f: { ...f, d: p > 0 ? 1 : p < 0 ? -1 : 0 }, p })
 
@@ -122,12 +129,8 @@ export function computeFactors({ snap, permit, landColor, view }: ChanceInput): 
   if (around >= 400) add({ k: 'demand', n: around }, 6)
   else if (around < 100) add({ k: 'demand', n: around }, -8)
 
-  // Уместность формата: сколько похожих (спальни, площадь, бассейн) рядом —
-  // от этого зависит, насколько точно известна цена ночи.
-  const similar = snap.matchSampleSize
-  if (similar >= 15) add({ k: 'format', n: similar }, 6)
-  else if (similar < 5) add({ k: 'format', n: similar }, -10)
-  else add({ k: 'format', n: similar }, 0)
+  // Сколько похожих рядом — уже в строке вероятности («у 8 из 9 похожих в 2 км»);
+  // отдельная причина «формат» по другому подбору соседей спорила бы с ней.
 
   const pm = (permit ?? '').trim()
   if (/заявка/i.test(pm)) add({ k: 'permit', s: /SLF/i.test(pm) ? 'slf_applied' : 'pbg_applied' }, 0)
@@ -142,6 +145,10 @@ export function computeFactors({ snap, permit, landColor, view }: ChanceInput): 
   if (left === 0) add({ k: 'built', s: 'ready' }, 5)
   else if (left != null && left >= 2) add({ k: 'built', s: 'later', n: left }, -6)
   else if (left != null) add({ k: 'built', s: 'soon' }, -2)
+
+  // Расстояние до берега — отдельной строкой, а не через радиус соседей
+  // (владелец 31.10.2026). Плюс — только у самой воды; дальше — просто факт.
+  if (coastM != null) add({ k: 'coast', n: Math.round(coastM / 10) * 10 }, coastM <= 500 ? 4 : 0)
 
   const infra = snap.infra?.composite
   if (infra != null) {
