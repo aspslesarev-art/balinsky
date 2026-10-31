@@ -36,15 +36,13 @@ export type YieldRange = {
   low: number
   high: number
   mid: number
-  /** Шанс по соседям, %: chanceK из chanceN соседей в chanceRadiusM дали бы
-   *  не меньше low. null — соседей с историей меньше пяти или помесячная сдача. */
-  chance: number | null
-  chanceK: number | null
-  chanceN: number | null
-  chanceRadiusM: number | null
-  /** То же по округе 10 км — «как вообще сдаются такие объекты в районе». */
-  areaK: number | null
-  areaN: number | null
+  /** По соседям (рядом 2–3 км, мало — округа 10 км; radiusM): самая вероятная
+   *  доходность (медиана, %), у половины соседей — от q25 до q75 (%), и сколько
+   *  из n дотянули бы до low (kLow) и до high (kHigh). null — соседей с историей
+   *  меньше пяти или помесячная сдача: тогда карточка показывает расчёт сайта. */
+  odds: { likely: number; q25: number; q75: number; kLow: number; kHigh: number; n: number; radiusM: number } | null
+  /** Самая вероятная по округе 10 км — «как вообще сдаются такие в районе». */
+  area: { likely: number; n: number } | null
   /** С кем сравнивали: уровень подбора и поля юнита (pickSimilar). */
   match: Match | null
   mode: 'daily' | 'monthly'
@@ -122,12 +120,22 @@ export function pickSimilar(rows: NeighbourPerf[], u: UnitProfile): { rows: Neig
   return { rows, match: m('type') }
 }
 
+/** Что дали бы объекту похожие соседи: самая вероятная доходность (медиана),
+ *  середина разброса (у половины соседей) и сколько из них дотянули бы до
+ *  нижней и до верхней границы вилки. Доли — 0..1. */
+export type NeighbourStats = { n: number; kLow: number; kHigh: number; p25: number; p50: number; p75: number }
+
+const quantile = (xs: number[], q: number) => {
+  const pos = (xs.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos)
+  return xs[lo] + (xs[hi] - xs[lo]) * (pos - lo)
+}
+
 /**
- * Сколько соседей своей ценой ночи и загрузкой дали бы объекту не меньше
- * lowCap. Всё остальное (площадка, управление, расходы, цена входа) — этого
+ * Доходность, которую каждый сосед своей ценой ночи и загрузкой дал бы этому
+ * объекту. Всё остальное (площадка, управление, расходы, цена входа) — этого
  * объекта, как в средней колонке сценариев на странице объекта.
  */
-export function neighbourChance(snap: InvestmentSnapshot, lowCap: number, rows: NeighbourPerf[]): { k: number; n: number } | null {
+export function neighbourStats(snap: InvestmentSnapshot, lowCap: number, highCap: number, rows: NeighbourPerf[]): NeighbourStats | null {
   const v = snap.villa
   const caps: number[] = []
   for (const r of rows) {
@@ -141,9 +149,16 @@ export function neighbourChance(snap: InvestmentSnapshot, lowCap: number, rows: 
     if (cap != null) caps.push(cap)
   }
   if (caps.length < MIN_NEIGHBOURS) return null
-  // Сравниваем с округлённой границей — той, что видит человек на карточке.
-  const edge = Math.round(lowCap * 1000) / 1000
-  return { k: caps.filter(x => x >= edge - 1e-9).length, n: caps.length }
+  caps.sort((a, b) => a - b)
+  // Сравниваем с округлёнными границами — теми, что видит человек на карточке.
+  const r3 = (x: number) => Math.round(x * 1000) / 1000
+  const lo = r3(lowCap), hi = r3(highCap)
+  return {
+    n: caps.length,
+    kLow: caps.filter(x => x >= lo - 1e-9).length,
+    kHigh: caps.filter(x => x >= hi - 1e-9).length,
+    p25: quantile(caps, 0.25), p50: quantile(caps, 0.5), p75: quantile(caps, 0.75),
+  }
 }
 
 export function computeFactors({ snap, permit, landColor, view, coastM }: ChanceInput): ChanceFactor[] {

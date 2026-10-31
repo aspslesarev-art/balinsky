@@ -12,9 +12,10 @@ import { CardYield } from './CardYield'
 
 // Pro-блок карточки каталога (макет «Pro: доход от и до + вероятность»,
 // утверждён 30.10.2026): полоса во всю ширину карточки с бледно-зелёным
-// фоном — доход «от и до» в % и в деньгах, пять точек «Вероятность N%»
-// (шанс по соседям: «не меньше нижней цифры — у K из N похожих») и
-// «Почему?»: на компьютере причины всплывают окошком при наведении, на
+// фоном — самая вероятная доходность (медиана того, что дали бы объекту
+// похожие соседи на Booking; владелец 31.10.2026: «хочу одну конкретную,
+// самую вероятную»), у половины соседей — от и до, шанс для нижней и для
+// верхней цифры вилки точками («не меньше 4% — у 9 из 10») и «Почему?»: на компьютере причины всплывают окошком при наведении, на
 // телефоне — окном снизу по нажатию (владелец 30.10.2026). Без Pro — серые
 // полоски вместо цифр, без кнопки (Pro открывают в шапке). Разметка одна для
 // всех, видимость — по метке data-pro (.bx-auth-block / .bx-nopro-block в
@@ -24,36 +25,40 @@ import { CardYield } from './CardYield'
 const COPY = {
   ru: {
     daily: 'Доход до налогов, в год', monthly: 'Доход при помесячной сдаче, в год',
-    perYear: 'в год', chance: (n: number) => `Вероятность ${n}%`, why: 'Почему?', close: 'Закрыть',
-    odds: (low: string, k: number, n: number, km: number) => `Не меньше ${low}% в год — у ${k} из ${n} похожих в ${km} км`,
-    oddsLong: (low: string, k: number, n: number, km: number) => `Рядом, в ${km} км: ${k} из ${n} похожих объектов на Booking своей ценой ночи и загрузкой дали бы этому объекту не меньше ${low}% в год.`,
-    areaLong: (low: string, k: number, n: number) => `В округе 10 км: ${k} из ${n}.`,
-    noNear: 'В 3 км мало похожих объектов с историей на Booking.',
-    compared: (what: string) => `Сравнивали с соседями на Booking: ${what}.`,
+    likelyLabel: 'Скорее всего, в год до налогов',
+    likelyHead: (x: string) => `Скорее всего ${x}%`,
+    half: (a: string, b: string, km: number) => `У половины похожих в ${km} км — от ${a} до ${b}%`,
+    atLeast: (x: string, k: number, n: number) => `${x}% и больше — у ${k} из ${n}`,
+    why: 'Почему?', close: 'Закрыть', perYear: 'в год',
+    how: (n: number, km: number, what: string, likely: string) => `Взяли ${n} похожих на Booking в ${km} км: ${what}. Цену ночи и загрузку каждого пересчитали на этот объект — его цену, расходы и комиссии. Половина дала бы больше ${likely}%, половина — меньше.`,
+    areaHow: (likely: string, n: number) => `По округе 10 км самая вероятная — ${likely}% (${n} похожих).`,
     oddsBasis: 'Цена и загрузка — медиана за всё время наблюдений, с 5 августа 2026. Сетевые отели не считаем.',
-    noOdds: 'Вероятность не посчитана: в 10 км мало похожих объектов с историей на Booking',
-    noOddsMonthly: 'Вероятность не считаем: соседи на Booking сдаются посуточно, а здесь — помесячно',
+    noOdds: 'Сравнить с соседями не удалось: в 10 км мало похожих объектов с историей на Booking. Цифры — расчёт сайта.',
+    noOddsMonthly: 'Соседи на Booking сдаются посуточно, а здесь — помесячно, поэтому цифры — расчёт сайта.',
+    badGood: (low: string, high: string) => `Плохой год — ${low}%, хороший — ${high}%`,
     whyTitle: 'Почему такой доход',
-    locked: 'Доход от и до и вероятность — в Pro',
-    note: 'Нижняя граница — плохой год: цена ночи как у дешёвых соседей, загрузка ниже обычной. Верхняя — хороший год. Середина — как на странице объекта.',
-    noteMonthly: 'Нижняя граница — аренда как у дешёвых соседей и 10 месяцев в году. Верхняя — как у дорогих и весь год.',
+    locked: 'Самая вероятная доходность — в Pro',
+    note: (low: string, high: string, mid: string) => `${low}% — плохой год по расчёту сайта: цена ночи как у дешёвых соседей, загрузка ниже обычной. ${high}% — хороший год. Средний год на странице объекта — ${mid}%.`,
+    noteMonthly: (low: string, high: string) => `${low}% — аренда как у дешёвых соседей и 10 месяцев в году. ${high}% — как у дорогих и весь год.`,
     units: 'Доход до налогов по юнитам, в год', villas: 'Виллы', apartments: 'Апартаменты',
   },
   en: {
     daily: 'Income before tax, per year', monthly: 'Income from monthly rental, per year',
-    perYear: 'a year', chance: (n: number) => `Likelihood ${n}%`, why: 'Why?', close: 'Close',
-    odds: (low: string, k: number, n: number, km: number) => `At least ${low}% a year — for ${k} of ${n} similar within ${km} km`,
-    oddsLong: (low: string, k: number, n: number, km: number) => `Within ${km} km: ${k} of ${n} similar Booking rentals, at their nightly rate and occupancy, would give this property at least ${low}% a year.`,
-    areaLong: (low: string, k: number, n: number) => `Within 10 km: ${k} of ${n}.`,
-    compared: (what: string) => `Compared with Booking neighbours: ${what}.`,
+    likelyLabel: 'Most likely, per year before tax',
+    likelyHead: (x: string) => `Most likely ${x}%`,
+    half: (a: string, b: string, km: number) => `Half of similar rentals within ${km} km: ${a}–${b}%`,
+    atLeast: (x: string, k: number, n: number) => `${x}% or more — ${k} of ${n}`,
+    why: 'Why?', close: 'Close', perYear: 'a year',
+    how: (n: number, km: number, what: string, likely: string) => `We took ${n} similar Booking rentals within ${km} km: ${what}. Each one's nightly rate and occupancy were applied to this property — its price, costs and fees. Half would give more than ${likely}%, half less.`,
+    areaHow: (likely: string, n: number) => `Within 10 km the most likely is ${likely}% (${n} similar).`,
     oddsBasis: 'Rate and occupancy are medians over everything observed since 5 August 2026. Chain hotels are left out.',
-    noOdds: 'Likelihood not calculated: too few similar rentals with a Booking history within 10 km',
-    noNear: 'Within 3 km there are too few similar rentals with a Booking history.',
-    noOddsMonthly: 'No likelihood: neighbours on Booking rent nightly, this one rents monthly',
+    noOdds: 'No neighbour comparison: too few similar rentals with a Booking history within 10 km. Figures are the site estimate.',
+    noOddsMonthly: 'Booking neighbours rent nightly and this one rents monthly, so figures are the site estimate.',
+    badGood: (low: string, high: string) => `Bad year ${low}%, good year ${high}%`,
     whyTitle: 'Why this income',
-    locked: 'Income range and likelihood — in Pro',
-    note: 'Low end — a bad year: nightly rate like the cheaper neighbours, occupancy below usual. High end — a good year. The middle matches the listing page.',
-    noteMonthly: 'Low end — rent like the cheaper neighbours, 10 months a year. High end — like the pricier ones, all year.',
+    locked: 'Most likely income — in Pro',
+    note: (low: string, high: string, mid: string) => `${low}% is a bad year by the site estimate: nightly rate like the cheaper neighbours, occupancy below usual. ${high}% is a good year. The average year on the listing page is ${mid}%.`,
+    noteMonthly: (low: string, high: string) => `${low}% — rent like the cheaper neighbours, 10 months a year. ${high}% — like the pricier ones, all year.`,
     units: 'Unit income before tax, per year', villas: 'Villas', apartments: 'Apartments',
   },
 } as const
@@ -139,9 +144,10 @@ const pct = (n: number, lang: Lang) => {
 }
 
 // Тон точек: 70+ — уверенно (зелёные), 50–69 — средне (охра), ниже — мало.
-function Dots({ chance }: { chance: number }) {
-  const on = Math.max(1, Math.min(5, Math.round(chance / 20)))
-  const tone = chance >= 70 ? 'bg-[var(--color-primary)]' : chance >= 50 ? 'bg-[#B86E1F]' : 'bg-[#C2410C]'
+// Для верхней цифры мало точек — не тревога, а просто редкая удача: тон ровный.
+function Dots({ chance, even = false }: { chance: number; even?: boolean }) {
+  const on = Math.max(0, Math.min(5, Math.round(chance / 20)))
+  const tone = even || chance >= 70 ? 'bg-[var(--color-primary)]' : chance >= 50 ? 'bg-[#B86E1F]' : 'bg-[#C2410C]'
   return (
     <span aria-hidden className="inline-flex gap-[3px]">
       {[0, 1, 2, 3, 4].map(i => <span key={i} className={`h-1.5 w-1.5 rounded-full ${i < on ? tone : 'bg-[var(--color-neutral-300)]'}`} />)}
@@ -167,20 +173,16 @@ const GAP = 8
 function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
   const c = pickCopy(COPY, lang)
   const en = lang !== 'ru'
-  const low = pct(range.low, lang)
-  const near = range.chance != null && range.chanceK != null && range.chanceN != null
-    ? c.oddsLong(low, range.chanceK, range.chanceN, (range.chanceRadiusM ?? 2000) / 1000)
-    : range.mode === 'monthly' ? c.noOddsMonthly : range.areaK != null ? c.noNear : c.noOdds
-  const area = range.areaK != null && range.areaN != null ? c.areaLong(low, range.areaK, range.areaN) : null
+  const o = range.odds
+  const top = o
+    ? c.how(o.n, o.radiusM / 1000, range.match ? matchText(range.match, en) : '', pct(o.likely, lang))
+    : range.mode === 'monthly' ? c.noOddsMonthly : c.noOdds
+  const area = o && range.area && o.radiusM !== 10000 ? c.areaHow(pct(range.area.likely, lang), range.area.n) : null
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{near}{area ? ` ${area}` : ''}</p>
-        {(range.chance != null || area) && (
-          <p className="m-0 text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
-            {range.match ? `${c.compared(matchText(range.match, en))} ` : ''}{c.oddsBasis}
-          </p>
-        )}
+        <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{top}{area ? ` ${area}` : ''}</p>
+        {o && <p className="m-0 text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{c.oddsBasis}</p>}
       </div>
       <ul className="m-0 flex list-none flex-col p-0">
         {range.factors.map((f, i) => {
@@ -197,7 +199,9 @@ function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
         })}
       </ul>
       <p className="m-0 rounded-xl bg-[var(--color-surface-alt)] p-3 text-[13px] leading-[1.55] text-[var(--color-text-muted)]">
-        {range.mode === 'monthly' ? c.noteMonthly : c.note}
+        {range.mode === 'monthly'
+          ? c.noteMonthly(pct(range.low, lang), pct(range.high, lang))
+          : c.note(pct(range.low, lang), pct(range.high, lang), pct(range.mid, lang))}
       </p>
     </div>
   )
@@ -218,7 +222,7 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
   const [mode, setMode] = useState<'pop' | 'sheet' | null>(null)
   const [pos, setPos] = useState<{ left: number; top?: number; bottom?: number }>({ left: 0 })
 
-  const headPct = range.chance ?? (range.areaK != null && range.areaN ? Math.round((range.areaK / range.areaN) * 100) : null)
+  const head = range.odds ? c.likelyHead(pct(range.odds.likely, lang)) : c.whyTitle
   const canHover = () => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
   const cancelClose = () => { if (closeTimer.current) { window.clearTimeout(closeTimer.current); closeTimer.current = null } }
   // Пауза, чтобы курсор успел дойти от кнопки до окошка.
@@ -281,9 +285,7 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
           style={{ position: 'absolute', left: pos.left, top: pos.top, bottom: pos.bottom, width: POP_W }}
           className="z-50 max-h-[70vh] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-[0_1px_2px_rgb(15_26_21/0.04),0_8px_24px_rgb(15_26_21/0.10)] animate-[bx-pop-in_200ms_cubic-bezier(.2,.8,.2,1)] motion-reduce:animate-none"
         >
-          <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-[var(--color-text)]">
-            {headPct != null && <Dots chance={headPct} />}{headPct != null ? c.chance(headPct) : c.whyTitle}
-          </div>
+          <div className="mb-2 text-[15px] font-semibold text-[var(--color-text)]">{head}</div>
           <Reasons range={range} lang={lang} />
         </div>,
         document.body,
@@ -300,9 +302,7 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
             className="relative max-h-[85vh] w-full overflow-y-auto rounded-t-2xl bg-white px-6 pb-8 pt-4 shadow-[0_-8px_24px_rgb(15_26_21/0.12)]"
           >
             <div className="mb-2 flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-2 text-[16px] font-semibold text-[var(--color-text)]">
-                {headPct != null && <Dots chance={headPct} />}{headPct != null ? c.chance(headPct) : c.whyTitle}
-              </span>
+              <span className="text-[16px] font-semibold text-[var(--color-text)]">{head}</span>
               <button
                 type="button"
                 aria-label={c.close}
@@ -332,41 +332,36 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
   const c = pickCopy(COPY, lang)
   if (!range) return <CardYield pct={legacyPct} lang={lang} className={className} />
 
-  // Вероятность на карточке — по соседям рядом (2–3 км); мало их — по округе 10 км.
-  const shown = range.chance != null && range.chanceK != null && range.chanceN != null
-    ? { pct: range.chance, k: range.chanceK, n: range.chanceN, km: (range.chanceRadiusM ?? 2000) / 1000 }
-    : range.areaK != null && range.areaN != null
-      ? { pct: Math.round((range.areaK / range.areaN) * 100), k: range.areaK, n: range.areaN, km: 10 }
-      : null
-  const money = range.entryUsd != null && range.entryUsd > 0
-    ? `${formatPrice(range.entryUsd * range.low / 100, currency, lang)} – ${formatPrice(range.entryUsd * range.high / 100, currency, lang)}`
-    : null
+  const o = range.odds
+  const big = o ? o.likely : range.mid
+  const money = range.entryUsd != null && range.entryUsd > 0 ? formatPrice(range.entryUsd * big / 100, currency, lang) : null
+  const share = (k: number, n: number) => Math.round((k / n) * 100)
   return (
     <div className={className}>
       <div className={`bx-auth-block ${BAND}`}>
         <div className="flex flex-col gap-3">
-          <span className="text-[13px] text-[var(--color-text-muted)]">{range.mode === 'monthly' ? c.monthly : c.daily}</span>
-          {/* Не влезает в строку (рупии, узкий экран) — сумма уходит под
-              проценты целиком, а не рвётся посередине. */}
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <span className="whitespace-nowrap text-[24px] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--color-primary)]">
-              {pct(range.low, lang)} – {pct(range.high, lang)}%
-            </span>
-            {money && <span className="whitespace-nowrap text-[14px] text-[var(--color-text)]">{money}</span>}
-          </div>
+          <span className="text-[13px] text-[var(--color-text-muted)]">{range.mode === 'monthly' ? c.monthly : o ? c.likelyLabel : c.daily}</span>
           <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between gap-3">
-              {shown
-                ? <span className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--color-text)]"><Dots chance={shown.pct} />{c.chance(shown.pct)}</span>
-                : <span />}
-              <WhyButton range={range} lang={lang} />
+            {/* Не влезает в строку (рупии, узкий экран) — сумма уходит под
+                проценты целиком, а не рвётся посередине. */}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <span className="whitespace-nowrap text-[24px] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--color-primary)]">
+                {pct(big, lang)}%
+              </span>
+              {money && <span className="whitespace-nowrap text-[14px] text-[var(--color-text)]">{money} {c.perYear}</span>}
             </div>
-            {/* К чему относится вероятность — сразу под ней, без наведения. */}
             <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
-              {shown
-                ? c.odds(pct(range.low, lang), shown.k, shown.n, shown.km)
-                : range.mode === 'monthly' ? c.noOddsMonthly : c.noOdds}
+              {o ? c.half(pct(o.q25, lang), pct(o.q75, lang), o.radiusM / 1000) : c.badGood(pct(range.low, lang), pct(range.high, lang))}
             </span>
+          </div>
+          <div className="flex items-end justify-between gap-3">
+            {o ? (
+              <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[14px] text-[var(--color-text)]">
+                <li className="flex items-center gap-2"><Dots chance={share(o.kLow, o.n)} />{c.atLeast(pct(range.low, lang), o.kLow, o.n)}</li>
+                <li className="flex items-center gap-2"><Dots chance={share(o.kHigh, o.n)} even />{c.atLeast(pct(range.high, lang), o.kHigh, o.n)}</li>
+              </ul>
+            ) : <span />}
+            <WhyButton range={range} lang={lang} />
           </div>
         </div>
       </div>

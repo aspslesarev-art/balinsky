@@ -7,7 +7,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { buildSnapshot, type ListingKind } from '../lib/investment/snapshot'
 import { computeYieldFacts, yieldScenarios } from '../lib/listing-verdict'
-import { computeFactors, neighbourChance, pickSimilar, type Match, type NeighbourPerf, type UnitProfile, type ViewKind } from '../lib/investment/chance'
+import { computeFactors, neighbourStats, pickSimilar, type Match, type NeighbourPerf, type UnitProfile, type ViewKind } from '../lib/investment/chance'
 import type { VisionFeatures, VisionManifest } from '../lib/listing-features'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
@@ -171,21 +171,29 @@ async function main() {
           coastM,
         })
         const low = range ? Math.min(range.bad, y.pct.beforeTax) : null
-        // Шанс по соседям — только у посуточной: соседи на Booking сдаются посуточно.
-        let odds: { k: number; n: number } | null = null
-        let oddsRadius: number | null = null
-        let area: { k: number; n: number } | null = null
+        // Самая вероятная по соседям — только у посуточной: соседи на Booking
+        // сдаются посуточно. Рядом 2 км, мало — 3 км, мало и там — округа 10 км.
+        const high = range ? Math.max(range.good, y.pct.beforeTax) : null
+        const pct = (x: number) => Math.round(x * 1000) / 10
+        let odds: Record<string, number> | null = null
+        let areaOdds: Record<string, number> | null = null
         let match: Match | null = null
-        if (low != null && y.mode === 'daily') {
+        if (low != null && high != null && y.mode === 'daily') {
           const { lat, lng, bedrooms } = snap.villa
+          const pack = (st: NonNullable<ReturnType<typeof neighbourStats>>, radiusM: number) => ({
+            likely: pct(st.p50), q25: pct(st.p25), q75: pct(st.p75), kLow: st.kLow, kHigh: st.kHigh, n: st.n, radiusM,
+          })
           for (const r of NEAR_RADII_M) {
             const picked = pickSimilar(await neighbours(lat, lng, r, u.kind, bedrooms), profile)
-            odds = neighbourChance(snap, low, picked.rows)
-            if (odds) { oddsRadius = r; match = picked.match; break }
+            const st = neighbourStats(snap, low, high, picked.rows)
+            if (st) { odds = pack(st, r); match = picked.match; break }
           }
           const wide = pickSimilar(await neighbours(lat, lng, AREA_RADIUS_M, u.kind, bedrooms), profile)
-          area = neighbourChance(snap, low, wide.rows)
-          if (!odds && area) match = wide.match
+          const st = neighbourStats(snap, low, high, wide.rows)
+          if (st) {
+            areaOdds = pack(st, AREA_RADIUS_M)
+            if (!odds) { odds = areaOdds; match = wide.match }
+          }
         }
         const occSource = y.mode === 'monthly' ? null
           : snap.ownBooking?.occupancy != null ? snap.ownBooking.source
@@ -199,10 +207,9 @@ async function main() {
           // Вилка всегда охватывает середину: у комплекса со своей загрузкой
           // плохой год из сценария соседей может оказаться выше неё.
           cap_low: low,
-          cap_high: range ? Math.max(range.good, y.pct.beforeTax) : null,
-          chance: odds ? Math.round((odds.k / odds.n) * 100) : null,
-          chance_k: odds?.k ?? null, chance_n: odds?.n ?? null, chance_radius_m: oddsRadius,
-          area_k: area?.k ?? null, area_n: area?.n ?? null, match,
+          cap_high: high,
+          odds, area_odds: areaOdds, match,
+          chance: null, chance_k: null, chance_n: null, chance_radius_m: null, area_k: null, area_n: null,
           factors, complex_id: c?.id ?? null,
           entry_usd: y.entryUsd != null ? Math.round(y.entryUsd) : null,
         })
