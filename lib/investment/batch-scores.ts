@@ -9,7 +9,7 @@ import { matchCompetitors, type MatchResult } from './matching'
 import { adrPercentiles, buildScenarios } from './economics'
 import { scoreInfra } from './infra-score'
 import { isDailyRentalRestricted } from '@/lib/land-use'
-import type { YieldRange, ChanceFactor } from './chance'
+import type { YieldRange, ChanceFactor, Match } from './chance'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -231,7 +231,7 @@ type PageYields = { caps: Map<string, number>; ranges: Map<string, YieldRange> }
 
 async function loadPageYields(kind: 'villa' | 'apartment'): Promise<PageYields> {
   const { data, error } = await sb.from('listing_yields')
-    .select('airtable_id, mode, cap_before, cap_low, cap_high, chance, chance_k, chance_n, chance_radius_m, area_k, area_n, factors, entry_usd').eq('kind', kind).limit(5000)
+    .select('airtable_id, mode, cap_before, cap_low, cap_high, chance, chance_k, chance_n, chance_radius_m, area_k, area_n, match, factors, entry_usd').eq('kind', kind).limit(5000)
   if (error) { console.error('[batch-scores] listing_yields:', error.message); return { caps: new Map(), ranges: new Map() } }
   const caps = new Map<string, number>()
   const ranges = new Map<string, YieldRange>()
@@ -246,6 +246,7 @@ async function loadPageYields(kind: 'villa' | 'apartment'): Promise<PageYields> 
       chanceRadiusM: r.chance_radius_m != null ? Number(r.chance_radius_m) : null,
       areaK: r.area_k != null ? Number(r.area_k) : null,
       areaN: r.area_n != null ? Number(r.area_n) : null,
+      match: (r.match ?? null) as Match | null,
       mode: r.mode === 'monthly' ? 'monthly' : 'daily',
       entryUsd: r.entry_usd != null ? Number(r.entry_usd) : null,
       factors: (r.factors ?? []) as ChanceFactor[],
@@ -313,12 +314,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 // instance. Map isn't serializable — entries go through the cache.
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
-  ['villa-scores-v11'],
+  ['villa-scores-v12'],
   { revalidate: 604800, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
-  ['apartment-scores-v11'],
+  ['apartment-scores-v12'],
   { revalidate: 604800, tags: ['content:apartments'] },
 )
 

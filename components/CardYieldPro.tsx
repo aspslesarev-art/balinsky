@@ -6,7 +6,8 @@ import { X } from 'lucide-react'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import type { ChanceFactor, ComplexYieldRange, YieldRange } from '@/lib/investment/chance'
+import { pluralRu } from '@/lib/plural-ru'
+import type { ChanceFactor, ComplexYieldRange, Match, YieldRange } from '@/lib/investment/chance'
 import { CardYield } from './CardYield'
 
 // Pro-блок карточки каталога (макет «Pro: доход от и до + вероятность»,
@@ -28,6 +29,7 @@ const COPY = {
     oddsLong: (low: string, k: number, n: number, km: number) => `Рядом, в ${km} км: ${k} из ${n} похожих объектов на Booking своей ценой ночи и загрузкой дали бы этому объекту не меньше ${low}% в год.`,
     areaLong: (low: string, k: number, n: number) => `В округе 10 км: ${k} из ${n}.`,
     noNear: 'В 3 км мало похожих объектов с историей на Booking.',
+    compared: (what: string) => `Сравнивали с соседями на Booking: ${what}.`,
     oddsBasis: 'Цена и загрузка — медиана за всё время наблюдений, с 5 августа 2026. Сетевые отели не считаем.',
     noOdds: 'Вероятность не посчитана: в 10 км мало похожих объектов с историей на Booking',
     noOddsMonthly: 'Вероятность не считаем: соседи на Booking сдаются посуточно, а здесь — помесячно',
@@ -43,6 +45,7 @@ const COPY = {
     odds: (low: string, k: number, n: number, km: number) => `At least ${low}% a year — for ${k} of ${n} similar within ${km} km`,
     oddsLong: (low: string, k: number, n: number, km: number) => `Within ${km} km: ${k} of ${n} similar Booking rentals, at their nightly rate and occupancy, would give this property at least ${low}% a year.`,
     areaLong: (low: string, k: number, n: number) => `Within 10 km: ${k} of ${n}.`,
+    compared: (what: string) => `Compared with Booking neighbours: ${what}.`,
     oddsBasis: 'Rate and occupancy are medians over everything observed since 5 August 2026. Chain hotels are left out.',
     noOdds: 'Likelihood not calculated: too few similar rentals with a Booking history within 10 km',
     noNear: 'Within 3 km there are too few similar rentals with a Booking history.',
@@ -57,6 +60,7 @@ const COPY = {
 
 const VIEW: Record<string, { ru: string; en: string }> = {
   jungle: { ru: 'Вид на джунгли', en: 'Jungle view' },
+  ocean: { ru: 'Вид на океан', en: 'Ocean view' },
   ocean_full: { ru: 'Вид на океан', en: 'Ocean view' },
   ocean_partial: { ru: 'Частичный вид на океан', en: 'Partial ocean view' },
   rice_field: { ru: 'Вид на рисовые поля', en: 'Rice field view' },
@@ -69,6 +73,8 @@ const VIEW: Record<string, { ru: string; en: string }> = {
 }
 
 const VIEW_NOTE: Record<string, { ru: string; en: string }> = {
+  ocean: { ru: 'Океан виден на фото объекта', en: 'The ocean shows in the listing photos' },
+  garden: { ru: 'У вилл с видом в сад загрузка на 3% выше (замер по 3 700 виллам на Booking)', en: 'Villas with a garden view are booked 3% more (3,700 villas on Booking)' },
   jungle: { ru: 'У вилл с таким видом загрузка на 4% выше (замер по 3 700 виллам на Booking)', en: 'Villas with this view are booked 4% more (3,700 villas on Booking)' },
   ocean_full: { ru: 'У вилл с таким видом загрузка на 7% выше (замер по 3 700 виллам на Booking)', en: 'Villas with this view are booked 7% more (3,700 villas on Booking)' },
   rice_field: { ru: 'На загрузку почти не влияет (замер по 3 700 виллам на Booking)', en: 'Barely affects bookings (3,700 villas on Booking)' },
@@ -77,6 +83,16 @@ const VIEW_NOTE: Record<string, { ru: string; en: string }> = {
 }
 
 const fmtKm = (m: number, en: boolean) => (m < 1000 ? `${m} ${en ? 'm' : 'м'}` : `${(m / 1000).toFixed(1).replace('.', en ? '.' : ',')} ${en ? 'km' : 'км'}`)
+
+/** «виллы на 2 спальни с частным бассейном, 100–260 м²» — с кем сравнивали. */
+function matchText(m: Match, en: boolean): string {
+  const r10 = (x: number) => Math.round(x / 10) * 10
+  const kind = m.k === 'villa' ? (en ? 'villas' : 'виллы') : (en ? 'apartments' : 'апартаменты')
+  const br = m.b == null ? '' : m.b === 0 ? (en ? ' (studios)' : '-студии') : en ? ` with ${m.b} bedroom${m.b > 1 ? 's' : ''}` : ` на ${m.b} ${pluralRu(m.b, ['спальню', 'спальни', 'спален'])}`
+  const pool = m.l === 'type' || m.l === 'area' || m.p == null ? '' : m.p ? (en ? ', private pool' : ' с частным бассейном') : (en ? ', no private pool' : ' без своего бассейна')
+  const area = (m.l === 'pool_area' || m.l === 'area') && m.a != null ? `, ${r10(m.a * 0.6)}–${r10(m.a * 1.6)} ${en ? 'm²' : 'м²'}` : ''
+  return `${kind}${br}${pool}${area}`
+}
 
 function factorText(f: ChanceFactor, en: boolean): { k: string; v: string | null } {
   const t = (ru: string, eng: string) => (en ? eng : ru)
@@ -160,7 +176,11 @@ function Reasons({ range, lang }: { range: YieldRange; lang: Lang }) {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <p className="m-0 text-[13px] leading-[1.55] text-[var(--color-text)]">{near}{area ? ` ${area}` : ''}</p>
-        {(range.chance != null || area) && <p className="m-0 text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{c.oddsBasis}</p>}
+        {(range.chance != null || area) && (
+          <p className="m-0 text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
+            {range.match ? `${c.compared(matchText(range.match, en))} ` : ''}{c.oddsBasis}
+          </p>
+        )}
       </div>
       <ul className="m-0 flex list-none flex-col p-0">
         {range.factors.map((f, i) => {

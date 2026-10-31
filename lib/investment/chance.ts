@@ -19,7 +19,7 @@ import { computeEconomics } from './economics'
 import { landColorBucket } from '../land-use'
 
 export type ViewKind =
-  | 'jungle' | 'ocean_full' | 'ocean_partial' | 'rice_field' | 'cliff'
+  | 'jungle' | 'ocean' | 'ocean_full' | 'ocean_partial' | 'rice_field' | 'cliff'
   | 'mountain' | 'river_valley' | 'city' | 'garden' | 'none'
 
 /** k — какая причина; d — в какую сторону; n/s — число или слово для текста. */
@@ -45,6 +45,8 @@ export type YieldRange = {
   /** То же по округе 10 км — «как вообще сдаются такие объекты в районе». */
   areaK: number | null
   areaN: number | null
+  /** С кем сравнивали: уровень подбора и поля юнита (pickSimilar). */
+  match: Match | null
   mode: 'daily' | 'monthly'
   /** Цена входа, $: доход в деньгах = доля × она. */
   entryUsd: number | null
@@ -60,7 +62,9 @@ export type ComplexYieldRange = {
 }
 
 const VIEW_POINTS: Record<ViewKind, number> = {
-  ocean_full: 10, jungle: 8, cliff: 6, ocean_partial: 3, river_valley: 3, garden: 3,
+  // ocean — океан виден на фото, но полный это вид или краешек, разбор фото не
+  // различает (а замер различает: полный +7,4 п., частичный −0,6) — середина.
+  ocean_full: 10, jungle: 8, cliff: 6, ocean: 4, ocean_partial: 3, river_valley: 3, garden: 3,
   mountain: 2, rice_field: 0, city: -6, none: -10,
 }
 
@@ -81,8 +85,42 @@ export type ChanceInput = {
   coastM: number | null
 }
 
-/** Сосед на Booking: медианная цена ночи ($) и загрузка (%) за всё время сбора. */
-export type NeighbourPerf = { price: number; occupancy: number }
+/** Сосед на Booking: медианная цена ночи ($) и загрузка (%) за всё время сбора,
+ *  плюс поля варианта с той же спальностью (booking_room_facts). */
+export type NeighbourPerf = { price: number; occupancy: number; privatePool: boolean | null; sizeM2: number | null }
+
+/** Юнит в формате Booking — то, по чему его сравнивают (listing_profile). */
+export type UnitProfile = { unitKind: 'villa' | 'apartment'; bedrooms: number | null; areaM2: number | null; privatePool: boolean | null }
+
+/** Каких соседей взяли: только тип и спальни; + площадь; + бассейн; + оба. */
+export type MatchLevel = 'type' | 'area' | 'pool' | 'pool_area'
+export type Match = { l: MatchLevel; k: 'villa' | 'apartment'; b: number | null; p: boolean | null; a: number | null }
+
+// Площадь «похожая» — от 0,6 до 1,6 раза: у вилл в Booking часто вписан дом с
+// участком, у нас — дом, поэтому окно широкое.
+const AREA_MIN = 0.6
+const AREA_MAX = 1.6
+
+/**
+ * Самые похожие соседи, которых хватает для расчёта (не меньше пяти):
+ * тот же бассейн и похожая площадь → тот же бассейн → похожая площадь →
+ * просто тип и спальни. Неизвестный бассейн или площадь у нас — ступень
+ * пропускаем (у большинства вилл бассейн не указан и не виден на фото).
+ */
+export function pickSimilar(rows: NeighbourPerf[], u: UnitProfile): { rows: NeighbourPerf[]; match: Match } {
+  const m = (l: MatchLevel): Match => ({ l, k: u.unitKind, b: u.bedrooms, p: u.privatePool, a: u.areaM2 })
+  const area = u.areaM2
+  const closeArea = (xs: NeighbourPerf[]) => area == null ? [] : xs.filter(r => r.sizeM2 != null && r.sizeM2 >= area * AREA_MIN && r.sizeM2 <= area * AREA_MAX)
+  if (u.privatePool != null) {
+    const samePool = rows.filter(r => r.privatePool === u.privatePool)
+    const both = closeArea(samePool)
+    if (both.length >= MIN_NEIGHBOURS) return { rows: both, match: m('pool_area') }
+    if (samePool.length >= MIN_NEIGHBOURS) return { rows: samePool, match: m('pool') }
+  }
+  const byArea = closeArea(rows)
+  if (byArea.length >= MIN_NEIGHBOURS) return { rows: byArea, match: m('area') }
+  return { rows, match: m('type') }
+}
 
 /**
  * Сколько соседей своей ценой ночи и загрузкой дали бы объекту не меньше
