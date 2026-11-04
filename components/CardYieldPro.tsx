@@ -44,7 +44,8 @@ const COPY = {
     noteMonthly: (low: string, high: string) => `${low}% — аренда как у дешёвых соседей и 10 месяцев в году. ${high}% — как у дорогих и весь год.`,
     units: 'Доход до налогов по юнитам, в год', villas: 'Виллы', apartments: 'Апартаменты',
     neighbours: (a: string, b: string) => `Если сдавать как похожие объекты рядом — обычно ${a}–${b}% в год до налогов.`,
-    likelyIs: 'Скорее всего',
+    likelyIs: 'Скорее всего', bothHead: 'Сколько в год до налогов, если сдавать как похожие объекты рядом:', perDay: 'посуточно', perMonth: 'помесячно',
+    bothAria: (d: string, m: string) => `Посуточно скорее всего ${d} процента в год, помесячно ${m}`,
     scaleAria: (a: string, b: string, x: string) => `Шкала дохода: у половины похожих объектов от ${a} до ${b} процентов, этот объект скорее всего ${x}`,
   },
   en: {
@@ -68,7 +69,8 @@ const COPY = {
     noteMonthly: (low: string, high: string) => `${low}% — rent like the cheaper neighbours, 10 months a year. ${high}% — like the pricier ones, all year.`,
     units: 'Unit income before tax, per year', villas: 'Villas', apartments: 'Apartments',
     neighbours: (a: string, b: string) => `Rented like similar places nearby, it usually makes ${a}–${b}% a year before tax.`,
-    likelyIs: 'Most likely',
+    likelyIs: 'Most likely', bothHead: 'Yearly income before tax if rented like similar places nearby:', perDay: 'nightly', perMonth: 'monthly',
+    bothAria: (d: string, m: string) => `Nightly most likely ${d} percent a year, monthly ${m}`,
     scaleAria: (a: string, b: string, x: string) => `Income scale: half of similar places ${a} to ${b} percent, this property most likely ${x}`,
   },
 } as const
@@ -369,6 +371,55 @@ function NeighbourScale({ o, lang }: { o: NonNullable<YieldRange['odds']>; lang:
   )
 }
 
+/** Посуточно и помесячно на одной шкале (вариант C1, владелец 04.11.2026):
+ *  зелёная точка — посуточно, оранжевая — помесячно, под каждой крупно
+ *  процент. Зоны — обычный разброс каждого способа. */
+function TwoModeScale({ range, lang }: { range: YieldRange; lang: Lang }) {
+  const c = pickCopy(COPY, lang)
+  const m = range.monthly!
+  const o = range.odds
+  const d = { v: o ? o.likely : range.mid, a: o ? o.q25 : range.low, b: o ? o.q75 : range.high }
+  const lo = Math.max(0, Math.floor(Math.min(d.a, m.low) - 1))
+  const hi = Math.ceil(Math.max(d.b, m.high) + 1)
+  const pos = (v: number) => ((v - lo) / (hi - lo)) * 100
+  // Подписи не наезжают друг на друга и на края шкалы.
+  const GAP = 26
+  const clamp = (x: number) => Math.min(82, Math.max(18, x))
+  let ld = clamp(pos(d.v)), lm = clamp(pos(m.mid))
+  if (Math.abs(ld - lm) < GAP) {
+    const dFirst = ld >= lm
+    const mid = Math.min(82 - GAP / 2, Math.max(18 + GAP / 2, (ld + lm) / 2))
+    ld = mid + (dFirst ? GAP / 2 : -GAP / 2)
+    lm = mid + (dFirst ? -GAP / 2 : GAP / 2)
+  }
+  const zone = (a: number, b: number, cls: string) => <div className={`absolute inset-y-0 rounded-full ${cls}`} style={{ left: `${pos(a)}%`, width: `${pos(b) - pos(a)}%` }} />
+  const dot = (v: number, cls: string) => <div className={`absolute -top-[5px] h-[22px] w-[22px] -translate-x-1/2 rounded-full border-[3px] border-white ${cls}`} style={{ left: `${pos(v)}%` }} />
+  const label = (x: number, v: number, cap: string, tone: string) => (
+    <span className={`absolute top-0 -translate-x-1/2 whitespace-nowrap text-center text-[20px] font-semibold leading-[1.2] tracking-[-0.01em] ${tone}`} style={{ left: `${x}%` }}>
+      {pct(v, lang)}%<span className="block text-[13px] font-normal tracking-normal text-[var(--color-text-muted)]">{cap}</span>
+    </span>
+  )
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="m-0 text-[14px] leading-[1.5] text-[var(--color-text)]">{c.bothHead}</p>
+      <div role="img" aria-label={c.bothAria(pct(d.v, lang), pct(m.mid, lang))} className="flex flex-col gap-2 px-2 pt-2">
+        <div className="relative h-3 rounded-full bg-[#DDE6E1]">
+          {zone(m.low, m.high, 'bg-[rgb(184_110_31/0.35)]')}
+          {zone(d.a, d.b, 'bg-[rgb(31_139_95/0.45)]')}
+          {dot(m.mid, 'bg-[#B86E1F] shadow-[0_0_0_2px_#B86E1F]')}
+          {dot(d.v, 'bg-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)]')}
+        </div>
+        <div className="relative h-12 text-[13px] text-[var(--color-text-muted)]">
+          <span className="absolute left-0 top-0">{lo}%</span>
+          {label(lm, m.mid, c.perMonth, 'text-[#8A4A0C]')}
+          {label(ld, d.v, c.perDay, 'text-[var(--color-primary)]')}
+          <span className="absolute right-0 top-0">{hi}%</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '' }: {
   range: YieldRange | null | undefined
   /** Цифра без вилки (старые данные) — прежняя строка «≈N% в год». */
@@ -386,7 +437,12 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
   return (
     <div className={className}>
       <div className={`bx-auth-block ${BAND}`}>
-        {o ? (
+        {range.mode === 'daily' && range.monthly ? (
+          <div className="flex flex-col gap-3">
+            <TwoModeScale range={range} lang={lang} />
+            <div className="-mt-1 flex justify-end"><WhyButton range={range} lang={lang} /></div>
+          </div>
+        ) : o ? (
           // Соседи есть — фраза и шкала (вариант B3, владелец 04.11.2026).
           <div className="flex flex-col gap-3">
             <p className="m-0 text-[14px] leading-[1.5] text-[var(--color-text)]">

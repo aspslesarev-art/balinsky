@@ -48,6 +48,9 @@ export type YieldRange = {
   mode: 'daily' | 'monthly'
   /** Цена входа, $: доход в деньгах = доля × она. */
   entryUsd: number | null
+  /** Помесячная сдача рядом, % (плохой / средний / хороший год) — у вилл с
+   *  посуточным режимом, если рядом есть помесячные объявления. */
+  monthly?: { low: number; mid: number; high: number } | null
   factors: ChanceFactor[]
 }
 

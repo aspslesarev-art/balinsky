@@ -231,7 +231,7 @@ type PageYields = { caps: Map<string, number>; ranges: Map<string, YieldRange> }
 
 async function loadPageYields(kind: 'villa' | 'apartment'): Promise<PageYields> {
   const { data, error } = await sb.from('listing_yields')
-    .select('airtable_id, mode, cap_before, cap_low, cap_high, odds, area_odds, match, factors, entry_usd').eq('kind', kind).limit(5000)
+    .select('airtable_id, mode, cap_before, cap_low, cap_high, odds, area_odds, match, factors, entry_usd, monthly').eq('kind', kind).limit(5000)
   if (error) { console.error('[batch-scores] listing_yields:', error.message); return { caps: new Map(), ranges: new Map() } }
   const caps = new Map<string, number>()
   const ranges = new Map<string, YieldRange>()
@@ -245,6 +245,7 @@ async function loadPageYields(kind: 'villa' | 'apartment'): Promise<PageYields> 
       match: (r.match ?? null) as Match | null,
       mode: r.mode === 'monthly' ? 'monthly' : 'daily',
       entryUsd: r.entry_usd != null ? Number(r.entry_usd) : null,
+      monthly: (r.monthly ?? null) as YieldRange['monthly'],
       factors: (r.factors ?? []) as ChanceFactor[],
     })
   }
@@ -310,12 +311,12 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 // instance. Map isn't serializable — entries go through the cache.
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
-  ['villa-scores-v14'],
+  ['villa-scores-v15'],
   { revalidate: 604800, tags: ['content:villas', 'content:apartments'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
-  ['apartment-scores-v14'],
+  ['apartment-scores-v15'],
   { revalidate: 604800, tags: ['content:apartments'] },
 )
 

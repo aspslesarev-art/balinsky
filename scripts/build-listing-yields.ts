@@ -143,7 +143,9 @@ async function main() {
         const snap = await buildSnapshot(u.id, u.kind)
         const y = computeYieldFacts(snap)
         if (!snap || !y) continue
-        const range = yieldScenarios(snap, null)[y.mode]
+        const scen = yieldScenarios(snap, null)
+        const range = scen[y.mode]
+        const monthlyRange = scen.monthly
         const c = u.complex ? cx.get(cxKey(u.complex)) : undefined
         const key = `${u.kind}:${u.id}`
         // Юнит в формате Booking (listing_profile): по нему подбираются соседи.
@@ -213,6 +215,8 @@ async function main() {
           cap_low: low,
           cap_high: high,
           odds, area_odds: areaOdds, match,
+          // Помесячно — рядом с посуточным, на карточке обе цифры (вариант C1, 04.11.2026).
+          monthly: y.mode === 'daily' && monthlyRange ? { low: pct(monthlyRange.bad), mid: pct(monthlyRange.mid), high: pct(monthlyRange.good) } : null,
           chance: null, chance_k: null, chance_n: null, chance_radius_m: null, area_k: null, area_n: null,
           factors, complex_id: c?.id ?? null,
           entry_usd: y.entryUsd != null ? Math.round(y.entryUsd) : null,
