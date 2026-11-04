@@ -87,7 +87,7 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
   return (
     <Link
       href={detailHref}
-      className="magic-card group block bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
+      className="magic-card group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
     >
       <div className="relative">
         <PhotoSlider photos={a.photos} alt={a.title} trackingId={`apt:${a.slug}`} priority={priority} />
@@ -123,9 +123,11 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
         />
       </div>
 
-      <div className="p-6">
+      {/* Карточки в ряду одной высоты (владелец 04.11.2026): название всегда
+          занимает две строки, нижняя строка прижата к низу. */}
+      <div className="flex flex-1 flex-col p-6">
         <h3
-          className="text-[20px] font-semibold text-[var(--color-text)] leading-[1.3] mb-4 overflow-hidden"
+          className="min-h-[2.6em] text-[20px] font-semibold text-[var(--color-text)] leading-[1.3] mb-4 overflow-hidden"
           style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
         >
           {a.title}
@@ -146,7 +148,7 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
 
         {/* Балл востребованности прижат к правому краю нижней строки: это
             последнее, что читает глаз, и он не конкурирует с ценой. */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="mt-auto flex items-center justify-between gap-3">
           <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
             {a.bedrooms != null && <span>{lang === 'ru' ? `${a.bedrooms} ${pluralRu(a.bedrooms, ['спальня', 'спальни', 'спален'])}` : `${a.bedrooms} BR`}</span>}
             {a.area != null && <span>{a.area} {c.sqm}</span>}
