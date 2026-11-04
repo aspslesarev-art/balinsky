@@ -29,7 +29,6 @@ const COPY = {
     half: (a: string, b: string, km: number) => `У половины похожих в ${km} км — от ${a} до ${b}%`,
     atLeast: (x: string, k: number, n: number) => `${x}% и больше — у ${k} из ${n}`,
     siteEstimate: 'Расчёт сайта: своего класса рядом мало для сравнения',
-    siteMonthly: 'Расчёт сайта по помесячной аренде у соседей',
     siteOwn: 'По броням самого комплекса на Booking',
     why: 'Почему?', close: 'Закрыть', perYear: 'в год',
     how: (n: number, km: number, what: string, likely: string) => `Взяли ${n} похожих на Booking в ${km} км: ${what}. Цену ночи и загрузку каждого пересчитали на этот объект — его цену, расходы и комиссии. Половина дала бы больше ${likely}%, половина — меньше.`,
@@ -45,6 +44,8 @@ const COPY = {
     units: 'Доход до налогов по юнитам, в год', villas: 'Виллы', apartments: 'Апартаменты',
     neighbours: (a: string, b: string) => `Если сдавать как похожие объекты рядом — обычно ${a}–${b}% в год до налогов.`,
     likelyIs: 'Скорее всего', bothHead: 'Сколько в год до налогов, если сдавать как похожие объекты рядом:', perDay: 'посуточно', perMonth: 'помесячно',
+    monthlyOnlyHead: 'Посуточно здесь сдавать нельзя — земля под жильё. Сколько в год до налогов, если сдавать помесячно, как похожие объекты рядом:',
+    monthlyAria: (m: string) => `Помесячно скорее всего ${m} процента в год`,
     bothAria: (d: string, m: string) => `Посуточно скорее всего ${d} процента в год, помесячно ${m}`,
     scaleAria: (a: string, b: string, x: string) => `Шкала дохода: у половины похожих объектов от ${a} до ${b} процентов, этот объект скорее всего ${x}`,
   },
@@ -54,7 +55,6 @@ const COPY = {
     half: (a: string, b: string, km: number) => `Half of similar rentals within ${km} km: ${a}–${b}%`,
     atLeast: (x: string, k: number, n: number) => `${x}% or more — ${k} of ${n}`,
     siteEstimate: 'Site estimate: too few rentals of the same class nearby',
-    siteMonthly: 'Site estimate from monthly rents nearby',
     siteOwn: 'From the complex’s own Booking reservations',
     why: 'Why?', close: 'Close', perYear: 'a year',
     how: (n: number, km: number, what: string, likely: string) => `We took ${n} similar Booking rentals within ${km} km: ${what}. Each one's nightly rate and occupancy were applied to this property — its price, costs and fees. Half would give more than ${likely}%, half less.`,
@@ -70,6 +70,8 @@ const COPY = {
     units: 'Unit income before tax, per year', villas: 'Villas', apartments: 'Apartments',
     neighbours: (a: string, b: string) => `Rented like similar places nearby, it usually makes ${a}–${b}% a year before tax.`,
     likelyIs: 'Most likely', bothHead: 'Yearly income before tax if rented like similar places nearby:', perDay: 'nightly', perMonth: 'monthly',
+    monthlyOnlyHead: 'Nightly rental is not allowed here — residential land. Yearly income before tax if rented monthly like similar places nearby:',
+    monthlyAria: (m: string) => `Monthly most likely ${m} percent a year`,
     bothAria: (d: string, m: string) => `Nightly most likely ${d} percent a year, monthly ${m}`,
     scaleAria: (a: string, b: string, x: string) => `Income scale: half of similar places ${a} to ${b} percent, this property most likely ${x}`,
   },
@@ -374,19 +376,21 @@ function NeighbourScale({ o, lang }: { o: NonNullable<YieldRange['odds']>; lang:
 /** Посуточно и помесячно на одной шкале (вариант C1, владелец 04.11.2026):
  *  зелёная точка — посуточно, оранжевая — помесячно, под каждой крупно
  *  процент. Зоны — обычный разброс каждого способа. */
+// На жёлтой земле (только помесячно) — та же шкала с одной оранжевой точкой.
 function TwoModeScale({ range, lang }: { range: YieldRange; lang: Lang }) {
   const c = pickCopy(COPY, lang)
-  const m = range.monthly!
+  const only = range.mode === 'monthly'
+  const m = only ? { low: range.low, mid: range.mid, high: range.high } : range.monthly!
   const o = range.odds
-  const d = { v: o ? o.likely : range.mid, a: o ? o.q25 : range.low, b: o ? o.q75 : range.high }
-  const lo = Math.max(0, Math.floor(Math.min(d.a, m.low) - 1))
-  const hi = Math.ceil(Math.max(d.b, m.high) + 1)
+  const d = only ? null : { v: o ? o.likely : range.mid, a: o ? o.q25 : range.low, b: o ? o.q75 : range.high }
+  const lo = Math.max(0, Math.floor(Math.min(d?.a ?? m.low, m.low) - 1))
+  const hi = Math.ceil(Math.max(d?.b ?? m.high, m.high) + 1)
   const pos = (v: number) => ((v - lo) / (hi - lo)) * 100
   // Подписи не наезжают друг на друга и на края шкалы.
   const GAP = 26
   const clamp = (x: number) => Math.min(82, Math.max(18, x))
-  let ld = clamp(pos(d.v)), lm = clamp(pos(m.mid))
-  if (Math.abs(ld - lm) < GAP) {
+  let ld = d ? clamp(pos(d.v)) : 0, lm = clamp(pos(m.mid))
+  if (d && Math.abs(ld - lm) < GAP) {
     const dFirst = ld >= lm
     const mid = Math.min(82 - GAP / 2, Math.max(18 + GAP / 2, (ld + lm) / 2))
     ld = mid + (dFirst ? GAP / 2 : -GAP / 2)
@@ -401,18 +405,18 @@ function TwoModeScale({ range, lang }: { range: YieldRange; lang: Lang }) {
   )
   return (
     <div className="flex flex-col gap-3">
-      <p className="m-0 text-[14px] leading-[1.5] text-[var(--color-text)]">{c.bothHead}</p>
-      <div role="img" aria-label={c.bothAria(pct(d.v, lang), pct(m.mid, lang))} className="flex flex-col gap-2 px-2 pt-2">
+      <p className="m-0 text-[14px] leading-[1.5] text-[var(--color-text)]">{d ? c.bothHead : c.monthlyOnlyHead}</p>
+      <div role="img" aria-label={d ? c.bothAria(pct(d.v, lang), pct(m.mid, lang)) : c.monthlyAria(pct(m.mid, lang))} className="flex flex-col gap-2 px-2 pt-2">
         <div className="relative h-3 rounded-full bg-[#DDE6E1]">
           {zone(m.low, m.high, 'bg-[rgb(184_110_31/0.35)]')}
-          {zone(d.a, d.b, 'bg-[rgb(31_139_95/0.45)]')}
+          {d && zone(d.a, d.b, 'bg-[rgb(31_139_95/0.45)]')}
           {dot(m.mid, 'bg-[#B86E1F] shadow-[0_0_0_2px_#B86E1F]')}
-          {dot(d.v, 'bg-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)]')}
+          {d && dot(d.v, 'bg-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)]')}
         </div>
         <div className="relative h-12 text-[13px] text-[var(--color-text-muted)]">
           <span className="absolute left-0 top-0">{lo}%</span>
           {label(lm, m.mid, c.perMonth, 'text-[#8A4A0C]')}
-          {label(ld, d.v, c.perDay, 'text-[var(--color-primary)]')}
+          {d && label(ld, d.v, c.perDay, 'text-[var(--color-primary)]')}
           <span className="absolute right-0 top-0">{hi}%</span>
         </div>
       </div>
@@ -437,7 +441,7 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
   return (
     <div className={className}>
       <div className={`bx-auth-block ${BAND}`}>
-        {range.mode === 'daily' && range.monthly ? (
+        {range.mode === 'monthly' || range.monthly ? (
           <div className="flex flex-col gap-3">
             <TwoModeScale range={range} lang={lang} />
             <div className="-mt-1 flex justify-end"><WhyButton range={range} lang={lang} /></div>
@@ -453,7 +457,7 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
           </div>
         ) : (
         <div className="flex flex-col gap-3">
-          <span className="text-[13px] text-[var(--color-text-muted)]">{range.mode === 'monthly' ? c.monthly : c.daily}</span>
+          <span className="text-[13px] text-[var(--color-text-muted)]">{c.daily}</span>
           <div className="flex flex-col gap-1">
             {/* Не влезает в строку (рупии, узкий экран) — сумма уходит под
                 проценты целиком, а не рвётся посередине. */}
@@ -464,8 +468,7 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
               {money && <span className="whitespace-nowrap text-[14px] text-[var(--color-text)]">{money} {c.perYear}</span>}
             </div>
             <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
-              {range.mode === 'monthly' ? c.siteMonthly
-                : range.factors.some(f => f.k === 'own') ? c.siteOwn
+              {range.factors.some(f => f.k === 'own') ? c.siteOwn
                 : c.siteEstimate}
             </span>
           </div>
