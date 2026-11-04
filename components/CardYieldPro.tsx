@@ -354,16 +354,15 @@ function NeighbourScale({ o, lang }: { o: NonNullable<YieldRange['odds']>; lang:
   const pos = (v: number) => ((v - lo) / (hi - lo)) * 100
   const clamp = (x: number) => Math.min(80, Math.max(20, x))
   return (
-    <div role="img" aria-label={c.scaleAria(pct(o.q25, lang), pct(o.q75, lang), pct(o.likely, lang))} className="flex flex-col gap-1.5 px-2">
-      <div className="relative h-5 text-[13px]">
-        <span className="absolute bottom-0 -translate-x-1/2 whitespace-nowrap font-semibold text-[var(--color-primary)]" style={{ left: `${clamp(pos(o.likely))}%` }}>{pct(o.likely, lang)}%</span>
-      </div>
+    <div role="img" aria-label={c.scaleAria(pct(o.q25, lang), pct(o.q75, lang), pct(o.likely, lang))} className="flex flex-col gap-2 px-2 pt-2">
       <div className="relative h-3 rounded-full bg-[#DDE6E1]">
         <div className="absolute inset-y-0 rounded-full bg-[rgb(31_139_95/0.45)]" style={{ left: `${pos(o.q25)}%`, width: `${pos(o.q75) - pos(o.q25)}%` }} />
         <div className="absolute -top-[5px] h-[22px] w-[22px] -translate-x-1/2 rounded-full border-[3px] border-white bg-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)]" style={{ left: `${pos(o.likely)}%` }} />
       </div>
-      <div className="relative h-5 text-[13px] text-[var(--color-text-muted)]">
+      {/* Под точкой — крупно доходность, на которую можно рассчитывать (владелец 04.11.2026). */}
+      <div className="relative h-7 text-[13px] text-[var(--color-text-muted)]">
         <span className="absolute left-0 top-0">{lo}%</span>
+        <span className="absolute top-0 -translate-x-1/2 whitespace-nowrap text-[20px] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--color-primary)]" style={{ left: `${clamp(pos(o.likely))}%` }}>{pct(o.likely, lang)}%</span>
         <span className="absolute right-0 top-0">{hi}%</span>
       </div>
     </div>
