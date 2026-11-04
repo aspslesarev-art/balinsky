@@ -3,7 +3,6 @@
 // Тексты пока RU + EN; остальные языки берут английский до перевода.
 import type { ReactNode } from 'react'
 import { PriceScale } from './PriceScale'
-import { NightReceiptBlock } from './NightReceiptBlock'
 import { DemandTabs } from './DemandTabs'
 import { BookingCompCard } from './BookingCompCard'
 import { InfoTip } from './InfoTip'
@@ -581,7 +580,7 @@ const BANDS_COPY = {
     heading: 'Что будет, если сдавать как соседи',
     railHeading: 'Похожие рядом — от дорогих к дешёвым',
     // tenths — у скольких из 10 соседей ночь дешевле, чем у этого объекта.
-    verdict: (self: ReactNode, tenths: number) => <>Доход мы посчитали по цене {self} за ночь. {tenths >= 10 ? 'Это дороже, чем у всех соседей.'
+    verdict: (self: ReactNode, tenths: number, unit: 'night' | 'month' = 'night') => <>Доход мы посчитали по цене {self} {unit === 'night' ? 'за ночь' : 'в месяц'}. {tenths >= 10 ? 'Это дороже, чем у всех соседей.'
       : tenths >= 7 ? `Это дороже, чем у ${tenths} из 10 соседей.`
       : tenths <= 0 ? 'Это дешевле, чем у всех соседей.'
       : tenths <= 3 ? `Это дешевле, чем у ${10 - tenths} из 10 соседей.`
@@ -589,7 +588,9 @@ const BANDS_COPY = {
     selfMark: 'этот объект', midMark: 'обычно у соседей', perNight: 'за ночь',
     ifLikeNeighbours: (self: ReactNode, tenths: number) => tenths >= 7 ? <>Если по {self} не получится и придётся сдавать как соседи, доход будет ниже. </>
       : tenths <= 3 ? <>Если сдавать как соседи, доход может быть выше. </> : null,
-    payback: (be: ReactNode) => <>Покупка окупится, если ночь стоит дороже {be}.</>,
+    payback: (be: ReactNode, unit: 'night' | 'month' = 'night') => <>Покупка окупится, если сдавать дороже {be} {unit === 'night' ? 'за ночь' : 'в месяц'}.</>,
+    monthLine: (n: number, km: number, district: string | null) => `${district ? `В районе ${district} и радиусе` : 'В радиусе'} ${String(km).replace('.', ',')} км помесячно ${pluralRu(n, ['сдаётся', 'сдаются', 'сдаются'])} ${n} ${pluralRu(n, ['похожий объект', 'похожих объекта', 'похожих объектов'])}.`,
+    monthUsual: 'Месяц у них обычно стоит от', perMonth: 'в месяц',
     bad: 'Плохо: сдавать как дешёвые',
     mid: 'Средне: как большинство',
     good: 'Хорошо: как дорогие',
@@ -599,12 +600,12 @@ const BANDS_COPY = {
     moneyGood: (x: ReactNode) => <>От {x} в месяц</>,
     tag: { bad: 'Плохо', mid: 'Средне', good: 'Хорошо' } as Record<Band, string>,
     loss: 'В минус',
-    allLoss: (be: ReactNode, unit: 'night' | 'month') => <>Даже по цене дорогих соседей покупка не окупится: для этого {unit === 'night' ? 'ночь' : 'месяц'} должен стоить дороже {be}.</>,
+    allLoss: (be: ReactNode, unit: 'night' | 'month') => <>Даже по цене дорогих соседей покупка не окупится: для этого нужно сдавать дороже {be} {unit === 'night' ? 'за ночь' : 'в месяц'}.</>,
   },
   en: {
     heading: 'What if you rent like the neighbours',
     railHeading: 'Similar rentals nearby — priciest first',
-    verdict: (self: ReactNode, tenths: number) => <>We estimated the income at {self} a night. {tenths >= 10 ? 'That is more than every neighbour charges.'
+    verdict: (self: ReactNode, tenths: number, unit: 'night' | 'month' = 'night') => <>We estimated the income at {self} a {unit}. {tenths >= 10 ? 'That is more than every neighbour charges.'
       : tenths >= 7 ? `That is more than ${tenths} in 10 neighbours charge.`
       : tenths <= 0 ? 'That is less than every neighbour charges.'
       : tenths <= 3 ? `That is less than ${10 - tenths} in 10 neighbours charge.`
@@ -612,7 +613,9 @@ const BANDS_COPY = {
     selfMark: 'this property', midMark: 'typical nearby', perNight: 'a night',
     ifLikeNeighbours: (self: ReactNode, tenths: number) => tenths >= 7 ? <>If {self} does not work out and you rent like the neighbours, income will be lower. </>
       : tenths <= 3 ? <>Renting like the neighbours, income could be higher. </> : null,
-    payback: (be: ReactNode) => <>The purchase pays back if a night costs more than {be}.</>,
+    payback: (be: ReactNode, unit: 'night' | 'month' = 'night') => <>The purchase pays back if a {unit} costs more than {be}.</>,
+    monthLine: (n: number, km: number, district: string | null) => `${district ? `In ${district} and within` : 'Within'} ${km} km, ${en(n, 'similar place is', 'similar places are')} rented monthly.`,
+    monthUsual: 'A month there usually costs', perMonth: 'a month',
     bad: 'Poor: priced like the cheap ones',
     mid: 'Typical: like most',
     good: 'Good: like the pricey ones',
@@ -742,7 +745,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                 <PriceScale self={self} median={bq.p50} lowGood={false} neutralDot
                   q={{ min: nightPrices[0], p25: bq.p25, p75: bq.p75, max: nightPrices[nightPrices.length - 1] }}
                   selfLabel={<>{b.selfMark}<br />{P(self)} <span className="font-normal text-[var(--color-text-muted)]">{b.perNight}</span></>}
-                  midLabel={<>{P(bq.p50)} {b.perNight}<br />{b.midMark}</>} />
+                  midLabel={Math.abs(self / bq.p50 - 1) < 0.03 ? null : <>{P(bq.p50)} {b.perNight}<br />{b.midMark}</>} />
                 <p className="max-w-[68ch] text-[16px] leading-relaxed text-[var(--color-text)]">{b.ifLikeNeighbours(P(self), tenths)}{receipt.breakeven == null ? null : allLoss ? b.allLoss(P(receipt.breakeven), 'night') : b.payback(P(receipt.breakeven))}</p>
               </section>
               <BandedRail heading={b.railHeading} prevLabel={c.prev} nextLabel={c.next}
@@ -758,10 +761,10 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   ) })
   if (m && m.comps.length > 0) tabs.push({ key: 'monthly', label: c.tabMonthly, content: (
         <div className="rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6">
+          {/* Как посуточно (владелец 04.11.2026): строка о соседях, шкала, лента. */}
           <p className="mb-4 text-[16px] text-[var(--color-text)]">
-            {m.ownN && m.ownDistrict ? c.whoDistrict(m.bedroomsRelaxed ? null : bedrooms, lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict, m.radiusKm) : c.whoLine(m.bedroomsRelaxed ? null : bedrooms, m.radiusKm)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={m.p50} lang={lang} /></span> {c.perMonth}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
+            {pickCopy(BANDS_COPY, lang).monthLine(m.n, m.radiusKm, m.ownN && m.ownDistrict ? (lang === 'ru' ? (districtRu(m.ownDistrict) ?? m.ownDistrict) : m.ownDistrict) : null)} {pickCopy(BANDS_COPY, lang).monthUsual} <span className="whitespace-nowrap"><InlinePrice usd={m.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={m.p75} lang={lang} approx={false} /></span>.
           </p>
-          {mReceipt && <div className="mb-6 border-b border-[var(--color-border)] pb-6"><NightReceiptBlock r={mReceipt} marketMedian={m.p50} lang={lang} /></div>}
           {(() => {
             // Зоны — те же, что посуточно: дешёвая четверть, середина, дорогая четверть.
             const card = (comp: typeof m.comps[number], tone?: Band, tag?: string) => (
@@ -788,20 +791,27 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             const b = pickCopy(BANDS_COPY, lang)
             const P = (usd: number) => <span className="whitespace-nowrap"><InlinePrice usd={usd} lang={lang} approx={false} /></span>
             const band = (p: number): Band => p < m.p25 ? 'bad' : p > m.p75 ? 'good' : 'mid'
-            const month = (p: number) => monthlyNetAt(snap, p, 'month') ?? 0
+            const self = mReceipt.guest
+            const prices = m.comps.map(x => x.rentMonthUsd).filter(x => x > 0)
+            const tenths = prices.length ? Math.round(prices.filter(x => x < self).length / prices.length * 10) : 5
+            const allLoss = mReceipt.breakeven != null && m.p75 < mReceipt.breakeven
             return (
-              <BandedRail heading={b.heading} prevLabel={c.prev} nextLabel={c.next}
-                note={mReceipt.breakeven != null && m.p75 < mReceipt.breakeven ? b.allLoss(P(mReceipt.breakeven), 'month') : undefined}
-                chips={[
-                  { band: 'bad', title: b.bad, range: <>{b.upTo} {P(m.p25)}</>, money: b.moneyBad(P(month(m.p25))) },
-                  { band: 'mid', title: b.mid, range: <>{P(m.p25)} – {P(m.p75)}</>, money: b.moneyMid(P(month(m.p50))) },
-                  { band: 'good', title: b.good, range: <>{b.from} {P(m.p75)}</>, money: b.moneyGood(P(month(m.p75))) },
-                ]}
+              <div className="flex flex-col gap-8">
+              <section className="flex flex-col gap-5">
+                <p className="text-[18px] font-semibold leading-snug tracking-tight md:text-[20px]">{b.verdict(P(self), tenths, 'month')}</p>
+                <PriceScale self={self} median={m.p50} lowGood={false} neutralDot
+                  q={{ min: Math.min(m.p25, ...prices), p25: m.p25, p75: m.p75, max: Math.max(m.p75, ...prices) }}
+                  selfLabel={<>{b.selfMark}<br />{P(self)} <span className="font-normal text-[var(--color-text-muted)]">{b.perMonth}</span></>}
+                  midLabel={Math.abs(self / m.p50 - 1) < 0.03 ? null : <>{P(m.p50)} {b.perMonth}<br />{b.midMark}</>} />
+                <p className="max-w-[68ch] text-[16px] leading-relaxed text-[var(--color-text)]">{b.ifLikeNeighbours(P(self), tenths)}{mReceipt.breakeven == null ? null : allLoss ? b.allLoss(P(mReceipt.breakeven), 'month') : b.payback(P(mReceipt.breakeven), 'month')}</p>
+              </section>
+              <BandedRail heading={b.railHeading} prevLabel={c.prev} nextLabel={c.next}
                 items={sorted.map(comp => {
                   const t = band(comp.rentMonthUsd)
                   const loss = mReceipt.breakeven != null && comp.rentMonthUsd < mReceipt.breakeven
                   return { band: t, node: card(comp, loss ? 'bad' : t, loss ? b.loss : b.tag[t]) }
                 })} />
+              </div>
             )
           })()}
         </div>

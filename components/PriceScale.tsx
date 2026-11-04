@@ -40,9 +40,12 @@ export function PriceScale({ self, median, q, selfLabel, midLabel, lowGood, redD
         <div className="absolute -inset-y-1.5 w-0.5 bg-[var(--color-text-muted)]" style={{ left: `${pos(median)}%` }} />
         <div className={`absolute -top-[5px] h-[22px] w-[22px] -translate-x-1/2 rounded-full border-[3px] border-white ${dot}`} style={{ left: `${pos(self)}%` }} />
       </div>
+      {/* Нет подписи середины (объект и есть середина) — строку не держим. */}
+      {midLabel != null && (
       <div className="relative h-10 text-[13px] text-[var(--color-text-muted)]">
         <span className="absolute -translate-x-1/2 whitespace-nowrap text-center" style={{ left: `${Math.min(85, Math.max(15, pos(median)))}%` }}>{midLabel}</span>
       </div>
+      )}
     </div>
   )
 }
