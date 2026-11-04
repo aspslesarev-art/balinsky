@@ -25,11 +25,9 @@ import { CardYield } from './CardYield'
 const COPY = {
   ru: {
     daily: 'Доход до налогов, в год', monthly: 'Доход при помесячной сдаче, в год',
-    likelyLabel: 'Скорее всего, в год до налогов',
     likelyHead: (x: string) => `Скорее всего ${x}%`,
     half: (a: string, b: string, km: number) => `У половины похожих в ${km} км — от ${a} до ${b}%`,
     atLeast: (x: string, k: number, n: number) => `${x}% и больше — у ${k} из ${n}`,
-    basedOn: (n: number, km: number) => `По ${n} похожим объектам в ${km} км на Booking`,
     siteEstimate: 'Расчёт сайта: своего класса рядом мало для сравнения',
     siteMonthly: 'Расчёт сайта по помесячной аренде у соседей',
     siteOwn: 'По броням самого комплекса на Booking',
@@ -45,14 +43,15 @@ const COPY = {
     note: (low: string, high: string, mid: string) => `${low}% — плохой год по расчёту сайта: цена ночи как у дешёвых соседей, загрузка ниже обычной. ${high}% — хороший год. Средний год на странице объекта — ${mid}%.`,
     noteMonthly: (low: string, high: string) => `${low}% — аренда как у дешёвых соседей и 10 месяцев в году. ${high}% — как у дорогих и весь год.`,
     units: 'Доход до налогов по юнитам, в год', villas: 'Виллы', apartments: 'Апартаменты',
+    neighbours: (a: string, b: string) => `Если сдавать как похожие объекты рядом — обычно ${a}–${b}% в год до налогов.`,
+    likelyIs: 'Скорее всего', thisOne: 'этот объект', halfZone: ['у половины', 'похожих'],
+    scaleAria: (a: string, b: string, x: string) => `Шкала дохода: у половины похожих объектов от ${a} до ${b} процентов, этот объект скорее всего ${x}`,
   },
   en: {
     daily: 'Income before tax, per year', monthly: 'Income from monthly rental, per year',
-    likelyLabel: 'Most likely, per year before tax',
     likelyHead: (x: string) => `Most likely ${x}%`,
     half: (a: string, b: string, km: number) => `Half of similar rentals within ${km} km: ${a}–${b}%`,
     atLeast: (x: string, k: number, n: number) => `${x}% or more — ${k} of ${n}`,
-    basedOn: (n: number, km: number) => `Based on ${n} similar Booking rentals within ${km} km`,
     siteEstimate: 'Site estimate: too few rentals of the same class nearby',
     siteMonthly: 'Site estimate from monthly rents nearby',
     siteOwn: 'From the complex’s own Booking reservations',
@@ -68,6 +67,9 @@ const COPY = {
     note: (low: string, high: string, mid: string) => `${low}% is a bad year by the site estimate: nightly rate like the cheaper neighbours, occupancy below usual. ${high}% is a good year. The average year on the listing page is ${mid}%.`,
     noteMonthly: (low: string, high: string) => `${low}% — rent like the cheaper neighbours, 10 months a year. ${high}% — like the pricier ones, all year.`,
     units: 'Unit income before tax, per year', villas: 'Villas', apartments: 'Apartments',
+    neighbours: (a: string, b: string) => `Rented like similar places nearby, it usually makes ${a}–${b}% a year before tax.`,
+    likelyIs: 'Most likely', thisOne: 'this property', halfZone: ['half of', 'similar places'],
+    scaleAria: (a: string, b: string, x: string) => `Income scale: half of similar places ${a} to ${b} percent, this property most likely ${x}`,
   },
 } as const
 
@@ -341,6 +343,34 @@ function WhyButton({ range, lang }: { range: YieldRange; lang: Lang }) {
   )
 }
 
+/** Шкала карточки (макет «вариант B3», владелец 04.11.2026): зелёная зона —
+ *  сколько дал бы объект у половины похожих соседей, точка — самая вероятная.
+ *  Края — запас в ширину зоны с каждой стороны, округлённый до целых. */
+function NeighbourScale({ o, lang }: { o: NonNullable<YieldRange['odds']>; lang: Lang }) {
+  const c = pickCopy(COPY, lang)
+  const w = Math.max(o.q75 - o.q25, 1)
+  const lo = Math.max(0, Math.floor(o.q25 - w))
+  const hi = Math.ceil(o.q75 + w)
+  const pos = (v: number) => ((v - lo) / (hi - lo)) * 100
+  const clamp = (x: number) => Math.min(80, Math.max(20, x))
+  return (
+    <div role="img" aria-label={c.scaleAria(pct(o.q25, lang), pct(o.q75, lang), pct(o.likely, lang))} className="flex flex-col gap-1.5 px-2">
+      <div className="relative h-5 text-[13px]">
+        <span className="absolute bottom-0 -translate-x-1/2 whitespace-nowrap font-semibold text-[var(--color-text)]" style={{ left: `${clamp(pos(o.likely))}%` }}>{c.thisOne}</span>
+      </div>
+      <div className="relative h-3 rounded-full bg-[#DDE6E1]">
+        <div className="absolute inset-y-0 rounded-full bg-[rgb(31_139_95/0.45)]" style={{ left: `${pos(o.q25)}%`, width: `${pos(o.q75) - pos(o.q25)}%` }} />
+        <div className="absolute -top-[5px] h-[22px] w-[22px] -translate-x-1/2 rounded-full border-[3px] border-white bg-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)]" style={{ left: `${pos(o.likely)}%` }} />
+      </div>
+      <div className="relative h-9 text-[13px] text-[var(--color-text-muted)]">
+        <span className="absolute left-0 top-0">{lo}%</span>
+        <span className="absolute top-0 -translate-x-1/2 whitespace-nowrap text-center text-[var(--color-primary-pressed)]" style={{ left: `${clamp((pos(o.q25) + pos(o.q75)) / 2)}%` }}>{c.halfZone[0]}<br />{c.halfZone[1]}</span>
+        <span className="absolute right-0 top-0">{hi}%</span>
+      </div>
+    </div>
+  )
+}
+
 export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '' }: {
   range: YieldRange | null | undefined
   /** Цифра без вилки (старые данные) — прежняя строка «≈N% в год». */
@@ -358,8 +388,18 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
   return (
     <div className={className}>
       <div className={`bx-auth-block ${BAND}`}>
+        {o ? (
+          // Соседи есть — фраза и шкала (вариант B3, владелец 04.11.2026).
+          <div className="flex flex-col gap-3">
+            <p className="m-0 text-[14px] leading-[1.5] text-[var(--color-text)]">
+              {c.neighbours(pct(o.q25, lang), pct(o.q75, lang))} {c.likelyIs} <b className="font-semibold text-[var(--color-primary)]">{pct(o.likely, lang)}%</b>{money && <>, <span className="whitespace-nowrap">{money}</span> {c.perYear}</>}.
+            </p>
+            <NeighbourScale o={o} lang={lang} />
+            <div className="-mt-1 flex justify-end"><WhyButton range={range} lang={lang} /></div>
+          </div>
+        ) : (
         <div className="flex flex-col gap-3">
-          <span className="text-[13px] text-[var(--color-text-muted)]">{range.mode === 'monthly' ? c.monthly : o ? c.likelyLabel : c.daily}</span>
+          <span className="text-[13px] text-[var(--color-text-muted)]">{range.mode === 'monthly' ? c.monthly : c.daily}</span>
           <div className="flex flex-col gap-1">
             {/* Не влезает в строку (рупии, узкий экран) — сумма уходит под
                 проценты целиком, а не рвётся посередине. */}
@@ -370,8 +410,7 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
               {money && <span className="whitespace-nowrap text-[14px] text-[var(--color-text)]">{money} {c.perYear}</span>}
             </div>
             <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">
-              {o ? c.basedOn(o.n, o.radiusM / 1000)
-                : range.mode === 'monthly' ? c.siteMonthly
+              {range.mode === 'monthly' ? c.siteMonthly
                 : range.factors.some(f => f.k === 'own') ? c.siteOwn
                 : c.siteEstimate}
             </span>
@@ -380,6 +419,7 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
               для нижней и верхней цифры — в «Почему?». */}
           <div className="-mt-1 flex justify-end"><WhyButton range={range} lang={lang} /></div>
         </div>
+        )}
       </div>
       <div className={`bx-nopro-block ${BAND}`}>
         <div className="flex flex-col gap-3">
