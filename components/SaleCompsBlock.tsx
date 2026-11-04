@@ -5,6 +5,7 @@
 // вилла на 50 при одной цене за м² — разные покупки.
 
 import Image from 'next/image'
+import { PriceScale } from './PriceScale'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { type SaleCompsBundle, type SaleComp, CATALOG_FAR_KM } from '@/lib/sale-comps'
 import { InlinePrice } from './InlinePrice'
@@ -115,12 +116,6 @@ export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundl
   const band = (v: number): Band => !q ? 'mid' : v < q.p25 ? 'good' : v > q.p75 ? 'bad' : 'mid'
   const sorted = [...data.comps].sort((x, y) => (metric(x) ?? 0) - (metric(y) ?? 0))
   const P = (usd: number) => <span className="whitespace-nowrap"><InlinePrice usd={Math.round(usd)} lang={lang} approx={false} /></span>
-  // Позиция на шкале: три равные трети — до четверти, середина, после трёх четвертей.
-  const pos = (v: number) => {
-    if (!q) return 50
-    const seg = (a: number, b: number, lo: number) => lo + (b > a ? Math.min(1, Math.max(0, (v - a) / (b - a))) : 0.5) * 100 / 3
-    return v < q.p25 ? seg(q.min, q.p25, 0) : v <= q.p75 ? seg(q.p25, q.p75, 100 / 3) : seg(q.p75, Math.max(q.max, v), 200 / 3)
-  }
   const selfBand = data.self != null ? band(data.self) : null
   const unit = <span className="whitespace-nowrap text-[14px] font-medium text-[var(--color-text-muted)]">{isYear ? c.perYear : c.perM2}</span>
 
@@ -130,19 +125,9 @@ export function SaleCompsBlock({ data, lang, hideTitle }: { data: SaleCompsBundl
       {data.diffPct != null && data.self != null && data.median != null && q && (
         <section className="flex flex-col gap-5 rounded-2xl border border-[var(--color-border)] bg-white p-4 md:p-6">
           <p className="text-[18px] font-semibold leading-snug tracking-tight md:text-[20px]">{c.verdict(data.diffPct, isYear)}</p>
-          <div className="flex flex-col gap-2 px-2">
-            {/* Эта вилла — подписью над шкалой, середина рынка — под ней: так не накладываются. */}
-            <div className="relative h-10 text-[13px]">
-              <span className="absolute bottom-0 -translate-x-1/2 whitespace-nowrap text-center font-semibold text-[var(--color-text)]" style={{ left: `${Math.min(85, Math.max(15, pos(data.self)))}%` }}>{c.selfMark}<br />{P(data.self)} <span className="font-normal text-[var(--color-text-muted)]">{isYear ? c.perYear : c.perM2}</span></span>
-            </div>
-            <div className="relative h-3 rounded-full bg-[linear-gradient(90deg,rgb(31_139_95/.25)_0_33.3%,rgb(232_160_40/.3)_33.3%_66.6%,rgb(209_67_52/.25)_66.6%_100%)]" aria-hidden="true">
-              <div className="absolute -inset-y-1.5 w-0.5 bg-[var(--color-text-muted)]" style={{ left: `${pos(data.median)}%` }} />
-              <div className="absolute -top-[5px] h-[22px] w-[22px] -translate-x-1/2 rounded-full border-[3px] border-white bg-[#D93025] shadow-[0_0_0_2px_#D93025]" style={{ left: `${pos(data.self)}%` }} />
-            </div>
-            <div className="relative h-10 text-[13px] text-[var(--color-text-muted)]">
-              <span className="absolute -translate-x-1/2 whitespace-nowrap text-center" style={{ left: `${Math.min(85, Math.max(15, pos(data.median)))}%` }}>{P(data.median)} {isYear ? c.perYear : c.perM2}<br />{c.midMark}</span>
-            </div>
-          </div>
+          <PriceScale self={data.self} median={data.median} q={q} lowGood redDot
+            selfLabel={<>{c.selfMark}<br />{P(data.self)} <span className="font-normal text-[var(--color-text-muted)]">{isYear ? c.perYear : c.perM2}</span></>}
+            midLabel={<>{P(data.median)} {isYear ? c.perYear : c.perM2}<br />{c.midMark}</>} />
           <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">
             {c.note(data.n, data.radiusKm, isYear, data.catalogN ?? 0)}{data.n < 30 ? ` ${c.few}` : ''}{data.catalogFar ? ` ${c.far(data.catalogFar, Math.max(data.radiusKm, CATALOG_FAR_KM))}` : ''}
           </p>

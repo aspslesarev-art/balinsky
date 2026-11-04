@@ -2,6 +2,7 @@
 // (безопасно → удобно → спрос → деньги). Выводы — lib/listing-verdict.ts.
 // Тексты пока RU + EN; остальные языки берут английский до перевода.
 import type { ReactNode } from 'react'
+import { PriceScale } from './PriceScale'
 import { DemandTabs } from './DemandTabs'
 import { BookingCompCard } from './BookingCompCard'
 import { InfoTip } from './InfoTip'
@@ -560,6 +561,13 @@ function plausibleArea(m2: number | null): number | null {
 const BANDS_COPY = {
   ru: {
     heading: 'Что будет, если сдавать как соседи',
+    railHeading: 'Похожие рядом — от дорогих к дешёвым',
+    verdict: (pct: number, self: ReactNode, mid: ReactNode) => pct >= 5
+      ? <>Цена ночи здесь выше середины соседей на {pct}%: {self} против {mid}</>
+      : pct <= -5 ? <>Цена ночи здесь ниже середины соседей на {-pct}%: {self} против {mid}</>
+      : <>Цена ночи здесь — как у середины соседей: {self} против {mid}</>,
+    selfMark: 'этот объект', midMark: 'середина соседей', perNight: 'за ночь',
+    scaleNote: (be: ReactNode | null) => <>Соседи — похожие объекты на Booking и Airbnb рядом; цена ночи этого объекта — из расчёта сайта.{be ? <> В минус, если сдавать дешевле {be} за ночь.</> : null}</>,
     bad: 'Плохо: сдавать как дешёвые',
     mid: 'Средне: как большинство',
     good: 'Хорошо: как дорогие',
@@ -573,6 +581,13 @@ const BANDS_COPY = {
   },
   en: {
     heading: 'What if you rent like the neighbours',
+    railHeading: 'Similar rentals nearby — priciest first',
+    verdict: (pct: number, self: ReactNode, mid: ReactNode) => pct >= 5
+      ? <>The nightly rate here is {pct}% above the neighbours’ middle: {self} vs {mid}</>
+      : pct <= -5 ? <>The nightly rate here is {-pct}% below the neighbours’ middle: {self} vs {mid}</>
+      : <>The nightly rate here is about the neighbours’ middle: {self} vs {mid}</>,
+    selfMark: 'this property', midMark: 'neighbours’ middle', perNight: 'a night',
+    scaleNote: (be: ReactNode | null) => <>Neighbours are similar Booking and Airbnb rentals nearby; this property’s nightly rate is the site estimate.{be ? <> At a loss below {be} a night.</> : null}</>,
     bad: 'Poor: priced like the cheap ones',
     mid: 'Typical: like most',
     good: 'Good: like the pricey ones',
@@ -694,26 +709,35 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             ].sort((a, b) => b.price - a.price)
             // Зоны — только когда соседей хватает на четверти и считается чек.
             const bq = receipt ? quartiles(all.map(x => x.price)) : null
-            if (!bq || !snap) return (
+            if (!bq || !snap || !receipt) return (
               <CardRail prevLabel={c.prev} nextLabel={c.next}>{all.map(x => x.node(undefined))}</CardRail>
             )
             const b = pickCopy(BANDS_COPY, lang)
             const P = (usd: number) => <span className="whitespace-nowrap"><InlinePrice usd={usd} lang={lang} approx={false} /></span>
             const band = (p: number): Band => p < bq.p25 ? 'bad' : p > bq.p75 ? 'good' : 'mid'
-            const month = (p: number) => monthlyNetAt(snap, p) ?? 0
+            // Шкала вместо трёх плашек зон (владелец 04.11.2026: «как в Продаже
+            // рядом, а плашки с “вам на руки” убрать»).
+            const prices = all.map(x => x.price)
+            const self = receipt.guest
+            const diff = Math.round((self / bq.p50 - 1) * 100)
             return (
-              <BandedRail heading={b.heading} prevLabel={c.prev} nextLabel={c.next}
-                note={receipt?.breakeven != null && bq.p75 < receipt.breakeven ? b.allLoss(P(receipt.breakeven), 'night') : undefined}
-                chips={[
-                  { band: 'bad', title: b.bad, range: <>{b.upTo} {P(bq.p25)}</>, money: b.moneyBad(P(month(bq.p25))) },
-                  { band: 'mid', title: b.mid, range: <>{P(bq.p25)} – {P(bq.p75)}</>, money: b.moneyMid(P(month(bq.p50))) },
-                  { band: 'good', title: b.good, range: <>{b.from} {P(bq.p75)}</>, money: b.moneyGood(P(month(bq.p75))) },
-                ]}
+              <div className="flex flex-col gap-8">
+              <section className="flex flex-col gap-5">
+                <p className="text-[18px] font-semibold leading-snug tracking-tight md:text-[20px]">{b.verdict(diff, <>{P(self)} {b.perNight}</>, P(bq.p50))}</p>
+                <PriceScale self={self} median={bq.p50} lowGood={false}
+                  q={{ min: Math.min(...prices), p25: bq.p25, p75: bq.p75, max: Math.max(...prices) }}
+                  selfLabel={<>{b.selfMark}<br />{P(self)} <span className="font-normal text-[var(--color-text-muted)]">{b.perNight}</span></>}
+                  midLabel={<>{P(bq.p50)} {b.perNight}<br />{b.midMark}</>} />
+                <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">{b.scaleNote(receipt.breakeven != null ? P(receipt.breakeven) : null)}</p>
+              </section>
+              <BandedRail heading={b.railHeading} prevLabel={c.prev} nextLabel={c.next}
+                note={receipt.breakeven != null && bq.p75 < receipt.breakeven ? b.allLoss(P(receipt.breakeven), 'night') : undefined}
                 items={all.map(x => {
                   const t = band(x.price)
                   const loss = receipt?.breakeven != null && x.price < receipt.breakeven
                   return { band: t, node: x.node({ tone: loss ? 'bad' : t, toneLabel: loss ? b.loss : b.tag[t] }) }
                 })} />
+              </div>
             )
           })()}
         </div>

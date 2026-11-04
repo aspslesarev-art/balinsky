@@ -13,7 +13,9 @@ export function BandedRail({ heading, chips, items, note, prevLabel, nextLabel }
   heading: string
   /** Строка под плашками — например, что даже «хорошо» не возвращает вложенное. */
   note?: ReactNode
-  chips: { band: Band; title: string; range: ReactNode; money: ReactNode }[]
+  /** Плашки зон. Нет — над лентой только заголовок (во «Посуточно» их
+   *  заменила шкала, владелец 04.11.2026). */
+  chips?: { band: Band; title: string; range: ReactNode; money: ReactNode }[]
   items: { band: Band; node: ReactNode }[]
   prevLabel: string
   nextLabel: string
@@ -35,7 +37,7 @@ export function BandedRail({ heading, chips, items, note, prevLabel, nextLabel }
   return (
     <div ref={root} className="flex flex-col gap-4">
       <h3 className="text-[18px] font-semibold tracking-tight">{heading}</h3>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {chips && <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {chips.map(ch => (
           <button key={ch.band} type="button" onClick={() => jump(ch.band)} disabled={!has.has(ch.band)} aria-pressed={active === ch.band}
             className={`flex cursor-pointer flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-shadow duration-[120ms] hover:shadow-[0_1px_2px_rgb(0_0_0/.04),0_4px_12px_rgb(0_0_0/.06)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-default disabled:opacity-60 disabled:hover:shadow-none ${BAND_SURFACE[ch.band]} ${BAND_TEXT[ch.band]} ${active === ch.band ? 'ring-2 ring-current' : ''}`}>
@@ -44,7 +46,7 @@ export function BandedRail({ heading, chips, items, note, prevLabel, nextLabel }
             <span className="text-[13px]">{ch.money}</span>
           </button>
         ))}
-      </div>
+      </div>}
       {note && <p className="max-w-[68ch] text-[15px] leading-relaxed text-[#8A1F14]">{note}</p>}
       <CardRail prevLabel={prevLabel} nextLabel={nextLabel}>
         {items.map((x, i) => <div key={i} data-band={x.band} className="h-full">{x.node}</div>)}
