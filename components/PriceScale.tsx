@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 // красная; иначе (аренда) наоборот.
 export type ScaleQuartiles = { min: number; p25: number; p75: number; max: number }
 
-export function PriceScale({ self, median, q, selfLabel, midLabel, lowGood, redDot = false }: {
+export function PriceScale({ self, median, q, selfLabel, midLabel, lowGood, redDot = false, neutralDot = false }: {
   self: number
   median: number
   q: ScaleQuartiles
@@ -17,6 +17,8 @@ export function PriceScale({ self, median, q, selfLabel, midLabel, lowGood, redD
   lowGood: boolean
   /** Точка всегда красная, как была в «Продаже рядом». */
   redDot?: boolean
+  /** Точка тёмная: цвет зоны не должен спорить с текстом над шкалой. */
+  neutralDot?: boolean
 }) {
   const pos = (v: number) => {
     const seg = (a: number, b: number, lo: number) => lo + (b > a ? Math.min(1, Math.max(0, (v - a) / (b - a))) : 0.5) * 100 / 3
@@ -27,7 +29,7 @@ export function PriceScale({ self, median, q, selfLabel, midLabel, lowGood, redD
     : 'bg-[linear-gradient(90deg,rgb(209_67_52/.25)_0_33.3%,rgb(232_160_40/.3)_33.3%_66.6%,rgb(31_139_95/.25)_66.6%_100%)]'
   // Точка — красная там, где для владельца хуже, иначе зелёная.
   const bad = redDot || (lowGood ? self > q.p75 : self < q.p25)
-  const dot = bad ? 'bg-[#D93025] shadow-[0_0_0_2px_#D93025]' : 'bg-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)]'
+  const dot = neutralDot ? 'bg-[var(--color-text)] shadow-[0_0_0_2px_var(--color-text)]' : bad ? 'bg-[#D93025] shadow-[0_0_0_2px_#D93025]' : 'bg-[var(--color-primary)] shadow-[0_0_0_2px_var(--color-primary)]'
   return (
     <div className="flex flex-col gap-2 px-2">
       {/* Объект — подписью над шкалой, середина — под ней: так не накладываются. */}

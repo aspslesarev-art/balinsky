@@ -3,6 +3,7 @@
 // Тексты пока RU + EN; остальные языки берут английский до перевода.
 import type { ReactNode } from 'react'
 import { PriceScale } from './PriceScale'
+import { NightReceiptBlock } from './NightReceiptBlock'
 import { DemandTabs } from './DemandTabs'
 import { BookingCompCard } from './BookingCompCard'
 import { InfoTip } from './InfoTip'
@@ -11,7 +12,6 @@ import { districtRu } from '@/lib/district-ru'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import type { InvestmentSnapshot, NearbyMatchCard } from '@/lib/investment/snapshot'
-import { NightReceiptBlock } from './NightReceiptBlock'
 import { BandedRail } from './BandedRail'
 import { BAND_SURFACE, BAND_TEXT, type Band } from '@/lib/band-colors'
 import { nightReceipt, monthReceipt, monthlyNetAt } from '@/lib/investment/night-economics'
@@ -158,7 +158,9 @@ const COPY = {
     dailyH: 'Сдают посуточно в этом районе',
     occNote: 'Загрузка — по estatemarket.io: доля ночей за месяц, когда этот вариант нельзя было забронировать (бронь или закрыл хозяин); у объекта — средняя по его вариантам.',
     airbnbLine: (n: number) => `На Airbnb рядом ${n} ${pluralRu(n, ['похожий объект', 'похожих объекта', 'похожих объектов'])}`,
-    airbnbNote: 'Цена на Airbnb — сколько гость платит за ночь вместе со сборами при брони на 5 ночей. Оценка на Booking — из 10, на Airbnb — из 5. Airbnb сдвигает точку на карте, поэтому расстояние до его объектов примерное.',
+    airbnbNote: 'Цена на Airbnb — сколько гость платит за ночь вместе со сборами при брони на 5 ночей. Оценка на Booking — из 10, на Airbnb — из 5. Airbnb сдвигает точку на карте, поэтому расстояние до его объектов примерное. Объект, который есть на обоих сайтах, считаем один раз.',
+    nearLine: (n: number, km: number, src: string) => `В радиусе ${String(km).replace('.', ',')} км ${pluralRu(n, ['сдаётся', 'сдаются', 'сдаются'])} ${n} ${pluralRu(n, ['похожий объект', 'похожих объекта', 'похожих объектов'])} на ${src}.`,
+    nightUsual: 'Ночь у них обычно стоит от', nightFrom: 'Ночь у них стоит от', nightOne: 'Ночь стоит', and: 'и',
     approx: 'около',
     infoLabel: 'Откуда эти цифры',
     dailyHRestricted: 'Посуточно у соседей - этому объекту так сдавать нельзя',
@@ -284,7 +286,9 @@ const COPY = {
     dailyH: 'Rented nightly in this area',
     occNote: 'Occupancy is from estatemarket.io: share of nights in a month this option could not be booked (booked or closed by the owner); for the property, the average across its options.',
     airbnbLine: (n: number) => `On Airbnb nearby: ${en(n, 'similar place', 'similar places')}`,
-    airbnbNote: 'Airbnb price is what a guest pays per night including fees, for a 5-night stay. Booking rates guests out of 10, Airbnb out of 5. Airbnb shifts map pins, so distances to its listings are approximate.',
+    airbnbNote: 'Airbnb price is what a guest pays per night including fees, for a 5-night stay. Booking rates guests out of 10, Airbnb out of 5. Airbnb shifts map pins, so distances to its listings are approximate. A place listed on both sites is counted once.',
+    nearLine: (n: number, km: number, src: string) => `Within ${km} km, ${en(n, 'similar place is', 'similar places are')} rented out on ${src}.`,
+    nightUsual: 'A night there usually costs', nightFrom: 'A night there costs', nightOne: 'A night costs', and: 'and',
     approx: '~',
     infoLabel: 'Where these numbers come from',
     dailyHRestricted: 'Nightly at neighbours - not allowed for this property',
@@ -533,6 +537,20 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
   )
 }
 
+// Один и тот же объект часто сдают и на Booking, и на Airbnb — считаем его
+// один раз (владелец 04.11.2026). Точку Airbnb сдвигает, поэтому сверяем
+// спальни, расстояние с запасом и общее «редкое» слово в названии.
+const COMMON_WORDS = new Set(['villa', 'villas', 'bali', 'private', 'pool', 'bedroom', 'bedrooms', 'room', 'rooms', 'luxury', 'house', 'home', 'resort', 'residence', 'residences', 'apartment', 'apartments', 'suite', 'suites', 'with', 'view', 'views', 'ocean', 'beach', 'near', 'walk', 'from', 'minutes', 'minute', 'stay', 'tropical', 'modern', 'cozy', 'cosy', 'stunning', 'beautiful', 'studio', 'garden', 'rice', 'field', 'fields', 'jungle', 'sunset', 'brand', 'family', 'spacious', 'center', 'centre', 'close', 'area', 'rooftop', 'king', 'deluxe', 'premium', 'canggu', 'berawa', 'pererenan', 'seseh', 'umalas', 'kerobokan', 'seminyak', 'legian', 'kuta', 'ubud', 'uluwatu', 'bingin', 'pecatu', 'ungasan', 'jimbaran', 'balangan', 'padang', 'sanur', 'batu', 'bolong', 'echo', 'nusa', 'dusa', 'tabanan', 'cemagi', 'kedungu', 'nyanyi', 'bukit', 'with', 'the', 'and'])
+function nameWords(s: string): string[] {
+  return s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').split(' ').filter(w => w.length >= 4 && !COMMON_WORDS.has(w))
+}
+function sameStay(b: NearbyMatchCard, a: AirbnbComp): boolean {
+  if (b.bedrooms != null && a.bedrooms != null && b.bedrooms !== a.bedrooms) return false
+  if (Math.abs(b.distanceKm - a.distanceKm) > 0.4) return false
+  const bw = new Set(nameWords(`${b.complex ?? ''} ${b.name}`))
+  return nameWords(a.name).some(w => bw.has(w))
+}
+
 // Квартили цены по объявлениям: «в среднем» — середина (медиана), «обычно» — от 25% до 75%.
 function quartiles(xs: number[]): { p25: number; p50: number; p75: number } | null {
   const a = xs.filter(x => Number.isFinite(x) && x > 0).sort((x, y) => x - y)
@@ -562,12 +580,16 @@ const BANDS_COPY = {
   ru: {
     heading: 'Что будет, если сдавать как соседи',
     railHeading: 'Похожие рядом — от дорогих к дешёвым',
-    verdict: (pct: number, self: ReactNode, mid: ReactNode) => pct >= 5
-      ? <>Цена ночи здесь выше середины соседей на {pct}%: {self} против {mid}</>
-      : pct <= -5 ? <>Цена ночи здесь ниже середины соседей на {-pct}%: {self} против {mid}</>
-      : <>Цена ночи здесь — как у середины соседей: {self} против {mid}</>,
-    selfMark: 'этот объект', midMark: 'середина соседей', perNight: 'за ночь',
-    scaleNote: (be: ReactNode | null) => <>Соседи — похожие объекты на Booking и Airbnb рядом; цена ночи этого объекта — из расчёта сайта.{be ? <> В минус, если сдавать дешевле {be} за ночь.</> : null}</>,
+    // tenths — у скольких из 10 соседей ночь дешевле, чем у этого объекта.
+    verdict: (self: ReactNode, tenths: number) => <>Доход мы посчитали по цене {self} за ночь. {tenths >= 10 ? 'Это дороже, чем у всех соседей.'
+      : tenths >= 7 ? `Это дороже, чем у ${tenths} из 10 соседей.`
+      : tenths <= 0 ? 'Это дешевле, чем у всех соседей.'
+      : tenths <= 3 ? `Это дешевле, чем у ${10 - tenths} из 10 соседей.`
+      : 'Примерно столько же берут соседи.'}</>,
+    selfMark: 'этот объект', midMark: 'обычно у соседей', perNight: 'за ночь',
+    ifLikeNeighbours: (self: ReactNode, tenths: number) => tenths >= 7 ? <>Если по {self} не получится и придётся сдавать как соседи, доход будет ниже. </>
+      : tenths <= 3 ? <>Если сдавать как соседи, доход может быть выше. </> : null,
+    payback: (be: ReactNode) => <>Покупка окупится, если ночь стоит дороже {be}.</>,
     bad: 'Плохо: сдавать как дешёвые',
     mid: 'Средне: как большинство',
     good: 'Хорошо: как дорогие',
@@ -577,17 +599,20 @@ const BANDS_COPY = {
     moneyGood: (x: ReactNode) => <>От {x} в месяц</>,
     tag: { bad: 'Плохо', mid: 'Средне', good: 'Хорошо' } as Record<Band, string>,
     loss: 'В минус',
-    allLoss: (be: ReactNode, unit: 'night' | 'month') => <>Даже по цене дорогих соседей вложенное за срок лизхолда не вернётся: для этого нужно сдавать от {be} {unit === 'night' ? 'за ночь' : 'в месяц'}.</>,
+    allLoss: (be: ReactNode, unit: 'night' | 'month') => <>Даже по цене дорогих соседей покупка не окупится: для этого {unit === 'night' ? 'ночь' : 'месяц'} должен стоить дороже {be}.</>,
   },
   en: {
     heading: 'What if you rent like the neighbours',
     railHeading: 'Similar rentals nearby — priciest first',
-    verdict: (pct: number, self: ReactNode, mid: ReactNode) => pct >= 5
-      ? <>The nightly rate here is {pct}% above the neighbours’ middle: {self} vs {mid}</>
-      : pct <= -5 ? <>The nightly rate here is {-pct}% below the neighbours’ middle: {self} vs {mid}</>
-      : <>The nightly rate here is about the neighbours’ middle: {self} vs {mid}</>,
-    selfMark: 'this property', midMark: 'neighbours’ middle', perNight: 'a night',
-    scaleNote: (be: ReactNode | null) => <>Neighbours are similar Booking and Airbnb rentals nearby; this property’s nightly rate is the site estimate.{be ? <> At a loss below {be} a night.</> : null}</>,
+    verdict: (self: ReactNode, tenths: number) => <>We estimated the income at {self} a night. {tenths >= 10 ? 'That is more than every neighbour charges.'
+      : tenths >= 7 ? `That is more than ${tenths} in 10 neighbours charge.`
+      : tenths <= 0 ? 'That is less than every neighbour charges.'
+      : tenths <= 3 ? `That is less than ${10 - tenths} in 10 neighbours charge.`
+      : 'Neighbours charge about the same.'}</>,
+    selfMark: 'this property', midMark: 'typical nearby', perNight: 'a night',
+    ifLikeNeighbours: (self: ReactNode, tenths: number) => tenths >= 7 ? <>If {self} does not work out and you rent like the neighbours, income will be lower. </>
+      : tenths <= 3 ? <>Renting like the neighbours, income could be higher. </> : null,
+    payback: (be: ReactNode) => <>The purchase pays back if a night costs more than {be}.</>,
     bad: 'Poor: priced like the cheap ones',
     mid: 'Typical: like most',
     good: 'Good: like the pricey ones',
@@ -621,10 +646,13 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
   const mReceipt = snap ? monthReceipt(snap) : null
   const dec = (x: number) => (lang === 'en' || lang === 'zh' ? x.toFixed(1) : x.toFixed(1).replace('.', ','))
   const cardCls = 'flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white transition-colors duration-[120ms] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
-  const dq = quartiles(dailyComps.map(x => x.adr))
-  const dailyKm = dailyComps.length ? Math.max(...dailyComps.map(x => x.distanceKm)) : null
+  // Booking и Airbnb — одним счётом, без повторов (владелец 04.11.2026).
+  const airbnbOwn = airbnbComps.filter(a => !dailyComps.some(b => sameStay(b, a)))
+  const nightPrices = [...dailyComps.map(x => x.adr), ...airbnbOwn.map(x => x.priceUsd)].filter(x => x > 0).sort((a, b) => a - b)
+  const nq = quartiles(nightPrices)
+  const nearKm = nightPrices.length ? Math.max(1, Math.ceil(Math.max(...dailyComps.map(x => x.distanceKm), ...airbnbOwn.map(x => x.distanceKm)))) : 2
+  const nearSrc = [dailyComps.length ? 'Booking' : '', airbnbOwn.length ? 'Airbnb' : ''].filter(Boolean)
   const tabs: { key: string; label: string; content: ReactNode }[] = []
-  const aq = quartiles(airbnbComps.map(x => x.priceUsd))
   const hasOcc = dailyComps.some(x => x.facts?.roomOcc != null || x.facts?.occ != null)
   if (dailyComps.length > 0 || airbnbComps.length > 0) tabs.push({ key: 'daily', label: c.tabDaily, content: (
         // Всё содержимое вкладки — одной карточкой (макет «Будет ли спрос → Посуточно», A).
@@ -633,26 +661,13 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
           {/* Сводка слева, пояснение «откуда цифры» — под значком i справа (владелец 22.10.2026). */}
           <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-2">
-          {dq && (
+          {nightPrices.length > 0 && (
             <p className="text-[16px] text-[var(--color-text)]">
-              {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={dq.p50} lang={lang} /></span> {c.perNight}, {c.range} <span className="whitespace-nowrap"><InlinePrice usd={dq.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={dq.p75} lang={lang} approx={false} /></span>.
-            </p>
-          )}
-          {!dq && dailyComps.length > 0 && (
-            // Меньше трёх соседей — без «в среднем», просто цены как есть.
-            <p className="text-[16px] text-[var(--color-text)]">
-              {c.whoLine(dailyComps.every(x => x.bedrooms === bedrooms) ? bedrooms : null, dailyKm != null ? Math.max(1, Math.ceil(dailyKm)) : 2)}: {(() => {
-                const ps = dailyComps.map(x => x.adr).filter(x => x > 0).sort((a, b) => a - b)
-                return ps.length > 1 && ps[0] !== ps[ps.length - 1]
-                  ? <>{c.from} <span className="whitespace-nowrap"><InlinePrice usd={ps[0]} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={ps[ps.length - 1]} lang={lang} approx={false} /></span> {c.perNight}</>
-                  : <span className="whitespace-nowrap"><InlinePrice usd={ps[0]} lang={lang} /> {c.perNight}</span>
-              })()}.
-            </p>
-          )}
-          {airbnbComps.length > 0 && (
-            // Airbnb отдельной строкой: его цена со сборами, в «обычно» Booking не смешиваем.
-            <p className="text-[16px] text-[var(--color-text)]">
-              {c.airbnbLine(airbnbComps.length)}{aq ? <>: {c.avg} <span className="whitespace-nowrap"><InlinePrice usd={aq.p50} lang={lang} /></span> {c.perNight}</> : ''}.
+              {c.nearLine(nightPrices.length, nearKm, nearSrc.join(` ${c.and} `))} {nq
+                ? <>{c.nightUsual} <span className="whitespace-nowrap"><InlinePrice usd={nq.p25} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={nq.p75} lang={lang} approx={false} /></span>.</>
+                : nightPrices[0] !== nightPrices[nightPrices.length - 1]
+                  ? <>{c.nightFrom} <span className="whitespace-nowrap"><InlinePrice usd={nightPrices[0]} lang={lang} approx={false} /></span> {c.to} <span className="whitespace-nowrap"><InlinePrice usd={nightPrices[nightPrices.length - 1]} lang={lang} approx={false} /></span>.</>
+                  : <>{c.nightOne} <span className="whitespace-nowrap"><InlinePrice usd={nightPrices[0]} lang={lang} /></span>.</>}
             </p>
           )}
           </div>
@@ -662,7 +677,6 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             </InfoTip>
           )}
           </div>
-          {receipt && <div className="mb-6 border-b border-[var(--color-border)] pb-6"><NightReceiptBlock r={receipt} marketMedian={dq?.p50 ?? null} lang={lang} /></div>}
           {/* Booking и Airbnb одной лентой, от дорогих к дешёвым (владелец 21.10.2026). */}
           {(() => {
             const all = [
@@ -688,7 +702,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                 {...t}
               />
               ) })),
-              ...airbnbComps.map(comp => ({ price: comp.priceUsd, node: (t?: { tone: Band; toneLabel: string }) => (
+              ...airbnbOwn.map(comp => ({ price: comp.priceUsd, node: (t?: { tone: Band; toneLabel: string }) => (
               <BookingCompCard
                 key={`a-${comp.id}`}
                 source="airbnb"
@@ -707,8 +721,9 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
               />
               ) })),
             ].sort((a, b) => b.price - a.price)
-            // Зоны — только когда соседей хватает на четверти и считается чек.
-            const bq = receipt ? quartiles(all.map(x => x.price)) : null
+            // Зоны и шкала — по всем соседям сразу, а не только по ленте:
+            // в ленте лишь 12 самых дорогих с Booking (владелец 04.11.2026).
+            const bq = receipt ? nq : null
             if (!bq || !snap || !receipt) return (
               <CardRail prevLabel={c.prev} nextLabel={c.next}>{all.map(x => x.node(undefined))}</CardRail>
             )
@@ -717,21 +732,20 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
             const band = (p: number): Band => p < bq.p25 ? 'bad' : p > bq.p75 ? 'good' : 'mid'
             // Шкала вместо трёх плашек зон (владелец 04.11.2026: «как в Продаже
             // рядом, а плашки с “вам на руки” убрать»).
-            const prices = all.map(x => x.price)
             const self = receipt.guest
-            const diff = Math.round((self / bq.p50 - 1) * 100)
+            const tenths = Math.round(nightPrices.filter(x => x < self).length / nightPrices.length * 10)
+            const allLoss = receipt.breakeven != null && bq.p75 < receipt.breakeven
             return (
               <div className="flex flex-col gap-8">
               <section className="flex flex-col gap-5">
-                <p className="text-[18px] font-semibold leading-snug tracking-tight md:text-[20px]">{b.verdict(diff, <>{P(self)} {b.perNight}</>, P(bq.p50))}</p>
-                <PriceScale self={self} median={bq.p50} lowGood={false}
-                  q={{ min: Math.min(...prices), p25: bq.p25, p75: bq.p75, max: Math.max(...prices) }}
+                <p className="text-[18px] font-semibold leading-snug tracking-tight md:text-[20px]">{b.verdict(P(self), tenths)}</p>
+                <PriceScale self={self} median={bq.p50} lowGood={false} neutralDot
+                  q={{ min: nightPrices[0], p25: bq.p25, p75: bq.p75, max: nightPrices[nightPrices.length - 1] }}
                   selfLabel={<>{b.selfMark}<br />{P(self)} <span className="font-normal text-[var(--color-text-muted)]">{b.perNight}</span></>}
                   midLabel={<>{P(bq.p50)} {b.perNight}<br />{b.midMark}</>} />
-                <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--color-text-muted)]">{b.scaleNote(receipt.breakeven != null ? P(receipt.breakeven) : null)}</p>
+                <p className="max-w-[68ch] text-[16px] leading-relaxed text-[var(--color-text)]">{b.ifLikeNeighbours(P(self), tenths)}{receipt.breakeven == null ? null : allLoss ? b.allLoss(P(receipt.breakeven), 'night') : b.payback(P(receipt.breakeven))}</p>
               </section>
               <BandedRail heading={b.railHeading} prevLabel={c.prev} nextLabel={c.next}
-                note={receipt.breakeven != null && bq.p75 < receipt.breakeven ? b.allLoss(P(receipt.breakeven), 'night') : undefined}
                 items={all.map(x => {
                   const t = band(x.price)
                   const loss = receipt?.breakeven != null && x.price < receipt.breakeven
