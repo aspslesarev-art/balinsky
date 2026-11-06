@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AuthFlag } from '@/components/AuthFlag'
+import { TelegramBrowserEscape } from '@/components/TelegramBrowserEscape'
 // Self-hosted (app/fonts): Google-hosted fonts are downloaded during every
 // build, and a flaky fetch failed a production deploy on 2026-09-25.
 import localFont from "next/font/local";
@@ -125,6 +126,7 @@ export function RootShell({
       </head>
       <body className="min-h-full flex flex-col">
         <AuthFlag />
+        <TelegramBrowserEscape />
         {/* GTM / GA4 / Метрика. Client-side so admin work and our own
             browsing never land in the reports — see components/Analytics.tsx. */}
         <Analytics />

@@ -251,6 +251,20 @@ export async function issueLoginToken(who: TelegramIdentity): Promise<string | n
 }
 
 /**
+ * Одноразовая ссылка входа для уже вошедшего человека — чтобы перенести вход
+ * из встроенного браузера Телеграма в обычный (components/TelegramBrowserEscape).
+ * Те же правила, что у ссылки из бота: 15 минут, один раз.
+ */
+export async function issueHandoffToken(telegramId: number): Promise<string | null> {
+  try {
+    return await mintLoginToken(telegramId)
+  } catch (e) {
+    console.error('[site-auth] issueHandoffToken:', e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
+/**
  * Redeem a login token. Single-use and time-boxed: the update only matches
  * while `used_at` is still null, so a replayed link returns nothing.
  */
