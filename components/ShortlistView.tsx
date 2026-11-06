@@ -1312,7 +1312,7 @@ function DownloadShortlistModal({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Телефон: файл сначала собираем, сохраняем отдельным нажатием (saveShortlistFile).
-  const [ready, setReady] = useState<{ blob: Blob; filename: string } | null>(null)
+  const [ready, setReady] = useState<{ blob: Blob; filename: string; save: (b: Blob, f: string) => Promise<void> } | null>(null)
   const trimmedName = name.trim()
   const trimmedTg = telegram.trim()
   const trimmedWa = whatsapp.trim()
@@ -1329,7 +1329,7 @@ function DownloadShortlistModal({
     setError(null)
     try {
       const mod = await import('./ShortlistPdf')
-      if (isPhone()) setReady(await mod.buildShortlistPdf(items, null, orientation, lang, currency))
+      if (isPhone()) setReady({ ...(await mod.buildShortlistPdf(items, null, orientation, lang, currency)), save: mod.saveShortlistFile })
       else { await mod.downloadShortlistPdf(items, null, orientation, lang, currency); onClose() }
     } catch (e) {
       console.error(e)
@@ -1346,7 +1346,7 @@ function DownloadShortlistModal({
     try {
       const mod = await import('./ShortlistPdf')
       const agent = { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }
-      if (isPhone()) setReady(await mod.buildShortlistPdf(items, agent, orientation, lang, currency))
+      if (isPhone()) setReady({ ...(await mod.buildShortlistPdf(items, agent, orientation, lang, currency)), save: mod.saveShortlistFile })
       else { await mod.downloadShortlistPdf(items, agent, orientation, lang, currency); onClose() }
     } catch (e) {
       console.error(e)
@@ -1390,10 +1390,9 @@ function DownloadShortlistModal({
             </p>
             <button
               type="button"
-              onClick={async () => {
-                const { saveShortlistFile } = await import('./ShortlistPdf')
-                await saveShortlistFile(ready.blob, ready.filename)
-                onClose()
+              onClick={() => {
+                // Без await до сохранения: иначе телефон считает нажатие «остывшим».
+                ready.save(ready.blob, ready.filename).finally(onClose)
               }}
               className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[10px] bg-[var(--color-primary-hover)] px-6 text-[16px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
             >
