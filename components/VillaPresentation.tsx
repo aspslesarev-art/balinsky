@@ -723,10 +723,25 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
   const pageCount = 2 + picked.reduce((n, b) => n + (BLOCK_PAGES[b] ?? 1), 0)
   const presetLabel = { short: c.presetShort, invest: c.presetInvest, life: c.presetLife, all: c.presetAll }
 
+  const trackPdf = () => {
+    trackEvent('presentation_open', { page_path: window.location.pathname })
+    fetch('/api/track/presentation', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        kind: 'object', objectKind: data.kind ?? 'villa', objectId: data.villaId, slug: data.slug, title: data.title,
+        agent: withAgent ? { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa } : null,
+        orientation, hasAgent: withAgent, lang: data.lang ?? 'ru', blocks: picked,
+      }),
+      keepalive: true,
+    }).catch(() => {})
+  }
+
   const download = async () => {
     if (!canDownload) return
     setBusy(true)
     setError(null)
+    let keepBusy = false
     try {
       try {
         localStorage.setItem(AGENT_KEY, JSON.stringify({ on: withAgent, name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }))
@@ -743,7 +758,20 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
       if (calc) for (const [k, v] of Object.entries(calcToQuery(calc))) q.set(k, v)
       const section = data.kind === 'apartment' ? '/ru/apartamenty/o/' : '/ru/villy/o/'
       const target = `${section}${data.slug}/pdf?${q.toString()}`
-      const r = await fetch(`/api/pdf?cur=${currency}&u=${encodeURIComponent(target)}`)
+      const pdfUrl = `/api/pdf?cur=${currency}&u=${encodeURIComponent(target)}`
+      // Телефон: скачивание «из скрипта» после долгой сборки iPhone и браузер
+      // Телеграма молча отбрасывают — нажатие уже «остыло» (владелец 06.11.2026).
+      // Поэтому прямо по нажатию переходим на сам файл: сервер отдаёт его как
+      // вложение, и браузер сам предлагает сохранить/открыть. Страница остаётся.
+      if (isPhone()) {
+        trackPdf()
+        keepBusy = true
+        window.location.assign(pdfUrl)
+        // Сборка идёт на сервере до минуты: пока «Собираю…», потом окно закрываем.
+        setTimeout(() => { setBusy(false); onClose() }, 20_000)
+        return
+      }
+      const r = await fetch(pdfUrl)
       if (!r.ok) throw new Error(`pdf ${r.status}`)
       const blob = await r.blob()
       const href = URL.createObjectURL(blob)
@@ -754,23 +782,13 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
       a.click()
       a.remove()
       setTimeout(() => URL.revokeObjectURL(href), 60_000)
-      trackEvent('presentation_open', { page_path: window.location.pathname })
-      fetch('/api/track/presentation', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          kind: 'object', objectKind: data.kind ?? 'villa', objectId: data.villaId, slug: data.slug, title: data.title,
-          agent: withAgent ? { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa } : null,
-          orientation, hasAgent: withAgent, lang: data.lang ?? 'ru', blocks: picked,
-        }),
-        keepalive: true,
-      }).catch(() => {})
+      trackPdf()
       onClose()
     } catch (e) {
       console.error(e)
       setError(c.pdfError)
     } finally {
-      setBusy(false)
+      if (!keepBusy) setBusy(false)
     }
   }
 
@@ -962,6 +980,12 @@ function DownloadModal({ data, onClose }: { data: VillaPresentationData; onClose
       </div>
     </div>
   )
+}
+
+// Телефон или планшет: тач-экран без мыши либо мобильный браузер.
+function isPhone(): boolean {
+  if (typeof window === 'undefined') return false
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches
 }
 
 function CheckDot({ on, locked, round }: { on: boolean; locked: boolean; round?: boolean }) {
