@@ -113,9 +113,17 @@ const COPY = {
     sqm: 'м²', house: 'дом', land: 'земля', bali: 'Бали',
     completed: 'Сдан',
     factsHeading: 'Характеристики',
-    factBedrooms: 'Спальни', factHouse: 'Дом', factLand: 'Земля', factCompletion: 'Сдача',
-    factPermits: 'Разрешения', factLeasehold: 'Лизхолд', factDistrict: 'Район',
-    factAirport: 'До аэропорта', factStyle: 'Стиль интерьера', factPriceM2: 'Цена за м²',
+    aboutVillaHeading: 'О вилле', aboutLandHeading: 'Участок и аренда земли',
+    factBedrooms: 'Спальни', factHouse: 'Площадь дома', factLand: 'Земля', factCompletion: 'Сдача',
+    factPermits: 'Разрешение на стройку', factLeasehold: 'Срок аренды', factDistrict: 'Район',
+    factAirport: 'До аэропорта', factStyle: 'Стиль', factPriceM2: 'Цена за м²',
+    factType: 'Тип', factTypeVilla: 'Вилла', factTypeVillaComplex: 'Вилла в комплексе',
+    factOwnership: 'Право', factOwnershipLease: 'Аренда земли (лизхолд)',
+    factSeller: 'Продаёт', factSellerDev: 'Застройщик', factSellerResale: 'Перепродажа',
+    factPricePerYear: 'Год владения обходится',
+    sidebarPriceNormal: 'Цена обычная для района',
+    sidebarSaveCompare: 'Сохранить и сравнить',
+    readMore: 'Узнать больше',
     factLeaseValue: (l: string) => `${l} ${Number.isFinite(Number(l)) ? pluralRu(Number(l), ['год', 'года', 'лет']) : 'лет'}`,
     descHeading: 'Описание',
     complexLabel: 'Жилой комплекс',
@@ -159,9 +167,17 @@ const COPY = {
     sqm: 'm²', house: 'house', land: 'land', bali: 'Bali',
     completed: 'Completed',
     factsHeading: 'Specs',
-    factBedrooms: 'Bedrooms', factHouse: 'House', factLand: 'Land', factCompletion: 'Completion',
-    factPermits: 'Permits', factLeasehold: 'Leasehold', factDistrict: 'District',
-    factAirport: 'To airport', factStyle: 'Interior style', factPriceM2: 'Price per m²',
+    aboutVillaHeading: 'About the villa', aboutLandHeading: 'Land & lease',
+    factBedrooms: 'Bedrooms', factHouse: 'House area', factLand: 'Land', factCompletion: 'Completion',
+    factPermits: 'Building permit', factLeasehold: 'Lease term', factDistrict: 'District',
+    factAirport: 'To airport', factStyle: 'Style', factPriceM2: 'Price per m²',
+    factType: 'Type', factTypeVilla: 'Villa', factTypeVillaComplex: 'Villa in a complex',
+    factOwnership: 'Ownership', factOwnershipLease: 'Leasehold',
+    factSeller: 'Sold by', factSellerDev: 'Developer', factSellerResale: 'Resale',
+    factPricePerYear: 'Annual cost of ownership',
+    sidebarPriceNormal: 'Normal price for the area',
+    sidebarSaveCompare: 'Save & compare',
+    readMore: 'Learn more',
     factLeaseValue: (l: string) => `${l} years`,
     descHeading: 'Description',
     complexLabel: 'Residential complex',
@@ -205,9 +221,17 @@ const COPY = {
     sqm: 'm²', house: 'rumah', land: 'tanah', bali: 'Bali',
     completed: 'Selesai',
     factsHeading: 'Spesifikasi',
-    factBedrooms: 'Kamar tidur', factHouse: 'Rumah', factLand: 'Tanah', factCompletion: 'Serah terima',
-    factPermits: 'Izin', factLeasehold: 'Hak sewa', factDistrict: 'Wilayah',
-    factAirport: 'Ke bandara', factStyle: 'Gaya interior', factPriceM2: 'Harga per m²',
+    aboutVillaHeading: 'Tentang vila', aboutLandHeading: 'Tanah & sewa',
+    factBedrooms: 'Kamar tidur', factHouse: 'Luas rumah', factLand: 'Tanah', factCompletion: 'Serah terima',
+    factPermits: 'Izin bangun', factLeasehold: 'Masa sewa', factDistrict: 'Wilayah',
+    factAirport: 'Ke bandara', factStyle: 'Gaya', factPriceM2: 'Harga per m²',
+    factType: 'Tipe', factTypeVilla: 'Vila', factTypeVillaComplex: 'Vila dalam kompleks',
+    factOwnership: 'Hak', factOwnershipLease: 'Hak sewa tanah',
+    factSeller: 'Dijual oleh', factSellerDev: 'Pengembang', factSellerResale: 'Jual kembali',
+    factPricePerYear: 'Biaya per tahun',
+    sidebarPriceNormal: 'Harga normal untuk area ini',
+    sidebarSaveCompare: 'Simpan & bandingkan',
+    readMore: 'Selengkapnya',
     factLeaseValue: (l: string) => `${l} tahun`,
     descHeading: 'Deskripsi',
     complexLabel: 'Kompleks hunian',
@@ -251,9 +275,17 @@ const COPY = {
     sqm: 'm²', house: 'maison', land: 'terrain', bali: 'Bali',
     completed: 'Livré',
     factsHeading: 'Caractéristiques',
-    factBedrooms: 'Chambres', factHouse: 'Maison', factLand: 'Terrain', factCompletion: 'Livraison',
-    factPermits: 'Permis', factLeasehold: 'Bail emphytéotique', factDistrict: 'Quartier',
-    factAirport: "Vers l'aéroport", factStyle: 'Style intérieur', factPriceM2: 'Prix au m²',
+    aboutVillaHeading: 'La villa', aboutLandHeading: 'Terrain & bail',
+    factBedrooms: 'Chambres', factHouse: 'Surface maison', factLand: 'Terrain', factCompletion: 'Livraison',
+    factPermits: 'Permis de construire', factLeasehold: 'Durée du bail', factDistrict: 'Quartier',
+    factAirport: "Vers l'aéroport", factStyle: 'Style', factPriceM2: 'Prix au m²',
+    factType: 'Type', factTypeVilla: 'Villa', factTypeVillaComplex: 'Villa en résidence',
+    factOwnership: 'Droit', factOwnershipLease: 'Bail emphytéotique',
+    factSeller: 'Vendu par', factSellerDev: 'Promoteur', factSellerResale: 'Revente',
+    factPricePerYear: 'Coût annuel de détention',
+    sidebarPriceNormal: 'Prix normal pour le quartier',
+    sidebarSaveCompare: 'Sauvegarder et comparer',
+    readMore: 'En savoir plus',
     factLeaseValue: (l: string) => `${l} ans`,
     descHeading: 'Description',
     complexLabel: 'Résidence',
@@ -297,9 +329,17 @@ const COPY = {
     sqm: 'm²', house: 'Haus', land: 'Grundstück', bali: 'Bali',
     completed: 'Fertiggestellt',
     factsHeading: 'Eckdaten',
-    factBedrooms: 'Schlafzimmer', factHouse: 'Haus', factLand: 'Grundstück', factCompletion: 'Fertigstellung',
-    factPermits: 'Genehmigungen', factLeasehold: 'Leasehold', factDistrict: 'Gegend',
-    factAirport: 'Zum Flughafen', factStyle: 'Innenstil', factPriceM2: 'Preis pro m²',
+    aboutVillaHeading: 'Über die Villa', aboutLandHeading: 'Grundstück & Pacht',
+    factBedrooms: 'Schlafzimmer', factHouse: 'Wohnfläche', factLand: 'Grundstück', factCompletion: 'Fertigstellung',
+    factPermits: 'Baugenehmigung', factLeasehold: 'Pachtdauer', factDistrict: 'Gegend',
+    factAirport: 'Zum Flughafen', factStyle: 'Stil', factPriceM2: 'Preis pro m²',
+    factType: 'Typ', factTypeVilla: 'Villa', factTypeVillaComplex: 'Villa in Wohnanlage',
+    factOwnership: 'Eigentumsrecht', factOwnershipLease: 'Leasehold',
+    factSeller: 'Verkauf durch', factSellerDev: 'Bauträger', factSellerResale: 'Wiederverkauf',
+    factPricePerYear: 'Jährliche Haltekosten',
+    sidebarPriceNormal: 'Normaler Preis für die Gegend',
+    sidebarSaveCompare: 'Speichern & vergleichen',
+    readMore: 'Mehr anzeigen',
     factLeaseValue: (l: string) => `${l} Jahre`,
     descHeading: 'Beschreibung',
     complexLabel: 'Wohnanlage',
@@ -343,9 +383,17 @@ const COPY = {
     sqm: 'm²', house: '房屋', land: '土地', bali: '巴厘岛',
     completed: '已交付',
     factsHeading: '核心信息',
-    factBedrooms: '卧室', factHouse: '房屋', factLand: '土地', factCompletion: '交付',
-    factPermits: '许可证', factLeasehold: '租赁产权', factDistrict: '地区',
-    factAirport: '到机场', factStyle: '室内风格', factPriceM2: '每平方米价格',
+    aboutVillaHeading: '别墅信息', aboutLandHeading: '土地与租赁',
+    factBedrooms: '卧室', factHouse: '房屋面积', factLand: '土地', factCompletion: '交付',
+    factPermits: '建筑许可', factLeasehold: '租赁期限', factDistrict: '区域',
+    factAirport: '到机场', factStyle: '风格', factPriceM2: '每平米价格',
+    factType: '类型', factTypeVilla: '别墅', factTypeVillaComplex: '小区别墅',
+    factOwnership: '产权', factOwnershipLease: '土地租赁权',
+    factSeller: '出售方', factSellerDev: '开发商', factSellerResale: '转售',
+    factPricePerYear: '年持有成本',
+    sidebarPriceNormal: '区域正常价格',
+    sidebarSaveCompare: '保存并比较',
+    readMore: '展开',
     factLeaseValue: (l: string) => `${l} 年`,
     descHeading: '描述',
     complexLabel: '住宅区',
@@ -389,9 +437,17 @@ const COPY = {
     sqm: 'm²', house: 'huis', land: 'grond', bali: 'Bali',
     completed: 'Opgeleverd',
     factsHeading: 'Kerngegevens',
-    factBedrooms: 'Slaapkamers', factHouse: 'Huis', factLand: 'Grond', factCompletion: 'Oplevering',
-    factPermits: 'Vergunningen', factLeasehold: 'Leasehold', factDistrict: 'Gebied',
-    factAirport: 'Naar luchthaven', factStyle: 'Interieurstijl', factPriceM2: 'Prijs per m²',
+    aboutVillaHeading: 'Over de villa', aboutLandHeading: 'Grond & pacht',
+    factBedrooms: 'Slaapkamers', factHouse: 'Woonoppervlak', factLand: 'Grond', factCompletion: 'Oplevering',
+    factPermits: 'Bouwvergunning', factLeasehold: 'Pachtduur', factDistrict: 'Wijk',
+    factAirport: 'Naar vliegveld', factStyle: 'Stijl', factPriceM2: 'Prijs per m²',
+    factType: 'Type', factTypeVilla: 'Villa', factTypeVillaComplex: 'Villa in complex',
+    factOwnership: 'Eigendomsrecht', factOwnershipLease: 'Erfpacht',
+    factSeller: 'Verkoper', factSellerDev: 'Ontwikkelaar', factSellerResale: 'Doorverkoop',
+    factPricePerYear: 'Jaarlijkse kosten',
+    sidebarPriceNormal: 'Normale prijs voor dit gebied',
+    sidebarSaveCompare: 'Bewaren & vergelijken',
+    readMore: 'Meer',
     factLeaseValue: (l: string) => `${l} jaar`,
     descHeading: 'Beschrijving',
     complexLabel: 'Wooncomplex',
@@ -435,9 +491,17 @@ const COPY = {
     sqm: 'm²', house: 'umah', land: 'tanah', bali: 'Bali',
     completed: 'Puput',
     factsHeading: 'Fakta utama',
-    factBedrooms: 'Kamar pules', factHouse: 'Umah', factLand: 'Tanah', factCompletion: 'Serah terima',
-    factPermits: 'Izin', factLeasehold: 'Hak sewa', factDistrict: 'Wewidangan',
-    factAirport: 'Ka bandara', factStyle: 'Gaya interior', factPriceM2: 'Aji per m²',
+    aboutVillaHeading: 'Indik vila', aboutLandHeading: 'Tanah & sewa',
+    factBedrooms: 'Kamar pules', factHouse: 'Wiyasan umah', factLand: 'Tanah', factCompletion: 'Serah terima',
+    factPermits: 'Ijin bangun', factLeasehold: 'Masa sewa', factDistrict: 'Wewidangan',
+    factAirport: 'Ka bandara', factStyle: 'Gaya', factPriceM2: 'Aji per m²',
+    factType: 'Tipe', factTypeVilla: 'Vila', factTypeVillaComplex: 'Vila ring kompleks',
+    factOwnership: 'Hak', factOwnershipLease: 'Hak sewa tanah',
+    factSeller: 'Kadol olih', factSellerDev: 'Pengembang', factSellerResale: 'Jual malih',
+    factPricePerYear: 'Biaya per tahun',
+    sidebarPriceNormal: 'Aji biasa ring daerah niki',
+    sidebarSaveCompare: 'Simpen & bandingang',
+    readMore: 'Selengkapnya',
     factLeaseValue: (l: string) => `${l} warsa`,
     descHeading: 'Deskripsi',
     complexLabel: 'Kompleks',
@@ -481,9 +545,17 @@ const COPY = {
     sqm: 'm²', house: 'dom', land: 'działka', bali: 'Bali',
     completed: 'Ukończony',
     factsHeading: 'Parametry',
-    factBedrooms: 'Sypialnie', factHouse: 'Dom', factLand: 'Działka', factCompletion: 'Oddanie',
-    factPermits: 'Pozwolenia', factLeasehold: 'Leasehold', factDistrict: 'Rejon',
-    factAirport: 'Na lotnisko', factStyle: 'Styl wnętrza', factPriceM2: 'Cena za m²',
+    aboutVillaHeading: 'O willi', aboutLandHeading: 'Działka i dzierżawa',
+    factBedrooms: 'Sypialnie', factHouse: 'Powierzchnia domu', factLand: 'Działka', factCompletion: 'Oddanie',
+    factPermits: 'Pozwolenie na budowę', factLeasehold: 'Okres dzierżawy', factDistrict: 'Dzielnica',
+    factAirport: 'Do lotniska', factStyle: 'Styl', factPriceM2: 'Cena za m²',
+    factType: 'Typ', factTypeVilla: 'Willa', factTypeVillaComplex: 'Willa w kompleksie',
+    factOwnership: 'Prawo', factOwnershipLease: 'Dzierżawa gruntu',
+    factSeller: 'Sprzedaje', factSellerDev: 'Deweloper', factSellerResale: 'Odsprzedaż',
+    factPricePerYear: 'Roczny koszt posiadania',
+    sidebarPriceNormal: 'Normalna cena w okolicy',
+    sidebarSaveCompare: 'Zapisz i porównaj',
+    readMore: 'Więcej',
     factLeaseValue: (l: string) => `${l} lat`,
     descHeading: 'Opis',
     complexLabel: 'Kompleks mieszkaniowy',
@@ -527,9 +599,17 @@ const COPY = {
     sqm: 'м²', house: 'будинок', land: 'ділянка', bali: 'Балі',
     completed: 'Зданий',
     factsHeading: 'Характеристики',
-    factBedrooms: 'Спальні', factHouse: 'Будинок', factLand: 'Ділянка', factCompletion: 'Здача',
-    factPermits: 'Дозволи', factLeasehold: 'Leasehold', factDistrict: 'Район',
-    factAirport: 'До аеропорту', factStyle: 'Стиль інтер’єру', factPriceM2: 'Ціна за м²',
+    aboutVillaHeading: 'Про віллу', aboutLandHeading: 'Ділянка та оренда землі',
+    factBedrooms: 'Спальні', factHouse: 'Площа будинку', factLand: 'Ділянка', factCompletion: 'Здача',
+    factPermits: 'Дозвіл на будівництво', factLeasehold: 'Термін оренди', factDistrict: 'Район',
+    factAirport: 'До аеропорту', factStyle: 'Стиль', factPriceM2: 'Ціна за м²',
+    factType: 'Тип', factTypeVilla: 'Вілла', factTypeVillaComplex: 'Вілла в комплексі',
+    factOwnership: 'Право', factOwnershipLease: 'Оренда землі (лізхолд)',
+    factSeller: 'Продає', factSellerDev: 'Забудовник', factSellerResale: 'Перепродаж',
+    factPricePerYear: 'Рік володіння обходиться',
+    sidebarPriceNormal: 'Звичайна ціна для району',
+    sidebarSaveCompare: 'Зберегти та порівняти',
+    readMore: 'Докладніше',
     factLeaseValue: (l: string) => `${l} років`,
     descHeading: 'Опис',
     complexLabel: 'Житловий комплекс',
@@ -555,7 +635,7 @@ const COPY = {
     faqHeading: 'Часті запитання',
     faq: (title: string, district: string | null, price: string | null, lease: string | null, land: number | null) => [
       { q: `Скільки коштує ${title}?`,
-        a: price ? `Поточна ціна пропозиції — ${price}. Актуальна ціна завжди показана в картці вище.` : 'Ціна за запитом. Зв’яжіться з нами, щоб дізнатися актуальну ціну.' },
+        a: price ? `Поточна ціна пропозиції — ${price}. Актуальна ціна завжди показана в картці вище.` : `Ціна за запитом. Зв’яжіться з нами, щоб дізнатися актуальну ціну.` },
       { q: `Де розташований ${title}?`,
         a: district ? `Об’єкт розташований у ${district}, Балі. Точні координати на карті вище.` : 'Точне розташування та координати на карті вище.' },
       { q: 'Чи може іноземець купити віллу на Балі?',
@@ -1175,6 +1255,24 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
+  type KV = { label: string; value: string }
+  const villaFacts: KV[] = ([
+    parentComplex ? { label: c.factType, value: c.factTypeVillaComplex } : { label: c.factType, value: c.factTypeVilla },
+    area != null ? { label: c.factHouse, value: `${area} ${c.sqm}` } : null,
+    bedrooms != null ? { label: c.factBedrooms, value: String(bedrooms) } : null,
+    interiorStyle ? { label: c.factStyle, value: facetLabel('style', interiorStyle, lang) } : null,
+    yearRaw ? { label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw } : null,
+    permitLabel(permit, lang) ? { label: c.factPermits, value: permitLabel(permit, lang)! } : null,
+  ] as (KV | null)[]).filter(Boolean) as KV[]
+
+  const landFacts: KV[] = ([
+    lease ? { label: c.factOwnership, value: c.factOwnershipLease } : null,
+    lease ? { label: c.factLeasehold, value: c.factLeaseValue(lease) } : null,
+    land != null ? { label: c.factLand, value: `${land} ${c.sqm}` } : null,
+    district ? { label: c.factDistrict, value: district } : null,
+    fmtAirportDistance(lat, lng, lang) ? { label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! } : null,
+  ] as (KV | null)[]).filter(Boolean) as KV[]
+
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
   // localized c.faq(...) template so de/zh/nl/id/fr/ban don't render English.
   const faqItems = lang === 'ru'
@@ -1545,11 +1643,19 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             {title}
           </h1>
           {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
-          <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
-            {bedrooms != null && <span>{(lang === 'ru' ? `${bedrooms} ${pluralRu(bedrooms, ['спальня', 'спальни', 'спален'])}` : `${bedrooms} BR`)}</span>}
-            {area != null && <span>{area} {c.sqm} {c.house}</span>}
-            {land != null && <span>{land} {c.sqm} {c.land}</span>}
-            {district && <span>{districtRaw ? geoChainString(districtRaw) : `${district}, ${c.bali}`}</span>}
+          <div className="text-[15px] text-[#36413B] leading-relaxed mb-2">
+            {districtRaw ? geoChainString(districtRaw) : district ? `${district}, ${c.bali}` : c.bali}
+          </div>
+          <div className="flex flex-wrap gap-5 text-[14px] mb-4">
+            {beachPick && beachPick.km <= 3 && (
+              <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M2 18c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><circle cx="12" cy="9" r="4"/></svg>{pickCopy({ ru: 'Пляж', en: 'Beach', id: 'Pantai', fr: 'Plage', de: 'Strand', zh: '海滩', nl: 'Strand', ban: 'Pantai', pl: 'Plaża', uk: 'Пляж' }, lang)} {beachPick.km < 1 ? `${Math.round(beachPick.km * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${beachPick.km.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
+            )}
+            {airportS && (
+              <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 16l20-6-3-3-6 2-6-5-2 1 4 6-5 2-2-1-1 1z"/></svg>{pickCopy({ ru: 'Аэропорт', en: 'Airport', id: 'Bandara', fr: 'Aéroport', de: 'Flughafen', zh: '机场', nl: 'Vliegveld', ban: 'Bandara', pl: 'Lotnisko', uk: 'Аеропорт' }, lang)} {Math.round(airportS / 60)} {pickCopy({ ru: 'мин', en: 'min', id: 'mnt', fr: 'min', de: 'Min', zh: '分钟', nl: 'min', ban: 'mnt', pl: 'min', uk: 'хв' }, lang)}</span>
+            )}
+            {nearby?.byCategory?.school && nearby.byCategory.school.length > 0 && nearby.byCategory.school[0].distanceKm <= 2 && (
+              <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/></svg>{pickCopy({ ru: 'Школа', en: 'School', id: 'Sekolah', fr: 'École', de: 'Schule', zh: '学校', nl: 'School', ban: 'Sekolah', pl: 'Szkoła', uk: 'Школа' }, lang)} {nearby.byCategory.school[0].distanceKm < 1 ? `${Math.round(nearby.byCategory.school[0].distanceKm * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${nearby.byCategory.school[0].distanceKm.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
+            )}
           </div>
           {/* Part-of-complex link near the top (TASK-13a): a strong internal
               link to the complex card, which is the canonical page for the
@@ -1593,35 +1699,45 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
         {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
-        {facts.length > 0 && (
+        {seoText && (
           <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {c.factsHeading}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {facts.map(({ Icon, label, value }) => (
-                <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
-                  <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
-                    <Icon size={16} className="shrink-0" />
-                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
-                  </div>
-                  <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
+            <p className="text-[16px] leading-[1.65] text-[var(--color-text)] max-w-[68ch] m-0">{seoText.split('\n')[0]}</p>
+            {seoText.includes('\n') && (
+              <ExpandableText className="max-w-[68ch] mt-2" more={c.readMore} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
+                <div className="prose-balinsky text-[16px] leading-[1.65] text-[var(--color-text)] whitespace-pre-line">
+                  {seoText.split('\n').slice(1).join('\n')}
                 </div>
-              ))}
-            </div>
+              </ExpandableText>
+            )}
           </section>
         )}
 
-        {seoText && (
-          <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {c.descHeading}
-            </h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-                {seoText}
-              </div>
-            </ExpandableText>
+        {(villaFacts.length > 0 || landFacts.length > 0) && (
+          <section className="mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+              {villaFacts.length > 0 && (
+                <div>
+                  <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-3 mt-0">{c.aboutVillaHeading}</h2>
+                  {villaFacts.map(f => (
+                    <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
+                      <span className="text-[var(--color-text-muted)]">{f.label}</span>
+                      <span className="text-right font-medium">{f.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {landFacts.length > 0 && (
+                <div>
+                  <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-3 mt-0">{c.aboutLandHeading}</h2>
+                  {landFacts.map(f => (
+                    <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
+                      <span className="text-[var(--color-text-muted)]">{f.label}</span>
+                      <span className="text-right font-medium">{f.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
         )}
 
@@ -1777,6 +1893,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               listingTitle={title}
               reservedUntil={activeReservation?.expires_at ?? null}
               presentationButton={presentationBtn}
+              dealRows={[
+                ...(priceM2 != null ? [{ label: c.factPriceM2, valueUsd: priceM2 }] : []),
+                ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
+                ...(priceNum != null && leaseYears != null && leaseYears > 0 ? [{ label: c.factPricePerYear, valueUsd: Math.round(priceNum / leaseYears) }] : []),
+                { label: c.factSeller, valueText: isResale ? c.factSellerResale : c.factSellerDev },
+              ]}
+              priceCompDiffPct={saleComps?.diffPct ?? null}
             />
             {managers.length > 0 && managers[0] && (
               <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">

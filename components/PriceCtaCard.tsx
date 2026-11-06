@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
-import { Send, Lock } from 'lucide-react'
+import { Send, Lock, Bookmark } from 'lucide-react'
 import { ApproxPrice } from './InlinePrice'
 import { useCurrency } from './CurrencyContext'
 import { formatPriceExact } from '@/lib/currency'
@@ -17,6 +17,7 @@ const COPY = {
     priceUpdated: (d: string) => `Цена обновлена ${d}`,
     reservedTitle: 'Объект сейчас забронирован',
     reservedUntil: (d: string) => `Резерв действует до ${d}.`,
+    saveCompare: 'Сохранить и сравнить',
     locale: 'ru-RU',
   },
   en: {
@@ -26,6 +27,7 @@ const COPY = {
     priceUpdated: (d: string) => `Price updated ${d}`,
     reservedTitle: 'Currently reserved',
     reservedUntil: (d: string) => `Hold expires on ${d}.`,
+    saveCompare: 'Save & compare',
     locale: 'en-GB',
   },
   id: {
@@ -35,6 +37,7 @@ const COPY = {
     priceUpdated: (d: string) => `Harga diperbarui ${d}`,
     reservedTitle: 'Saat ini dipesan',
     reservedUntil: (d: string) => `Hold berlaku hingga ${d}.`,
+    saveCompare: 'Simpan & bandingkan',
     locale: 'id-ID',
   },
   fr: {
@@ -44,6 +47,7 @@ const COPY = {
     priceUpdated: (d: string) => `Prix mis à jour ${d}`,
     reservedTitle: 'Actuellement réservé',
     reservedUntil: (d: string) => `Le blocage expire le ${d}.`,
+    saveCompare: 'Sauvegarder et comparer',
     locale: 'fr-FR',
   },
   de: {
@@ -53,6 +57,7 @@ const COPY = {
     priceUpdated: (d: string) => `Preis aktualisiert ${d}`,
     reservedTitle: 'Derzeit reserviert',
     reservedUntil: (d: string) => `Reservierung gilt bis ${d}.`,
+    saveCompare: 'Speichern & vergleichen',
     locale: 'de-DE',
   },
   zh: {
@@ -62,6 +67,7 @@ const COPY = {
     priceUpdated: (d: string) => `价格更新于 ${d}`,
     reservedTitle: '目前已预订',
     reservedUntil: (d: string) => `保留有效期至 ${d}。`,
+    saveCompare: '保存并比较',
     locale: 'zh-CN',
   },
   nl: {
@@ -71,6 +77,7 @@ const COPY = {
     priceUpdated: (d: string) => `Prijs bijgewerkt ${d}`,
     reservedTitle: 'Momenteel gereserveerd',
     reservedUntil: (d: string) => `Reservering geldt tot ${d}.`,
+    saveCompare: 'Opslaan & vergelijken',
     locale: 'nl-NL',
   },
   ban: {
@@ -80,6 +87,7 @@ const COPY = {
     priceUpdated: (d: string) => `Aji kaanyarin ${d}`,
     reservedTitle: 'Sané mangkin kareservasi',
     reservedUntil: (d: string) => `Hold mamargi kantos ${d}.`,
+    saveCompare: 'Simpen & bandingang',
     locale: 'id-ID',
   },
   pl: {
@@ -89,6 +97,7 @@ const COPY = {
     priceUpdated: (d: string) => `Cena zaktualizowana ${d}`,
     reservedTitle: 'Obecnie zarezerwowane',
     reservedUntil: (d: string) => `Rezerwacja wygasa ${d}.`,
+    saveCompare: 'Zapisz i porównaj',
     locale: 'pl-PL',
   },
   uk: {
@@ -98,6 +107,7 @@ const COPY = {
     priceUpdated: (d: string) => `Ціну оновлено ${d}`,
     reservedTitle: 'Зараз заброньовано',
     reservedUntil: (d: string) => `Бронь діє до ${d}.`,
+    saveCompare: 'Зберегти та порівняти',
     locale: 'uk-UA',
   },
 } as const
@@ -127,6 +137,9 @@ export function PriceCtaCard({
   pricePrefix = null,
   note = null,
   sidebar = false,
+  sidebarExtra = null,
+  dealRows = null,
+  priceCompDiffPct = null,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
@@ -139,12 +152,12 @@ export function PriceCtaCard({
   listingSlug?: string | null
   listingTitle?: string | null
   reservedUntil?: string | null
-  /** «от» перед ценой — у жилого комплекса цена минимальная по юнитам. */
   pricePrefix?: string | null
-  /** Строка под ценой вместо цены за м² (у комплекса: сколько юнитов в продаже). */
   note?: string | null
-  /** Вертикальный layout для sticky-сайдбара. */
   sidebar?: boolean
+  sidebarExtra?: ReactNode
+  dealRows?: { label: string; valueUsd?: number; valueText?: string }[] | null
+  priceCompDiffPct?: number | null
 }) {
   const { currency } = useCurrency()
   const pathname = usePathname() ?? ''
@@ -189,6 +202,26 @@ export function PriceCtaCard({
         )}
       </div>
 
+      {sidebar && dealRows && dealRows.length > 0 && (
+        <div className="flex flex-col">
+          {dealRows.map((row, i) => (
+            <div key={i} className="flex justify-between gap-2 py-2 border-b border-dotted border-[#CFD8D3] text-[14px]">
+              <span className="text-[var(--color-text-muted)]">{row.label}</span>
+              <span className="font-medium text-right">{row.valueUsd != null ? formatPriceExact(row.valueUsd, currency, lang) : row.valueText}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {sidebar && priceCompDiffPct != null && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[14px] font-semibold">{pickCopy({ ru: 'Цена обычная для района', en: 'Normal price for the area', id: 'Harga normal untuk area ini', fr: 'Prix normal pour le quartier', de: 'Normaler Preis für die Gegend', zh: '区域正常价格', nl: 'Normale prijs voor dit gebied', ban: 'Aji biasa ring daerah niki', pl: 'Normalna cena w okolicy', uk: 'Звичайна ціна для району' }, lang)}</span>
+          <div className="relative h-[10px] rounded-[5px]" style={{ background: 'linear-gradient(90deg, #CFE8D9 0% 33.3%, #F6E2BF 33.3% 66.6%, #F4D3CE 66.6% 100%)' }} aria-hidden="true">
+            <div className="absolute top-[-5px] w-5 h-5 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + priceCompDiffPct * 1.5))}%`, marginLeft: '-10px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
+          </div>
+        </div>
+      )}
+      {sidebar && sidebarExtra}
+
       {/* RIGHT — CTAs + trust chips. Order on mobile uses CSS so the
           primary button stays at the top per spec. */}
       <div className={`flex flex-col gap-3 ${sidebar ? '' : 'xl:items-end'}`}>
@@ -219,6 +252,15 @@ export function PriceCtaCard({
               <Send size={18} strokeWidth={1.6} />
               {buyLabel}
             </a>
+            {sidebar && (
+              <button
+                type="button"
+                className="inline-flex w-full items-center justify-center gap-2 min-h-[48px] py-2 px-6 rounded-[10px] bg-[#EEF6F1] hover:bg-[#E0EDE5] text-[#135237] text-[15px] font-semibold text-center leading-tight transition-colors"
+              >
+                <Bookmark size={18} strokeWidth={1.6} />
+                {c.saveCompare}
+              </button>
+            )}
           </div>
         )}
 
