@@ -126,6 +126,7 @@ export function PriceCtaCard({
   reservedUntil = null,
   pricePrefix = null,
   note = null,
+  sidebar = false,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
@@ -142,6 +143,8 @@ export function PriceCtaCard({
   pricePrefix?: string | null
   /** Строка под ценой вместо цены за м² (у комплекса: сколько юнитов в продаже). */
   note?: string | null
+  /** Вертикальный layout для sticky-сайдбара. */
+  sidebar?: boolean
 }) {
   const { currency } = useCurrency()
   const pathname = usePathname() ?? ''
@@ -164,7 +167,7 @@ export function PriceCtaCard({
   void listingSlug
 
   return (
-    <div className="rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-5 md:gap-6 xl:items-center">
+    <div className={`rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid gap-5 md:gap-6 ${sidebar ? 'grid-cols-1 shadow-[0_1px_2px_rgb(0_0_0/.04),0_4px_12px_rgb(0_0_0/.06)]' : 'grid-cols-1 xl:grid-cols-[1fr_auto] xl:items-center'}`}>
       {/* LEFT — price */}
       <div className="min-w-0">
         <div className="text-[30px] md:text-[32px] font-semibold tracking-[-0.02em] leading-none text-[#1A1F1C] tabular-nums">
@@ -188,7 +191,7 @@ export function PriceCtaCard({
 
       {/* RIGHT — CTAs + trust chips. Order on mobile uses CSS so the
           primary button stays at the top per spec. */}
-      <div className="flex flex-col gap-3 xl:items-end">
+      <div className={`flex flex-col gap-3 ${sidebar ? '' : 'xl:items-end'}`}>
         {reservedUntil ? (
           // The unit is already on a 14-day hold. Hide the buy / reserve
           // CTAs so two visitors don't think they both have it. They can
@@ -202,7 +205,7 @@ export function PriceCtaCard({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col-reverse md:flex-row gap-2 w-full md:w-auto">
+          <div className={`flex gap-2 w-full ${sidebar ? 'flex-col' : 'flex-col-reverse md:flex-row md:w-auto'}`}>
             {presentationButton}
             {/* Balinsky не принимает заявки и не бронирует объекты: единственный
                 CTA ведёт к прямым контактам оператора объекта — блок менеджеров

@@ -1455,6 +1455,37 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   )
   if (analyticsOnly) return analytics
 
+  const presentationBtn = priceNum != null ? (
+    <span className="bx-pro-only">
+    <AddToCollection kind="villa" slug={slug} snapshot={{
+      title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+      district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+      leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+      id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
+    }} />
+    <VillaPresentationButton
+      variant="outline"
+      lang={lang}
+      villaId={v.airtable_id}
+      slug={slug}
+      title={title}
+      district={district}
+      photos={photos}
+      priceUsd={priceNum}
+      pricePerM2={priceM2}
+      bedrooms={bedrooms}
+      area={area}
+      land={land}
+      yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
+      lease={lease}
+      permit={permit}
+      lat={lat}
+      lng={lng}
+      seoText={seoText}
+    />
+    </span>
+  ) : null
+
   return (
     <>
       <Header active="villy" />
@@ -1537,55 +1568,29 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             </div>
           )}
           {priceNum != null && (
-            <PriceCtaCard
-              priceUsd={priceNum}
-              pricePerSqmUsd={priceM2}
-              updatedAt={priceUpdatedAt}
-              managerId={managers[0]?.id ?? null}
-              sellerUrl={sellerUrl}
-              listingKind="villa"
-              listingId={v.airtable_id}
-              listingSlug={slug}
-              listingTitle={title}
-              reservedUntil={activeReservation?.expires_at ?? null}
-              presentationButton={
-                // PDF-презентация — только для Pro (.bx-pro-only в globals.css).
-                <span className="bx-pro-only">
-                <AddToCollection kind="villa" slug={slug} snapshot={{
-                  title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-                  district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
-                  leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
-                  id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
-                }} />
-                <VillaPresentationButton
-                  variant="outline"
-                  lang={lang}
-                  villaId={v.airtable_id}
-                  slug={slug}
-                  title={title}
-                  district={district}
-                  photos={photos}
-                  priceUsd={priceNum}
-                  pricePerM2={priceM2}
-                  bedrooms={bedrooms}
-                  area={area}
-                  land={land}
-                  yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
-                  lease={lease}
-                  permit={permit}
-                  lat={lat}
-                  lng={lng}
-                  seoText={seoText}
-                />
-                </span>
-              }
-            />
+            <div className="lg:hidden">
+              <PriceCtaCard
+                priceUsd={priceNum}
+                pricePerSqmUsd={priceM2}
+                updatedAt={priceUpdatedAt}
+                managerId={managers[0]?.id ?? null}
+                sellerUrl={sellerUrl}
+                listingKind="villa"
+                listingId={v.airtable_id}
+                listingSlug={slug}
+                listingTitle={title}
+                reservedUntil={activeReservation?.expires_at ?? null}
+                presentationButton={presentationBtn}
+              />
+            </div>
           )}
         </section>
 
-        {/* 3D-планировка стоит под ценой, а не под галереей: в первом экране
-            секция сводила на нет ленивую загрузку — Three.js и страница
-            модели (~134 КБ) грузились даже у тех, кто до 3D не доскроллил. */}
+        {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+        {/* ── Main column ── */}
+        <div className="min-w-0 flex-1">
+
         {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
         {facts.length > 0 && (
@@ -1620,17 +1625,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </section>
         )}
 
-        {/* Аналитика — четыре раздела в одном порядке: место → аренда
-            рядом → доходность → участок. Калькулятор стоит после ставок
-            соседей, потому что строится на них. Перед разделами — «карта
-            страницы» с главной цифрой каждого. */}
-        {/* «Для дохода / Для жизни»: в режиме «для жизни» — только безопасность и удобство (lib/living.ts). */}
-        {/* Итог «Для дохода / Для жизни» и разделы аналитики — только для вошедших
-            (.bx-auth-block в globals.css); гостю после описания сразу контакты менеджера. */}
         {analytics}
 
-        {/* Карточка застройщика — тоже только для вошедших (владелец 21.10.2026):
-            гостю после описания сразу контакты менеджера. */}
         <div className="bx-auth-block">
         {(developer || developerName) && (
           <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1763,11 +1759,54 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </div>
         </section>
 
-        {/* Emit the Product/merchant-listing schema ONLY when it carries an
-            image — Google's merchant validator marks an image-less Product
-            invalid ("Отсутствует поле image"), and an image-less listing
-            can't be a valid rich result anyway. The page keeps its
-            place + FAQ schema regardless. */}
+        </div>{/* ── /Main column ── */}
+
+        {/* ── Sticky sidebar (desktop only) ── */}
+        {priceNum != null && (
+          <aside className="hidden lg:flex flex-col gap-4 w-[340px] shrink-0 sticky top-4">
+            <PriceCtaCard
+              sidebar
+              priceUsd={priceNum}
+              pricePerSqmUsd={priceM2}
+              updatedAt={priceUpdatedAt}
+              managerId={managers[0]?.id ?? null}
+              sellerUrl={sellerUrl}
+              listingKind="villa"
+              listingId={v.airtable_id}
+              listingSlug={slug}
+              listingTitle={title}
+              reservedUntil={activeReservation?.expires_at ?? null}
+              presentationButton={presentationBtn}
+            />
+            {managers.length > 0 && managers[0] && (
+              <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
+                <div className="flex items-center gap-3">
+                  {managers[0].photo ? (
+                    <div className="shrink-0 w-[48px] h-[48px] rounded-full overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">
+                      <Image src={managers[0].photo} alt={managers[0].name} fill sizes="48px" className="object-cover" />
+                    </div>
+                  ) : (
+                    <div className="shrink-0 w-[48px] h-[48px] rounded-full bg-[var(--color-search-bg)] border border-[var(--color-border)] flex items-center justify-center text-[18px] text-[var(--color-text-muted)]">
+                      {managers[0].name.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-semibold text-[var(--color-text)] truncate">
+                      {managers[0].name}{developerName ? `, ${developerName}` : ''}
+                    </div>
+                    <div className="text-[13px] text-[var(--color-text-muted)]">
+                      {managers[0].languages.length > 0
+                        ? `Telegram, WhatsApp · ${managers[0].languages.join(', ')}`
+                        : 'Telegram, WhatsApp'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </aside>
+        )}
+        </div>{/* ═══ /Two-column layout ═══ */}
+
         {photos.length > 0 && (
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
         )}
