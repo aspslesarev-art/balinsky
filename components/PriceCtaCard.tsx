@@ -124,6 +124,8 @@ export function PriceCtaCard({
   listingSlug = null,
   listingTitle = null,
   reservedUntil = null,
+  pricePrefix = null,
+  note = null,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
@@ -136,6 +138,10 @@ export function PriceCtaCard({
   listingSlug?: string | null
   listingTitle?: string | null
   reservedUntil?: string | null
+  /** «от» перед ценой — у жилого комплекса цена минимальная по юнитам. */
+  pricePrefix?: string | null
+  /** Строка под ценой вместо цены за м² (у комплекса: сколько юнитов в продаже). */
+  note?: string | null
 }) {
   const { currency } = useCurrency()
   const pathname = usePathname() ?? ''
@@ -162,13 +168,16 @@ export function PriceCtaCard({
       {/* LEFT — price */}
       <div className="min-w-0">
         <div className="text-[30px] md:text-[32px] font-semibold tracking-[-0.02em] leading-none text-[#1A1F1C] tabular-nums">
-          {main}
+          {pricePrefix ? `${pricePrefix} ` : ''}{main}
         </div>
         <ApproxPrice usd={priceUsd} lang={lang} className="block mt-2 text-[15px] text-[var(--color-text-muted)]" />
         {perSqm && (
           <div className="mt-1.5 text-[13px] text-[var(--color-text-muted)]">
             {perSqm} {c.perSqm}
           </div>
+        )}
+        {note && (
+          <div className="mt-1.5 text-[13px] text-[var(--color-text-muted)]">{note}</div>
         )}
         {updated && (
           <div className="mt-2 text-[12px] text-[var(--color-text-muted)]">

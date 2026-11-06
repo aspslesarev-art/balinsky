@@ -1034,7 +1034,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   }
 }
 
-export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lang; pdf?: PdfRequest }) {
+export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean }) {
   const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). resolveVilla finds either form
@@ -1359,6 +1359,100 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
     )
   }
 
+  // Pro-аналитика отдельно: её же показывает страница жилого комплекса (analyticsOnly).
+  const analytics = (
+    <>
+        <ProPendingNote lang={lang} />
+        <div className="bx-auth-block">
+        <GoalSwitch lang={lang}
+          income={
+            <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
+              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
+              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
+              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
+              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
+          }
+          live={livingFacts ? (
+            <ListingVerdict mode="live" verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
+              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
+              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
+              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
+              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
+          ) : null} />
+        <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
+          {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
+          <div className={`grid grid-cols-1 items-stretch gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
+          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
+            leaseYears={leaseYears} landYellow={rentalRestricted}
+            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
+            coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
+          {landOk && (
+            <div className="flex flex-col gap-6 [&>*:last-child]:flex-1">
+              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
+                <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
+              </LazyMount>
+              <SafetyChecks verdict={verdict} lang={lang} />
+            </div>
+          )}
+          </div>
+        </DataChapter>
+
+        {hasPlace && (
+          <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
+            {/* «О районе» — первым в разделе, над «Как добраться» (владелец 23.10.2026). */}
+            {districtCopy && districtSlug && (
+              <div className="[&>section]:!mb-0"><DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} /></div>
+            )}
+            {/* Три полосы друг под другом: текст слева, карта справа — «Солнце и погода»,
+                «Как добраться», «Главное рядом» (макет «Удобно ли там жить?», B —
+                владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли
+                это?». Пляж — ниже, во всю ширину. */}
+            {(livingFacts || geoFacts) && (
+              <div className="mb-4 flex flex-col gap-4 [&>*]:mb-0">
+                {/* «Солнце и погода» — сразу под «О районе» (владелец 23.10.2026). */}
+                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
+                {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
+                  map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
+                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
+                  map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
+              </div>
+            )}
+            {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
+            {/* «Что рядом» списком убран 23.10.2026: повторял «Главное рядом» и карту с точками. */}
+            {/* Карта туристов — сразу под «Что рядом»: вместе отвечают, оживлённо ли вокруг. */}
+            {lat != null && lng != null && (
+              <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
+            )}
+          </DataChapter>
+        )}
+
+        {hasRent && (
+          <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
+            <DemandSummary snap={verdictSnap} verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps}
+              sale={saleComps ? <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} hideTitle /> : undefined}
+              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
+            {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
+                по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
+          </DataChapter>
+        )}
+
+        {hasYield && (
+          <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
+            {/* Три варианта вместо карточки, которая повторяла ответ раздела. */}
+            <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
+            <div id="kalkulyator" className="scroll-mt-24" />
+            <GatedBlock kind="investment" lang={lang}>
+              <LazyMount fallback={<div className="min-h-[600px]" />}>
+                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} showMap={false} />
+              </LazyMount>
+            </GatedBlock>
+          </DataChapter>
+        )}
+        </div>
+    </>
+  )
+  if (analyticsOnly) return analytics
+
   return (
     <>
       <Header active="villy" />
@@ -1531,93 +1625,7 @@ export async function VillaDetail({ slug, lang, pdf }: { slug: string; lang: Lan
         {/* «Для дохода / Для жизни»: в режиме «для жизни» — только безопасность и удобство (lib/living.ts). */}
         {/* Итог «Для дохода / Для жизни» и разделы аналитики — только для вошедших
             (.bx-auth-block в globals.css); гостю после описания сразу контакты менеджера. */}
-        <ProPendingNote lang={lang} />
-        <div className="bx-auth-block">
-        <GoalSwitch lang={lang}
-          income={
-            <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
-              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
-              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
-              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
-              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
-          }
-          live={livingFacts ? (
-            <ListingVerdict mode="live" verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
-              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
-              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
-              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
-              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
-          ) : null} />
-        <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
-          {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
-          <div className={`grid grid-cols-1 items-stretch gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
-          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
-            leaseYears={leaseYears} landYellow={rentalRestricted}
-            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
-            coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
-          {landOk && (
-            <div className="flex flex-col gap-6 [&>*:last-child]:flex-1">
-              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-              </LazyMount>
-              <SafetyChecks verdict={verdict} lang={lang} />
-            </div>
-          )}
-          </div>
-        </DataChapter>
-
-        {hasPlace && (
-          <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {/* «О районе» — первым в разделе, над «Как добраться» (владелец 23.10.2026). */}
-            {districtCopy && districtSlug && (
-              <div className="[&>section]:!mb-0"><DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} /></div>
-            )}
-            {/* Три полосы друг под другом: текст слева, карта справа — «Солнце и погода»,
-                «Как добраться», «Главное рядом» (макет «Удобно ли там жить?», B —
-                владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли
-                это?». Пляж — ниже, во всю ширину. */}
-            {(livingFacts || geoFacts) && (
-              <div className="mb-4 flex flex-col gap-4 [&>*]:mb-0">
-                {/* «Солнце и погода» — сразу под «О районе» (владелец 23.10.2026). */}
-                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
-                {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
-                  map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
-                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
-                  map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
-              </div>
-            )}
-            {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
-            {/* «Что рядом» списком убран 23.10.2026: повторял «Главное рядом» и карту с точками. */}
-            {/* Карта туристов — сразу под «Что рядом»: вместе отвечают, оживлённо ли вокруг. */}
-            {lat != null && lng != null && (
-              <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
-            )}
-          </DataChapter>
-        )}
-
-        {hasRent && (
-          <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
-            <DemandSummary snap={verdictSnap} verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps}
-              sale={saleComps ? <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} hideTitle /> : undefined}
-              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
-            {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
-                по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
-          </DataChapter>
-        )}
-
-        {hasYield && (
-          <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
-            {/* Три варианта вместо карточки, которая повторяла ответ раздела. */}
-            <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
-            <div id="kalkulyator" className="scroll-mt-24" />
-            <GatedBlock kind="investment" lang={lang}>
-              <LazyMount fallback={<div className="min-h-[600px]" />}>
-                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} showMap={false} />
-              </LazyMount>
-            </GatedBlock>
-          </DataChapter>
-        )}
-        </div>
+        {analytics}
 
         {/* Карточка застройщика — тоже только для вошедших (владелец 21.10.2026):
             гостю после описания сразу контакты менеджера. */}

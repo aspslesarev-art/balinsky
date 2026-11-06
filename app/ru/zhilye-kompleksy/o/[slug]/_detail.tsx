@@ -21,11 +21,8 @@ import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
 import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
 import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { parseGeoOverlay } from '@/lib/geo-placement'
-import { ProgressBar } from '@/components/ProgressBar'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { ManagerCard } from '@/components/ManagerCard'
-import { AgentStoriesButton } from '@/components/AgentStoriesButton'
-import { InlinePrice } from '@/components/InlinePrice'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -91,6 +88,9 @@ import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { LegalAudit } from '@/components/LegalAudit'
+import { PriceCtaCard } from '@/components/PriceCtaCard'
+import { VillaDetail } from '@/app/ru/villy/o/[slug]/_detail'
+import { ApartmentDetail } from '@/app/ru/apartamenty/o/[slug]/_detail'
 import {
   LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD,
   parseAuditItems, parseBalance,
@@ -133,7 +133,7 @@ const COPY = {
     completion: (y: string) => `сдача ${y}`,
     units: (n: number) => `${n} ${pluralRu(n, ['юнит', 'юнита', 'юнитов'])}`,
     unitsFrom: 'Юниты от',
-    keyFacts: 'Ключевые факты',
+    keyFacts: 'Характеристики',
     factType: 'Тип юнитов',
     factCompletion: 'Срок сдачи',
     factCompletionDone: 'Сдан',
@@ -210,7 +210,7 @@ const COPY = {
     completion: (y: string) => `completion ${y}`,
     units: (n: number) => `${n} units`,
     unitsFrom: 'Units from',
-    keyFacts: 'Key facts',
+    keyFacts: 'Specifications',
     factType: 'Unit type',
     factCompletion: 'Completion',
     factCompletionDone: 'Completed',
@@ -1616,6 +1616,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     permitRaw && permitRaw.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: copy.factPermits, value: permit },
     lease && { Icon: Lock, label: copy.factLeasehold, value: copy.factLeaseValue(lease) },
     totalUnits != null && { Icon: BedDouble, label: copy.factUnits, value: String(totalUnits) },
+    lang === 'ru' && firstString(d['Payment plan,%']) && { Icon: Calendar, label: 'Рассрочка', value: firstString(d['Payment plan,%'])!.replace(/%/g, '').replace(/\s*\+\s*/g, ' / ') + '%' },
     district && { Icon: MapPin, label: copy.factDistrict, value: district },
     airportFact && { Icon: Plane, label: copy.factAirport, value: airportFact },
   ].filter(Boolean) as { Icon: typeof Building2; label: string; value: string }[]
@@ -1786,6 +1787,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   if (totalUnits != null) placeJsonLd.numberOfAccommodationUnits = totalUnits
 
   const minPrice = units.length > 0 ? units.find(u => u.priceUsd != null)?.priceUsd ?? null : null
+  // Юнит, чью аналитику показываем в Pro: самый дешёвый с ценой, иначе первый.
+  const repUnit = [...units].filter(u => u.priceUsd != null && Number.isFinite(Number(u.priceUsd)))
+    .sort((a, b) => Number(a.priceUsd) - Number(b.priceUsd))[0] ?? units[0] ?? null
 
   // Price markup for the complex. Villa and apartment detail pages have shipped
   // Product + Offer for a while; complexes carried only ApartmentComplex, which
@@ -1876,7 +1880,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <Link href={complexesRoot} className="hover:text-[var(--color-text)]">{copy.backToComplexes}</Link>
             {district && <> · <span>{district}</span></>}
           </div>
-          <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[20px] sm:text-[28px] md:text-[44px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.2] md:leading-[1.05] [word-break:break-word] [overflow-wrap:anywhere] min-w-0 mb-2 sm:mb-3">
+          <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {name}
           </h1>
           {isSold && (
@@ -1884,24 +1888,31 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
               {copy.sold}
             </div>
           )}
-          <div className="text-[13px] sm:text-[15px] md:text-[16px] text-[var(--color-text-muted)] leading-snug max-w-3xl mb-3 sm:mb-4">
-            {types.length > 0 && <>{types.join(', ')}</>}
-            {district && <> · {district}, {copy.bali}</>}
-            {yearRaw && <> · {status?.toLowerCase().includes('построен') ? copy.completed : copy.completion(yearRaw)}</>}
-            {totalUnits != null && <> · {copy.units(totalUnits)}</>}
+          {/* Строка фактов и плашка застройщика — как у виллы (макет 06.11.2026). */}
+          <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
+            {types.length > 0 && <span>{types.join(', ')}</span>}
+            {totalUnits != null && <span>{copy.units(totalUnits)}</span>}
+            {yearRaw && <span>{status?.toLowerCase().includes('построен') ? copy.completed : copy.completion(yearRaw)}</span>}
+            {district && <span>{district}, {copy.bali}</span>}
           </div>
-          <div className="max-w-3xl mb-3 sm:mb-4">
-            <ProgressBar value={ready} />
-            <div className="mt-1.5 text-[12px] sm:text-[13px] text-[var(--color-text-muted)]">
-              {status ?? copy.statusUnknown} · {copy.estimate} ~{ready}%
-            </div>
-          </div>
-          {minPrice != null && (
-            <div className="text-[16px] sm:text-[18px] md:text-[20px] font-semibold text-[#16A34A]">
-              {copy.unitsFrom} <InlinePrice usd={minPrice} lang={lang} />
+          {developerLink && (
+            <div className="mb-4">
+              <Link
+                href={`${developersRoot}/${developerLink.slug}`}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-soft)] px-3 py-1.5 text-[13.5px] font-medium text-[var(--color-primary-pressed)] no-underline hover:opacity-80 transition-opacity"
+              >
+                {lang === 'ru' ? `Застройщик ${developerLink.name} →` : `Developer ${developerLink.name} →`}
+              </Link>
             </div>
           )}
-          {lang === 'ru' && <AgentStoriesButton kind="complex" id={c.airtable_id} className="mt-4" />}
+          {minPrice != null && (
+            <PriceCtaCard
+              priceUsd={Number(minPrice)}
+              pricePrefix={lang === 'ru' ? 'от' : lang === 'en' ? 'from' : null}
+              managerId={managers[0]?.id ?? null}
+              presentationButton={null}
+            />
+          )}
         </section>
 
         {/* KEY FACTS */}
@@ -1910,7 +1921,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
               {copy.keyFacts}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {facts.map(({ Icon, label, value }) => (
                 <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
                   <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
@@ -1928,7 +1939,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {pageBody && (
           <section className="mb-10">
             <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {copy.aboutPrefix} {name}
+              {lang === 'ru' ? 'Описание' : `${copy.aboutPrefix} ${name}`}
             </h2>
             <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
               <div {...edit(COMPLEX_DESCRIPTION_FIELD, 'longtext', 'Описание ЖК')} className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
@@ -1937,6 +1948,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             </ExpandableText>
           </section>
         )}
+
+        {/* Pro-аналитика как у виллы: тот же код страницы юнита, на примере
+            самого доступного юнита комплекса (макет 06.11.2026). Без Pro
+            скрыта (.bx-auth-block внутри). Нет юнитов - старые разделы ниже. */}
+        {repUnit && (repUnit.kind === 'villa'
+          ? <VillaDetail slug={repUnit.slug} lang={lang} analyticsOnly />
+          : <ApartmentDetail slug={repUnit.slug} lang={lang} analyticsOnly />)}
 
         {/* Interactive plan — sits ABOVE the units list because the
             visitor drills from the panorama → highlighted hotspot →
@@ -2000,6 +2018,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* Аналитика — те же разделы, что на странице виллы: место → аренда
             рядом → участок. Калькулятора у комплекса нет — он на страницах
             юнитов. Перед разделами — «карта страницы». */}
+        {!repUnit && <div className="bx-auth-block">
         <DataGuide lang={lang} chapters={chapters} facts={{
           airportMin: geoFacts?.routes?.airport ? Math.round(geoFacts.routes.airport.s / 60) : null,
           neighbourAdrUsd: marketOk ? marketStats!.villa_adr_usd ?? marketStats!.apartment_adr_usd : null,
@@ -2144,10 +2163,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </DataChapter>
         )}
 
+        </div>}
+
         {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated).
             Замыкает инвест-обвязку: посетитель уже посмотрел объект и юниты,
             прикинул зонирование и доход соседей — и здесь получает вердикт
             «безопасно ли», пока ещё в этом настроении. */}
+        <div className="bx-auth-block">
         <LegalAudit
           lang={lang}
           slug={slug}
@@ -2161,6 +2183,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           editId={c.airtable_id}
           editable={lang === 'ru'}
         />
+        </div>
 
         {/* DEVELOPER — links straight to /ru/zastrojshhiki/<slug>
             when we resolved one by name; falls back to the index
