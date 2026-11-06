@@ -1311,6 +1311,8 @@ function DownloadShortlistModal({
   const [whatsapp, setWhatsapp] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Телефон: файл сначала собираем, сохраняем отдельным нажатием (saveShortlistFile).
+  const [ready, setReady] = useState<{ blob: Blob; filename: string } | null>(null)
   const trimmedName = name.trim()
   const trimmedTg = telegram.trim()
   const trimmedWa = whatsapp.trim()
@@ -1326,9 +1328,9 @@ function DownloadShortlistModal({
     setBusy(true)
     setError(null)
     try {
-      const { downloadShortlistPdf } = await import('./ShortlistPdf')
-      await downloadShortlistPdf(items, null, orientation, lang, currency)
-      onClose()
+      const mod = await import('./ShortlistPdf')
+      if (isPhone()) setReady(await mod.buildShortlistPdf(items, null, orientation, lang, currency))
+      else { await mod.downloadShortlistPdf(items, null, orientation, lang, currency); onClose() }
     } catch (e) {
       console.error(e)
       setError(c.pdfError)
@@ -1342,15 +1344,10 @@ function DownloadShortlistModal({
     setBusy(true)
     setError(null)
     try {
-      const { downloadShortlistPdf } = await import('./ShortlistPdf')
-      await downloadShortlistPdf(
-        items,
-        { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa },
-        orientation,
-        lang,
-        currency,
-      )
-      onClose()
+      const mod = await import('./ShortlistPdf')
+      const agent = { name: trimmedName, telegram: trimmedTg, whatsapp: trimmedWa }
+      if (isPhone()) setReady(await mod.buildShortlistPdf(items, agent, orientation, lang, currency))
+      else { await mod.downloadShortlistPdf(items, agent, orientation, lang, currency); onClose() }
     } catch (e) {
       console.error(e)
       setError(c.pdfError)
@@ -1386,7 +1383,24 @@ function DownloadShortlistModal({
           </button>
         </div>
 
-        {mode === 'choose' ? (
+        {ready ? (
+          <div className="mt-4 flex flex-col gap-3">
+            <p className="m-0 text-[15px] leading-relaxed text-[var(--color-text)]">
+              {lang === 'ru' ? 'PDF готов. Нажмите, чтобы сохранить его или сразу отправить клиенту.' : 'Your PDF is ready. Tap to save it or send it right away.'}
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                const { saveShortlistFile } = await import('./ShortlistPdf')
+                await saveShortlistFile(ready.blob, ready.filename)
+                onClose()
+              }}
+              className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[10px] bg-[var(--color-primary-hover)] px-6 text-[16px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+            >
+              {lang === 'ru' ? 'Сохранить PDF' : 'Save PDF'}
+            </button>
+          </div>
+        ) : mode === 'choose' ? (
           <>
             <p className="text-[13px] text-[var(--color-text-muted)] mb-4">{c.pdfModalIntro}</p>
             <div className="mb-4 inline-flex w-full rounded-full border border-[var(--color-border)] p-1 bg-[var(--color-search-bg)]">
@@ -1526,4 +1540,10 @@ function PdfField({
       />
     </label>
   )
+}
+
+// Телефон или планшет: мобильный браузер либо тач-экран без мыши.
+function isPhone(): boolean {
+  if (typeof window === 'undefined') return false
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches
 }

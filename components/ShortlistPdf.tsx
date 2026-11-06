@@ -1162,18 +1162,56 @@ export async function downloadShortlistPdf(
   lang: Lang = 'ru',
   currency: Currency = 'USD',
 ): Promise<void> {
-  const blob = await pdf(
-    <ShortlistPdfDocument items={items} agent={agent} orientation={orientation} lang={lang} currency={currency} />
-  ).toBlob()
+  const { blob, filename } = await buildShortlistPdf(items, agent, orientation, lang, currency)
+  saveBlob(blob, filename)
+}
+
+function saveBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  const orientSuffix = orientation === 'portrait' ? '-mobile' : ''
-  a.download = `balinsky-shortlist${orientSuffix}.pdf`
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
+/**
+ * Сохранить готовый файл по НОВОМУ нажатию. На телефоне скачивание после
+ * долгой сборки отбрасывается (нажатие «остыло»), поэтому сначала собираем,
+ * потом человек жмёт «Сохранить PDF» (владелец 06.11.2026). Где можно —
+ * системное «Поделиться»: на iPhone оттуда «Сохранить в Файлы» или сразу
+ * отправить клиенту в Телеграм/WhatsApp.
+ */
+export async function saveShortlistFile(blob: Blob, filename: string): Promise<void> {
+  const file = new File([blob], filename, { type: 'application/pdf' })
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean }
+  if (nav.canShare?.({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], title: filename })
+      return
+    } catch (e) {
+      // Человек закрыл окно «Поделиться» — это не ошибка, файл ему не нужен.
+      if ((e as Error)?.name === 'AbortError') return
+    }
+  }
+  saveBlob(blob, filename)
+}
+
+/** Собрать PDF подборки (без сохранения) и отметить событие. */
+export async function buildShortlistPdf(
+  items: WishlistItem[],
+  agent: AgentContact | null,
+  orientation: PdfOrientation = 'landscape',
+  lang: Lang = 'ru',
+  currency: Currency = 'USD',
+): Promise<{ blob: Blob; filename: string }> {
+  const blob = await pdf(
+    <ShortlistPdfDocument items={items} agent={agent} orientation={orientation} lang={lang} currency={currency} />
+  ).toBlob()
+  const orientSuffix = orientation === 'portrait' ? '-mobile' : ''
+  const filename = `balinsky-shortlist${orientSuffix}.pdf`
   // Fire-and-forget analytics. Item ids capped server-side at 30
   // to keep rows compact; full count goes in itemCount regardless.
   // Per-item details (title, district, price) so the admin sees
@@ -1205,6 +1243,7 @@ export async function downloadShortlistPdf(
     }),
     keepalive: true,
   }).catch(() => {})
+  return { blob, filename }
 }
 
 // Доля → «17,8%»: запятая, как на странице объекта, кроме английского и
