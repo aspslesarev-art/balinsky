@@ -60,14 +60,13 @@ import { isHiddenDeveloper } from '@/lib/hidden-developers'
 import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
-import { DataChapter, DataGuide, type ChapterId } from '@/components/DataChapters'
+import { DataChapter, type ChapterId } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { loadComplexAccess, loadGeoFacts, type RouteLeg } from '@/lib/complex-access'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { AreaBlock } from '@/components/AreaBlock'
 import { PlotSiteBlock, plotChapterHint } from '@/components/PlotSiteBlock'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
-import { ComplexSignalsBlock } from '@/components/ComplexSignalsBlock'
 import { computeComplexSignals, loadDistrictOccupancyMedians, hasAnySignal } from '@/lib/complex-signals'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { PageEditButton } from '@/components/page-edit/PageEditButton'
@@ -1827,7 +1826,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
   const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits))
   const plotSite = geoFacts?.climate?.plot ?? null
-  const marketOk = !!marketStats && (marketStats.villa_count > 0 || marketStats.apartment_count > 0)
   const hasPlace = !!((lat != null && lng != null) || nearby || (districtCopy && districtSlug) || hasAnySignal(signals))
   // «Аренда рядом» — только когда есть ставки соседей. Без них инвест-
   // сигналы (пляж, срок сдачи) уходят в конец раздела «Место».
@@ -2018,12 +2016,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {/* Аналитика — те же разделы, что на странице виллы: место → аренда
             рядом → участок. Калькулятора у комплекса нет — он на страницах
             юнитов. Перед разделами — «карта страницы». */}
+        {/* Нет юнитов - старые разделы ЖК, только Pro и без аренды/дохода (владелец 06.11.2026). */}
         {!repUnit && <div className="bx-auth-block">
-        <DataGuide lang={lang} chapters={chapters} facts={{
-          airportMin: geoFacts?.routes?.airport ? Math.round(geoFacts.routes.airport.s / 60) : null,
-          neighbourAdrUsd: marketOk ? marketStats!.villa_adr_usd ?? marketStats!.apartment_adr_usd : null,
-          strAllowed: landOk ? landProfile!.str_likely_allowed : null,
-        }} />
 
         {hasPlace && (
           <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
@@ -2140,13 +2134,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             {districtCopy && districtSlug && (
               <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
             )}
-            {!hasRent && hasAnySignal(signals) && <ComplexSignalsBlock signals={signals} lang={lang} />}
-          </DataChapter>
-        )}
-
-        {hasRent && (
-          <DataChapter id="arenda" n={chapters.indexOf('arenda') + 1} lang={lang}>
-            {hasAnySignal(signals) && <ComplexSignalsBlock signals={signals} lang={lang} />}
           </DataChapter>
         )}
 

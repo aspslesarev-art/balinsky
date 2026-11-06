@@ -1360,11 +1360,19 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   }
 
   // Pro-аналитика отдельно: её же показывает страница жилого комплекса (analyticsOnly).
+  // Итог «для жизни» - и в переключателе, и один на странице ЖК (там нет спроса и дохода).
+  const liveVerdict = livingFacts ? (
+            <ListingVerdict mode="live" verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
+              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
+              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
+              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
+              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
+          ) : null
   const analytics = (
     <>
         <ProPendingNote lang={lang} />
         <div className="bx-auth-block">
-        <GoalSwitch lang={lang}
+        {analyticsOnly ? liveVerdict : <GoalSwitch lang={lang}
           income={
             <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
               underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
@@ -1372,13 +1380,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
               anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
           }
-          live={livingFacts ? (
-            <ListingVerdict mode="live" verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
-              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
-              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
-              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
-              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
-          ) : null} />
+          live={liveVerdict} />}
         <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
           {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
           <div className={`grid grid-cols-1 items-stretch gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
@@ -1426,7 +1428,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </DataChapter>
         )}
 
-        {hasRent && (
+        {!analyticsOnly && hasRent && (
           <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
             <DemandSummary snap={verdictSnap} verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps}
               sale={saleComps ? <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} hideTitle /> : undefined}
@@ -1436,7 +1438,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </DataChapter>
         )}
 
-        {hasYield && (
+        {!analyticsOnly && hasYield && (
           <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
             {/* Три варианта вместо карточки, которая повторяла ответ раздела. */}
             <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
