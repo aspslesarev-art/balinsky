@@ -35,7 +35,6 @@ import { loadVillaLandProfile, landAllowsBuilding } from '@/lib/land-profile'
 import { parseProjectPermits, hasProjectPermits } from '@/lib/project-permits'
 import { loadMarketStats } from '@/lib/complex-market-stats'
 import { loadOneUnitDemand } from '@/lib/unit-demand'
-import { DataChapter } from '@/components/DataChapters'
 import { GatedBlock } from '@/components/GatedBlock'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -61,7 +60,6 @@ import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingList } from '@/components/LivingVerdict'
 import { BeachBlock } from '@/components/BeachBlock'
 import { nearestBeachProfile, nearestBeachProfileByPoint } from '@/lib/beaches'
-import { GoalSwitch } from '@/components/GoalSwitch'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
@@ -133,7 +131,10 @@ const COPY = {
     openComplex: 'Открыть страницу комплекса',
     sellingSeparately: 'Объект продаётся отдельно (не в составе комплекса)',
     developerLabel: 'Застройщик',
-    openDeveloper: 'Открыть страницу застройщика',
+    openDeveloper: 'Подробнее о застройщике',
+    devStatTotal: (n: number) => `${n} ${pluralRu(n, ['вилла построена', 'виллы построено', 'вилл построено'])}`,
+    devStatReady: (n: number) => `${n} ${pluralRu(n, ['сдана', 'сданы', 'сданы'])}`,
+    devStatBuilding: (n: number) => `${n} ${pluralRu(n, ['строится', 'строятся', 'строятся'])}`,
     videosTitleComplex: (n: string) => `Видео: ${n}`,
     videosTitleDev: (n: string) => `Видео: ${n}`,
     videosTitleDefault: 'Видео',
@@ -187,7 +188,10 @@ const COPY = {
     openComplex: 'Open complex page',
     sellingSeparately: 'Sold separately (not part of a complex)',
     developerLabel: 'Developer',
-    openDeveloper: 'Open developer page',
+    openDeveloper: 'More about the developer',
+    devStatTotal: (n: number) => `${n} villas built`,
+    devStatReady: (n: number) => `${n} completed`,
+    devStatBuilding: (n: number) => `${n} under construction`,
     videosTitleComplex: (n: string) => `Videos: ${n}`,
     videosTitleDev: (n: string) => `Videos: ${n}`,
     videosTitleDefault: 'Videos',
@@ -241,7 +245,10 @@ const COPY = {
     openComplex: 'Buka halaman kompleks',
     sellingSeparately: 'Dijual terpisah (bukan bagian dari kompleks)',
     developerLabel: 'Pengembang',
-    openDeveloper: 'Buka halaman pengembang',
+    openDeveloper: 'Selengkapnya tentang pengembang',
+    devStatTotal: (n: number) => `${n} vila dibangun`,
+    devStatReady: (n: number) => `${n} selesai`,
+    devStatBuilding: (n: number) => `${n} sedang dibangun`,
     videosTitleComplex: (n: string) => `Video: ${n}`,
     videosTitleDev: (n: string) => `Video: ${n}`,
     videosTitleDefault: 'Video',
@@ -295,7 +302,10 @@ const COPY = {
     openComplex: 'Ouvrir la page de la résidence',
     sellingSeparately: 'Vendu séparément (hors résidence)',
     developerLabel: 'Promoteur',
-    openDeveloper: 'Ouvrir la page du promoteur',
+    openDeveloper: 'En savoir plus sur le promoteur',
+    devStatTotal: (n: number) => `${n} villas construites`,
+    devStatReady: (n: number) => `${n} livrées`,
+    devStatBuilding: (n: number) => `${n} en construction`,
     videosTitleComplex: (n: string) => `Vidéos : ${n}`,
     videosTitleDev: (n: string) => `Vidéos : ${n}`,
     videosTitleDefault: 'Vidéos',
@@ -349,7 +359,10 @@ const COPY = {
     openComplex: 'Zur Wohnanlage',
     sellingSeparately: 'Einzeln verkauft (nicht Teil einer Anlage)',
     developerLabel: 'Bauträger',
-    openDeveloper: 'Zur Bauträgerseite',
+    openDeveloper: 'Mehr über den Bauträger',
+    devStatTotal: (n: number) => `${n} Villen gebaut`,
+    devStatReady: (n: number) => `${n} fertiggestellt`,
+    devStatBuilding: (n: number) => `${n} im Bau`,
     videosTitleComplex: (n: string) => `Videos: ${n}`,
     videosTitleDev: (n: string) => `Videos: ${n}`,
     videosTitleDefault: 'Videos',
@@ -403,7 +416,10 @@ const COPY = {
     openComplex: '打开住宅区页面',
     sellingSeparately: '单独出售（不属于任何住宅区）',
     developerLabel: '开发商',
-    openDeveloper: '打开开发商页面',
+    openDeveloper: '了解更多开发商信息',
+    devStatTotal: (n: number) => `已建${n}栋别墅`,
+    devStatReady: (n: number) => `${n}栋已交付`,
+    devStatBuilding: (n: number) => `${n}栋在建`,
     videosTitleComplex: (n: string) => `视频：${n}`,
     videosTitleDev: (n: string) => `视频：${n}`,
     videosTitleDefault: '视频',
@@ -457,7 +473,10 @@ const COPY = {
     openComplex: 'Open complexpagina',
     sellingSeparately: 'Apart verkocht (geen deel van een complex)',
     developerLabel: 'Ontwikkelaar',
-    openDeveloper: 'Open ontwikkelaarspagina',
+    openDeveloper: 'Meer over de ontwikkelaar',
+    devStatTotal: (n: number) => `${n} villa's gebouwd`,
+    devStatReady: (n: number) => `${n} opgeleverd`,
+    devStatBuilding: (n: number) => `${n} in aanbouw`,
     videosTitleComplex: (n: string) => `Video\'s: ${n}`,
     videosTitleDev: (n: string) => `Video\'s: ${n}`,
     videosTitleDefault: 'Video\'s',
@@ -511,7 +530,10 @@ const COPY = {
     openComplex: 'Buka halaman kompleks',
     sellingSeparately: 'Kaadol pasah (nenten bagian saking kompleks)',
     developerLabel: 'Pangwangun',
-    openDeveloper: 'Buka halaman pangwangun',
+    openDeveloper: 'Langkungan indik pangwangun',
+    devStatTotal: (n: number) => `${n} vila kabangun`,
+    devStatReady: (n: number) => `${n} sampun puput`,
+    devStatBuilding: (n: number) => `${n} kantun kabangun`,
     videosTitleComplex: (n: string) => `Video: ${n}`,
     videosTitleDev: (n: string) => `Video: ${n}`,
     videosTitleDefault: 'Video',
@@ -565,7 +587,10 @@ const COPY = {
     openComplex: 'Otwórz stronę kompleksu',
     sellingSeparately: 'Sprzedawana oddzielnie (poza kompleksem)',
     developerLabel: 'Deweloper',
-    openDeveloper: 'Otwórz stronę dewelopera',
+    openDeveloper: 'Więcej o deweloperze',
+    devStatTotal: (n: number) => `${n} willi wybudowanych`,
+    devStatReady: (n: number) => `${n} oddanych`,
+    devStatBuilding: (n: number) => `${n} w budowie`,
     videosTitleComplex: (n: string) => `Filmy: ${n}`,
     videosTitleDev: (n: string) => `Filmy: ${n}`,
     videosTitleDefault: 'Filmy',
@@ -619,7 +644,10 @@ const COPY = {
     openComplex: 'Відкрити сторінку комплексу',
     sellingSeparately: 'Продається окремо (поза комплексом)',
     developerLabel: 'Забудовник',
-    openDeveloper: 'Відкрити сторінку забудовника',
+    openDeveloper: 'Детальніше про забудовника',
+    devStatTotal: (n: number) => `${n} вілл збудовано`,
+    devStatReady: (n: number) => `${n} здано`,
+    devStatBuilding: (n: number) => `${n} будується`,
     videosTitleComplex: (n: string) => `Відео: ${n}`,
     videosTitleDev: (n: string) => `Відео: ${n}`,
     videosTitleDefault: 'Відео',
@@ -1404,7 +1432,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     ownOccupancy: verdictSnap?.ownBooking?.occupancy ?? null,
   })
   const qh = questionHeaders(verdict, yields, monthly, saleComps?.diffPct ?? null, underConstruction, lang)
-  const asQuestion = (h: typeof qh.safety) => ({ kicker: h.kicker, title: h.title, status: h.status, pillClass: TONE_PILL_CLASS[h.tone], lead: h.lead })
 
   // Печатная презентация для Pro (/ru/villy/o/<slug>/pdf): те же данные и блоки,
   // разложенные по листам A4 (components/pdf/PdfDocument.tsx).
@@ -1457,30 +1484,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     )
   }
 
-  // Pro-аналитика отдельно: её же показывает страница жилого комплекса (analyticsOnly).
-  // Итог «для жизни» - и в переключателе, и один на странице ЖК (там нет спроса и дохода).
-  const liveVerdict = livingFacts ? (
-            <ListingVerdict mode="live" verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
-              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
-              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
-              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
-              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
-          ) : null
   const analytics = (
     <>
         <ProPendingNote lang={lang} />
         <div className="bx-auth-block">
-        {analyticsOnly ? liveVerdict : <GoalSwitch lang={lang}
-          income={
-            <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={saleComps?.diffPct ?? null}
-              underConstruction={underConstruction} lang={lang} lat={lat} lng={lng}
-              neighbourPhotos={(verdictSnap?.competitors ?? []).map(x => x.photo).filter((x): x is string => !!x)}
-              dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
-              anchors={{ safety: 'uchastok', comfort: hasPlace ? 'mesto' : 'uchastok', demand: hasRent ? 'arenda' : 'dokhodnost', money: 'dokhodnost' }} />
-          }
-          live={liveVerdict} />}
-        <DataChapter id="uchastok" n={1} lang={lang} question={asQuestion(qh.safety)}>
-          {/* Слева - документы, стройка, земля; справа - что можно делать с участком. */}
+
+        <section id="uchastok" className="mb-12 scroll-mt-24">
           <div className={`grid grid-cols-1 items-stretch gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
@@ -1495,21 +1504,35 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             </div>
           )}
           </div>
-        </DataChapter>
+        </section>
+
+        {!analyticsOnly && hasRent && (
+          <section id="arenda" className="mb-12 scroll-mt-24">
+            <DemandSummary snap={verdictSnap} verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps}
+              sale={saleComps ? <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} hideTitle /> : undefined}
+              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
+          </section>
+        )}
+
+        {!analyticsOnly && hasYield && (
+          <section id="dokhodnost" className="mb-12 scroll-mt-24">
+            <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
+            <div id="kalkulyator" className="scroll-mt-24" />
+            <GatedBlock kind="investment" lang={lang}>
+              <LazyMount fallback={<div className="min-h-[600px]" />}>
+                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} showMap={false} />
+              </LazyMount>
+            </GatedBlock>
+          </section>
+        )}
 
         {hasPlace && (
-          <DataChapter id="mesto" n={2} lang={lang} question={asQuestion(qh.comfort)}>
-            {/* «О районе» — первым в разделе, над «Как добраться» (владелец 23.10.2026). */}
+          <section id="mesto" className="mb-12 scroll-mt-24">
             {districtCopy && districtSlug && (
               <div className="[&>section]:!mb-0"><DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} /></div>
             )}
-            {/* Три полосы друг под другом: текст слева, карта справа — «Солнце и погода»,
-                «Как добраться», «Главное рядом» (макет «Удобно ли там жить?», B —
-                владелец 23.10.2026). «Район и берег» убран: высота и океан — в «Безопасно ли
-                это?». Пляж — ниже, во всю ширину. */}
             {(livingFacts || geoFacts) && (
               <div className="mb-4 flex flex-col gap-4 [&>*]:mb-0">
-                {/* «Солнце и погода» — сразу под «О районе» (владелец 23.10.2026). */}
                 {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
                 {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
                   map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
@@ -1518,36 +1541,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               </div>
             )}
             {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
-            {/* «Что рядом» списком убран 23.10.2026: повторял «Главное рядом» и карту с точками. */}
-            {/* Карта туристов — сразу под «Что рядом»: вместе отвечают, оживлённо ли вокруг. */}
             {lat != null && lng != null && (
               <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
             )}
-          </DataChapter>
+          </section>
         )}
 
-        {!analyticsOnly && hasRent && (
-          <DataChapter id="arenda" n={3} lang={lang} question={asQuestion(qh.demand)}>
-            <DemandSummary snap={verdictSnap} verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps}
-              sale={saleComps ? <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} hideTitle /> : undefined}
-              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
-            {/* «Почём сдают соседи» (estatemarket.io) и «Востребованность в районе» убраны
-                по решению владельца 16.10.2026: непонятны и повторяют сводку выше. */}
-          </DataChapter>
-        )}
-
-        {!analyticsOnly && hasYield && (
-          <DataChapter id="dokhodnost" n={4} lang={lang} question={asQuestion(qh.money)}>
-            {/* Три варианта вместо карточки, которая повторяла ответ раздела. */}
-            <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
-            <div id="kalkulyator" className="scroll-mt-24" />
-            <GatedBlock kind="investment" lang={lang}>
-              <LazyMount fallback={<div className="min-h-[600px]" />}>
-                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} showMap={false} />
-              </LazyMount>
-            </GatedBlock>
-          </DataChapter>
-        )}
         </div>
     </>
   )
@@ -1761,57 +1760,35 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
         {analytics}
 
-        <div className="bx-auth-block">
         {(developer || developerName) && (
-          <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Карточку комплекса убрали 21.10.2026 (владелец): остаются застройщик, контакты, видео. */}
-            {developer ? (
-              <Link
-                href={`${developersRoot}/${developer.slug}`}
-                className="group block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors"
-              >
-                <div className="p-5 flex items-start gap-4">
-                  <div className="shrink-0 w-[72px] h-[72px] rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-2">
-                    {developer.logoUrl ? (
-                      <Image src={developer.logoUrl} alt={developer.name} width={56} height={56} className="max-w-full max-h-full object-contain" />
-                    ) : (
-                      <HardHat size={28} className="text-[var(--color-text-muted)]" />
-                    )}
+          <section className="mb-10">
+            <div className="rounded-xl border border-[var(--color-border)] p-6">
+              <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{c.developerLabel}</div>
+              <div className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-4">{developer?.name ?? developerName}</div>
+              {devStats && (
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <div className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--color-text)]">{devStats.total}</div>
+                    <div className="text-[13px] text-[var(--color-text-muted)]">{c.devStatTotal(devStats.total).replace(/^\d+\s*/, '')}</div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                      <HardHat size={14} /> {c.developerLabel}
-                    </div>
-                    <div className="text-[19px] font-semibold text-[var(--color-text)] truncate">{developer.name}</div>
+                  <div>
+                    <div className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--color-primary)]">{devStats.ready}</div>
+                    <div className="text-[13px] text-[var(--color-text-muted)]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</div>
+                  </div>
+                  <div>
+                    <div className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--color-text)]">{devStats.inProgress}</div>
+                    <div className="text-[13px] text-[var(--color-text-muted)]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</div>
                   </div>
                 </div>
-                {developer.highlights.length > 0 && (
-                  <div className="px-5 pb-2">
-                    <ul className="space-y-1.5 text-[13px] text-[var(--color-text)]">
-                      {developer.highlights.map((h, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <Star size={12} className="mt-1 shrink-0 text-[var(--color-primary)]" />
-                          <span>{lang !== 'ru' && lang !== 'uk' && hasCyrillic(h) ? translitPreserveCase(h) : h}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="px-5 pb-5 pt-2 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+              )}
+              {developer && (
+                <Link href={`${developersRoot}/${developer.slug}`} className="text-[14px] font-medium text-[var(--color-primary-pressed)] hover:underline inline-flex items-center gap-1">
                   {c.openDeveloper} <ChevronRight size={14} />
-                </div>
-              </Link>
-            ) : developerName ? (
-              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
-                <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                  <HardHat size={14} /> {c.developerLabel}
-                </div>
-                <div className="text-[19px] font-semibold text-[var(--color-text)]">{developerName}</div>
-              </div>
-            ) : null}
+                </Link>
+              )}
+            </div>
           </section>
         )}
-        </div>
 
         {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} inquiry={{ kind: 'villa', name: title, complexName: parentComplex?.name ?? null, priceUsd: priceNum }} />}
 
