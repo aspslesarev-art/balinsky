@@ -1599,19 +1599,19 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           { label: title },
         ]} />
 
-        <section className="mb-4 mt-2">
-          <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
-            <Link href={villasRoot} className="hover:text-[var(--color-text)]">{c.villasCrumb}</Link>
-            {district && <> · {district}</>}
-          </div>
-          <h1 className="text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
+        {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+        {/* ── Main column ── */}
+        <div className="min-w-0 flex-1 flex flex-col gap-12">
+
+        <section className="flex flex-col gap-3">
+          <h1 className="text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
-          {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
-          <div className="text-[15px] text-[#36413B] leading-relaxed mb-2">
-            {districtRaw ? geoChainString(districtRaw) : district ? `${district}, ${c.bali}` : c.bali}
+          <div className="text-[15px] text-[#36413B]">
+            {district ? `${district}, ${c.bali}` : c.bali}
           </div>
-          <div className="flex flex-wrap gap-5 text-[14px] mb-4">
+          <div className="flex flex-wrap gap-5 text-[14px]">
             {beachPick && beachPick.km <= 3 && (
               <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M2 18c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><circle cx="12" cy="9" r="4"/></svg>{pickCopy({ ru: 'Пляж', en: 'Beach', id: 'Pantai', fr: 'Plage', de: 'Strand', zh: '海滩', nl: 'Strand', ban: 'Pantai', pl: 'Plaża', uk: 'Пляж' }, lang)} {beachPick.km < 1 ? `${Math.round(beachPick.km * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${beachPick.km.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
             )}
@@ -1621,22 +1621,18 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             {nearby?.byCategory?.school && nearby.byCategory.school.length > 0 && nearby.byCategory.school[0].distanceKm <= 2 && (
               <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/></svg>{pickCopy({ ru: 'Школа', en: 'School', id: 'Sekolah', fr: 'École', de: 'Schule', zh: '学校', nl: 'School', ban: 'Sekolah', pl: 'Szkoła', uk: 'Школа' }, lang)} {nearby.byCategory.school[0].distanceKm < 1 ? `${Math.round(nearby.byCategory.school[0].distanceKm * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${nearby.byCategory.school[0].distanceKm.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
             )}
+            <a href="#mesto" className="text-[14px] text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]">{pickCopy({ ru: 'На карте', en: 'On the map', id: 'Di peta', fr: 'Sur la carte', de: 'Auf der Karte', zh: '地图', nl: 'Op de kaart', ban: 'Ring peta', pl: 'Na mapie', uk: 'На карті' }, lang)}</a>
           </div>
-          {/* Part-of-complex link near the top (TASK-13a): a strong internal
-              link to the complex card, which is the canonical page for the
-              cluster of same-name URLs. Villa stays a standalone product
-              (no canonical), this is just prominent navigation. */}
+          {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           {parentComplex && (
-            <div className="mb-4">
-              <Link
-                href={`${complexesRoot}/o/${parentComplex.slug}`}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-soft)] px-3 py-1.5 text-[13.5px] font-medium text-[var(--color-primary-pressed)] no-underline hover:opacity-80 transition-opacity"
-              >
-                {lang === 'ru'
-                  ? `Часть жилого комплекса «${parentComplex.name}» →`
-                  : `Part of the ${parentComplex.name} complex →`}
-              </Link>
-            </div>
+            <Link
+              href={`${complexesRoot}/o/${parentComplex.slug}`}
+              className="inline-flex items-center gap-1.5 text-[13px] text-[var(--color-primary)] hover:underline"
+            >
+              {lang === 'ru'
+                ? `${parentComplex.name} — страница комплекса`
+                : `${parentComplex.name} — complex page`}
+            </Link>
           )}
           {priceNum != null && (
             <div className="lg:hidden">
@@ -1657,7 +1653,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           )}
         </section>
 
-        <section className="mb-6">
+        <section>
           <PhotoGalleryHero
             photos={photos}
             alt={title}
@@ -1690,11 +1686,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             }}
           />
         </section>
-
-        {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
-        {/* ── Main column ── */}
-        <div className="min-w-0 flex-1 flex flex-col gap-12">
 
         {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
