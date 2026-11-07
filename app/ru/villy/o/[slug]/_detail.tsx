@@ -66,6 +66,7 @@ import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPdf, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
+import { IncomeCalculator } from '@/components/IncomeCalculator'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
@@ -1572,23 +1573,31 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </section>
         )}
 
-        {!analyticsOnly && hasRent && (
-          <section id="arenda" className="scroll-mt-24">
-            <DemandSummary snap={verdictSnap} verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps}
-              sale={saleComps ? <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} hideTitle /> : undefined}
-              daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
-          </section>
-        )}
-
-        {!analyticsOnly && hasYield && (
-          <section id="dokhodnost" className="scroll-mt-24">
-            <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
-            <div id="kalkulyator" className="scroll-mt-24" />
-            <GatedBlock kind="investment" lang={lang}>
-              <LazyMount fallback={<div className="min-h-[600px]" />}>
-                <InvestmentWidget villaId={v.airtable_id} apiKey={GMAPS_KEY} lang={lang} showMap={false} />
-              </LazyMount>
-            </GatedBlock>
+        {!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null && (
+          <section id="kalkulyator" className="scroll-mt-24">
+            <IncomeCalculator
+              villa={{
+                askingPrice: verdictSnap.villa.askingPrice,
+                area: verdictSnap.villa.area,
+                bedrooms: verdictSnap.villa.bedrooms,
+                leaseholdYearsLeft: verdictSnap.villa.leaseholdYearsLeft,
+                furnished: verdictSnap.villa.furnished,
+                landRentYear: verdictSnap.villa.landRentYear,
+                district: district ?? verdictSnap.villa.district,
+              }}
+              region={verdictSnap.region}
+              dailyPresets={verdictSnap.scenarios && !verdictSnap.flags.rentalRestricted ? {
+                p25: verdictSnap.scenarios.bad.adrAsking,
+                p50: verdictSnap.scenarios.median.adrAsking,
+                p75: verdictSnap.scenarios.good.adrAsking,
+              } : null}
+              monthlyPresets={monthly ? { p25: monthly.p25, p50: monthly.p50, p75: monthly.p75 } : null}
+              defaultOccupancyPct={Math.round((verdictSnap.ownBooking?.occupancy ?? verdictSnap.region.occupancyByScenario.median) * 100)}
+              dailyCompCount={(verdictSnap.competitors?.length ?? 0) + airbnbComps.length}
+              monthlyCompCount={monthly?.n ?? 0}
+              restricted={!!verdictSnap.flags.rentalRestricted}
+              lang={lang}
+            />
           </section>
         )}
 
