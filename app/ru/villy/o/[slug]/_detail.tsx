@@ -1876,7 +1876,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
         {/* ── Sticky sidebar (desktop only) ── */}
         {priceNum != null && (
-          <aside className="hidden lg:flex flex-col gap-4 sticky top-4" style={{ flex: '1 1 340px' }}>
+          <aside className="hidden lg:flex flex-col gap-4 sticky top-[88px]" style={{ flex: '1 1 340px' }}>
             <PriceCtaCard
               sidebar
               priceUsd={priceNum}
