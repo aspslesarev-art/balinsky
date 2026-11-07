@@ -1600,41 +1600,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           { label: title },
         ]} />
 
-        <section className="mb-6 mt-2">
-          <PhotoGalleryHero
-            photos={photos}
-            alt={title}
-            alts={photoAlts}
-            wishlistItem={{
-              kind: 'villa', slug, title,
-              photo: photos[0] ?? null,
-              priceUsd: priceNum ?? null,
-              district: district ?? null,
-              bedrooms: bedrooms ?? null,
-              area: area ?? null,
-              land: land ?? null,
-              dealType: isResale ? 'resale' : 'primary',
-              pricePerSqmUsd: priceM2 ?? null,
-              pricePerSqmYearUsd: numberOrNull(d['Цена м² в год']),
-              leaseYears: lease ? Number(lease) || null : null,
-              permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
-              status: status ?? null,
-              claimedYieldPct: (() => {
-                const y = numberOrNull(d['Заявленная доходность'])
-                return y != null ? Math.round(y * 1000) / 10 : null
-              })(),
-              landUse: firstString(d['Назначение земли']) ?? null,
-              developerName: developerName ?? null,
-              developerCompletedCount: devStats?.ready ?? null,
-              developerInProgressCount: devStats?.inProgress ?? null,
-              bestCapRate,
-              interiorStyle,
-              airtableId: v.airtable_id,
-            }}
-          />
-        </section>
-
-        <section className="mb-10">
+        <section className="mb-4 mt-2">
           <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
             <Link href={villasRoot} className="hover:text-[var(--color-text)]">{c.villasCrumb}</Link>
             {district && <> · {district}</>}
@@ -1692,12 +1658,64 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           )}
         </section>
 
+        <section className="mb-6">
+          <PhotoGalleryHero
+            photos={photos}
+            alt={title}
+            alts={photoAlts}
+            wishlistItem={{
+              kind: 'villa', slug, title,
+              photo: photos[0] ?? null,
+              priceUsd: priceNum ?? null,
+              district: district ?? null,
+              bedrooms: bedrooms ?? null,
+              area: area ?? null,
+              land: land ?? null,
+              dealType: isResale ? 'resale' : 'primary',
+              pricePerSqmUsd: priceM2 ?? null,
+              pricePerSqmYearUsd: numberOrNull(d['Цена м² в год']),
+              leaseYears: lease ? Number(lease) || null : null,
+              permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
+              status: status ?? null,
+              claimedYieldPct: (() => {
+                const y = numberOrNull(d['Заявленная доходность'])
+                return y != null ? Math.round(y * 1000) / 10 : null
+              })(),
+              landUse: firstString(d['Назначение земли']) ?? null,
+              developerName: developerName ?? null,
+              developerCompletedCount: devStats?.ready ?? null,
+              developerInProgressCount: devStats?.inProgress ?? null,
+              bestCapRate,
+              interiorStyle,
+              airtableId: v.airtable_id,
+            }}
+          />
+        </section>
+
         {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
         {/* ── Main column ── */}
         <div className="min-w-0 flex-1">
 
         {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
+
+        {facts.length > 0 && (
+          <section className="mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {facts.map(f => (
+                <div key={f.label} className="flex gap-3 items-center">
+                  <div className="w-10 h-10 rounded-[10px] bg-[#EEF6F1] flex-none flex items-center justify-center text-[var(--color-primary)]">
+                    <f.Icon size={20} strokeWidth={1.8} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[13px] text-[var(--color-text-muted)]">{f.label}</span>
+                    <span className="text-[17px] font-semibold truncate">{f.value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {seoText && (
           <section className="mb-10">
