@@ -1600,9 +1600,9 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         ]} />
 
         {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+        <div className="flex flex-wrap gap-12 items-start">
         {/* ── Main column ── */}
-        <div className="min-w-0 flex-1 flex flex-col gap-12">
+        <div className="min-w-0 flex flex-col gap-12" style={{ flex: '999 1 720px' }}>
 
         <section className="flex flex-col gap-3">
           <h1 className="text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] [word-break:break-word] [overflow-wrap:anywhere]">
@@ -1653,41 +1653,47 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           )}
         </section>
 
-        <section>
-          <PhotoGalleryHero
-            photos={photos}
-            alt={title}
-            alts={photoAlts}
-            wishlistItem={{
-              kind: 'villa', slug, title,
-              photo: photos[0] ?? null,
-              priceUsd: priceNum ?? null,
-              district: district ?? null,
-              bedrooms: bedrooms ?? null,
-              area: area ?? null,
-              land: land ?? null,
-              dealType: isResale ? 'resale' : 'primary',
-              pricePerSqmUsd: priceM2 ?? null,
-              pricePerSqmYearUsd: numberOrNull(d['Цена м² в год']),
-              leaseYears: lease ? Number(lease) || null : null,
-              permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
-              status: status ?? null,
-              claimedYieldPct: (() => {
-                const y = numberOrNull(d['Заявленная доходность'])
-                return y != null ? Math.round(y * 1000) / 10 : null
-              })(),
-              landUse: firstString(d['Назначение земли']) ?? null,
-              developerName: developerName ?? null,
-              developerCompletedCount: devStats?.ready ?? null,
-              developerInProgressCount: devStats?.inProgress ?? null,
-              bestCapRate,
-              interiorStyle,
-              airtableId: v.airtable_id,
-            }}
-          />
+        <section className="flex flex-col gap-2">
+          <div className="relative">
+            {photos[0] && (
+              <Image
+                src={photos[0]}
+                alt={photoAlts?.[0] ?? title}
+                width={920}
+                height={480}
+                sizes="(min-width: 1024px) 720px, 100vw"
+                priority
+                className="w-full h-[300px] sm:h-[400px] md:h-[480px] object-cover rounded-xl"
+              />
+            )}
+            <div className="absolute left-1/2 bottom-4 -translate-x-1/2 flex bg-[rgb(16_24_20/0.8)] rounded-lg overflow-hidden">
+              <span className="text-white text-[14px] font-semibold px-4 py-2.5 bg-white/[0.16]">{photos.length} {pickCopy({ ru: 'фото', en: 'photos', id: 'foto', fr: 'photos', de: 'Fotos', zh: '照片', nl: 'foto\'s', ban: 'poto', pl: 'zdjęć', uk: 'фото' }, lang)}</span>
+              {videos.length > 0 && <span className="text-white text-[14px] px-4 py-2.5">{videos.length} {pickCopy({ ru: 'видео', en: 'videos', id: 'video', fr: 'vidéos', de: 'Videos', zh: '视频', nl: 'video\'s', ban: 'vidéo', pl: 'wideo', uk: 'відео' }, lang)}</span>}
+              {plan3dUrl && <span className="text-white text-[14px] px-4 py-2.5">{pickCopy({ ru: 'Планировка', en: 'Floor plan', id: 'Denah', fr: 'Plan', de: 'Grundriss', zh: '平面图', nl: 'Plattegrond', ban: 'Denah', pl: 'Rzut', uk: 'Планування' }, lang)}</span>}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            {photos.slice(1, 4).map((p, i) => (
+              <Image key={i} src={p} alt={photoAlts?.[i + 1] ?? title} width={160} height={72} sizes="160px" className="w-full h-[72px] object-cover rounded-lg" />
+            ))}
+            {photos.length > 4 && (
+              <div className="h-[72px] rounded-lg bg-[#F3F7F4] flex items-center justify-center text-[14px] text-[#36413B]">
+                +{photos.length - 4} {pickCopy({ ru: 'фото', en: 'photos', id: 'foto', fr: 'photos', de: 'Fotos', zh: '照片', nl: 'foto\'s', ban: 'poto', pl: 'zdjęć', uk: 'фото' }, lang)}
+              </div>
+            )}
+            {photos[4] && (
+              <Image src={photos[4]} alt={photoAlts?.[4] ?? title} width={160} height={72} sizes="160px" className="w-full h-[72px] object-cover rounded-lg hidden sm:block" />
+            )}
+            {plan3dUrl ? (
+              <a href={plan3dUrl} target="_blank" rel="noopener" className="h-[72px] rounded-lg bg-[#EEF6F1] flex-col items-center justify-center gap-0.5 no-underline hidden sm:flex">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B6E4A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>
+                <span className="text-[11px] text-[#1B6E4A] font-medium">{pickCopy({ ru: 'Планировка', en: 'Floor plan', id: 'Denah', fr: 'Plan', de: 'Grundriss', zh: '平面图', nl: 'Plattegrond', ban: 'Denah', pl: 'Rzut', uk: 'Планування' }, lang)}</span>
+              </a>
+            ) : photos[5] ? (
+              <Image src={photos[5]} alt={photoAlts?.[5] ?? title} width={160} height={72} sizes="160px" className="w-full h-[72px] object-cover rounded-lg hidden sm:block" />
+            ) : null}
+          </div>
         </section>
-
-        {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
         {seoText && (
           <section>
@@ -1778,17 +1784,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </section>
         )}
 
-        {otherVillas.length > 0 && district && (
-          <section>
-            <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-4">
-              {c.otherVillas(district)}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {otherVillas.map(o => <VillaCard key={o.id} a={o} lang={lang} />)}
-            </div>
-          </section>
-        )}
-
         <section>
           <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-2">
             {c.faqHeading}
@@ -1806,55 +1801,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </div>
         </section>
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} inquiry={{ kind: 'villa', name: title, complexName: parentComplex?.name ?? null, priceUsd: priceNum }} />}
-
-        {videos.length > 0 && (
-          <VideoGrid videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
-        )}
-
-        <section>
-          <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-4">{c.relatedHeading}</h2>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
-            {[
-              { href: villasRoot, label: getBuyAnchor('villa', lang) },
-              ...(district && districtSlug ? [
-                { href: `${villasRoot}/${districtSlug}`, label: getBuyAnchor('villa', lang, district) },
-              ] : []),
-              ...(bedrooms && BEDROOM_TO_SLUG[String(bedrooms)] ? [
-                {
-                  href: `${villasRoot}/${BEDROOM_TO_SLUG[String(bedrooms)]}`,
-                  label: pickCopy({
-                    ru: `${bedrooms}-комнатные виллы на Бали`,
-                    en: `${bedrooms}-bedroom villas in Bali`,
-                    id: `Vila ${bedrooms} kamar di Bali`,
-                    fr: `Villas ${bedrooms} chambres à Bali`,
-                    de: `${bedrooms}-Zimmer-Villen auf Bali`,
-                    zh: `${bedrooms}居室别墅`,
-                    nl: `${bedrooms}-slaapkamervilla's op Bali`,
-                    ban: `Vila ${bedrooms} kamar ring Bali`,
-                    pl: `Wille ${bedrooms}-sypialniane na Bali`,
-                    uk: `${bedrooms}-кімнатні вілли на Балі`,
-                  }, lang),
-                },
-              ] : []),
-              { href: apartmentsRoot, label: getBuyAnchor('apartment', lang) },
-              { href: complexesRoot, label: c.related.complexes },
-              { href: developersRoot, label: c.related.developers },
-            ].map(l => (
-              <li key={l.href + l.label}>
-                <Link href={l.href} className="inline-flex items-center gap-1 text-[14px] text-[var(--color-text)] hover:text-[var(--color-primary-pressed)]">
-                  <ChevronRight size={14} className="text-[var(--color-primary)]" /> {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
 
         </div>{/* ── /Main column ── */}
 
         {/* ── Sticky sidebar (desktop only) ── */}
         {priceNum != null && (
-          <aside className="hidden lg:flex flex-col gap-4 w-[340px] shrink-0 sticky top-4">
+          <aside className="hidden lg:flex flex-col gap-4 sticky top-4" style={{ flex: '1 1 340px' }}>
             <PriceCtaCard
               sidebar
               priceUsd={priceNum}
