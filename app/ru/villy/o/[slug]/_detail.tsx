@@ -1694,13 +1694,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
         {/* ── Main column ── */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex flex-col gap-12">
 
         {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
         {facts.length > 0 && (
-          <section className="mb-10">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          <section>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
               {facts.map(f => (
                 <div key={f.label} className="flex gap-3 items-center">
                   <div className="w-10 h-10 rounded-[10px] bg-[#EEF6F1] flex-none flex items-center justify-center text-[var(--color-primary)]">
@@ -1717,7 +1717,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         )}
 
         {seoText && (
-          <section className="mb-10">
+          <section>
             <p className="text-[16px] leading-[1.65] text-[var(--color-text)] max-w-[68ch] m-0">{seoText.split('\n')[0]}</p>
             {seoText.includes('\n') && (
               <ExpandableText className="max-w-[68ch] mt-2" more={c.readMore} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
@@ -1730,7 +1730,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         )}
 
         {(villaFacts.length > 0 || landFacts.length > 0) && (
-          <section className="mb-12">
+          <section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
               {villaFacts.length > 0 && (
                 <div>
@@ -1738,7 +1738,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   {villaFacts.map(f => (
                     <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
                       <span className="text-[var(--color-text-muted)]">{f.label}</span>
-                      <span className="text-right font-medium">{f.value}</span>
+                      <span className="text-right">{f.value}</span>
                     </div>
                   ))}
                 </div>
@@ -1749,7 +1749,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   {landFacts.map(f => (
                     <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
                       <span className="text-[var(--color-text-muted)]">{f.label}</span>
-                      <span className="text-right font-medium">{f.value}</span>
+                      <span className="text-right">{f.value}</span>
                     </div>
                   ))}
                 </div>
@@ -1761,68 +1761,92 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         {analytics}
 
         {(developer || developerName) && (
-          <section className="mb-10">
-            <div className="rounded-xl border border-[var(--color-border)] p-6">
-              <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{c.developerLabel}</div>
-              <div className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-4">{developer?.name ?? developerName}</div>
+          <section>
+            <div className="rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4">
+              <div className="text-[13px] text-[#4C5751]">{c.developerLabel}</div>
+              <div className="flex justify-between items-center">
+                <span className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)]">{developer?.name ?? developerName}</span>
+                {developer?.logoUrl ? (
+                  <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-1">
+                    <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-w-full max-h-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="shrink-0 w-12 h-12 rounded-lg bg-[#2C3B2F] flex items-center justify-center text-[10px] font-semibold text-white tracking-wide">
+                    {(developer?.name ?? developerName ?? '').slice(0, 6).toUpperCase()}
+                  </div>
+                )}
+              </div>
               {devStats && (
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <div className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--color-text)]">{devStats.total}</div>
-                    <div className="text-[13px] text-[var(--color-text-muted)]">{c.devStatTotal(devStats.total).replace(/^\d+\s*/, '')}</div>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[28px] font-semibold leading-[1.15]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
+                    <span className="text-[14px] text-[#4C5751]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</span>
                   </div>
-                  <div>
-                    <div className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--color-primary)]">{devStats.ready}</div>
-                    <div className="text-[13px] text-[var(--color-text-muted)]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</div>
-                  </div>
-                  <div>
-                    <div className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--color-text)]">{devStats.inProgress}</div>
-                    <div className="text-[13px] text-[var(--color-text-muted)]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</div>
-                  </div>
+                  {devStats.inProgress > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[28px] font-semibold leading-[1.15]">{devStats.inProgress}</span>
+                      <span className="text-[14px] text-[#4C5751]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</span>
+                    </div>
+                  )}
+                  {videos.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[28px] font-semibold leading-[1.15]">{videos.length} {pickCopy({ ru: 'видео', en: 'videos', id: 'video', fr: 'vidéos', de: 'Videos', zh: '视频', nl: 'video\'s', ban: 'vidéo', pl: 'wideo', uk: 'відео' }, lang)}</span>
+                      <span className="text-[14px] text-[#4C5751]">{pickCopy({ ru: 'об объекте', en: 'about the property', id: 'tentang properti', fr: 'sur le bien', de: 'über das Objekt', zh: '关于此物业', nl: 'over het object', ban: 'indik properti', pl: 'o obiekcie', uk: 'про об\'єкт' }, lang)}</span>
+                    </div>
+                  )}
                 </div>
               )}
               {developer && (
-                <Link href={`${developersRoot}/${developer.slug}`} className="text-[14px] font-medium text-[var(--color-primary-pressed)] hover:underline inline-flex items-center gap-1">
-                  {c.openDeveloper} <ChevronRight size={14} />
+                <Link href={`${developersRoot}/${developer.slug}`} className="text-[15px] text-[var(--color-primary-pressed)] hover:underline">
+                  {c.openDeveloper}
                 </Link>
               )}
             </div>
           </section>
         )}
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} inquiry={{ kind: 'villa', name: title, complexName: parentComplex?.name ?? null, priceUsd: priceNum }} />}
-
-        {/* «Что сдают рядом помесячно» убран 17.10.2026: повторял вкладку «Помесячно» в «Будет ли спрос?». */}
-
-        {videos.length > 0 && (
-          <VideoGrid videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
-        )}
-
         {otherVillas.length > 0 && district && (
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
+          <section>
+            <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-4">
               {c.otherVillas(district)}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {otherVillas.map(o => <VillaCard key={o.id} a={o} lang={lang} />)}
             </div>
           </section>
         )}
 
-        <section className="mb-10">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.relatedHeading}</h2>
+        <section>
+          <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-2">
+            {c.faqHeading}
+          </h2>
+          <div>
+            {faqItems.map((it, i) => (
+              <details key={i} className="group">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 py-4 border-b border-[#E4E9E6] text-[16px] text-[var(--color-text)]">
+                  {it.q}
+                  <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45 shrink-0">+</span>
+                </summary>
+                <p className="mt-3 mb-4 text-[14px] text-[var(--color-text-muted)] leading-relaxed">{it.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {managers.length > 0 && <ManagerCard managers={managers} developerName={developer?.name ?? developerName} inquiry={{ kind: 'villa', name: title, complexName: parentComplex?.name ?? null, priceUsd: priceNum }} />}
+
+        {videos.length > 0 && (
+          <VideoGrid videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
+        )}
+
+        <section>
+          <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-4">{c.relatedHeading}</h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
             {[
-              // Buy-intent anchors, not «Все виллы»: these 2300 listing pages
-              // are the site's main internal-link source, so the anchor text
-              // is what tells Google what the hub is for (lib/districts.ts).
               { href: villasRoot, label: getBuyAnchor('villa', lang) },
               ...(district && districtSlug ? [
                 { href: `${villasRoot}/${districtSlug}`, label: getBuyAnchor('villa', lang, district) },
               ] : []),
-              // Bedroom facet — mirrors what the apartment detail page already
-              // does. Sends weight to /villy/2-spalni & co, which currently get
-              // almost no internal links.
               ...(bedrooms && BEDROOM_TO_SLUG[String(bedrooms)] ? [
                 {
                   href: `${villasRoot}/${BEDROOM_TO_SLUG[String(bedrooms)]}`,
@@ -1851,23 +1875,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               </li>
             ))}
           </ul>
-        </section>
-
-        <section className="mb-10">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-            {c.faqHeading}
-          </h2>
-          <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
-            {faqItems.map((it, i) => (
-              <details key={i} className="group py-4">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
-                  {it.q}
-                  <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-[14px] text-[var(--color-text-muted)] leading-relaxed">{it.a}</p>
-              </details>
-            ))}
-          </div>
         </section>
 
         </div>{/* ── /Main column ── */}
