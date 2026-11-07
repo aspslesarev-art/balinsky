@@ -1501,14 +1501,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             leaseYears={leaseYears} landYellow={rentalRestricted}
             dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
-          {landOk && (
-            <div className="flex flex-col gap-6">
-              <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-              </LazyMount>
-              <SafetyChecks verdict={verdict} lang={lang} />
-            </div>
-          )}
         </section>
 
         {saleComps && saleComps.diffPct != null && priceNum != null && (
