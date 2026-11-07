@@ -1484,30 +1484,96 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     )
   }
 
+  const saleCompLow = saleComps?.q && saleComps.self && saleComps.self > 0 && priceNum
+    ? Math.round(saleComps.q.p25 / saleComps.self * priceNum) : null
+  const saleCompHigh = saleComps?.q && saleComps.self && saleComps.self > 0 && priceNum
+    ? Math.round(saleComps.q.p75 / saleComps.self * priceNum) : null
+  const isRu = lang === 'ru' || lang === 'uk'
+
   const analytics = (
     <>
         <ProPendingNote lang={lang} />
-        <div className="bx-auth-block">
 
-        <section id="uchastok" className="mb-12 scroll-mt-24">
-          <div className={`grid grid-cols-1 items-stretch gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
+        <section id="uchastok" className="scroll-mt-24">
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
             dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
           {landOk && (
-            <div className="flex flex-col gap-6 [&>*:last-child]:flex-1">
+            <div className="flex flex-col gap-6">
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
                 <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
               </LazyMount>
               <SafetyChecks verdict={verdict} lang={lang} />
             </div>
           )}
-          </div>
         </section>
 
+        {saleComps && saleComps.diffPct != null && priceNum != null && (
+          <section className="flex flex-col gap-4 scroll-mt-24">
+            <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
+              {pickCopy({
+                ru: Math.abs(saleComps.diffPct) < 15 ? 'Цена нормальная для района' : saleComps.diffPct < 0 ? 'Цена ниже рынка' : 'Цена выше рынка',
+                en: Math.abs(saleComps.diffPct) < 15 ? 'Normal price for the area' : saleComps.diffPct < 0 ? 'Below market price' : 'Above market price',
+                id: Math.abs(saleComps.diffPct) < 15 ? 'Harga normal untuk area ini' : saleComps.diffPct < 0 ? 'Di bawah harga pasar' : 'Di atas harga pasar',
+                fr: Math.abs(saleComps.diffPct) < 15 ? 'Prix normal pour le quartier' : saleComps.diffPct < 0 ? 'En dessous du marché' : 'Au-dessus du marché',
+                de: Math.abs(saleComps.diffPct) < 15 ? 'Normaler Preis für die Gegend' : saleComps.diffPct < 0 ? 'Unter Marktwert' : 'Über Marktwert',
+                zh: Math.abs(saleComps.diffPct) < 15 ? '区域正常价格' : saleComps.diffPct < 0 ? '低于市场价' : '高于市场价',
+                nl: Math.abs(saleComps.diffPct) < 15 ? 'Normale prijs voor dit gebied' : saleComps.diffPct < 0 ? 'Onder marktwaarde' : 'Boven marktwaarde',
+                ban: Math.abs(saleComps.diffPct) < 15 ? 'Aji biasa ring daerah niki' : saleComps.diffPct < 0 ? 'Ring sor aji pasar' : 'Ring duur aji pasar',
+                pl: Math.abs(saleComps.diffPct) < 15 ? 'Normalna cena w okolicy' : saleComps.diffPct < 0 ? 'Poniżej cen rynkowych' : 'Powyżej cen rynkowych',
+                uk: Math.abs(saleComps.diffPct) < 15 ? 'Ціна звичайна для району' : saleComps.diffPct < 0 ? 'Ціна нижче ринку' : 'Ціна вище ринку',
+              }, lang)}
+            </h2>
+            {saleCompLow != null && saleCompHigh != null && (
+              <p className="text-[16px] leading-[1.55] m-0">
+                {pickCopy({
+                  ru: <>Такая вилла рядом обычно стоит <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Эта - <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  en: <>Similar villas nearby usually cost <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. This one is <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  id: <>Villa serupa di sekitar biasanya <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Ini <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  fr: <>Les villas similaires coûtent <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Celle-ci : <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  de: <>Ähnliche Villen kosten <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Diese: <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  zh: <>附近类似别墅通常 <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>。这套 <b>{fmtUsd(priceNum, lang)}</b>。</>,
+                  nl: <>Vergelijkbare villa's kosten <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Deze: <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  ban: <>Villa mirip ring sekitar <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Niki <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  pl: <>Podobne wille kosztują <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Ta: <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  uk: <>Схожі вілли коштують <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Ця - <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                }, lang)}
+              </p>
+            )}
+            <div className="px-2 flex flex-col gap-2.5">
+              <div className="relative h-[14px] rounded-[7px]" style={{ background: 'linear-gradient(90deg, #CFE8D9 0% 33.3%, #F6E2BF 33.3% 66.6%, #F4D3CE 66.6% 100%)' }} aria-hidden="true">
+                <div className="absolute top-[-5px] w-6 h-6 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + saleComps.diffPct * 1.5))}%`, marginLeft: '-12px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
+              </div>
+              {saleCompLow != null && saleCompHigh != null && (
+                <div className="grid grid-cols-3 text-[14px]">
+                  <span className="text-[#1B6E4A] font-semibold">{isRu ? 'Дешевле' : 'Cheaper'}<br /><span className="font-normal text-[#4C5751]">{isRu ? 'до' : 'up to'} {fmtUsd(saleCompLow, lang)}</span></span>
+                  <span className="text-[#9A5A0B] font-semibold text-center">{isRu ? 'Обычная цена' : 'Typical'}<br /><span className="font-normal text-[#4C5751]">{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</span></span>
+                  <span className="text-[#A8362B] font-semibold text-right">{isRu ? 'Дороже' : 'Pricier'}<br /><span className="font-normal text-[#4C5751]">{isRu ? 'от' : 'from'} {fmtUsd(saleCompHigh, lang)}</span></span>
+                </div>
+              )}
+            </div>
+            {saleComps.n > 0 && (
+              <a href="#arenda" className="text-[15px] text-[var(--color-primary)]">
+                {pickCopy({
+                  ru: `С чем сравнивали: ${saleComps.n} ${pluralRu(saleComps.n, ['вилла', 'виллы', 'вилл'])} на продаже рядом`,
+                  en: `Compared with ${saleComps.n} villa${saleComps.n > 1 ? 's' : ''} for sale nearby`,
+                  id: `Dibandingkan dengan ${saleComps.n} villa dijual di sekitar`,
+                  fr: `Comparé à ${saleComps.n} villa${saleComps.n > 1 ? 's' : ''} en vente`,
+                  de: `Verglichen mit ${saleComps.n} Villa${saleComps.n > 1 ? 's' : ''} zum Verkauf`,
+                  zh: `与附近${saleComps.n}套在售别墅比较`,
+                  nl: `Vergeleken met ${saleComps.n} villa's te koop`,
+                  ban: `Kabandingang sareng ${saleComps.n} villa`,
+                  pl: `Porównanie z ${saleComps.n} willami na sprzedaż`,
+                  uk: `Порівняння з ${saleComps.n} ${pluralRu(saleComps.n, ['віллою', 'віллами', 'віллами'])} на продажу`,
+                }, lang)}
+              </a>
+            )}
+          </section>
+        )}
+
         {!analyticsOnly && hasRent && (
-          <section id="arenda" className="mb-12 scroll-mt-24">
+          <section id="arenda" className="scroll-mt-24">
             <DemandSummary snap={verdictSnap} verdict={verdict} monthly={monthly} bedrooms={bedrooms} lang={lang} dailyComps={verdictSnap?.competitors ?? []} airbnbComps={airbnbComps}
               sale={saleComps ? <SaleCompsBlock data={saleComps} bedrooms={bedrooms} lang={lang} hideTitle /> : undefined}
               daily={marketOk ? { count: marketStats!.villa_count, adrUsd: marketStats!.villa_adr_usd, occupancyPct: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : marketStats!.villa_occupancy_pct } : null} />
@@ -1515,7 +1581,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         )}
 
         {!analyticsOnly && hasYield && (
-          <section id="dokhodnost" className="mb-12 scroll-mt-24">
+          <section id="dokhodnost" className="scroll-mt-24">
             <YieldScenariosTable data={yieldScenarios(verdictSnap, null)} verified={yields?.ownSource === 'actual'} lang={lang} />
             <div id="kalkulyator" className="scroll-mt-24" />
             <GatedBlock kind="investment" lang={lang}>
@@ -1527,27 +1593,26 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         )}
 
         {hasPlace && (
-          <section id="mesto" className="mb-12 scroll-mt-24">
+          <section id="mesto" className="scroll-mt-24 flex flex-col gap-6">
             {districtCopy && districtSlug && (
               <div className="[&>section]:!mb-0"><DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} /></div>
             )}
-            {(livingFacts || geoFacts) && (
-              <div className="mb-4 flex flex-col gap-4 [&>*]:mb-0">
-                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} wide />}
-                {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
-                  map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
-                {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
-                  map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
+            {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
+              map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
+            {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
+              map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
+            {(beach || geoFacts) && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 [&>*]:mb-0">
+                {beach && beachPick && <BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} />}
+                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
               </div>
             )}
-            {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
             {lat != null && lng != null && (
-              <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
+              <TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} />
             )}
           </section>
         )}
 
-        </div>
     </>
   )
   if (analyticsOnly) return analytics

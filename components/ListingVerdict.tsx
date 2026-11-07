@@ -515,24 +515,53 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
     if (water <= 100) rows.push({ k: ru ? 'Река или ручей' : 'River or stream', v: m(water), tone: 'warn', note: ru ? 'Спросите, заливало ли участок в сезон дождей.' : 'Ask whether the plot floods in the rainy season.' })
   }
 
+  const issues = rows.filter(r => r.tone === 'warn' || r.tone === 'minus').length
+  const CHECK_BG: Record<string, string> = { plus: 'bg-[#1B6E4A]', warn: 'bg-[#9A5A0B]', minus: 'bg-[#A8362B]' }
+  const recs: string[] = []
+  if (p === 'slfApplied') recs.push(ru ? 'дату приёмки (SLF)' : 'occupancy date (SLF)')
+  if (!permitOk(p) && p !== 'slfApplied') recs.push(ru ? 'копию разрешения (PBG)' : 'permit copy (PBG)')
+  if (leaseYears == null) recs.push(ru ? 'договор аренды земли у нотариуса' : 'notarized land lease')
+  if (v.safety.notStarted) recs.push(ru ? 'гарантии от застройщика' : 'developer guarantees')
+
   return (
-    <div className="rounded-[20px] border border-[var(--color-border)] bg-white px-5 md:px-6">
-      <dl className="divide-y divide-[var(--color-border)]">
-        {rows.map(r => (
-          <div key={r.k} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[220px_minmax(0,1fr)] sm:gap-6">
-            <dt className="flex items-center gap-2 text-[15px] text-[var(--color-text-muted)]">
-              <span className={`h-2 w-2 shrink-0 rounded-full ${r.tone ? DOT[r.tone] : 'bg-[var(--color-border)]'}`} aria-hidden />
-              {r.k}
-            </dt>
-            <dd className="text-[16px] text-[var(--color-text)]">
-              {r.v}
-              {r.note && <span className="mt-0.5 block text-[14px] leading-snug text-[var(--color-text-muted)]">{r.note}</span>}
-            </dd>
+    <section className="rounded-xl overflow-hidden bg-[#FDF4E7]">
+      <div className="p-6 flex flex-col gap-4">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
+              {ru
+                ? `Проверка Balinsky${issues > 0 ? `: есть ${issues} ${pluralRu(issues, ['вопрос', 'вопроса', 'вопросов'])}` : ': рисков не видно'}`
+                : `Balinsky check${issues > 0 ? `: ${issues} issue${issues > 1 ? 's' : ''} found` : ': no risks found'}`}
+            </h2>
+            <span className="text-[14px] text-[#4C5751]">
+              {ru ? 'Документы, участок, застройщик и природные риски' : 'Documents, land, developer and natural hazards'}
+            </span>
           </div>
-        ))}
-      </dl>
-      <p className="pb-4 pt-1 text-[12px] text-[var(--color-text-muted)]">{ru ? 'Риски - InaRISK, дороги - OpenStreetMap, уклон и уровень моря - Copernicus' : 'Hazards - InaRISK, roads - OpenStreetMap, slope and sea level - Copernicus'}</p>
-    </div>
+          <div className="w-14 h-14 rounded-xl bg-white flex-none flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={issues > 0 ? '#9A5A0B' : '#1B6E4A'} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+              {issues > 0 ? <><path d="M12 8v4" /><path d="M12 16h.01" /></> : <path d="M9 12l2 2 4-4" />}
+            </svg>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 gap-x-6">
+          {rows.map(r => (
+            <div key={r.k} className="flex gap-2.5 items-start text-[15px] leading-[1.45]">
+              <span className={`w-5 h-5 rounded-full flex-none mt-0.5 text-white text-[13px] font-semibold flex items-center justify-center ${r.tone ? CHECK_BG[r.tone] : 'bg-[#8E9B93]'}`} aria-hidden="true">
+                {r.tone === 'plus' ? '✓' : r.tone ? '!' : '—'}
+              </span>
+              <span>{r.k}: {r.v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {recs.length > 0 && (
+        <div className="bg-white/55 px-6 py-4 flex flex-wrap gap-x-6 gap-y-2 text-[15px] items-baseline">
+          <span className="font-semibold">{ru ? 'До оплаты попросите:' : 'Before paying, ask for:'}</span>
+          {recs.map((r, i) => <span key={i}>{r}</span>)}
+        </div>
+      )}
+    </section>
   )
 }
 
