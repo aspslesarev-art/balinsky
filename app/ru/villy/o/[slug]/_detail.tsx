@@ -67,6 +67,7 @@ import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPdf, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { IncomeCalculator } from '@/components/IncomeCalculator'
+import { BeachWeatherDesign } from '@/components/BeachWeatherDesign'
 import { LocationSection } from '@/components/LocationSection'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
@@ -1607,11 +1608,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             lang={lang}
           />
         )}
-        {(beach || geoFacts) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 [&>*]:mb-0">
-            {beach && beachPick && <BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} />}
-            {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
-          </div>
+        {(beach || geoFacts?.climate) && (
+          <BeachWeatherDesign
+            beach={beach && beachPick ? beach : null}
+            beachKm={beachPick?.km ?? 0}
+            beachPhoto={beach?.photos?.[0]?.src ?? null}
+            climate={geoFacts?.climate ?? null}
+            lang={lang}
+          />
         )}
 
     </>
