@@ -147,7 +147,7 @@ const COPY = {
       developers: 'Застройщики Бали',
       villasIn: (d: string) => `Виллы в ${d}`,
     },
-    faqHeading: 'Часто задаваемые вопросы',
+    faqHeading: 'Частые вопросы',
     faq: (title: string, district: string | null, price: string | null, lease: string | null, land: number | null) => [
       { q: `Сколько стоит ${title}?`,
         a: price ? `Текущая цена объекта — ${price}. Актуальный прайс всегда указан в карточке выше.` : 'Цена уточняется. Свяжитесь для актуального прайса.' },
@@ -1604,7 +1604,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             <Link href={villasRoot} className="hover:text-[var(--color-text)]">{c.villasCrumb}</Link>
             {district && <> · {district}</>}
           </div>
-          <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
+          <h1 className="text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
           {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
@@ -1698,24 +1698,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
         {plan3dUrl && <Villa3DPlan src={plan3dUrl} lang={lang} />}
 
-        {facts.length > 0 && (
-          <section>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
-              {facts.map(f => (
-                <div key={f.label} className="flex gap-3 items-center">
-                  <div className="w-10 h-10 rounded-[10px] bg-[#EEF6F1] flex-none flex items-center justify-center text-[var(--color-primary)]">
-                    <f.Icon size={20} strokeWidth={1.8} />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[13px] text-[var(--color-text-muted)]">{f.label}</span>
-                    <span className="text-[17px] font-semibold truncate">{f.value}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         {seoText && (
           <section>
             <p className="text-[16px] leading-[1.65] text-[var(--color-text)] max-w-[68ch] m-0">{seoText.split('\n')[0]}</p>
@@ -1777,7 +1759,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                 )}
               </div>
               {devStats && (
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                   <div className="flex flex-col gap-1">
                     <span className="text-[28px] font-semibold leading-[1.15]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
                     <span className="text-[14px] text-[#4C5751]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</span>
@@ -1822,12 +1804,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </h2>
           <div>
             {faqItems.map((it, i) => (
-              <details key={i} className="group">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 py-4 border-b border-[#E4E9E6] text-[16px] text-[var(--color-text)]">
+              <details key={i} className="group border-b border-[#E4E9E6]">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 py-4 text-[16px] text-[var(--color-text)]">
                   {it.q}
-                  <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45 shrink-0">+</span>
+                  <span className="text-[#94A29A] text-[20px] leading-none shrink-0"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
                 </summary>
-                <p className="mt-3 mb-4 text-[14px] text-[var(--color-text-muted)] leading-relaxed">{it.a}</p>
+                <div className="pb-4 text-[15px] leading-[1.6] text-[#4C5751]">{it.a}</div>
               </details>
             ))}
           </div>
