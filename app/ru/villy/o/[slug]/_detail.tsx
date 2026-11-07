@@ -1669,11 +1669,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           { label: title },
         ]} />
 
-        {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
-        <div className="flex flex-wrap gap-12 items-start">
-        {/* ── Main column ── */}
-        <div className="min-w-0 flex flex-col gap-12" style={{ flex: '999 1 720px' }}>
-
         <section className="flex flex-col gap-3">
           <h1 className="text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
@@ -1722,6 +1717,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             </div>
           )}
         </section>
+
+        {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
+        <div className="flex flex-wrap gap-12 items-start">
+        {/* ── Main column ── */}
+        <div className="min-w-0 flex flex-col gap-12" style={{ flex: '999 1 720px' }}>
 
         <section className="flex flex-col gap-2">
           <div className="relative">
