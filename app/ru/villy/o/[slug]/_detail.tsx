@@ -67,6 +67,7 @@ import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPdf, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { IncomeCalculator } from '@/components/IncomeCalculator'
+import { LocationSection } from '@/components/LocationSection'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
@@ -1601,25 +1602,24 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </section>
         )}
 
-        {hasPlace && (
-          <section id="mesto" className="scroll-mt-24 flex flex-col gap-6">
-            {districtCopy && districtSlug && (
-              <div className="[&>section]:!mb-0"><DistrictAboutCard aerial={lat != null && lng != null ? { lat, lng } : null} copy={districtCopy} lang={lang} kind="villa" hubHref={`${villasRoot}/${districtSlug}`} /></div>
-            )}
-            {geoFacts && <ComplexAccessBlock lang={lang} routes={geoFacts.routes}
-              map={geoFacts.route_lines && lat != null && lng != null ? { lines: geoFacts.route_lines, lat, lng, name: parentComplex?.name ?? title } : null} />}
-            {livingFacts && <LivingList facts={livingFacts} lang={lang} hideBeach={beachIsNearest}
-              map={nearby && lat != null && lng != null ? { byCategory: nearby.byCategory, lat, lng, name: parentComplex?.name ?? title } : null} />}
-            {(beach || geoFacts) && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 [&>*]:mb-0">
-                {beach && beachPick && <BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} />}
-                {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
-              </div>
-            )}
-            {lat != null && lng != null && (
-              <TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} />
-            )}
-          </section>
+        {hasPlace && lat != null && lng != null && (
+          <LocationSection
+            lat={lat}
+            lng={lng}
+            name={parentComplex?.name ?? title}
+            livingFacts={livingFacts}
+            nearby={nearby}
+            routes={geoFacts?.routes ?? null}
+            routeLines={geoFacts?.route_lines ?? null}
+            beach={beach && beachPick ? { name: (lang === 'ru' ? beach.name_ru : beach.name_en) ?? beach.name_ru ?? '', rating: beachPick.google?.rating ?? null, reviews: beachPick.google?.reviews ?? null, km: beachPick.km } : null}
+            lang={lang}
+          />
+        )}
+        {(beach || geoFacts) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 [&>*]:mb-0">
+            {beach && beachPick && <BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} />}
+            {geoFacts && <ClimateBlock climate={geoFacts.climate} air={geoFacts.air} lang={lang} lat={lat} lng={lng} />}
+          </div>
         )}
 
     </>
