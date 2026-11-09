@@ -191,6 +191,42 @@ if (existsSync(propPath)) {
   console.log(`Propertia: ${fromProp} вилл добавлено`)
 }
 
+// ── Новые источники (villabalisale, balivillarealty, balitecturerealty, prestige, ppbali) ──
+const newPath = join(__dirname, '../data/new_sources_villas.json')
+let fromNew = 0
+if (existsSync(newPath)) {
+  type NewItem = {
+    id: string; type: string; tenure: string; area: string; lat: number | null; lng: number | null
+    land_sqm: number | null; building_sqm: number | null; bedrooms: number | null; bathrooms: number | null
+    lease_years: number | null; price_usd: number | null; total_price_idr: number | null
+    url: string; name: string; created_at: string; source: string
+  }
+  const newItems: NewItem[] = JSON.parse(readFileSync(newPath, 'utf8'))
+  for (const n of newItems) {
+    if (n.type !== 'villa' || !n.lat || !n.lng || !n.bedrooms) continue
+    const usd = n.price_usd ?? (n.total_price_idr ? Math.round(n.total_price_idr / IDR_PER_USD) : null)
+    if (!usd || usd < 20000 || usd > 20e6) continue
+    const m2 = n.building_sqm && n.building_sqm >= 25 && n.building_sqm <= 2000 ? Math.round(n.building_sqm) : null
+    const inBali = n.lat > -8.95 && n.lat < -8.05 && n.lng > 114.4 && n.lng < 115.75
+    if (!inBali) continue
+    const ppm = m2 ? usd / m2 : null
+    if (ppm != null && (ppm < 300 || ppm > 15000)) continue
+    const key = `${n.area}|${n.bedrooms}|${m2}|${Math.round(usd / 1000)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const ten: 0 | 1 | null = n.tenure === 'leasehold' ? 1 : n.tenure === 'freehold' ? 0 : null
+    items.push([
+      Number(Number(n.lat).toFixed(5)), Number(Number(n.lng).toFixed(5)),
+      n.bedrooms, usd, m2,
+      n.land_sqm && n.land_sqm > 20 ? Math.round(n.land_sqm) : null,
+      ten, n.lease_years, n.created_at?.slice(0, 10) ?? null,
+      n.url, null, n.area,
+    ])
+    fromNew++
+  }
+  console.log(`Новые источники: ${fromNew} вилл добавлено`)
+}
+
 const TILE = 0.05
 const tileKey = (lat: number, lng: number) => `${Math.floor(lat / TILE)}_${Math.floor(lng / TILE)}`
 const tiles = new Map<string, typeof items>()
@@ -203,7 +239,7 @@ const asOf = items.reduce((mx, i) => (typeof i[8] === 'string' && i[8] > mx ? i[
 const index = {
   generatedAt: new Date().toISOString(),
   asOf: asOf || null,
-  source: 'rumah123.com + bali-home-immo.com + propertia.com',
+  source: 'rumah123.com + bali-home-immo.com + propertia.com + villabalisale.com + balivillarealty.com + balitecturerealty.com + prestigepropertybali.com + ppbali.com',
   idrPerUsd: IDR_PER_USD,
   urlBase: 'https://www.rumah123.com',
   photoBase: 'https://picture.rumah123.com/r123-images/',
