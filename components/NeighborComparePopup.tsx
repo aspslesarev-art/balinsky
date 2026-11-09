@@ -270,9 +270,11 @@ function Gallery({ photos, name, onClose }: { photos: { src: string; alt: string
 
 // ─── Tab content builders ────────────────────────────────────────
 
+const COL_W = 150
+
 function SaleTab({ villa, comps, lang }: { villa: CompareVilla; comps: CompareSaleItem[]; lang: Lang }) {
   const c = pickCopy(COPY, lang)
-  const items = comps.slice(0, 4)
+  const items = comps
   if (items.length === 0) return null
 
   const villaM2 = villa.areaSqm && villa.priceUsd ? Math.round(villa.priceUsd / villa.areaSqm) : null
@@ -289,14 +291,11 @@ function SaleTab({ villa, comps, lang }: { villa: CompareVilla; comps: CompareSa
   ]
 
   const cols = items.length + 1
-  const pins: { lat: number; lng: number; label: string; main?: boolean }[] = []
-  if (villa.lat != null && villa.lng != null) pins.push({ lat: villa.lat, lng: villa.lng, label: c.thisVilla, main: true })
 
   return (
     <div className="flex flex-col">
       <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
-        <div className="min-w-[600px]" style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, 1fr)` }}>
-          {/* Headers */}
+        <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
           <div />
           <div className="px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
@@ -304,7 +303,6 @@ function SaleTab({ villa, comps, lang }: { villa: CompareVilla; comps: CompareSa
               <Thumb photo={item.photo} label={item.name ?? `${item.buildingM2 ?? '?'} ${c.m2}`} sub={`${dec(item.distanceKm, lang)} ${c.km} · ${item.catalog ? 'Balinsky' : item.source}`} noPhotoText={c.noPhoto} />
             </div>
           ))}
-          {/* Rows */}
           {rows.map((row, ri) => (
             <div key={ri} className="contents">
               <MetricLabel>{row.label}</MetricLabel>
@@ -314,7 +312,6 @@ function SaleTab({ villa, comps, lang }: { villa: CompareVilla; comps: CompareSa
           ))}
         </div>
       </div>
-      {pins.length > 1 && <MiniMap pins={pins} radius={Math.max(...items.map(i => i.distanceKm), 1)} district={villa.district} lang={lang} />}
     </div>
   )
 }
@@ -323,7 +320,7 @@ function DailyTab({ villa, comps, villaAdr, villaOcc, lang }: {
   villa: CompareVilla; comps: CompareDailyItem[]; villaAdr: number | null; villaOcc: number | null; lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
-  const items = comps.slice(0, 3)
+  const items = comps
   if (items.length === 0) return null
 
   const villaIncomeYear = villaAdr && villaOcc ? Math.round(villaAdr * 365 * (villaOcc / 100) * 0.7) : null
@@ -342,12 +339,12 @@ function DailyTab({ villa, comps, villaAdr, villaOcc, lang }: {
   const cols = items.length + 1
   const pins: { lat: number; lng: number; label: string; main?: boolean }[] = []
   if (villa.lat != null && villa.lng != null) pins.push({ lat: villa.lat, lng: villa.lng, label: c.thisVilla, main: true })
-  items.forEach(i => pins.push({ lat: i.lat, lng: i.lng, label: i.name.split(' ').slice(0, 2).join(' ') }))
+  items.forEach(i => { if (i.lat && i.lng) pins.push({ lat: i.lat, lng: i.lng, label: i.name.split(' ').slice(0, 2).join(' ') }) })
 
   return (
     <div className="flex flex-col">
       <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
-        <div className="min-w-[600px]" style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, 1fr)` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
           <div />
           <div className="px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
@@ -369,7 +366,7 @@ function DailyTab({ villa, comps, villaAdr, villaOcc, lang }: {
           ))}
         </div>
       </div>
-      {pins.length > 1 && <MiniMap pins={pins} radius={Math.max(...items.map(i => i.distanceKm), 1)} district={villa.district} lang={lang} />}
+      {pins.length > 1 && <MiniMap pins={pins} radius={Math.max(...items.filter(i => i.lat && i.lng).map(i => i.distanceKm), 1)} district={villa.district} lang={lang} />}
     </div>
   )
 }
@@ -378,7 +375,7 @@ function MonthlyTab({ villa, comps, villaMonthly, lang }: {
   villa: CompareVilla; comps: CompareMonthlyItem[]; villaMonthly: number | null; lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
-  const items = comps.slice(0, 4)
+  const items = comps
   if (items.length === 0) return null
 
   const villaIncomeYear = villaMonthly ? Math.round(villaMonthly * 11 * 0.9) : null
@@ -400,7 +397,7 @@ function MonthlyTab({ villa, comps, villaMonthly, lang }: {
   return (
     <div className="flex flex-col">
       <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
-        <div className="min-w-[600px]" style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, 1fr)` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
           <div />
           <div className="px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (

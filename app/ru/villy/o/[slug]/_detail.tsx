@@ -1498,11 +1498,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const isRu = lang === 'ru' || lang === 'uk'
 
   const compareData: CompareData | null = (() => {
-    const saleCItems: CompareSaleItem[] = (saleComps?.comps ?? []).slice(0, 4).map(sc => ({
+    const saleSource = (url: string) => {
+      try { const h = new URL(url).hostname.replace('www.', ''); return h.split('.')[0] } catch { return 'rumah123' }
+    }
+    const saleCItems: CompareSaleItem[] = (saleComps?.comps ?? []).map(sc => ({
       name: sc.name ?? sc.district, photo: sc.photo, bedrooms: sc.bedrooms,
       buildingM2: sc.buildingM2, landM2: sc.landM2, priceUsd: sc.priceUsd,
       leaseYears: sc.leaseYears, distanceKm: sc.distanceKm, url: sc.url,
-      source: sc.catalog ? 'Balinsky' : 'rumah123', catalog: sc.catalog,
+      source: sc.catalog ? 'Balinsky' : saleSource(sc.url), catalog: sc.catalog,
     }))
     const dailyCItems: CompareDailyItem[] = [
       ...(verdictSnap?.competitors ?? []).slice(0, 8).map(comp => ({
@@ -1519,8 +1522,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         distanceKm: comp.distanceKm, url: comp.url, source: 'airbnb' as const,
         lat: 0, lng: 0,
       })),
-    ].sort((a, b) => b.priceUsd - a.priceUsd).slice(0, 4)
-    const monthlyCItems: CompareMonthlyItem[] = (monthly?.comps ?? []).slice(0, 4).map(mc => ({
+    ].sort((a, b) => b.priceUsd - a.priceUsd).slice(0, 8)
+    const monthlyCItems: CompareMonthlyItem[] = (monthly?.comps ?? []).map(mc => ({
       title: mc.title, photo: mc.photo, bedrooms: mc.bedrooms,
       rentMonthUsd: mc.rentMonthUsd, buildingM2: mc.buildingM2,
       district: mc.district, distanceKm: mc.distanceKm,
