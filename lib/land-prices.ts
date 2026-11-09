@@ -16,7 +16,7 @@ export type LandPriceBundle = {
   radiusKm: number
   p25: number
   p75: number
-  freeholdN: number
+  method: 'leasehold' | 'freehold_adjusted'
 }
 
 let _index: { ts: number; data: Index | null } | null = null
@@ -68,6 +68,7 @@ function quantile(xs: number[], p: number): number {
 
 const RADII_KM = [2, 3, 5] as const
 const MIN_PLOTS = 5
+const FREEHOLD_TO_LEASEHOLD = 0.35
 
 export async function landPricesNear(lat: number, lng: number): Promise<LandPriceBundle | null> {
   const idx = await loadIndex()
@@ -81,11 +82,9 @@ export async function landPricesNear(lat: number, lng: number): Promise<LandPric
   }
   const raw = (await Promise.all(keys.map(loadTile))).flat()
 
+  // 1) leasehold plots — direct comparison
   for (const radius of RADII_KM) {
-    const nearby = raw.filter(r => {
-      const d = km(lat, lng, r[0], r[1])
-      return d <= radius && r[4] === 0 // freehold only for fair comparison
-    })
+    const nearby = raw.filter(r => km(lat, lng, r[0], r[1]) <= radius && r[4] === 1)
     const ppms = nearby.map(r => r[2] / r[3]).filter(v => v >= 10 && v <= 5000)
     if (ppms.length >= MIN_PLOTS) {
       return {
@@ -94,24 +93,23 @@ export async function landPricesNear(lat: number, lng: number): Promise<LandPric
         radiusKm: radius,
         p25: Math.round(quantile(ppms, 0.25)),
         p75: Math.round(quantile(ppms, 0.75)),
-        freeholdN: ppms.length,
+        method: 'leasehold',
       }
     }
   }
 
-  // fallback: all tenure types
+  // 2) freehold plots × 0.35 coefficient
   for (const radius of RADII_KM) {
-    const nearby = raw.filter(r => km(lat, lng, r[0], r[1]) <= radius)
+    const nearby = raw.filter(r => km(lat, lng, r[0], r[1]) <= radius && r[4] === 0)
     const ppms = nearby.map(r => r[2] / r[3]).filter(v => v >= 10 && v <= 5000)
     if (ppms.length >= MIN_PLOTS) {
-      const freehold = nearby.filter(r => r[4] === 0)
       return {
-        medianPpm: Math.round(median(ppms)),
+        medianPpm: Math.round(median(ppms) * FREEHOLD_TO_LEASEHOLD),
         n: ppms.length,
         radiusKm: radius,
-        p25: Math.round(quantile(ppms, 0.25)),
-        p75: Math.round(quantile(ppms, 0.75)),
-        freeholdN: freehold.length,
+        p25: Math.round(quantile(ppms, 0.25) * FREEHOLD_TO_LEASEHOLD),
+        p75: Math.round(quantile(ppms, 0.75) * FREEHOLD_TO_LEASEHOLD),
+        method: 'freehold_adjusted',
       }
     }
   }

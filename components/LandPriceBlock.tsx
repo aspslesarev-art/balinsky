@@ -1,5 +1,5 @@
-// «Стоимость земли» — сколько стоит земля под виллой (фрихолд-эквивалент).
-// Показывается только когда известна площадь участка.
+// «Стоимость земли» — лизхолд-оценка земли под виллой.
+// Лизхолд-данные напрямую, или фрихолд × 0.35 как запасной вариант.
 
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { InlinePrice } from './InlinePrice'
@@ -7,20 +7,24 @@ import type { LandPriceBundle } from '@/lib/land-prices'
 
 const COPY = {
   ru: {
-    title: 'Стоимость земли',
-    landValue: 'земля под виллой',
+    title: 'Стоимость земли (лизхолд)',
+    landValue: 'аренда земли под виллой',
     landPpm: 'за м²',
     share: (pct: number) => `${pct}% цены виллы - земля, остальное - стройка`,
-    note: (n: number, r: number, m2: number) =>
-      `Расчёт: ${m2} м² участка × медиана $${fmt(r)}/м² по ${n} участкам рядом (фрихолд). Вилла на лизхолде - вы арендуете землю, а не покупаете, но ориентир полезен.`,
+    noteLeasehold: (n: number, ppm: number, m2: number) =>
+      `Расчёт: ${m2} м² × медиана $${fmt(ppm)}/м² по ${n} лизхолд-участкам рядом.`,
+    noteAdjusted: (n: number, ppm: number, m2: number) =>
+      `Расчёт: ${m2} м² × медиана $${fmt(ppm)}/м² (фрихолд-цена × 0.35 - типичная пропорция для лизхолда 25-30 лет, ${n} участков рядом).`,
   },
   en: {
-    title: 'Land value',
-    landValue: 'land under the villa',
+    title: 'Land value (leasehold)',
+    landValue: 'land lease under the villa',
     landPpm: 'per m²',
     share: (pct: number) => `${pct}% of villa price is land, the rest is construction`,
-    note: (n: number, r: number, m2: number) =>
-      `Based on ${m2} m² plot × median $${fmt(r)}/m² from ${n} nearby plots (freehold). The villa is leasehold - you lease the land, but this gives a useful reference.`,
+    noteLeasehold: (n: number, ppm: number, m2: number) =>
+      `Based on ${m2} m² × median $${fmt(ppm)}/m² from ${n} leasehold plots nearby.`,
+    noteAdjusted: (n: number, ppm: number, m2: number) =>
+      `Based on ${m2} m² × median $${fmt(ppm)}/m² (freehold price × 0.35 - typical ratio for 25-30 year leasehold, ${n} plots nearby).`,
   },
 }
 
@@ -82,7 +86,9 @@ export function LandPriceBlock({ data, landM2, priceUsd, lang }: {
       )}
 
       <p className="text-[12px] leading-relaxed text-[var(--color-text-muted)]">
-        {c.note(data.n, data.medianPpm, landM2)}
+        {data.method === 'leasehold'
+          ? c.noteLeasehold(data.n, data.medianPpm, landM2)
+          : c.noteAdjusted(data.n, data.medianPpm, landM2)}
       </p>
     </div>
   )
