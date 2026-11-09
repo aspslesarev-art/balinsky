@@ -1648,16 +1648,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               monthlyCompCount={monthly?.n ?? 0}
               restricted={!!verdictSnap.flags.rentalRestricted}
               lang={lang}
-              dailyCompareSlot={compareData && compareData.daily.length > 0 ? (
-                <CompareButton data={compareData} lang={lang} initialTab="daily" className="border-[#1B6E4A] text-[#1B6E4A] hover:bg-[#1B6E4A]/5">
-                  {pickCopy({ ru: `Соседи, которые сдают посуточно: ${compareData.daily.length} ${pluralRu(compareData.daily.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting nightly: ${compareData.daily.length}` }, lang)}
-                </CompareButton>
-              ) : undefined}
-              monthlyCompareSlot={compareData && compareData.monthly.length > 0 ? (
-                <CompareButton data={compareData} lang={lang} initialTab="monthly" className="border-[#1B6E4A] text-[#1B6E4A] hover:bg-[#1B6E4A]/5">
-                  {pickCopy({ ru: `Соседи, которые сдают помесячно: ${compareData.monthly.length} ${pluralRu(compareData.monthly.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting monthly: ${compareData.monthly.length}` }, lang)}
-                </CompareButton>
-              ) : undefined}
+              compareData={compareData}
             />
           </section>
         )}

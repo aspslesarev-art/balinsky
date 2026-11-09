@@ -186,36 +186,6 @@ function Thumb({ photo, label, sub, highlighted, noPhotoText }: {
   )
 }
 
-function EditableUsd({ value, onChange, lang }: { value: number; onChange: (v: number) => void; lang: Lang }) {
-  const [raw, setRaw] = useState(String(value || ''))
-  const commit = () => { const n = parseInt(raw.replace(/\D/g, ''), 10); onChange(Number.isFinite(n) && n > 0 ? n : 0) }
-  return (
-    <span className="inline-flex items-center gap-0.5">
-      <span className="text-[13px] opacity-60">$</span>
-      <input type="text" inputMode="numeric" value={raw}
-        onChange={e => setRaw(e.target.value)} onBlur={commit}
-        onKeyDown={e => e.key === 'Enter' && (e.currentTarget.blur())}
-        className="w-[72px] rounded-md border border-[var(--color-primary)]/30 bg-white/60 px-1.5 py-0.5 text-[14px] font-semibold tabular-nums outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30"
-      />
-    </span>
-  )
-}
-
-function EditablePct({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [raw, setRaw] = useState(String(value || ''))
-  const commit = () => { const n = parseInt(raw.replace(/\D/g, ''), 10); onChange(Number.isFinite(n) && n > 0 && n <= 100 ? n : 0) }
-  return (
-    <span className="inline-flex items-center gap-0.5">
-      <input type="text" inputMode="numeric" value={raw}
-        onChange={e => setRaw(e.target.value)} onBlur={commit}
-        onKeyDown={e => e.key === 'Enter' && (e.currentTarget.blur())}
-        className="w-[48px] rounded-md border border-[var(--color-primary)]/30 bg-white/60 px-1.5 py-0.5 text-[14px] font-semibold tabular-nums text-right outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30"
-      />
-      <span className="text-[13px] opacity-60">%</span>
-    </span>
-  )
-}
-
 function MetricLabel({ children }: { children: ReactNode }) {
   return <div className="sticky left-0 z-[2] bg-white py-2.5 pl-4 md:pl-7 pr-2 text-[13px] text-[var(--color-text-muted)] leading-snug">{children}</div>
 }
@@ -357,20 +327,17 @@ function DailyTab({ villa, comps, villaAdr, villaOcc, lang }: {
   const items = comps
   if (items.length === 0) return null
 
-  const [adr, setAdr] = useState(villaAdr ?? 0)
-  const [occ, setOcc] = useState(villaOcc ?? 75)
-
-  const incomeYear = adr && occ ? Math.round(adr * 365 * (occ / 100) * 0.7) : null
-  const paybackYears = incomeYear && villa.priceUsd ? Math.round(villa.priceUsd / incomeYear) : null
+  const villaIncomeYear = villaAdr && villaOcc ? Math.round(villaAdr * 365 * (villaOcc / 100) * 0.7) : null
+  const villaPaybackYears = villaIncomeYear && villa.priceUsd ? Math.round(villa.priceUsd / villaIncomeYear) : null
 
   type Row = { label: string; villa: ReactNode; values: ReactNode[] }
   const rows: Row[] = [
-    { label: c.priceNight, villa: <EditableUsd value={adr} onChange={setAdr} lang={lang} />, values: items.map(i => <InlinePrice key={i.id} usd={i.priceUsd} lang={lang} approx={false} />) },
-    { label: c.occupancy, villa: <EditablePct value={occ} onChange={setOcc} />, values: items.map(i => i.occupancy ? `${Math.round(i.occupancy)}%` : c.na) },
+    { label: c.priceNight, villa: villaAdr ? <InlinePrice usd={villaAdr} lang={lang} approx={false} /> : c.na, values: items.map(i => <InlinePrice key={i.id} usd={i.priceUsd} lang={lang} approx={false} />) },
+    { label: c.occupancy, villa: villaOcc ? `~${villaOcc}%` : c.na, values: items.map(i => i.occupancy ? `${Math.round(i.occupancy)}%` : c.na) },
     { label: c.bedrooms, villa: villa.bedrooms != null ? (villa.bedrooms === 0 ? c.studio : String(villa.bedrooms)) : c.na, values: items.map(i => i.bedrooms != null ? (i.bedrooms === 0 ? c.studio : String(i.bedrooms)) : c.na) },
     { label: c.area, villa: villa.areaSqm ? `${villa.areaSqm} ${c.m2}` : c.na, values: items.map(i => i.areaSqm ? `${Math.round(i.areaSqm)} ${c.m2}` : c.na) },
-    { label: c.incomeYear, villa: incomeYear ? <>≈ <InlinePrice usd={incomeYear} lang={lang} approx={false} /></> : c.na, values: items.map(() => c.na) },
-    { label: c.payback, villa: paybackYears ? c.approxYears(paybackYears) : c.na, values: items.map(() => c.na) },
+    { label: c.incomeYear, villa: villaIncomeYear ? <>≈ <InlinePrice usd={villaIncomeYear} lang={lang} approx={false} /></> : c.na, values: items.map(() => c.na) },
+    { label: c.payback, villa: villaPaybackYears ? c.approxYears(villaPaybackYears) : c.na, values: items.map(() => c.na) },
   ]
 
   const cols = items.length + 1
@@ -415,17 +382,15 @@ function MonthlyTab({ villa, comps, villaMonthly, lang }: {
   const items = comps
   if (items.length === 0) return null
 
-  const [monthly, setMonthly] = useState(villaMonthly ?? 0)
-
-  const incomeYear = monthly ? Math.round(monthly * 11 * 0.9) : null
+  const villaIncomeYear = villaMonthly ? Math.round(villaMonthly * 11 * 0.9) : null
 
   type Row = { label: string; villa: ReactNode; values: ReactNode[] }
   const rows: Row[] = [
-    { label: c.priceMonth, villa: <EditableUsd value={monthly} onChange={setMonthly} lang={lang} />, values: items.map(i => <InlinePrice key={i.title} usd={i.rentMonthUsd} lang={lang} approx={false} />) },
+    { label: c.priceMonth, villa: villaMonthly ? <InlinePrice usd={villaMonthly} lang={lang} approx={false} /> : c.na, values: items.map(i => <InlinePrice key={i.title} usd={i.rentMonthUsd} lang={lang} approx={false} />) },
     { label: c.bedrooms, villa: villa.bedrooms != null ? (villa.bedrooms === 0 ? c.studio : String(villa.bedrooms)) : c.na, values: items.map(i => i.bedrooms === 0 ? c.studio : String(i.bedrooms)) },
     { label: c.pool, villa: villa.hasPool ? c.yes : villa.hasPool === false ? c.no : c.na, values: items.map(i => i.hasPool ? c.yes : i.hasPool === false ? c.no : c.na) },
     { label: c.district, villa: villa.district ?? c.na, values: items.map(i => i.district ?? c.na) },
-    { label: c.incomeYear, villa: incomeYear ? <>≈ <InlinePrice usd={incomeYear} lang={lang} approx={false} /></> : c.na, values: items.map(() => c.na) },
+    { label: c.incomeYear, villa: villaIncomeYear ? <>≈ <InlinePrice usd={villaIncomeYear} lang={lang} approx={false} /></> : c.na, values: items.map(() => c.na) },
   ]
 
   const cols = items.length + 1
@@ -462,8 +427,9 @@ function MonthlyTab({ villa, comps, villaMonthly, lang }: {
 
 type Tab = 'sale' | 'daily' | 'monthly'
 
-export function NeighborComparePopup({ data, lang, onClose, initialTab }: {
+export function NeighborComparePopup({ data, lang, onClose, initialTab, overrideAdr, overrideOcc, overrideMonthly }: {
   data: CompareData; lang: Lang; onClose: () => void; initialTab?: Tab
+  overrideAdr?: number; overrideOcc?: number; overrideMonthly?: number
 }) {
   const c = pickCopy(COPY, lang)
 
@@ -531,8 +497,8 @@ export function NeighborComparePopup({ data, lang, onClose, initialTab }: {
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 pt-5 pb-2 md:px-7">
           {tab === 'sale' && <SaleTab villa={data.villa} comps={data.sale} lang={lang} />}
-          {tab === 'daily' && <DailyTab villa={data.villa} comps={data.daily} villaAdr={data.villaAdrUsd} villaOcc={data.villaOccupancy} lang={lang} />}
-          {tab === 'monthly' && <MonthlyTab villa={data.villa} comps={data.monthly} villaMonthly={data.villaMonthlyUsd} lang={lang} />}
+          {tab === 'daily' && <DailyTab villa={data.villa} comps={data.daily} villaAdr={overrideAdr ?? data.villaAdrUsd} villaOcc={overrideOcc ?? data.villaOccupancy} lang={lang} />}
+          {tab === 'monthly' && <MonthlyTab villa={data.villa} comps={data.monthly} villaMonthly={overrideMonthly ?? data.villaMonthlyUsd} lang={lang} />}
         </div>
 
         {/* Footer */}
@@ -546,8 +512,9 @@ export function NeighborComparePopup({ data, lang, onClose, initialTab }: {
 
 // ─── Trigger button (wraps popup state) ──────────────────────────
 
-export function CompareButton({ data, lang, className, initialTab, children }: {
+export function CompareButton({ data, lang, className, initialTab, children, overrideAdr, overrideOcc, overrideMonthly }: {
   data: CompareData; lang: Lang; className?: string; initialTab?: 'sale' | 'daily' | 'monthly'; children?: ReactNode
+  overrideAdr?: number; overrideOcc?: number; overrideMonthly?: number
 }) {
   const [open, setOpen] = useState(false)
   const c = pickCopy(COPY, lang)
@@ -559,7 +526,7 @@ export function CompareButton({ data, lang, className, initialTab, children }: {
         className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--color-primary)] px-5 text-[15px] font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors ${className ?? ''}`}>
         {children ?? c.heading}
       </button>
-      {open && <NeighborComparePopup data={data} lang={lang} initialTab={initialTab} onClose={() => setOpen(false)} />}
+      {open && <NeighborComparePopup data={data} lang={lang} initialTab={initialTab} overrideAdr={overrideAdr} overrideOcc={overrideOcc} overrideMonthly={overrideMonthly} onClose={() => setOpen(false)} />}
     </>
   )
 }

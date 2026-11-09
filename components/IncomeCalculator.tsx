@@ -8,6 +8,7 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice, formatPriceExact } from '@/lib/currency'
 import { pluralRu } from '@/lib/plural-ru'
+import { CompareButton, type CompareData } from './NeighborComparePopup'
 
 const COPY = {
   ru: {
@@ -82,8 +83,7 @@ type CalcProps = {
   monthlyCompCount: number
   restricted: boolean
   lang: Lang
-  dailyCompareSlot?: ReactNode
-  monthlyCompareSlot?: ReactNode
+  compareData?: CompareData | null
 }
 
 const OCC_PRESETS = [60, 75, 90] as const
@@ -101,7 +101,7 @@ function nearestOcc(pct: number): number {
 export function IncomeCalculator({
   villa, region, dailyPresets, monthlyPresets, defaultOccupancyPct,
   dailyCompCount, monthlyCompCount, restricted, lang,
-  dailyCompareSlot, monthlyCompareSlot,
+  compareData,
 }: CalcProps) {
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
@@ -259,9 +259,13 @@ export function IncomeCalculator({
             fmtUsd={fmtUsd} dec={dec} lang={lang}
           />
 
-          {dailyCompareSlot ?? (dailyCompCount > 0 && (
+          {compareData && compareData.daily.length > 0 ? (
+            <CompareButton data={compareData} lang={lang} initialTab="daily" overrideAdr={dailyPrice} overrideOcc={occ} className="border-[#1B6E4A] text-[#1B6E4A] hover:bg-[#1B6E4A]/5">
+              {pickCopy({ ru: `Соседи, которые сдают посуточно: ${compareData.daily.length} ${pluralRu(compareData.daily.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting nightly: ${compareData.daily.length}` }, lang)}
+            </CompareButton>
+          ) : dailyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.dailyLink(dailyCompCount)}</span>
-          ))}
+          )}
         </div>
       )}
 
@@ -298,9 +302,13 @@ export function IncomeCalculator({
             </span>
           )}
 
-          {monthlyCompareSlot ?? (monthlyCompCount > 0 && (
+          {compareData && compareData.monthly.length > 0 ? (
+            <CompareButton data={compareData} lang={lang} initialTab="monthly" overrideMonthly={monthlyPrice} className="border-[#1B6E4A] text-[#1B6E4A] hover:bg-[#1B6E4A]/5">
+              {pickCopy({ ru: `Соседи, которые сдают помесячно: ${compareData.monthly.length} ${pluralRu(compareData.monthly.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting monthly: ${compareData.monthly.length}` }, lang)}
+            </CompareButton>
+          ) : monthlyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.monthlyLink(monthlyCompCount)}</span>
-          ))}
+          )}
         </div>
       )}
     </section>
