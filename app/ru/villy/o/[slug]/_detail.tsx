@@ -1507,12 +1507,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
         </section>
 
-        {landPrices && land != null && land > 0 && priceNum != null && priceNum > 0 && (
-          <section className="scroll-mt-24">
-            <LandPriceBlock data={landPrices} landM2={land} priceUsd={priceNum} lang={lang} />
-          </section>
-        )}
-
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <section className="flex flex-col gap-4 scroll-mt-24">
             <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
@@ -1616,6 +1610,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             beach={beach && beachPick ? { name: (lang === 'ru' ? beach.name_ru : beach.name_en) ?? beach.name_ru ?? '', rating: beachPick.google?.rating ?? null, reviews: beachPick.google?.reviews ?? null, km: beachPick.km } : null}
             lang={lang}
           />
+        )}
+        {landPrices && land != null && land > 0 && priceNum != null && priceNum > 0 && (
+          <section className="scroll-mt-24">
+            <LandPriceBlock data={landPrices} landM2={land} priceUsd={priceNum} lang={lang} />
+          </section>
         )}
         {(beach || geoFacts?.climate) && (
           <BeachWeatherDesign
