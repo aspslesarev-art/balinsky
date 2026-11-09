@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 import { computeEconomics } from '@/lib/investment/economics'
 import { computeMonthlyEconomics, AGENT_FEE_PCT, MONTHS_RENTED } from '@/lib/investment/monthly'
 import type { RegionDefaults } from '@/lib/investment/regions'
@@ -82,6 +82,8 @@ type CalcProps = {
   monthlyCompCount: number
   restricted: boolean
   lang: Lang
+  dailyCompareSlot?: ReactNode
+  monthlyCompareSlot?: ReactNode
 }
 
 const OCC_PRESETS = [60, 75, 90] as const
@@ -99,6 +101,7 @@ function nearestOcc(pct: number): number {
 export function IncomeCalculator({
   villa, region, dailyPresets, monthlyPresets, defaultOccupancyPct,
   dailyCompCount, monthlyCompCount, restricted, lang,
+  dailyCompareSlot, monthlyCompareSlot,
 }: CalcProps) {
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
@@ -256,9 +259,9 @@ export function IncomeCalculator({
             fmtUsd={fmtUsd} dec={dec} lang={lang}
           />
 
-          {dailyCompCount > 0 && (
+          {dailyCompareSlot ?? (dailyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.dailyLink(dailyCompCount)}</span>
-          )}
+          ))}
         </div>
       )}
 
@@ -295,9 +298,9 @@ export function IncomeCalculator({
             </span>
           )}
 
-          {monthlyCompCount > 0 && (
+          {monthlyCompareSlot ?? (monthlyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.monthlyLink(monthlyCompCount)}</span>
-          )}
+          ))}
         </div>
       )}
     </section>

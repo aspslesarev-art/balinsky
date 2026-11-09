@@ -427,8 +427,8 @@ function MonthlyTab({ villa, comps, villaMonthly, lang }: {
 
 type Tab = 'sale' | 'daily' | 'monthly'
 
-export function NeighborComparePopup({ data, lang, onClose }: {
-  data: CompareData; lang: Lang; onClose: () => void
+export function NeighborComparePopup({ data, lang, onClose, initialTab }: {
+  data: CompareData; lang: Lang; onClose: () => void; initialTab?: Tab
 }) {
   const c = pickCopy(COPY, lang)
 
@@ -437,7 +437,8 @@ export function NeighborComparePopup({ data, lang, onClose }: {
   if (data.daily.length > 0) available.push({ key: 'daily', label: c.tabDaily, count: data.daily.length })
   if (data.monthly.length > 0) available.push({ key: 'monthly', label: c.tabMonthly, count: data.monthly.length })
 
-  const [tab, setTab] = useState<Tab>(available[0]?.key ?? 'sale')
+  const startTab = initialTab && available.some(t => t.key === initialTab) ? initialTab : available[0]?.key ?? 'sale'
+  const [tab, setTab] = useState<Tab>(startTab)
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -510,8 +511,8 @@ export function NeighborComparePopup({ data, lang, onClose }: {
 
 // ─── Trigger button (wraps popup state) ──────────────────────────
 
-export function CompareButton({ data, lang, className }: {
-  data: CompareData; lang: Lang; className?: string
+export function CompareButton({ data, lang, className, initialTab, children }: {
+  data: CompareData; lang: Lang; className?: string; initialTab?: 'sale' | 'daily' | 'monthly'; children?: ReactNode
 }) {
   const [open, setOpen] = useState(false)
   const c = pickCopy(COPY, lang)
@@ -521,9 +522,9 @@ export function CompareButton({ data, lang, className }: {
     <>
       <button type="button" onClick={() => setOpen(true)}
         className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--color-primary)] px-5 text-[15px] font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors ${className ?? ''}`}>
-        {c.heading}
+        {children ?? c.heading}
       </button>
-      {open && <NeighborComparePopup data={data} lang={lang} onClose={() => setOpen(false)} />}
+      {open && <NeighborComparePopup data={data} lang={lang} initialTab={initialTab} onClose={() => setOpen(false)} />}
     </>
   )
 }
