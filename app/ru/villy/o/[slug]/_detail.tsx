@@ -1600,7 +1600,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               )}
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {saleComps.n > 0 && (
+              {saleComps.n > 0 && !compareData && (
                 <a href="#arenda" className="text-[15px] text-[var(--color-primary)]">
                   {pickCopy({
                     ru: `С чем сравнивали: ${saleComps.n} ${pluralRu(saleComps.n, ['вилла', 'виллы', 'вилл'])} на продаже рядом`,
