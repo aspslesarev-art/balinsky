@@ -40,6 +40,8 @@ export type SaleComp = {
   url: string
   photo: string | null
   district: string | null
+  lat: number
+  lng: number
   distanceKm: number
   /** Цена за м²; для лизхолда со сроком — ещё и за м² на год. */
   ppm: number | null
@@ -153,7 +155,7 @@ export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle 
       bedrooms: c.bedrooms, priceUsd: c.priceUsd, buildingM2: c.buildingM2, landM2: c.landM2,
       leasehold: c.leaseYears != null ? true : null, leaseYears: c.leaseYears, posted: null,
       url: c.url, photo: c.photo, district: c.district, name: c.name, catalog: true,
-      distanceKm: km(i.lat, i.lng, c.lat, c.lng),
+      lat: c.lat, lng: c.lng, distanceKm: km(i.lat, i.lng, c.lat, c.lng),
       ppm, ppmYear: ppm != null && c.leaseYears ? ppm / c.leaseYears : null,
     }
   }).filter(c => c.distanceKm <= RADII_KM[RADII_KM.length - 1])
@@ -172,7 +174,7 @@ export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle 
       leasehold: tenure == null ? null : tenure === 1,
       leaseYears, posted, url: url.startsWith('http') ? url : idx.urlBase + url,
       photo: photo ? (photo.startsWith('http') ? photo : idx.photoBase + photo) : null,
-      district, distanceKm: km(i.lat, i.lng, lat, lng),
+      district, lat, lng, distanceKm: km(i.lat, i.lng, lat, lng),
       ppm, ppmYear: ppm != null && leaseYears ? ppm / leaseYears : null,
     }
   })

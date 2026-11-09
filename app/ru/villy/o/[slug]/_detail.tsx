@@ -1504,7 +1504,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     const saleCItems: CompareSaleItem[] = (saleComps?.comps ?? []).map(sc => ({
       name: sc.name ?? sc.district, photo: sc.photo, bedrooms: sc.bedrooms,
       buildingM2: sc.buildingM2, landM2: sc.landM2, priceUsd: sc.priceUsd,
-      leaseYears: sc.leaseYears, distanceKm: sc.distanceKm, url: sc.url,
+      leaseYears: sc.leaseYears, lat: sc.lat, lng: sc.lng, distanceKm: sc.distanceKm, url: sc.url,
       source: sc.catalog ? 'Balinsky' : saleSource(sc.url), catalog: sc.catalog,
     }))
     const dailyCItems: CompareDailyItem[] = [

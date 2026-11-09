@@ -30,6 +30,8 @@ export type CompareSaleItem = {
   landM2: number | null
   priceUsd: number
   leaseYears: number | null
+  lat: number
+  lng: number
   distanceKm: number
   url: string
   source: string
@@ -185,15 +187,13 @@ function Thumb({ photo, label, sub, highlighted, noPhotoText }: {
 }
 
 function MetricLabel({ children }: { children: ReactNode }) {
-  return <div className="py-2.5 pr-2 text-[13px] text-[var(--color-text-muted)] leading-snug">{children}</div>
+  return <div className="sticky left-0 z-[2] bg-white py-2.5 pr-2 text-[13px] text-[var(--color-text-muted)] leading-snug">{children}</div>
 }
 
 function CellVal({ children, highlighted }: { children: ReactNode; highlighted?: boolean }) {
-  return (
-    <div className={`py-2.5 px-3 text-[14px] leading-snug ${highlighted ? 'font-semibold bg-[var(--color-primary-soft)]' : ''}`}>
-      {children}
-    </div>
-  )
+  const base = 'py-2.5 px-3 text-[14px] leading-snug'
+  if (highlighted) return <div className={`${base} sticky left-[96px] z-[1] font-semibold bg-[var(--color-primary-soft)]`}>{children}</div>
+  return <div className={base}>{children}</div>
 }
 
 function MiniMap({ pins, radius, district, lang }: {
@@ -291,13 +291,16 @@ function SaleTab({ villa, comps, lang }: { villa: CompareVilla; comps: CompareSa
   ]
 
   const cols = items.length + 1
+  const pins: { lat: number; lng: number; label: string; main?: boolean }[] = []
+  if (villa.lat != null && villa.lng != null) pins.push({ lat: villa.lat, lng: villa.lng, label: c.thisVilla, main: true })
+  items.forEach(i => { if (i.lat && i.lng) pins.push({ lat: i.lat, lng: i.lng, label: i.name ?? `${i.buildingM2 ?? '?'} ${c.m2}` }) })
 
   return (
     <div className="flex flex-col">
       <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
         <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
-          <div />
-          <div className="px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
+          <div className="sticky left-0 z-[2] bg-white" />
+          <div className="sticky left-[96px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
             <div key={i} className="px-1 pb-3">
               <Thumb photo={item.photo} label={item.name ?? `${item.buildingM2 ?? '?'} ${c.m2}`} sub={`${dec(item.distanceKm, lang)} ${c.km} · ${item.catalog ? 'Balinsky' : item.source}`} noPhotoText={c.noPhoto} />
@@ -312,6 +315,7 @@ function SaleTab({ villa, comps, lang }: { villa: CompareVilla; comps: CompareSa
           ))}
         </div>
       </div>
+      {pins.length > 1 && <MiniMap pins={pins} radius={Math.max(...items.filter(i => i.lat && i.lng).map(i => i.distanceKm), 1)} district={villa.district} lang={lang} />}
     </div>
   )
 }
@@ -345,8 +349,8 @@ function DailyTab({ villa, comps, villaAdr, villaOcc, lang }: {
     <div className="flex flex-col">
       <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
         <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
-          <div />
-          <div className="px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
+          <div className="sticky left-0 z-[2] bg-white" />
+          <div className="sticky left-[96px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
             <div key={i} className="px-1 pb-3">
               <Thumb
@@ -398,8 +402,8 @@ function MonthlyTab({ villa, comps, villaMonthly, lang }: {
     <div className="flex flex-col">
       <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
         <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
-          <div />
-          <div className="px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
+          <div className="sticky left-0 z-[2] bg-white" />
+          <div className="sticky left-[96px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
             <div key={i} className="px-1 pb-3">
               <Thumb photo={item.photo} label={item.title.length > 20 ? item.title.slice(0, 18) + '…' : item.title} sub={item.district ?? ''} noPhotoText={c.noPhoto} />
