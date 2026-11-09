@@ -16,7 +16,7 @@
 import { DatabaseSync } from 'node:sqlite'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { CURRENCY_RATES } from '../lib/currency'
 
 const DRY = process.argv.includes('--dry')
@@ -120,6 +120,77 @@ for (const r of rows) {
   ])
 }
 
+// ── BHI (bali-home-immo.com) ──
+const bhiPath = join(__dirname, '../data/bhi_villas.json')
+let fromBhi = 0
+if (existsSync(bhiPath)) {
+  type BhiItem = {
+    id: string; type: string; tenure: string; area: string; lat: number | null; lng: number | null
+    land_sqm: number | null; building_sqm: number | null; bedrooms: number | null; bathrooms: number | null
+    lease_years: number | null; price_usd: number | null; total_price_idr: number | null
+    slug: string; name: string; created_at: string
+  }
+  const bhi: BhiItem[] = JSON.parse(readFileSync(bhiPath, 'utf8'))
+  for (const b of bhi) {
+    if (b.type !== 'villa' || !b.lat || !b.lng || !b.bedrooms) continue
+    const usd = b.price_usd ?? (b.total_price_idr ? Math.round(b.total_price_idr / IDR_PER_USD) : null)
+    if (!usd || usd < 20000 || usd > 20e6) continue
+    const m2 = b.building_sqm && b.building_sqm >= 25 && b.building_sqm <= 2000 ? Math.round(b.building_sqm) : null
+    const inBali = b.lat > -8.95 && b.lat < -8.05 && b.lng > 114.4 && b.lng < 115.75
+    if (!inBali) continue
+    const ppm = m2 ? usd / m2 : null
+    if (ppm != null && (ppm < 300 || ppm > 15000)) continue
+    const key = `${b.area}|${b.bedrooms}|${m2}|${Math.round(usd / 1000)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const ten: 0 | 1 | null = b.tenure === 'leasehold' ? 1 : b.tenure === 'freehold' ? 0 : null
+    const url = `https://bali-home-immo.com/realestate-property/for-sale/villa/${b.tenure}/${(b.area || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}/${b.slug}`
+    items.push([
+      Number(Number(b.lat).toFixed(5)), Number(Number(b.lng).toFixed(5)),
+      b.bedrooms, usd, m2,
+      b.land_sqm && b.land_sqm > 20 ? Math.round(b.land_sqm) : null,
+      ten, b.lease_years, b.created_at?.slice(0, 10) ?? null,
+      url, null, b.area,
+    ])
+    fromBhi++
+  }
+  console.log(`BHI: ${fromBhi} вилл добавлено`)
+}
+
+// ── Propertia ──
+const propPath = join(__dirname, '../data/propertia_villas.json')
+let fromProp = 0
+if (existsSync(propPath)) {
+  type PropItem = {
+    property_id: string; lat: number; lng: number; bedrooms: number; bathrooms: number | null
+    building_m2: number | null; land_are: number | null; lease_years: number | null
+    price_idr: number; url: string; district: string; title: string
+  }
+  const prop: PropItem[] = JSON.parse(readFileSync(propPath, 'utf8'))
+  for (const p of prop) {
+    if (!p.lat || !p.lng || !p.bedrooms) continue
+    const usd = Math.round(p.price_idr / IDR_PER_USD)
+    if (usd < 20000 || usd > 20e6) continue
+    const m2 = p.building_m2 && p.building_m2 >= 25 && p.building_m2 <= 2000 ? Math.round(p.building_m2) : null
+    const inBali = p.lat > -8.95 && p.lat < -8.05 && p.lng > 114.4 && p.lng < 115.75
+    if (!inBali) continue
+    const ppm = m2 ? usd / m2 : null
+    if (ppm != null && (ppm < 300 || ppm > 15000)) continue
+    const key = `${p.district}|${p.bedrooms}|${m2}|${Math.round(usd / 1000)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    items.push([
+      Number(p.lat.toFixed(5)), Number(p.lng.toFixed(5)),
+      p.bedrooms, usd, m2,
+      p.land_are ? Math.round(Number(p.land_are) * 100) : null,
+      1, p.lease_years, null,
+      p.url, null, p.district,
+    ])
+    fromProp++
+  }
+  console.log(`Propertia: ${fromProp} вилл добавлено`)
+}
+
 const TILE = 0.05
 const tileKey = (lat: number, lng: number) => `${Math.floor(lat / TILE)}_${Math.floor(lng / TILE)}`
 const tiles = new Map<string, typeof items>()
@@ -132,7 +203,7 @@ const asOf = items.reduce((mx, i) => (typeof i[8] === 'string' && i[8] > mx ? i[
 const index = {
   generatedAt: new Date().toISOString(),
   asOf: asOf || null,
-  source: 'rumah123.com',
+  source: 'rumah123.com + bali-home-immo.com + propertia.com',
   idrPerUsd: IDR_PER_USD,
   urlBase: 'https://www.rumah123.com',
   photoBase: 'https://picture.rumah123.com/r123-images/',

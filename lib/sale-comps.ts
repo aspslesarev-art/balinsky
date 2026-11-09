@@ -170,8 +170,8 @@ export async function saleCompsNear(i: SaleCompsInput): Promise<SaleCompsBundle 
     return {
       bedrooms, priceUsd, buildingM2, landM2,
       leasehold: tenure == null ? null : tenure === 1,
-      leaseYears, posted, url: idx.urlBase + url,
-      photo: photo ? idx.photoBase + photo : null,
+      leaseYears, posted, url: url.startsWith('http') ? url : idx.urlBase + url,
+      photo: photo ? (photo.startsWith('http') ? photo : idx.photoBase + photo) : null,
       district, distanceKm: km(i.lat, i.lng, lat, lng),
       ppm, ppmYear: ppm != null && leaseYears ? ppm / leaseYears : null,
     }
