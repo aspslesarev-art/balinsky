@@ -98,6 +98,7 @@ import { districtRu } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
+import { CompareButton, type CompareData, type CompareSaleItem, type CompareDailyItem, type CompareMonthlyItem } from '@/components/NeighborComparePopup'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { curatePhotos } from '@/lib/listing-photos'
@@ -1496,6 +1497,53 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     ? Math.round(saleComps.q.p75 / saleComps.self * priceNum) : null
   const isRu = lang === 'ru' || lang === 'uk'
 
+  const compareData: CompareData | null = (() => {
+    const saleCItems: CompareSaleItem[] = (saleComps?.comps ?? []).slice(0, 4).map(sc => ({
+      name: sc.name ?? sc.district, photo: sc.photo, bedrooms: sc.bedrooms,
+      buildingM2: sc.buildingM2, landM2: sc.landM2, priceUsd: sc.priceUsd,
+      leaseYears: sc.leaseYears, distanceKm: sc.distanceKm, url: sc.url,
+      source: sc.catalog ? 'Balinsky' : 'rumah123', catalog: sc.catalog,
+    }))
+    const dailyCItems: CompareDailyItem[] = [
+      ...(verdictSnap?.competitors ?? []).slice(0, 8).map(comp => ({
+        id: comp.id, name: comp.complex ?? comp.name, photo: comp.facts?.roomPhoto ?? comp.photo,
+        priceUsd: comp.adr, bedrooms: comp.bedrooms, areaSqm: comp.facts?.roomArea ?? null,
+        occupancy: comp.facts?.roomOcc ?? comp.facts?.occ ?? null,
+        rating: comp.facts?.score ?? comp.rating ?? null, reviews: comp.facts?.reviewCount ?? comp.reviews ?? null,
+        distanceKm: comp.distanceKm, url: comp.url, source: 'booking' as const, lat: comp.lat, lng: comp.lng,
+      })),
+      ...airbnbComps.slice(0, 4).map(comp => ({
+        id: comp.id, name: comp.name, photo: comp.photo,
+        priceUsd: comp.priceUsd, bedrooms: comp.bedrooms, areaSqm: null,
+        occupancy: null, rating: comp.rating, reviews: comp.reviews,
+        distanceKm: comp.distanceKm, url: comp.url, source: 'airbnb' as const,
+        lat: 0, lng: 0,
+      })),
+    ].sort((a, b) => b.priceUsd - a.priceUsd).slice(0, 4)
+    const monthlyCItems: CompareMonthlyItem[] = (monthly?.comps ?? []).slice(0, 4).map(mc => ({
+      title: mc.title, photo: mc.photo, bedrooms: mc.bedrooms,
+      rentMonthUsd: mc.rentMonthUsd, buildingM2: mc.buildingM2,
+      district: mc.district, distanceKm: mc.distanceKm,
+      url: mc.url, lat: mc.lat ?? null, lng: mc.lng ?? null,
+    }))
+    const total = saleCItems.length + dailyCItems.length + monthlyCItems.length
+    if (total === 0) return null
+    return {
+      villa: {
+        title, photo: photos[0] ?? null, bedrooms, areaSqm: area, landSqm: land,
+        priceUsd: priceNum, leaseYears, district, lat, lng,
+        hasPool: verdictSnap?.villa.hasPool ?? null,
+      },
+      sale: saleCItems,
+      daily: dailyCItems,
+      monthly: monthlyCItems,
+      villaAdrUsd: verdictSnap?.scenarios?.median.adrAsking ?? null,
+      villaOccupancy: verdictSnap?.marketOccupancy ? Math.round(verdictSnap.marketOccupancy.occupancy * 100) : null,
+      villaMonthlyUsd: monthly?.p50 ?? null,
+      searchRadiusKm: verdictSnap?.searchRadiusKm ?? saleComps?.radiusKm ?? 2,
+    }
+  })()
+
   const analytics = (
     <>
         <ProPendingNote lang={lang} />
@@ -1551,22 +1599,25 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                 </div>
               )}
             </div>
-            {saleComps.n > 0 && (
-              <a href="#arenda" className="text-[15px] text-[var(--color-primary)]">
-                {pickCopy({
-                  ru: `С чем сравнивали: ${saleComps.n} ${pluralRu(saleComps.n, ['вилла', 'виллы', 'вилл'])} на продаже рядом`,
-                  en: `Compared with ${saleComps.n} villa${saleComps.n > 1 ? 's' : ''} for sale nearby`,
-                  id: `Dibandingkan dengan ${saleComps.n} villa dijual di sekitar`,
-                  fr: `Comparé à ${saleComps.n} villa${saleComps.n > 1 ? 's' : ''} en vente`,
-                  de: `Verglichen mit ${saleComps.n} Villa${saleComps.n > 1 ? 's' : ''} zum Verkauf`,
-                  zh: `与附近${saleComps.n}套在售别墅比较`,
-                  nl: `Vergeleken met ${saleComps.n} villa's te koop`,
-                  ban: `Kabandingang sareng ${saleComps.n} villa`,
-                  pl: `Porównanie z ${saleComps.n} willami na sprzedaż`,
-                  uk: `Порівняння з ${saleComps.n} ${pluralRu(saleComps.n, ['віллою', 'віллами', 'віллами'])} на продажу`,
-                }, lang)}
-              </a>
-            )}
+            <div className="flex flex-wrap items-center gap-3">
+              {saleComps.n > 0 && (
+                <a href="#arenda" className="text-[15px] text-[var(--color-primary)]">
+                  {pickCopy({
+                    ru: `С чем сравнивали: ${saleComps.n} ${pluralRu(saleComps.n, ['вилла', 'виллы', 'вилл'])} на продаже рядом`,
+                    en: `Compared with ${saleComps.n} villa${saleComps.n > 1 ? 's' : ''} for sale nearby`,
+                    id: `Dibandingkan dengan ${saleComps.n} villa dijual di sekitar`,
+                    fr: `Comparé à ${saleComps.n} villa${saleComps.n > 1 ? 's' : ''} en vente`,
+                    de: `Verglichen mit ${saleComps.n} Villa${saleComps.n > 1 ? 's' : ''} zum Verkauf`,
+                    zh: `与附近${saleComps.n}套在售别墅比较`,
+                    nl: `Vergeleken met ${saleComps.n} villa's te koop`,
+                    ban: `Kabandingang sareng ${saleComps.n} villa`,
+                    pl: `Porównanie z ${saleComps.n} willami na sprzedaż`,
+                    uk: `Порівняння з ${saleComps.n} ${pluralRu(saleComps.n, ['віллою', 'віллами', 'віллами'])} на продажу`,
+                  }, lang)}
+                </a>
+              )}
+              {compareData && <CompareButton data={compareData} lang={lang} />}
+            </div>
           </section>
         )}
 
