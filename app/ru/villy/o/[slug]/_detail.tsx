@@ -51,6 +51,8 @@ const LandProfileBlock = dynamic(
   () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
 )
 import { saleCompsNear, type CatalogSale } from '@/lib/sale-comps'
+import { landPricesNear } from '@/lib/land-prices'
+import { LandPriceBlock } from '@/components/LandPriceBlock'
 import { loadAll as loadVillaCatalog } from '@/app/ru/villy/_lib'
 import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
@@ -1219,7 +1221,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
   const leaseYears = lease && /^\d+(\.\d+)?$/.test(lease.trim()) ? Number(lease.trim()) : null
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, demand, saleComps, verdictSnap, complexFacts, airbnbComps] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, demand, saleComps, verdictSnap, complexFacts, airbnbComps, landPrices] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(lang),
@@ -1239,6 +1241,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     loadVerdictSnapshot(v.airtable_id),
     loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
     loadAirbnbNearby(lat, lng, bedrooms),
+    lat != null && lng != null ? landPricesNear(lat, lng).catch(() => null) : null,
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
   // зонирования. Переводы пока генерятся только для ЖК, поэтому на
@@ -1503,6 +1506,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
         </section>
+
+        {landPrices && (
+          <section className="scroll-mt-24">
+            <LandPriceBlock data={landPrices} landM2={land} priceUsd={priceNum} lang={lang} />
+          </section>
+        )}
 
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <section className="flex flex-col gap-4 scroll-mt-24">
