@@ -128,7 +128,7 @@ if (existsSync(bhiPath)) {
     id: string; type: string; tenure: string; area: string; lat: number | null; lng: number | null
     land_sqm: number | null; building_sqm: number | null; bedrooms: number | null; bathrooms: number | null
     lease_years: number | null; price_usd: number | null; total_price_idr: number | null
-    slug: string; name: string; created_at: string
+    slug: string; name: string; created_at: string; photo?: string | null
   }
   const bhi: BhiItem[] = JSON.parse(readFileSync(bhiPath, 'utf8'))
   for (const b of bhi) {
@@ -150,7 +150,7 @@ if (existsSync(bhiPath)) {
       b.bedrooms, usd, m2,
       b.land_sqm && b.land_sqm > 20 ? Math.round(b.land_sqm) : null,
       ten, b.lease_years, b.created_at?.slice(0, 10) ?? null,
-      url, null, b.area,
+      url, b.photo ?? null, b.area,
     ])
     fromBhi++
   }
@@ -164,7 +164,7 @@ if (existsSync(propPath)) {
   type PropItem = {
     property_id: string; lat: number; lng: number; bedrooms: number; bathrooms: number | null
     building_m2: number | null; land_are: number | null; lease_years: number | null
-    price_idr: number; url: string; district: string; title: string
+    price_idr: number; url: string; district: string; title: string; photo?: string | null
   }
   const prop: PropItem[] = JSON.parse(readFileSync(propPath, 'utf8'))
   for (const p of prop) {
@@ -184,7 +184,7 @@ if (existsSync(propPath)) {
       p.bedrooms, usd, m2,
       p.land_are ? Math.round(Number(p.land_are) * 100) : null,
       1, p.lease_years, null,
-      p.url, null, p.district,
+      p.url, p.photo ?? null, p.district,
     ])
     fromProp++
   }
@@ -199,7 +199,7 @@ if (existsSync(newPath)) {
     id: string; type: string; tenure: string; area: string; lat: number | null; lng: number | null
     land_sqm: number | null; building_sqm: number | null; bedrooms: number | null; bathrooms: number | null
     lease_years: number | null; price_usd: number | null; total_price_idr: number | null
-    url: string; name: string; created_at: string; source: string
+    url: string; name: string; created_at: string; source: string; photo?: string | null
   }
   const newItems: NewItem[] = JSON.parse(readFileSync(newPath, 'utf8'))
   for (const n of newItems) {
@@ -220,7 +220,7 @@ if (existsSync(newPath)) {
       n.bedrooms, usd, m2,
       n.land_sqm && n.land_sqm > 20 ? Math.round(n.land_sqm) : null,
       ten, n.lease_years, n.created_at?.slice(0, 10) ?? null,
-      n.url, null, n.area,
+      n.url, n.photo ?? null, n.area,
     ])
     fromNew++
   }
