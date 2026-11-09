@@ -187,12 +187,12 @@ function Thumb({ photo, label, sub, highlighted, noPhotoText }: {
 }
 
 function MetricLabel({ children }: { children: ReactNode }) {
-  return <div className="sticky left-0 z-[2] bg-white py-2.5 pr-2 text-[13px] text-[var(--color-text-muted)] leading-snug">{children}</div>
+  return <div className="sticky left-0 z-[2] bg-white py-2.5 pl-4 md:pl-7 pr-2 text-[13px] text-[var(--color-text-muted)] leading-snug">{children}</div>
 }
 
 function CellVal({ children, highlighted }: { children: ReactNode; highlighted?: boolean }) {
   const base = 'py-2.5 px-3 text-[14px] leading-snug'
-  if (highlighted) return <div className={`${base} sticky left-[96px] z-[1] font-semibold bg-[var(--color-primary-soft)]`}>{children}</div>
+  if (highlighted) return <div className={`${base} sticky left-[124px] z-[1] font-semibold bg-[var(--color-primary-soft)]`}>{children}</div>
   return <div className={base}>{children}</div>
 }
 
@@ -297,10 +297,10 @@ function SaleTab({ villa, comps, lang }: { villa: CompareVilla; comps: CompareSa
 
   return (
     <div className="flex flex-col">
-      <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
-        <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
-          <div className="sticky left-0 z-[2] bg-white" />
-          <div className="sticky left-[96px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
+      <div className="overflow-x-auto -mx-4 md:-mx-7 pr-4 md:pr-7">
+        <div style={{ display: 'grid', gridTemplateColumns: `124px repeat(${cols}, ${COL_W}px)` }}>
+          <div className="sticky left-0 z-[2] bg-white pl-4 md:pl-7" />
+          <div className="sticky left-[124px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
             <div key={i} className="px-1 pb-3">
               <Thumb photo={item.photo} label={item.name ?? `${item.buildingM2 ?? '?'} ${c.m2}`} sub={`${dec(item.distanceKm, lang)} ${c.km} · ${item.catalog ? 'Balinsky' : item.source}`} noPhotoText={c.noPhoto} />
@@ -347,10 +347,10 @@ function DailyTab({ villa, comps, villaAdr, villaOcc, lang }: {
 
   return (
     <div className="flex flex-col">
-      <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
-        <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
-          <div className="sticky left-0 z-[2] bg-white" />
-          <div className="sticky left-[96px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
+      <div className="overflow-x-auto -mx-4 md:-mx-7 pr-4 md:pr-7">
+        <div style={{ display: 'grid', gridTemplateColumns: `124px repeat(${cols}, ${COL_W}px)` }}>
+          <div className="sticky left-0 z-[2] bg-white pl-4 md:pl-7" />
+          <div className="sticky left-[124px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
             <div key={i} className="px-1 pb-3">
               <Thumb
@@ -400,10 +400,10 @@ function MonthlyTab({ villa, comps, villaMonthly, lang }: {
 
   return (
     <div className="flex flex-col">
-      <div className="overflow-x-auto -mx-4 md:-mx-7 px-4 md:px-7">
-        <div style={{ display: 'grid', gridTemplateColumns: `96px repeat(${cols}, ${COL_W}px)` }}>
-          <div className="sticky left-0 z-[2] bg-white" />
-          <div className="sticky left-[96px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
+      <div className="overflow-x-auto -mx-4 md:-mx-7 pr-4 md:pr-7">
+        <div style={{ display: 'grid', gridTemplateColumns: `124px repeat(${cols}, ${COL_W}px)` }}>
+          <div className="sticky left-0 z-[2] bg-white pl-4 md:pl-7" />
+          <div className="sticky left-[124px] z-[1] bg-white px-1 pb-3"><Thumb photo={villa.photo} label={c.thisVilla} sub={villa.title} highlighted noPhotoText={c.noPhoto} /></div>
           {items.map((item, i) => (
             <div key={i} className="px-1 pb-3">
               <Thumb photo={item.photo} label={item.title.length > 20 ? item.title.slice(0, 18) + '…' : item.title} sub={item.district ?? ''} noPhotoText={c.noPhoto} />
