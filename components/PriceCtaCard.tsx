@@ -214,7 +214,13 @@ export function PriceCtaCard({
       )}
       {sidebar && priceCompDiffPct != null && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[14px] font-semibold">{pickCopy({ ru: 'Цена обычная для района', en: 'Normal price for the area', id: 'Harga normal untuk area ini', fr: 'Prix normal pour le quartier', de: 'Normaler Preis für die Gegend', zh: '区域正常价格', nl: 'Normale prijs voor dit gebied', ban: 'Aji biasa ring daerah niki', pl: 'Normalna cena w okolicy', uk: 'Звичайна ціна для району' }, lang)}</span>
+          <span className="text-[14px] font-semibold">{pickCopy(
+            Math.abs(priceCompDiffPct) < 15
+              ? { ru: 'Цена обычная для района', en: 'Normal price for the area', id: 'Harga normal untuk area ini', fr: 'Prix normal pour le quartier', de: 'Normaler Preis für die Gegend', zh: '区域正常价格', nl: 'Normale prijs voor dit gebied', ban: 'Aji biasa ring daerah niki', pl: 'Normalna cena w okolicy', uk: 'Звичайна ціна для району' }
+              : priceCompDiffPct < 0
+                ? { ru: 'Цена ниже рынка', en: 'Below market price', id: 'Harga di bawah pasar', fr: 'Prix inférieur au marché', de: 'Unter Marktpreis', zh: '低于市场价格', nl: 'Onder marktprijs', ban: 'Aji ring bawah pasar', pl: 'Cena poniżej rynku', uk: 'Ціна нижча ринку' }
+                : { ru: 'Цена выше рынка', en: 'Above market price', id: 'Harga di atas pasar', fr: 'Prix supérieur au marché', de: 'Über Marktpreis', zh: '高于市场价格', nl: 'Boven marktprijs', ban: 'Aji ring duur pasar', pl: 'Cena powyżej rynku', uk: 'Ціна вища ринку' },
+            lang)}</span>
           <div className="relative h-[10px] rounded-[5px]" style={{ background: 'linear-gradient(90deg, #CFE8D9 0% 33.3%, #F6E2BF 33.3% 66.6%, #F4D3CE 66.6% 100%)' }} aria-hidden="true">
             <div className="absolute top-[-5px] w-5 h-5 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + priceCompDiffPct * 1.5))}%`, marginLeft: '-10px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
           </div>
