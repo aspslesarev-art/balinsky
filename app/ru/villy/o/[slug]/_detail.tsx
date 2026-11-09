@@ -1507,7 +1507,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
         </section>
 
-        {landPrices && (
+        {landPrices && land != null && land > 0 && priceNum != null && priceNum > 0 && (
           <section className="scroll-mt-24">
             <LandPriceBlock data={landPrices} landM2={land} priceUsd={priceNum} lang={lang} />
           </section>
