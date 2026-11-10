@@ -108,9 +108,10 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             </button>
           )}
           {planCount > 0 && (
-            <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={`${tile} bg-[#EEF6F1]`} aria-label={c.plans}>
-              {plans[0] && <Image src={plans[0]} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover opacity-40" />}
-              <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 text-[#1B6E4A] text-[12px] font-semibold">
+            <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={tile} aria-label={c.plans}>
+              {plans[0] && <Image src={plans[0]} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover" />}
+              {/* Как «+7 фото»: тёмная плашка и белый текст — светлая была почти не видна. */}
+              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.62)] text-white text-[14px] font-semibold">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>
                 {c.plans}
               </span>
