@@ -14,7 +14,7 @@
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;font-family:var(--font);color:var(--ink)}
-  body{background:radial-gradient(ellipse at 50% 35%,#ffffff 0%,#f6f3f8 55%,#e9eef6 100%)}
+  body{background:radial-gradient(ellipse at 50% 35%,#ffffff 0%,#eef6f0 55%,#dcebe1 100%)}
   /* До первого клика жесты уходят странице: touch-action не блокируем,
      колесо не перехватываем. После клика модель забирает управление. */
   /* touch-action:pan-y держим всегда: вертикальный свайп остаётся за
@@ -125,8 +125,8 @@ renderer.setClearColor(0x000000, 0);   // фон — CSS-градиент неб
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0xe6ece0, 0.42));
-const sun = new THREE.DirectionalLight(0xfff6ea, 0.74);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xcfdcc0, 0.5));
+const sun = new THREE.DirectionalLight(0xfff1d6, 0.85);
 sun.position.set(10, 20, 9);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048,2048);
@@ -137,7 +137,7 @@ scene.add(sun);
 
 // ---- тун: три ступени освещённости ----
 const toonRamp = (()=>{
-  const v=[140,205,248], d=new Uint8Array(v.length*4);
+  const v=[120,190,235], d=new Uint8Array(v.length*4);
   v.forEach((x,i)=>{d.set([x,x,x,255],i*4);});
   const t=new THREE.DataTexture(d,v.length,1,THREE.RGBAFormat);
   t.minFilter=t.magFilter=THREE.NearestFilter; t.generateMipmaps=false; t.needsUpdate=true;
@@ -155,48 +155,48 @@ function tex(draw, size=256){
 }
 const T = {
   planks: tex((x,s)=>{                       // светлый дуб, доски вразбежку
-    x.fillStyle='#ecc89c'; x.fillRect(0,0,s,s);
+    x.fillStyle='#e2b47c'; x.fillRect(0,0,s,s);
     const n=6, h=s/n;
     for(let i=0;i<n;i++){
-      x.fillStyle=['#eac396','#f1cfa6','#e6bd8e','#efcaa0','#e9c193','#f3d3ac'][i];
+      x.fillStyle=['#dcaa70','#e8bd88','#d9a56a','#e4b67e','#dfae74','#e9c08c'][i];
       x.fillRect(0,i*h+1,s,h-2);
-      x.fillStyle='#c99a6c'; x.fillRect(0,i*h,s,2);
+      x.fillStyle='#b9824c'; x.fillRect(0,i*h,s,2);
       const j=(i%2?.35:.8)*s; x.fillRect(j,i*h,2,h);
     }
   }),
   planksDark: tex((x,s)=>{                   // спальни — тон теплее
-    x.fillStyle='#e4b699'; x.fillRect(0,0,s,s);
+    x.fillStyle='#c98f5e'; x.fillRect(0,0,s,s);
     const n=6, h=s/n;
     for(let i=0;i<n;i++){
-      x.fillStyle=['#e3b497','#eabfa4','#dfae90','#e7baa0','#e1b194','#ecc3a9'][i];
+      x.fillStyle=['#c58a58','#d29a68','#c08454','#cd9462','#c78c5a','#d49d6c'][i];
       x.fillRect(0,i*h+1,s,h-2);
-      x.fillStyle='#c08e70'; x.fillRect(0,i*h,s,2);
+      x.fillStyle='#9a6638'; x.fillRect(0,i*h,s,2);
       const j=(i%2?.3:.75)*s; x.fillRect(j,i*h,2,h);
     }
   }),
   tiles: tex((x,s)=>{                        // санузлы — светло-голубая плитка
-    x.fillStyle='#a6d8e0'; x.fillRect(0,0,s,s);
+    x.fillStyle='#a9cfd6'; x.fillRect(0,0,s,s);
     const n=4, h=s/n;
     for(let i=0;i<n;i++)for(let j=0;j<n;j++){
-      x.fillStyle=(i+j)%2?'#d8f0f3':'#c3e6eb'; x.fillRect(j*h+2,i*h+2,h-4,h-4);
+      x.fillStyle=(i+j)%2?'#d9eef1':'#cbe6ea'; x.fillRect(j*h+2,i*h+2,h-4,h-4);
     }
   }),
   terrazzo: tex((x,s)=>{                     // вход — терраццо
-    x.fillStyle='#f5f0e9'; x.fillRect(0,0,s,s);
-    const cols=['#dccfc0','#cfc3b6','#f0c7b2','#c4d6cb'];
+    x.fillStyle='#ece5da'; x.fillRect(0,0,s,s);
+    const cols=['#c9b9a3','#a99a86','#e0a37c','#9fb7a8'];
     for(let i=0;i<220;i++){x.fillStyle=cols[i%4];x.beginPath();x.arc(Math.random()*s,Math.random()*s,1+Math.random()*3,0,7);x.fill();}
   }),
   deck: tex((x,s)=>{                         // настил у бассейна
-    x.fillStyle='#ddb48a'; x.fillRect(0,0,s,s);
-    for(let i=0;i<8;i++){x.fillStyle='#c4976b';x.fillRect(i*s/8,0,3,s);}
+    x.fillStyle='#c79a6b'; x.fillRect(0,0,s,s);
+    for(let i=0;i<8;i++){x.fillStyle='#a87a4c';x.fillRect(i*s/8,0,3,s);}
   }),
   grass: tex((x,s)=>{
-    x.fillStyle='#93d07c'; x.fillRect(0,0,s,s);
-    for(let i=0;i<500;i++){x.fillStyle=Math.random()<.5?'#86c46f':'#a2da8c';x.fillRect(Math.random()*s,Math.random()*s,3,6);}
+    x.fillStyle='#78b955'; x.fillRect(0,0,s,s);
+    for(let i=0;i<500;i++){x.fillStyle=Math.random()<.5?'#6dad4b':'#85c561';x.fillRect(Math.random()*s,Math.random()*s,3,6);}
   }),
   water: tex((x,s)=>{                        // вода с бликами, текстура плывёт
-    x.fillStyle='#6fd0e6'; x.fillRect(0,0,s,s);
-    x.strokeStyle='rgba(255,255,255,.75)'; x.lineWidth=4; x.lineCap='round';
+    x.fillStyle='#3fb6d3'; x.fillRect(0,0,s,s);
+    x.strokeStyle='rgba(255,255,255,.55)'; x.lineWidth=4; x.lineCap='round';
     for(let i=0;i<14;i++){
       const px=Math.random()*s, py=Math.random()*s, l=20+Math.random()*30;
       x.beginPath(); x.moveTo(px,py); x.quadraticCurveTo(px+l/2,py-8,px+l,py); x.stroke();
@@ -210,27 +210,27 @@ function texMat(t, rw, rd, color=0xffffff){
 
 // материалы — сочнее, чем на рендерах, но в той же гамме
 const M = {
-  wall:  toon(0xfbecd6),
-  cap:   toon(0xb98563),
-  wood:  toon(0xbb8c66),
-  woodL: toon(0xe8bf92),
-  slab:  toon(0xf3ece2),
-  sofa:  toon(0xa9d69a),
-  cush:  toon(0xffa98f),
-  mustard: toon(0xffd37a),
-  teal:  toon(0x7cd0cc),
-  coral: toon(0xff9f8a),
-  sage:  toon(0x9fd0b4),
+  wall:  toon(0xefd9b8),
+  cap:   toon(0x8a5a36),
+  wood:  toon(0x9a6a44),
+  woodL: toon(0xc89566),
+  slab:  toon(0xe9dfd0),
+  sofa:  toon(0x9fc490),
+  cush:  toon(0xf08a6b),
+  mustard: toon(0xf0bd4f),
+  teal:  toon(0x4aa8a8),
+  coral: toon(0xf08a6b),
+  sage:  toon(0x7fae95),
   white: toon(0xfdfcf9),
-  steel: toon(0xe6ecef),
-  dark:  toon(0x8c7a6c),
-  leaf:  toon(0x7fcf74),
-  leafD: toon(0x66b960),
-  trunk: toon(0xcc9f74),
-  pot:   toon(0xf29b78),
-  dirt:  toon(0xd6a57c),
-  stone: toon(0xeee9e1),
-  poolTile: toon(0x55bcd6),
+  steel: toon(0xd7e0e3),
+  dark:  toon(0x4a3a2e),
+  leaf:  toon(0x4fb35a),
+  leafD: toon(0x3f9a4a),
+  trunk: toon(0xa77a52),
+  pot:   toon(0xd9774c),
+  dirt:  toon(0xa9744a),
+  stone: toon(0xd8d2c6),
+  poolTile: toon(0x2f8fb0),
   glass: new THREE.MeshBasicMaterial({color:0xbfe6f2, transparent:true, opacity:.25, side:THREE.DoubleSide, depthWrite:false}),
 };
 const waterTex = T.water.clone(); waterTex.needsUpdate=true; waterTex.repeat.set(1.5,1);
@@ -246,10 +246,10 @@ const cx = W/2, cz = (HD+POOL_D)/2;
 const zOf = u => HD - u;
 
 // ---- контуры: тонкая тёмная линия по рёбрам ----
-const EDGE = new THREE.LineBasicMaterial({color:0x7d6352, transparent:true, opacity:.6});
+const EDGE = new THREE.LineBasicMaterial({color:0x4a3526, transparent:true, opacity:.6});
 function edges(m, thr=30){ m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry, thr), EDGE)); }
 // для скруглённых предметов — «оболочка» с обратными гранями (комиксный контур)
-const HULL = new THREE.MeshBasicMaterial({color:0x86695a, side:THREE.BackSide});
+const HULL = new THREE.MeshBasicMaterial({color:0x4a3526, side:THREE.BackSide});
 
 function box(g, w,h,d, x,y,z, mat, shadow=true, outline=true){
   const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
@@ -509,7 +509,7 @@ function baths(g, uDiv, uEnd, wv){
   floorPatch(g, 0,uDiv, wv,W, YF, T.tiles, .8);
   floorPatch(g, uDiv,uEnd, wv,W, YF, T.tiles, .8);
   rr(g, .3,1.05, 4.15,5.95, YF,.55, M.white, .18);            // ванна
-  rr(g, .38,.97, 4.25,5.85, YF+.45,.12, new THREE.MeshBasicMaterial({color:0xc6e9f0}), .05, false);
+  rr(g, .38,.97, 4.25,5.85, YF+.45,.12, new THREE.MeshBasicMaterial({color:0x8fd3e3}), .05, false);
   rr(g, 1.5,2.05, 3.98,4.4, YF,.42, M.white, .1);
   rr(g, 2.2,2.9, 5.7,6.05, YF,.85, M.woodL, .04);
   rr(g, uDiv+.2,uDiv+.75, 4.0,4.45, YF,.85, M.woodL, .04);
@@ -570,7 +570,7 @@ function baths(g, uDiv, uEnd, wv){
 const plumbobs=[];
 function makePerson(g, h, x, z, ry, yBase, shirtC, pantsC){
   const p = new THREE.Group();
-  const skin = toon(0xe7b48d), shirt = toon(shirtC), pants = toon(pantsC), hair = toon(0x9c7b63);
+  const skin = toon(0xe7b48d), shirt = toon(shirtC), pants = toon(pantsC), hair = toon(0x5a3a26);
   const legH=h*.42, torH=h*.33, headR=h*.1;                     // голова крупнее — мультяшнее
   const mesh=(geo,mat,y)=>{const m=new THREE.Mesh(geo,mat);m.position.y=y;m.castShadow=true;
     const o=new THREE.Mesh(geo,HULL);o.scale.setScalar(1.08);m.add(o);p.add(m);return m;};
@@ -587,7 +587,7 @@ function makePerson(g, h, x, z, ry, yBase, shirtC, pantsC){
   const hr=mesh(new THREE.SphereGeometry(headR*1.04,16,12,0,Math.PI*2,0,Math.PI*.55), hair, hy+headR*.08);
   hr.rotation.x=-.25;
   const pb = new THREE.Mesh(new THREE.OctahedronGeometry(h*.08),
-    new THREE.MeshToonMaterial({color:0x6fe08a, emissive:0x2f9a4a, gradientMap:toonRamp}));
+    new THREE.MeshToonMaterial({color:0x3fe04a, emissive:0x1f9a27, gradientMap:toonRamp}));
   pb.scale.y = 1.7;
   pb.position.y = hy+headR*2.6+h*.08;
   pb.userData.baseY = pb.position.y;
@@ -599,16 +599,16 @@ function makePerson(g, h, x, z, ry, yBase, shirtC, pantsC){
 
 // ============ подписи ============
 // Плашка с цветной точкой по типу комнаты — как ярлыки в игре.
-const DOT={livingKitchen:'#ffd37a',bath:'#7cd0cc',bathroom:'#7cd0cc',laundry:'#7cd0cc',stairs:'#e8bf92',entrance:'#e8bf92',terrace:'#a9d69a',pool:'#6fd0e6',masterBedroom:'#ff9f8a',bedroom:'#ff9f8a',study:'#9fd0b4',hall:'#e8bf92'};
+const DOT={livingKitchen:'#f0bd4f',bath:'#4aa8a8',bathroom:'#4aa8a8',laundry:'#4aa8a8',stairs:'#c89566',entrance:'#c89566',terrace:'#9fc490',pool:'#3fb6d3',masterBedroom:'#f08a6b',bedroom:'#f08a6b',study:'#7fae95',hall:'#c89566'};
 function makeLabel(text, x, y, z, key){
   const cnv=document.createElement('canvas'); cnv.width=320; cnv.height=80;
   const ctx=cnv.getContext('2d');
   ctx.fillStyle='rgba(74,53,38,.18)'; ctx.beginPath(); ctx.roundRect(6,14,308,60,30); ctx.fill();
-  ctx.fillStyle='#ffffff'; ctx.strokeStyle='#cbb8a8'; ctx.lineWidth=3;
+  ctx.fillStyle='#ffffff'; ctx.strokeStyle='#4a3526'; ctx.lineWidth=3;
   ctx.beginPath(); ctx.roundRect(4,6,308,60,30); ctx.fill(); ctx.stroke();
   ctx.fillStyle=DOT[key]||'#9fc490'; ctx.beginPath(); ctx.arc(36,36,11,0,7); ctx.fill();
-  ctx.strokeStyle='#b39d8b'; ctx.lineWidth=2.5; ctx.stroke();
-  ctx.fillStyle='#5a4a3e'; ctx.textAlign='left';
+  ctx.strokeStyle='#4a3526'; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.fillStyle='#2c2118'; ctx.textAlign='left';
   let size=26;
   do { ctx.font='700 '+size+'px system-ui,-apple-system,sans-serif'; size-=1; }
   while (size>=15 && ctx.measureText(text).width>250);
@@ -619,10 +619,10 @@ function makeLabel(text, x, y, z, key){
   labelsG.add(sp); return sp;
 }
 const P = (g,h,u,v,ry,y,c1,c2)=>makePerson(g,h,v,zOf(u),ry,y,c1,c2);
-P(floor1G, 1.65, 5.2, 4.9, Math.PI, .12, 0xf4b8a8, 0x9fb3cf);
-P(floor1G, 1.78, -1.6, 2.6, 0, .1, 0xa9d6d4, 0xf3ead8);
-P(floor2A, 1.05, 2.4, 2.9, Math.PI/2, YF, 0xf6dfa4, 0xa9d6d4);
-P(floor2B, 1.7, 7.9, 2.3, -Math.PI/2, YF, 0xbcd6c6, 0xb9a597);
+P(floor1G, 1.65, 5.2, 4.9, Math.PI, .12, 0xf08a6b, 0x4a5a78);
+P(floor1G, 1.78, -1.6, 2.6, 0, .1, 0x4aa8a8, 0xf3ead8);
+P(floor2A, 1.05, 2.4, 2.9, Math.PI/2, YF, 0xf0bd4f, 0x4aa8a8);
+P(floor2B, 1.7, 7.9, 2.3, -Math.PI/2, YF, 0x7fae95, 0x4a3a2e);
 
 const R=Model3D.room;
 const Lb = (key,area,u,y,v)=>makeLabel(R(key,area), v, y, zOf(u), key);
