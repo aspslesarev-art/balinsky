@@ -21,6 +21,9 @@ export interface CuratedPhotos {
   photos: string[]
   /** Floor-plan images (audit «document» rejects), original order. */
   plans: string[]
+  /** Master plans of the complex («document: master plan…» rejects): shown
+   *  on the complex page, never among a unit's floor plans. */
+  masterplans: string[]
   /** Same entry with alt_ru/alt_en permuted to match `photos`. */
   vision: VisionEntry | null
 }
@@ -61,7 +64,7 @@ export function curatePhotos(
 ): CuratedPhotos {
   const list = Array.isArray(photos) ? photos : []
   const audit = auditOf(vision)
-  if (!list.length || !audit) return { photos: [...list], plans: [], vision: vision ?? null }
+  if (!list.length || !audit) return { photos: [...list], plans: [], masterplans: [], vision: vision ?? null }
 
   // «document» rejects are floor plans in practice (checked by eye on
   // 2026-11-10: top-down renders and 2D/3D plans). They are not photos, but
@@ -72,13 +75,24 @@ export function curatePhotos(
       .map(r => r.i)
       .filter(i => Number.isInteger(i) && i >= 0 && i < list.length),
   )
-  const plans = [...planIdx].sort((a, b) => a - b).map(i => list[i]).filter((u): u is string => typeof u === 'string')
+  // Генплан комплекса помечен «document: master plan…» — отдельно от
+  // планировок виллы или апартаментов (владелец 2026-11-10).
+  const masterIdx = new Set(
+    (audit.reject ?? [])
+      .filter(r => typeof r.reason === 'string' && /^document:\s*(master|site)\s*plan/i.test(r.reason))
+      .map(r => r.i),
+  )
+  const pick = (want: boolean) => [...planIdx].filter(i => masterIdx.has(i) === want).sort((a, b) => a - b)
+    .map(i => list[i]).filter((u): u is string => typeof u === 'string')
+  const plans = pick(false)
+  const masterplans = pick(true)
 
   const ordered = displayOrder(list.length, audit)
   const withoutPlans = ordered.filter(i => !planIdx.has(i))
   const order = withoutPlans.length > 0 ? withoutPlans : ordered
   return {
     plans,
+    masterplans,
     photos: order.map(i => list[i]).filter((u): u is string => typeof u === 'string'),
     vision: vision
       ? { ...vision, alt_ru: permute(vision.alt_ru, order) ?? vision.alt_ru, alt_en: permute(vision.alt_en, order) ?? vision.alt_en }

@@ -1630,8 +1630,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     : (nativeBody ?? kb?.body ?? rawBody))
   const vision = await loadListingVision('complex', c.airtable_id)
   const photoAlts = slidesPhotos.map((_, i) => altFor(vision, i, lang, name))
-  // Картинки планировок (аудит пометил их «document») — во вкладку «Планировки».
-  const complexPlans = curatePhotos(photoManifest[c.airtable_id] ?? [], vision).plans
+  // На странице комплекса — генплан, без планировок отдельных вилл и квартир
+  // (они на страницах юнитов; владелец 2026-11-10).
+  const complexPlans = curatePhotos(photoManifest[c.airtable_id] ?? [], vision).masterplans
 
   const gmap = firstString(d['Link from Google maps on location'] ?? d['Google maps'] ?? d['Google map'])
 
