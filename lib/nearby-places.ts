@@ -27,7 +27,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places.json`
 const LISTING_URL = (id: string) =>
   // ?v= — смена ключа кэша после правки файлов (17.10.2026, 10.11.2026 — места рядом для CITRINE).
-  `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places/${id}.json?v=20261110b`
+  `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places/${id}.json?v=20261110c`
 
 const TTL_MS = 30 * 60 * 1000
 let _index: { ts: number; data: Index } | null = null
