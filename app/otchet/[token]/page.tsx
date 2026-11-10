@@ -97,14 +97,9 @@ export default async function ReportPage({ params, searchParams }: {
           </ol>
         </section>
 
-        <section className="rounded-xl border border-[#DDE3DF] bg-white p-5 flex flex-wrap items-baseline gap-x-8 gap-y-2" aria-labelledby="outreach">
-          <h2 id="outreach" className="text-[15px] font-semibold w-full sm:w-auto">Рассылка знакомства</h2>
-          <span className="text-[14px]">ушло <b className="tabular-nums">{f.outreachSent}</b></span>
-          <span className="text-[14px]">ответили <b className="tabular-nums">{f.outreachReplied}</b> <span className="text-[#5B6B62]">({pct(f.outreachReplied, f.outreachSent)})</span></span>
-        </section>
 
         <section className="flex flex-col gap-3" aria-labelledby="who">
-          <h2 id="who" className="text-[15px] font-semibold">С кем была переписка · {s.rows.length}</h2>
+          <h2 id="who" className="text-[15px] font-semibold">Агенты, с кем была переписка · {s.rows.length}</h2>
           {s.rows.length === 0 ? (
             <p className="rounded-xl border border-[#DDE3DF] bg-white px-5 py-10 text-center text-[14px] text-[#5B6B62]">
               {period === 'today' ? 'Сегодня переписки с агентами ещё не было.' : 'За этот период переписки с агентами не было.'}
@@ -141,7 +136,7 @@ export default async function ReportPage({ params, searchParams }: {
         </section>
 
         <footer className="text-[12.5px] text-[#5B6B62] max-w-[68ch] leading-relaxed">
-          Касание - одно сообщение в личной переписке в Телеграме. Диалог - переписка, где за период писали обе стороны. Текст переписки в отчёт не попадает.
+          В отчёте только агенты по недвижимости. Касание - одно сообщение в личной переписке в Телеграме. Диалог - переписка, где за период писали обе стороны. Текст переписки в отчёт не попадает.
         </footer>
       </div>
     </main>

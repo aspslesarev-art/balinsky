@@ -36,7 +36,7 @@ export function periodRange(p: TouchPeriodKey): { from: string; to: string } {
 }
 
 type DailyRow = { day: string; chat_id: number; out_cnt: number; in_cnt: number; label: string | null; kind: TouchRow['kind'] }
-type AgentLite = { id: string; name: string; agency: string | null; status: AgentStatus; tg_chat_id: number | null; deals_count: number | null; deals_volume_usd: number | null }
+type AgentLite = { id: string; name: string; agency: string | null; status: AgentStatus; tg_chat_id: number | null; deals_count: number | null; deals_volume_usd: number | null; data: { not_agent?: boolean } | null }
 
 async function dailyRows(from: string, to: string): Promise<DailyRow[]> {
   const out: DailyRow[] = []
@@ -90,7 +90,7 @@ export async function touchStats(period: TouchPeriodKey): Promise<TouchStats> {
 
   const [daily, agentsRes, outreachRes, syncRes, cal, reservations, deals] = await Promise.all([
     dailyRows(from, to),
-    sb.from('agents').select('id,name,agency,status,tg_chat_id,deals_count,deals_volume_usd').eq('archived', false).not('tg_chat_id', 'is', null),
+    sb.from('agents').select('id,name,agency,status,tg_chat_id,deals_count,deals_volume_usd,data').eq('archived', false).not('tg_chat_id', 'is', null),
     sb.from('crm_outreach').select('sent_at,replied_at').gte('sent_at', fromIso).lt('sent_at', toIso),
     sb.from('crm_sync_status').select('synced_at').eq('id', 1).maybeSingle(),
     calendarMeetings(fromIso, toIso),
@@ -101,11 +101,17 @@ export async function touchStats(period: TouchPeriodKey): Promise<TouchStats> {
   if (outreachRes.error) throw new Error(outreachRes.error.message)
 
   const agents = new Map<number, AgentLite>()
-  for (const a of (agentsRes.data ?? []) as AgentLite[]) if (a.tg_chat_id != null) agents.set(Number(a.tg_chat_id), a)
+  // В отчёт идут только агенты по недвижимости — те, у кого есть карточка.
+  // Застройщики, юристы, боты и прочие собеседники без карточки не считаются;
+  // карточку, заведённую не на агента, помечаем data.not_agent.
+  for (const a of (agentsRes.data ?? []) as AgentLite[]) {
+    if (a.tg_chat_id != null && !a.data?.not_agent) agents.set(Number(a.tg_chat_id), a)
+  }
 
   const byChat = new Map<number, TouchRow>()
   for (const d of daily) {
     const a = agents.get(Number(d.chat_id))
+    if (!a) continue
     const row = byChat.get(d.chat_id) ?? {
       chat_id: d.chat_id,
       agent_id: a?.id ?? null,
