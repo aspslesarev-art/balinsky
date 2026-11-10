@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, Play, Box } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { WishlistButton, type WishlistInput } from './WishlistButton'
 
 export type GalleryVideo = { url: string; name: string | null }
 type Tab = 'photos' | 'videos' | 'plans'
@@ -36,7 +37,8 @@ const ytThumb = (url: string) => { const id = ytId(url); return id ? `https://i.
 const chip = 'text-white text-[14px] px-4 py-2.5 hover:bg-white/[0.12] focus-visible:bg-white/[0.12] transition-colors'
 const tile = 'relative h-[72px] rounded-lg overflow-hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
 
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang }: {
+// Used by both the villa and the apartment detail pages.
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -44,6 +46,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   videos: GalleryVideo[]
   title: string
   lang: Lang
+  /** Heart toggle in the top-right corner of the cover (apartment page). */
+  wishlistItem?: WishlistInput
 }) {
   const c = pickCopy(COPY, lang)
   const [open, setOpen] = useState<{ tab: Tab; i: number } | null>(null)
@@ -70,6 +74,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
               className="w-full h-[300px] sm:h-[400px] md:h-[480px] object-cover rounded-xl" />
           </button>
         )}
+        {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
         <div className="absolute left-1/2 bottom-4 -translate-x-1/2 flex bg-[rgb(16_24_20/0.8)] rounded-lg overflow-hidden whitespace-nowrap">
           {photos.length > 0 && <button type="button" onClick={() => setOpen({ tab: 'photos', i: 0 })} className={`${chip} font-semibold bg-white/[0.16]`}>{photos.length} {c.photos.toLowerCase()}</button>}
           {videos.length > 0 && <button type="button" onClick={() => setOpen({ tab: 'videos', i: 0 })} className={chip}>{videos.length} {c.videos.toLowerCase()}</button>}

@@ -17,7 +17,7 @@ import {
 import { Header } from '@/components/Header'
 import { ExpandableText } from '@/components/ExpandableText'
 import { PageContainer } from '@/components/PageContainer'
-import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
+import { VillaGallery } from '@/components/VillaGallery'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
@@ -1324,10 +1324,14 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
         ]} />
 
         <section className="mb-6 mt-2">
-          <PhotoGalleryHero
+          <VillaGallery
             photos={photos}
-            alt={title}
             alts={photoAlts}
+            plans={curated.plans}
+            plan3dUrl={null}
+            videos={aptVideos.map(vd => ({ url: vd.url, name: vd.name }))}
+            title={title}
+            lang={lang}
             wishlistItem={{
               kind: 'apartment', slug, title,
               photo: photos[0] ?? null,
@@ -1515,7 +1519,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
         {/* «Что сдают рядом помесячно» убран 17.10.2026: повторял вкладку «Помесячно» в «Будет ли спрос?». */}
 
         {aptVideos.length > 0 && (
-          <VideoGrid videos={aptVideos} title={parentComplexName ? `${pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)}: ${parentComplexName}` : pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)} />
+          <VideoGrid jsonLdOnly videos={aptVideos} title={parentComplexName ? `${pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)}: ${parentComplexName}` : pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)} />
         )}
 
         {otherApts.length > 0 && district && (
