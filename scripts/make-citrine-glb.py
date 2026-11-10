@@ -9,6 +9,9 @@ EAVE, RIDGE, OVER = 6.1, 2.2, 0.3
 PITCH, STAG, W, D = 7.68, 0.0, 6.2, 9.14  # ряд прямой, шаг по генплану (10.11.2026)
 TILT = math.radians(10)  # каждая вилла повёрнута вокруг своего центра к террасам
 PIV = [0.0, 0.0]
+# У западной виллы на снимке Google кусты выше земли и прячут бассейн —
+# ставим каждую виллу на участок-цоколь (10.11.2026).
+LIFT = 1.2
 plot = [(-1, -7.0), (5*PITCH+W+1, -7.0), (5*PITCH+W+1, D+3), (-1, D+3)]
 cx = sum(p[0] for p in plot)/4; cz = sum(p[1] for p in plot)/4
 ax = math.radians(ROW_AZ); az = math.radians(ROW_AZ + 90)
@@ -16,7 +19,7 @@ def enu(x, z, h):
     dx, dz = x - PIV[0], z - PIV[1]
     x = PIV[0] + dx*math.cos(TILT) - dz*math.sin(TILT); z = PIV[1] + dx*math.sin(TILT) + dz*math.cos(TILT)
     x -= cx; z -= cz
-    return (x*math.sin(ax) + z*math.sin(az), x*math.cos(ax) + z*math.cos(az), h)
+    return (x*math.sin(ax) + z*math.sin(az), x*math.cos(ax) + z*math.cos(az), h + LIFT)
 
 WALL = (0.93, 0.90, 0.84); ROOF = (0.29, 0.29, 0.31); GLASS = (0.35, 0.45, 0.50); POOL = (0.27, 0.66, 0.74)
 pos, nor, col, idx = [], [], [], []
@@ -41,10 +44,12 @@ def boxp(x0, x1, z0, z1, h0, h1, color):
 FRAME = (0.11, 0.11, 0.12); DECK = (0.55, 0.42, 0.29); PLANTER = (0.73, 0.70, 0.65)
 LEAF = (0.25, 0.48, 0.23); YARD = (0.90, 0.88, 0.84); GLASS = (0.10, 0.15, 0.18)
 H1, SLAB = 3.1, 0.22
+LAWN = (0.42, 0.55, 0.30)
 for i in range(6):
     ox, oz = i*PITCH, i*STAG
     PIV[0], PIV[1] = ox + W/2, oz + D/2  # поворот вокруг центра дома
     B = lambda x0, x1, h0, h1, z0, z1, c: boxp(ox+x0, ox+x1, oz+z0, oz+z1, h0, h1, c)
+    B(-0.6, W+0.6, -LIFT-3, 0, -6.0, D+0.3, LAWN)  # участок-цоколь
     B(0, W, 0, H1, 0.2, D, WALL)
     B(-0.15, W+0.15, H1, H1+SLAB, -0.6, D+0.15, WALL)
     B(0, W, H1+SLAB, EAVE, 0.6, D, WALL)
