@@ -39,11 +39,11 @@ const METERS_PER_DEG_LAT = 111_320
 
 /** Стартовый вид: камера с севера смотрит на юг, за комплексом — океан. */
 function overview(view: Google3DView): Orbit {
-  return { lat: view.latitude, lng: view.longitude, heading: 190, tilt: 68, range: 1100 }
+  return { lat: view.latitude, lng: view.longitude, heading: view.cameraHeading ?? 190, tilt: 68, range: view.range ?? 1100 }
 }
 
 function topDown(view: Google3DView): Orbit {
-  return { lat: view.latitude, lng: view.longitude, heading: 0, tilt: 0, range: 900 }
+  return { lat: view.latitude, lng: view.longitude, heading: 0, tilt: 0, range: view.range ? Math.max(MIN_RANGE, view.range * 0.8) : 900 }
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))

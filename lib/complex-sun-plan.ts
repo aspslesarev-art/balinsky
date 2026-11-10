@@ -68,6 +68,10 @@ export type Google3DView = {
   latitude: number
   longitude: number
   heading: number
+  /** Стартовая дистанция камеры, м. Не задана — 1100 (под крупный посёлок). */
+  range?: number
+  /** Куда смотрит стартовая камера, градусы от севера. Не задан — 190 (на юг). */
+  cameraHeading?: number
 }
 
 export type SitePlan = {
@@ -358,6 +362,10 @@ const CITRINE: SitePlan = {
     latitude: -8.559784,
     longitude: 115.263214,
     heading: 0,
+    // 6 вилл на ~45 м: с 1.1 км их не видно, начинаем с 220 м.
+    range: 220,
+    // Камера с рисовых полей на восток от участка смотрит на запад — на бассейны и фасады.
+    cameraHeading: 270,
   },
   buildingDepth: CITRINE_D,
   units: [{ id: 1, x0: 0, x1: CITRINE_W }],
