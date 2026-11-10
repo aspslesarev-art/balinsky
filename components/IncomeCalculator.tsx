@@ -113,10 +113,10 @@ export function IncomeCalculator({
   const [tab, setTab] = useState<'daily' | 'monthly'>(defaultTab ?? 'daily')
 
   const [dailyPrice, setDailyPrice] = useState(dailyPresets?.p50 ?? 0)
-  const [dailyPreset, setDailyPreset] = useState<'p25' | 'p50' | 'p75'>('p50')
+  const [dailyPreset, setDailyPreset] = useState<'p25' | 'p50' | 'p75' | null>('p50')
   const [occ, setOcc] = useState(nearestOcc(defaultOccupancyPct))
   const [monthlyPrice, setMonthlyPrice] = useState(monthlyPresets?.p50 ?? 0)
-  const [monthlyPreset, setMonthlyPreset] = useState<'p25' | 'p50' | 'p75'>('p50')
+  const [monthlyPreset, setMonthlyPreset] = useState<'p25' | 'p50' | 'p75' | null>('p50')
 
   const dailyResult = useMemo(() => {
     if (!dailyPresets || dailyPrice <= 0) return null
@@ -221,8 +221,19 @@ export function IncomeCalculator({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
               <span className="text-[14px] text-[#36413B]">{c.priceNight}</span>
-              <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex justify-between text-[16px]">
-                <span>{fmtExact(dailyPrice)}</span>
+              <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex items-center text-[16px] focus-within:border-[#1B6E4A] focus-within:ring-1 focus-within:ring-[#1B6E4A]/30 transition-colors">
+                <span className="text-[#4C5751] mr-1">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={dailyPrice > 0 ? String(dailyPrice) : ''}
+                  onChange={e => {
+                    const n = parseInt(e.target.value.replace(/\D/g, ''), 10)
+                    setDailyPrice(Number.isFinite(n) ? n : 0)
+                    setDailyPreset(null)
+                  }}
+                  className="w-full bg-transparent outline-none tabular-nums"
+                />
               </div>
               <div className="flex gap-1.5 flex-wrap">
                 <button type="button" className={chipCls(dailyPreset === 'p25')} onClick={() => selectDaily('p25')}>
@@ -273,8 +284,19 @@ export function IncomeCalculator({
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <span className="text-[14px] text-[#36413B]">{c.priceMonth}</span>
-            <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex justify-between text-[16px]">
-              <span>{fmtExact(monthlyPrice)}</span>
+            <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex items-center text-[16px] focus-within:border-[#1B6E4A] focus-within:ring-1 focus-within:ring-[#1B6E4A]/30 transition-colors">
+              <span className="text-[#4C5751] mr-1">$</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={monthlyPrice > 0 ? String(monthlyPrice) : ''}
+                onChange={e => {
+                  const n = parseInt(e.target.value.replace(/\D/g, ''), 10)
+                  setMonthlyPrice(Number.isFinite(n) ? n : 0)
+                  setMonthlyPreset(null)
+                }}
+                className="w-full bg-transparent outline-none tabular-nums"
+              />
             </div>
             <div className="flex gap-1.5 flex-wrap">
               <button type="button" className={chipCls(monthlyPreset === 'p25')} onClick={() => selectMonthly('p25')}>
