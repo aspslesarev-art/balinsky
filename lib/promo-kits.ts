@@ -1,6 +1,6 @@
 // Готовые сторис для агентов (без названия объекта и застройщика) —
 // complex-photos/promo/_promo.json, ключ — airtable_id комплекса. Показываются
-// плиткой «Для агентов» в медиаблоке виллы и комплекса.
+// плиткой «Реклама» в медиаблоке виллы и комплекса.
 const URL_ = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/complex-photos/promo/_promo.json`
 
 /** files — полные PNG 1080×1920 для сохранения, thumbs — лёгкие JPG 540×960 для сетки. */
