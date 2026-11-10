@@ -42,7 +42,7 @@ const METERS_PER_DEG_LAT = 111_320
 
 /** Стартовый вид: камера с севера смотрит на юг, за комплексом — океан. */
 function overview(view: Google3DView): Orbit {
-  return { lat: view.latitude, lng: view.longitude, heading: view.cameraHeading ?? 190, tilt: 68, range: view.range ?? 1100 }
+  return { lat: view.latitude, lng: view.longitude, heading: view.cameraHeading ?? 190, tilt: Math.min(view.cameraTilt ?? 68, MAX_TILT), range: view.range ?? 1100 }
 }
 
 function topDown(view: Google3DView): Orbit {

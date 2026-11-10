@@ -1389,6 +1389,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     // to duplicate it here.
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
+  const viewText = lang === 'ru' ? firstString(d['Вид']) : (firstString(d['Вид EN']) ?? null)
   type KV = { label: string; value: string }
   const villaFacts: KV[] = ([
     parentComplex ? { label: c.factType, value: c.factTypeVillaComplex } : { label: c.factType, value: c.factTypeVilla },
@@ -1397,6 +1398,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     interiorStyle ? { label: c.factStyle, value: facetLabel('style', interiorStyle, lang) } : null,
     yearRaw ? { label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw } : null,
     permitLabel(permit, lang) ? { label: c.factPermits, value: permitLabel(permit, lang)! } : null,
+    // Вид из окон — поле «Вид» (рус) / «Вид EN»; заполняется вручную по 3D-карте.
+    viewText ? { label: pickCopy({ ru: 'Вид из окон', en: 'View', id: 'Pemandangan', fr: 'Vue', de: 'Aussicht', zh: '景观', nl: 'Uitzicht', ban: 'Pemandangan', pl: 'Widok', uk: 'Вид з вікон' }, lang), value: viewText } : null,
   ] as (KV | null)[]).filter(Boolean) as KV[]
 
   const landFacts: KV[] = ([
