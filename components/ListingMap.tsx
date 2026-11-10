@@ -33,13 +33,27 @@ const loadHeat = () => (heatCache ??= fetch(HEAT_URL).then(r => r.ok ? r.json() 
 
 export type MapRoute = { key: string; color: string; label: string; line: number[][] }
 export type MapPoint = { lng: number; lat: number; color: string }
+/** Круг расстояния вокруг объекта: радиус в метрах и подпись («500 м»). */
+export type MapRing = { m: number; label: string }
 
-export function ListingMap({ lat, lng, name, routes, points, heat = false, aerial = false, className = 'h-[320px]' }: {
+// Окружность радиусом r метров как многоугольник — для слоя линий.
+function ringCoords(lng: number, lat: number, r: number, n = 96): number[][] {
+  const dLat = r / 111320, dLng = r / (111320 * Math.cos(lat * Math.PI / 180))
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const a = (i / n) * 2 * Math.PI
+    return [lng + dLng * Math.sin(a), lat + dLat * Math.cos(a)]
+  })
+}
+
+export function ListingMap({ lat, lng, name, routes, points, rings, heat = false, aerial = false, className = 'h-[320px]' }: {
   lat: number
   lng: number
   name: string
   routes?: MapRoute[]
   points?: MapPoint[]
+  /** Круги 100 м / 500 м / 1 км / 2 км — карта сразу показывает весь
+   *  самый большой круг, чтобы было видно, что в какой зоне. */
+  rings?: MapRing[]
   /** Слой «где бывают иностранные туристы». */
   heat?: boolean
   /** Спутник под углом, без управления — картинка района. */
@@ -81,6 +95,28 @@ export function ListingMap({ lat, lng, name, routes, points, heat = false, aeria
           }
           m.fitBounds(b, { padding: 32, animate: false })
         }
+        if (rings?.length) {
+          const maxR = Math.max(...rings.map(r => r.m))
+          m.addSource('bx-rings', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: rings.map(r => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: ringCoords(lng, lat, r.m) } })) },
+          })
+          m.addLayer({ id: 'bx-rings-casing', type: 'line', source: 'bx-rings', paint: { 'line-color': '#FFFFFF', 'line-width': 4, 'line-opacity': 0.8 } })
+          m.addLayer({ id: 'bx-rings', type: 'line', source: 'bx-rings', paint: { 'line-color': '#1B6E4A', 'line-width': 1.5, 'line-dasharray': [3, 2] } })
+          // Подписи — на северо-востоке каждого круга, наружу от него.
+          for (const r of rings) {
+            const [x, y] = ringCoords(lng, lat, r.m, 8)[1]
+            const el = document.createElement('div')
+            el.className = 'bx-map-ring'
+            el.textContent = r.label
+            new ml.Marker({ element: el, anchor: 'bottom-left' }).setLngLat([x, y]).addTo(m)
+          }
+          const [w, s] = [ringCoords(lng, lat, maxR, 4)[3][0], ringCoords(lng, lat, maxR, 4)[2][1]]
+          const [e, n] = [ringCoords(lng, lat, maxR, 4)[1][0], ringCoords(lng, lat, maxR, 4)[0][1]]
+          // Снизу лежит легенда: на телефоне она в две-три строки, поэтому отступ больше.
+          const narrow = (ref.current?.clientWidth ?? 800) < 640
+          m.fitBounds([[w, s], [e, n]], { padding: { top: 24, bottom: narrow ? 170 : 64, left: 16, right: 16 }, animate: false })
+        }
         if (points?.length) {
           m.addSource('bx-pts', {
             type: 'geojson',
@@ -119,7 +155,7 @@ export function ListingMap({ lat, lng, name, routes, points, heat = false, aeria
       })
     })
     return () => { cancelled = true; map?.remove() }
-  }, [lat, lng, name, routes, points, heat, aerial])
+  }, [lat, lng, name, routes, points, rings, heat, aerial])
 
   return <div ref={ref} className={`w-full overflow-hidden rounded-xl bg-[var(--color-search-bg)] ${className}`} role="img" aria-label={name} />
 }

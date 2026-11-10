@@ -564,6 +564,8 @@ html[data-goal="live"] #dokhodnost { display: none; }
 }
 
 /* Точка объекта на картах MapLibre (components/ListingMap.tsx). */
+/* Подписи кругов расстояния на карте «Что рядом». */
+.bx-map-ring { pointer-events: none; font-size: 12px; font-weight: 600; line-height: 1; color: #1B6E4A; background: rgb(255 255 255 / .92); padding: 3px 6px; border-radius: 6px; box-shadow: 0 1px 2px rgb(0 0 0 / .08); white-space: nowrap; }
 .bx-map-me {
   /* Не перехватывает мышь: иначе над точкой курсор менялся с «руки» на стрелку. */
   pointer-events: none;

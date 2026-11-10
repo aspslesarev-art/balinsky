@@ -75,6 +75,11 @@ const MINUTES = (s: number) => Math.round(s / 60)
 export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, routeLines, beach, lang }: Props) {
   const [tab, setTab] = useState<TabKey>('nearby')
   const c = pickCopy(COPY, lang)
+  // Круги расстояний на карте «Что рядом»: 100 м, 500 м, 1 км, 2 км.
+  const rings = useMemo(() => {
+    const m = lang === 'ru' ? 'м' : 'm', km = lang === 'ru' ? 'км' : 'km'
+    return [{ m: 100, label: `100 ${m}` }, { m: 500, label: `500 ${m}` }, { m: 1000, label: `1 ${km}` }, { m: 2000, label: `2 ${km}` }]
+  }, [lang])
   const TABS: TabKey[] = ['nearby', 'routes', 'tourists']
 
   const nearData = useMemo(() => {
@@ -174,7 +179,7 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
       <LazyMount fallback={<div className="h-[420px] rounded-xl bg-[#F3F7F4]" />}>
         <div className="relative rounded-xl overflow-hidden">
           {tab === 'nearby' && (
-            <ListingMap lat={lat} lng={lng} name={name} points={mapPoints} className="h-[420px]" />
+            <ListingMap lat={lat} lng={lng} name={name} points={mapPoints} rings={rings} className="h-[420px]" />
           )}
           {tab === 'routes' && (
             <ListingMap lat={lat} lng={lng} name={name} routes={mapRoutes} className="h-[420px]" />
