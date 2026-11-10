@@ -1006,7 +1006,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const parentComplexName = parentComplex?.name ?? null
   // 3D-тур комплекса — плиткой «3D-тур» в галерее.
-  const aptTourUrl = (await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ slug: null, tourUrl: null }))).tourUrl
+  const aptTourUrl = (await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))).tourUrl
 
   const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),

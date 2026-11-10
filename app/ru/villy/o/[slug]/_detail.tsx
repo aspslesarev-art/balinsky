@@ -42,6 +42,9 @@ import dynamic from 'next/dynamic'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { loadComplexMedia } from '@/lib/complex-media'
 import { loadPromoKit } from '@/lib/promo-kits'
+import { LegalAudit } from '@/components/LegalAudit'
+import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
+import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 import type { Wind } from '@/lib/complex-access'
 import { getSitePlan } from '@/lib/complex-sun-plan'
 import { loadSunSettings } from '@/lib/complex-sun'
@@ -1197,8 +1200,16 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   let masterplanCover: string | null = null
   // Медиа комплекса для ряда «фишек» под фото: 3D-тур, солнце и 3D-карта.
   const promoKit = await loadPromoKit(firstString(d['Комплекс']))
-  const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ slug: null, tourUrl: null }))
+  const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))
   const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
+  // Юридическая проверка комплекса (документы застройщика) — тот же блок, что
+  // на странице ЖК, и так же только в Pro (bx-auth-block).
+  const cd = complexMedia.data ?? {}
+  const villaLegal = complexMedia.id
+    ? await loadComplexAudit(complexMedia.id, lang, firstString(cd[LEGAL_OK_FIELD]), null, firstString(cd[LEGAL_BALANCE_NOTES_FIELD])).catch(() => null)
+    : null
+  const villaLegalQuestions = parseAuditItems(firstString(cd[LEGAL_QUESTIONS_FIELD])).length
+  const villaLegalBalance = parseBalance(firstString(cd[LEGAL_BALANCE_FIELD]))
   const sunSettings = sunPlan && complexMedia.slug ? await loadSunSettings(complexMedia.slug).catch(() => null) : null
   const renderSunTiles = (wind: Wind | null) => sunPlan && sunSettings?.enabled ? (
     <>
@@ -1646,6 +1657,21 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
         </section>
+
+        {villaLegal && complexMedia.slug && (villaLegal.ok.length > 0 || villaLegalQuestions > 0) && (
+          <div className="bx-auth-block">
+            <LegalAudit
+              lang={lang}
+              slug={complexMedia.slug}
+              okItems={villaLegal.ok}
+              questionsCount={villaLegalQuestions}
+              balanceBuyer={villaLegalBalance}
+              balanceSummary={villaLegal.balance[0] ?? null}
+              balanceNotesCount={villaLegal.balance.length}
+              editable={false}
+            />
+          </div>
+        )}
 
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <section className="flex flex-col gap-4 scroll-mt-24">
