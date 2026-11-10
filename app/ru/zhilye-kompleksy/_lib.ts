@@ -783,6 +783,16 @@ export function buildTitle(f: ComplexFilterState): string {
 // permit. Kept as a parallel function rather than parameterising
 // buildHeading so RU pages stay 100% byte-identical to before.
 export function buildHeadingEn(f: ComplexFilterState): string {
+  // «Under construction» alone is what people search as «new developments»
+  // (GSC: «new developments north bali», «residential developments bali») —
+  // name the page the way the query is phrased.
+  if (
+    f.status.length === 1 && f.status[0] === 'building' &&
+    !f.types.length && !f.developer.length && !f.year.length && !f.permit.length
+  ) {
+    const where = f.district.length ? `in ${f.district.join(', ')}` : 'in Bali'
+    return `New developments ${where} — residential complexes under construction`
+  }
   const adj: string[] = []
   if (f.status.length === 1) {
     const s = f.status[0]

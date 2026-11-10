@@ -69,7 +69,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Developers',
       links: [
-        { label: 'Directory', href: '/en/developers' },
+        { label: 'Bali property developers', href: '/en/developers' },
         { label: 'Events', href: '/en/events' },
         { label: 'Promotions', href: '/en/promo' },
       ],
@@ -119,7 +119,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Pengembang',
       links: [
-        { label: 'Direktori', href: '/en/developers' },
+        { label: 'Pengembang properti Bali', href: '/en/developers' },
         { label: 'Acara', href: '/en/events' },
         { label: 'Promo', href: '/en/promo' },
       ],
@@ -169,7 +169,7 @@ const COLS_BY_LANG: Record<Lang, Col[]> = {
     {
       title: 'Promoteurs',
       links: [
-        { label: 'Annuaire', href: '/en/developers' },
+        { label: 'Promoteurs immobiliers à Bali', href: '/en/developers' },
         { label: 'Événements', href: '/en/events' },
         { label: 'Promotions', href: '/en/promo' },
       ],

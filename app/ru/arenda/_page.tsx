@@ -21,8 +21,8 @@ const COPY = {
   en: {
     title: 'Long-term villa and apartment rental in Bali | Balinsky',
     description: 'Villas, apartments and houses for long-term rent in Bali — Canggu, Ubud, Seminyak, Bukit and other districts. Updated daily.',
-    h1: 'Rent a home in Bali',
-    sub: 'Villas and apartments for long-term rent — updates automatically',
+    h1: 'Monthly rentals in Bali',
+    sub: 'Villas, apartments and houses for rent in Bali per month — updates automatically',
     loading: 'Loading…',
   },
   id: {

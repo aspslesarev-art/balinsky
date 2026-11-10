@@ -29,19 +29,19 @@ const COPY = {
     sortHint: 'По умолчанию список отсортирован по числу сданных жилых комплексов. Balinsky не присваивает застройщикам рейтингов и оценок надёжности — здесь только факты: сданные и строящиеся проекты, количество юнитов, проекты за пределами Бали. Документы по конкретному объекту проверяйте самостоятельно, с юристом.',
   },
   en: {
-    h1: 'Developers in Bali',
+    h1: 'Bali property developers',
     count: (n: number) => `${n} companies in the catalogue`,
     intro: 'A directory of Bali developers with active projects — villas, apartments and residential complexes. For each company we collect reference information in four areas: construction and real estate, track record, equipment and production, and post-handover management.',
     sortHint: 'By default the list is sorted by the number of completed projects. Balinsky does not rate developers or score their reliability — only facts are shown here: completed and ongoing projects, unit counts, projects outside Bali. Check the documents for a specific property yourself, with a lawyer.',
   },
   id: {
-    h1: 'Pengembang di Bali',
+    h1: 'Pengembang properti di Bali',
     count: (n: number) => `${n} perusahaan dalam katalog`,
     intro: 'Direktori pengembang Bali dengan proyek aktif — vila, apartemen, dan kompleks hunian. Untuk setiap perusahaan kami menghimpun informasi referensi dalam empat bidang: konstruksi dan properti, rekam jejak, peralatan dan produksi, serta pengelolaan pasca-serah terima.',
     sortHint: 'Secara bawaan daftar diurutkan menurut jumlah proyek yang telah selesai. Balinsky tidak memberi peringkat atau skor keandalan kepada pengembang — di sini hanya fakta: proyek selesai dan berjalan, jumlah unit, proyek di luar Bali. Periksa dokumen properti tertentu sendiri, bersama pengacara.',
   },
   fr: {
-    h1: 'Promoteurs à Bali',
+    h1: 'Promoteurs immobiliers à Bali',
     count: (n: number) => `${n} sociétés dans le catalogue`,
     intro: 'Un annuaire des promoteurs de Bali avec des projets actifs — villas, appartements et résidences. Pour chaque société, nous rassemblons des informations de référence dans quatre domaines : construction et immobilier, historique, équipement et production, et gestion après livraison.',
     sortHint: 'Par défaut, la liste est triée par nombre de projets livrés. Balinsky n’attribue ni note ni indice de fiabilité aux promoteurs — seuls des faits figurent ici : projets livrés et en cours, nombre d’unités, projets hors de Bali. Vérifiez vous-même les documents d’un bien précis, avec un avocat.',
