@@ -247,6 +247,7 @@ function modernVilla(
   width: number,
   depth: number,
   heights: ModelHeights,
+  closeEast = false,
 ) {
   const g = new THREE.Group()
   const add = (m: THREE.Material, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, shadow = true) => {
@@ -288,6 +289,8 @@ function modernVilla(
   add(materials.deck, 0, width, 0, 0.12, -2.88, 0.2, false)
   // садовая стена между соседними двориками (с запада)
   add(materials.yardWall, -0.5, -0.32, 0, Math.max(1.6, heights.yardWall), -5.8, depth)
+  // у крайней виллы ряда — стена и с другой стороны, иначе двор открыт
+  if (closeEast) add(materials.yardWall, width + 0.32, width + 0.5, 0, Math.max(1.6, heights.yardWall), -5.8, depth)
   // вальмовая крыша
   const x0 = -0.35, x1 = width + 0.35, z0 = 0.25, z1 = depth + 0.35, y = top, rise = heights.ridgeRise
   const xm = (x0 + x1) / 2, inset = (x1 - x0) * 0.45
@@ -342,9 +345,9 @@ export function buildComplexModel(plan: SitePlan, heights: ModelHeights): Comple
     // корпус со своими секциями и глубиной, затем ряд ставится на место и
     // разворачивается. Дворовые стены и бассейны — принадлежность одного
     // прямого ряда, у таких планов их нет.
-    for (const block of plan.blocks) {
+    for (const [bi, block] of plan.blocks.entries()) {
       const row = plan.houseStyle === 'modern-villa'
-        ? modernVilla(materials, (block.units[0]?.x1 ?? 6) - (block.units[0]?.x0 ?? 0), block.depth, { ...heights, eaveHeight: block.eaveHeight ?? heights.eaveHeight })
+        ? modernVilla(materials, (block.units[0]?.x1 ?? 6) - (block.units[0]?.x0 ?? 0), block.depth, { ...heights, eaveHeight: block.eaveHeight ?? heights.eaveHeight }, bi === plan.blocks.length - 1)
         : buildingBlock(
           materials,
           { ...plan, units: block.units, buildingDepth: block.depth },
