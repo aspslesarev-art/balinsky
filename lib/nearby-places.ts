@@ -25,7 +25,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places.json`
 const LISTING_URL = (id: string) =>
   // ?v= — смена ключа кэша после правки файлов (17.10.2026, 10.11.2026 — места рядом для CITRINE).
-  `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places/${id}.json?v=20261110`
+  `${SUPABASE_URL}/storage/v1/object/public/competitors/_nearby_places/${id}.json?v=20261110b`
 
 const TTL_MS = 30 * 60 * 1000
 let _index: { ts: number; data: Index } | null = null
@@ -36,7 +36,7 @@ async function loadIndex(): Promise<Index | null> {
   if (_indexInflight) return _indexInflight
   _indexInflight = (async () => {
     try {
-      const r = await fetch(INDEX_URL, { next: { revalidate: 604800 } })
+      const r = await fetch(INDEX_URL, { next: { revalidate: 604800, tags: ['nearby:places'] } })
       if (!r.ok) return null
       const j = (await r.json()) as Index
       _index = { ts: Date.now(), data: j }
@@ -57,7 +57,7 @@ export async function loadNearbyPlaces(
   if (!idx) return null
   if (!idx.ids.includes(villaId)) return null
   try {
-    const r = await fetch(LISTING_URL(villaId), { next: { revalidate: 604800 } })
+    const r = await fetch(LISTING_URL(villaId), { next: { revalidate: 604800, tags: ['nearby:places'] } })
     if (!r.ok) return null
     const byCategory = (await r.json()) as Record<string, NearbyPlace[]>
     return { categories: idx.categories, byCategory }

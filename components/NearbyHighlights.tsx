@@ -11,7 +11,10 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 // with tens of thousands of reviews (Monkey Forest, Bali Zoo) crowd out what is
 // actually around the corner.
 const ART = new Set(['art_gallery', 'museum'])
-const PLAN: { cat: string; n: number; maxKm: number; only?: (p: NearbyPlace) => boolean }[] = [
+const PLAN: { cat: string; n: number; maxKm: number; minReviews?: number; only?: (p: NearbyPlace) => boolean }[] = [
+  // A gallery or museum next door is a landmark buyers use to find the place,
+  // however few reviews it has (CITRINE sits right behind Mega Sari Art Studio).
+  { cat: 'attraction', n: 1, maxKm: 0.3, minReviews: 0, only: p => ART.has(p.primaryType ?? '') },
   { cat: 'attraction', n: 3, maxKm: 3, only: p => p.primaryType === 'art_gallery' },
   { cat: 'attraction', n: 1, maxKm: 5, only: p => p.primaryType === 'museum' },
   { cat: 'attraction', n: 2, maxKm: 3, only: p => !ART.has(p.primaryType ?? '') },
@@ -41,9 +44,9 @@ const CAT_LABEL: Record<string, { ru: string; en: string }> = {
 export function pickHighlights(byCategory: Record<string, NearbyPlace[]>): (NearbyPlace & { cat: string })[] {
   const seen = new Set<string>()
   const out: (NearbyPlace & { cat: string })[] = []
-  for (const { cat, n, maxKm, only } of PLAN) {
+  for (const { cat, n, maxKm, minReviews = MIN_REVIEWS, only } of PLAN) {
     const list = (byCategory[cat] ?? [])
-      .filter(p => p.name && (p.reviews ?? 0) >= MIN_REVIEWS && p.distanceKm <= maxKm && (!only || only(p)))
+      .filter(p => p.name && (p.reviews ?? 0) >= minReviews && p.distanceKm <= maxKm && (!only || only(p)))
       .sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0))
     let k = 0
     for (const p of list) {
@@ -63,7 +66,7 @@ export function NearbyHighlights({ byCategory, lang }: { byCategory: Record<stri
   if (items.length === 0) return null
   const ru = lang === 'ru' || lang === 'uk'
   const title = pickCopy({ ru: 'Популярные места рядом', en: 'Popular places nearby' }, lang)
-  const km = (d: number) => d < 1 ? `${Math.round(d * 1000 / 50) * 50} ${ru ? 'м' : 'm'}` : `${d.toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'км' : 'km'}`
+  const km = (d: number) => d < 0.1 ? pickCopy({ ru: 'по соседству', en: 'next door' }, lang) : d < 1 ? `${Math.round(d * 1000 / 50) * 50} ${ru ? 'м' : 'm'}` : `${d.toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'км' : 'km'}`
   const label = (p: NearbyPlace & { cat: string }) => {
     const t = (p.primaryType && TYPE_LABEL[p.primaryType]) || CAT_LABEL[p.cat]
     return t ? pickCopy(t, lang) : ''

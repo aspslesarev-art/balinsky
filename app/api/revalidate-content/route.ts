@@ -38,6 +38,8 @@ export async function POST(request: Request) {
     // (e.g. marking floor plans) must show without waiting for that TTL.
     const visionKind = ({ villas: 'villa', apartments: 'apartment', complexes: 'complex' } as Record<string, string>)[k]
     if (visionKind) revalidateTag(`vision:${visionKind}`, 'max')
+    // «Что рядом» (competitors/_nearby_places) — same week-long cache.
+    if (k === 'villas') revalidateTag('nearby:places', 'max')
     for (const route of KIND_TO_PATHS[k]) {
       revalidatePath(route.path, route.type)
     }
