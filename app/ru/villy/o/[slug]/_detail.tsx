@@ -1706,7 +1706,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   }, lang)}
                 </a>
               )}
-              {compareData && <CompareButton data={compareData} lang={lang} />}
+              {compareData && (
+                <CompareButton data={compareData} lang={lang} initialTab="sale">
+                  {compareData.sale.length > 0
+                    ? pickCopy({ ru: `Соседи на продаже: ${compareData.sale.length} ${pluralRu(compareData.sale.length, ['вилла', 'виллы', 'вилл'])}`, en: `Neighbours for sale: ${compareData.sale.length}` }, lang)
+                    : undefined}
+                </CompareButton>
+              )}
             </div>
           </section>
         )}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import { InlinePrice } from './InlinePrice'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
@@ -523,8 +523,12 @@ export function CompareButton({ data, lang, className, initialTab, children, ove
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
-        className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--color-primary)] px-5 text-[15px] font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors ${className ?? ''}`}>
-        {children ?? c.heading}
+        // Один вид на всей странице (у цены продажи и в калькуляторе дохода):
+        // заметная плашка с иконкой и стрелкой, ширина по тексту (владелец 10.11.2026).
+        className={`inline-flex self-start min-h-12 max-w-full items-center gap-2.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-soft)] px-5 py-2.5 text-left text-[15px] font-semibold leading-snug text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors ${className ?? ''}`}>
+        <Users size={18} aria-hidden className="shrink-0" />
+        <span>{children ?? c.heading}</span>
+        <ChevronRight size={18} aria-hidden className="shrink-0" />
       </button>
       {open && <NeighborComparePopup data={data} lang={lang} initialTab={initialTab} overrideAdr={overrideAdr} overrideOcc={overrideOcc} overrideMonthly={overrideMonthly} onClose={() => setOpen(false)} />}
     </>

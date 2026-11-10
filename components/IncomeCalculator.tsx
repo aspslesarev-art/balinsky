@@ -282,8 +282,8 @@ export function IncomeCalculator({
           />
 
           {compareData && compareData.daily.length > 0 ? (
-            <CompareButton data={compareData} lang={lang} initialTab="daily" overrideAdr={dailyPrice} overrideOcc={occ} className="border-[#1B6E4A] text-[#1B6E4A] hover:bg-[#1B6E4A]/5">
-              {pickCopy({ ru: `Соседи, которые сдают посуточно: ${compareData.daily.length} ${pluralRu(compareData.daily.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting nightly: ${compareData.daily.length}` }, lang)}
+            <CompareButton data={compareData} lang={lang} initialTab="daily" overrideAdr={dailyPrice} overrideOcc={occ}>
+              {pickCopy({ ru: `Соседи посуточно: ${compareData.daily.length} ${pluralRu(compareData.daily.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting nightly: ${compareData.daily.length}` }, lang)}
             </CompareButton>
           ) : dailyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.dailyLink(dailyCompCount)}</span>
@@ -361,8 +361,8 @@ export function IncomeCalculator({
           )}
 
           {compareData && compareData.monthly.length > 0 ? (
-            <CompareButton data={compareData} lang={lang} initialTab="monthly" overrideMonthly={monthlyPrice} className="border-[#1B6E4A] text-[#1B6E4A] hover:bg-[#1B6E4A]/5">
-              {pickCopy({ ru: `Соседи, которые сдают помесячно: ${compareData.monthly.length} ${pluralRu(compareData.monthly.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting monthly: ${compareData.monthly.length}` }, lang)}
+            <CompareButton data={compareData} lang={lang} initialTab="monthly" overrideMonthly={monthlyPrice}>
+              {pickCopy({ ru: `Соседи помесячно: ${compareData.monthly.length} ${pluralRu(compareData.monthly.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting monthly: ${compareData.monthly.length}` }, lang)}
             </CompareButton>
           ) : monthlyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.monthlyLink(monthlyCompCount)}</span>
