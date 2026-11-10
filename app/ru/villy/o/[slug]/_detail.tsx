@@ -41,6 +41,7 @@ import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import dynamic from 'next/dynamic'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { loadComplexMedia } from '@/lib/complex-media'
+import { loadPromoKit } from '@/lib/promo-kits'
 import type { Wind } from '@/lib/complex-access'
 import { getSitePlan } from '@/lib/complex-sun-plan'
 import { loadSunSettings } from '@/lib/complex-sun'
@@ -1195,6 +1196,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   // эту страницу.
   let masterplanCover: string | null = null
   // Медиа комплекса для ряда «фишек» под фото: 3D-тур, солнце и 3D-карта.
+  const promoKit = await loadPromoKit(firstString(d['Комплекс']))
   const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ slug: null, tourUrl: null }))
   const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
   const sunSettings = sunPlan && complexMedia.slug ? await loadSunSettings(complexMedia.slug).catch(() => null) : null
@@ -1890,6 +1892,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           masterplan={masterplanNode}
           masterplanCover={masterplanCover}
           tourUrl={complexMedia.tourUrl}
+          promo={promoKit}
           extraTiles={renderSunTiles(geoFacts?.climate?.wind ?? null)}
         />
 

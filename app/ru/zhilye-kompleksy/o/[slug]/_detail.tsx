@@ -37,6 +37,7 @@ import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { getSitePlan } from '@/lib/complex-sun-plan'
 import { embeddableTourUrl } from '@/lib/tour3d'
+import { loadPromoKit } from '@/lib/promo-kits'
 import { loadSunSettings } from '@/lib/complex-sun'
 import dynamic from 'next/dynamic'
 // Heavy client widgets — code-split off the initial JS bundle.
@@ -1930,6 +1931,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             lang={lang}
             extraTiles={sunChips}
             plansAreMasterplan
+            promo={await loadPromoKit(c.airtable_id)}
             tourUrl={embeddableTourUrl(c.data['3D tours'])}
             wishlistItem={{
               kind: 'complex', slug, title: name,
