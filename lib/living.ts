@@ -12,6 +12,7 @@ import type { NearbyPlace } from './nearby-places'
 import type { Climate, Routes } from './complex-access'
 import type { Tone } from './listing-verdict'
 import type { GeoNoise } from './living-geo'
+import { nearestBeachProfileByPoint } from './beaches'
 
 // Радиусы поиска по категориям — те же, что в scripts/sync-nearby-places.mjs.
 const SEARCH_KM = { international_school: 8, school: 5, beach: 5, hospital: 5, supermarket: 1.5 } as const
@@ -49,6 +50,10 @@ export type LivingRow = {
   placeId?: string | null
   /** Школа — международная (а не местная). */
   intl?: boolean
+  /** Пляж: минут на машине, если известно. */
+  driveMin?: number | null
+  /** Пляж: км взяты по прямой из каталога пляжей, а не из мест рядом. */
+  straight?: boolean
   /** Врачи — аптека рядом. */
   pharmacyKm?: number | null
   /** Тишина — что шумит рядом. */
@@ -129,6 +134,8 @@ export function computeLivingFacts(args: {
   bedrooms: number | null
   noise?: GeoNoise | null
   climate?: Climate | null
+  /** Координаты объекта: нет пляжа в местах рядом — берём ближайший из каталога пляжей. */
+  point?: { lat: number | null; lng: number | null } | null
 }): LivingFacts | null {
   const b = args.byCategory
   if (!b) return null
@@ -173,11 +180,15 @@ export function computeLivingFacts(args: {
   const cowork = nearest(b.coworking), gym = nearest(b.wellness)
   const cafesTone: Tone = cafes >= 5 ? 'plus' : cafes >= 2 ? 'warn' : 'minus'
 
-  const beachKm = beach?.distanceKm ?? null
+  // Пляжа нет в радиусе поиска (Убуд и север): всё равно называем ближайший
+  // из каталога пляжей — покупателю нужно знать, куда и насколько далеко ехать.
+  const beachFallback = !beach ? nearestBeachProfileByPoint(args.point?.lat, args.point?.lng, 40) : null
+  const beachKm = beach?.distanceKm ?? (beachFallback ? Math.round(beachFallback.km * 10) / 10 : null)
+  const beachName = beach?.name ?? (beachFallback ? (beachFallback.beach.name_en ?? beachFallback.beach.name_ru) : null)
 
   const rows: LivingRow[] = [
     { key: 'school', tone: toneByKm(school?.distanceKm ?? null, LIMITS.school), km: school?.distanceKm ?? null, searchKm: intl || !school ? SEARCH_KM.international_school : SEARCH_KM.school, name: school?.name ?? null, intl: !!intl },
-    { key: 'beach', tone: toneByKm(beachKm, LIMITS.beach), km: beachKm, searchKm: SEARCH_KM.beach, name: beach?.name ?? null, placeId: beach?.id ?? null },
+    { key: 'beach', tone: toneByKm(beachKm, LIMITS.beach), km: beachKm, searchKm: SEARCH_KM.beach, name: beachName, placeId: beach?.id ?? beachFallback?.placeId ?? null, driveMin: beach?.driveMin ?? null, straight: !beach && !!beachFallback },
     { key: 'health', tone: toneByKm(clinic?.distanceKm ?? null, LIMITS.health), km: clinic?.distanceKm ?? null, searchKm: SEARCH_KM.hospital, name: clinic?.name ?? null, pharmacyKm: pharmacy?.distanceKm ?? null },
     // Магазин ищется в 1,5 км: не нашли — значит дальше, это «есть минусы», а не «далеко».
     { key: 'shop', tone: shop ? toneByKm(shop.distanceKm, LIMITS.shop) : 'warn', km: shop?.distanceKm ?? null, searchKm: SEARCH_KM.supermarket, name: shop?.name ?? null },

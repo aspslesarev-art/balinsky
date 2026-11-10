@@ -11,6 +11,8 @@ export type NearbyPlace = {
   lat: number
   lng: number
   distanceKm: number
+  /** Минут на машине (Google Maps), где измерено — для далёких мест вроде пляжа. */
+  driveMin?: number | null
 }
 
 export type NearbyCategory = { key: string; title: string }

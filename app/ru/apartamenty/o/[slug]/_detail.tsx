@@ -1146,6 +1146,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     bedrooms: verdictSnap?.villa.bedrooms ?? null,
     noise: livingNoise,
     climate: geoFacts?.climate ?? null,
+    point: { lat, lng },
   })
   // Ближайший пляж с описанием (lib/beaches.ts) — карточкой в разделе «Место».
   const beachRow = livingFacts?.rows.find(r => r.key === 'beach') ?? null

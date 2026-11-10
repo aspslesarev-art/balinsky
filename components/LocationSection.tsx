@@ -24,6 +24,8 @@ const COPY = {
     labels: { school: 'Школа', intl: 'Международная школа', beach: 'Пляж', health: 'Клиника', shop: 'Магазин', cafes: 'Кафе', quiet: 'Тишина', volcano: 'Вулкан' },
     km: (km: number) => km < 1 ? `${Math.round(km * 1000 / 50) * 50} м` : `${km.toFixed(1).replace('.', ',')} км`,
     far: (km: number) => `дальше ${String(km).replace('.', ',')} км`,
+    drive: (m: number) => `${m} мин на машине`,
+    straight: 'по прямой',
     quietOk: 'тихо',
     cafesCount: (n: number) => `${n} в 500 м`,
     routeLabels: { airport: '✈ Аэропорт', canggu: 'Чангу', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур' } as Record<string, string>,
@@ -41,6 +43,8 @@ const COPY = {
     labels: { school: 'School', intl: 'International school', beach: 'Beach', health: 'Clinic', shop: 'Grocery', cafes: 'Cafés', quiet: 'Quiet', volcano: 'Volcano' },
     km: (km: number) => km < 1 ? `${Math.round(km * 1000 / 50) * 50} m` : `${km.toFixed(1)} km`,
     far: (km: number) => `beyond ${km} km`,
+    drive: (m: number) => `${m} min by car`,
+    straight: 'as the crow flies',
     quietOk: 'quiet',
     cafesCount: (n: number) => `${n} within 500 m`,
     routeLabels: { airport: '✈ Airport', canggu: 'Canggu', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur' } as Record<string, string>,
@@ -137,7 +141,8 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
         } else if (r.key === 'cafes') {
           sub = r.count ? c.cafesCount(r.count) : (r.km != null ? c.km(r.km) : '')
         } else {
-          sub = [r.km != null ? c.km(r.km) : c.far(r.searchKm ?? 0), r.name].filter(Boolean).join(' · ')
+          const kmTxt = r.km != null ? (r.straight ? `${c.km(r.km)} ${c.straight}` : c.km(r.km)) : c.far(r.searchKm ?? 0)
+          sub = [kmTxt, r.name, r.driveMin ? c.drive(r.driveMin) : null].filter(Boolean).join(' · ')
         }
         return { emoji, label, sub }
       })
