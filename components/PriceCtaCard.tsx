@@ -156,7 +156,7 @@ export function PriceCtaCard({
   note?: string | null
   sidebar?: boolean
   sidebarExtra?: ReactNode
-  dealRows?: { label: string; valueUsd?: number; valueText?: string }[] | null
+  dealRows?: { label: string; valueUsd?: number; valueText?: string; approx?: boolean }[] | null
   priceCompDiffPct?: number | null
 }) {
   const { currency } = useCurrency()
@@ -207,7 +207,7 @@ export function PriceCtaCard({
           {dealRows.map((row, i) => (
             <div key={i} className="flex justify-between gap-2 py-2 border-b border-dotted border-[#CFD8D3] text-[14px]">
               <span className="text-[var(--color-text-muted)]">{row.label}</span>
-              <span className="font-medium text-right">{row.valueUsd != null ? formatPriceExact(row.valueUsd, currency, lang) : row.valueText}</span>
+              <span className="font-medium text-right">{row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : row.valueText}</span>
             </div>
           ))}
         </div>

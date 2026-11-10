@@ -195,7 +195,7 @@ export function PhotoGalleryHero({
   )
 }
 
-function Lightbox({
+export function Lightbox({
   photos,
   startIndex,
   alt,

@@ -109,6 +109,7 @@ import { facetLabel } from '@/lib/filter-i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
 import { Villa3DPlan } from '@/components/Villa3DPlan'
+import { VillaGallery } from '@/components/VillaGallery'
 import { metaSnippet } from '@/lib/seo'
 
 const COPY = {
@@ -1583,7 +1584,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   fr: <>Les villas similaires coûtent <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Celle-ci : <b>{fmtUsd(priceNum, lang)}</b>.</>,
                   de: <>Ähnliche Villen kosten <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Diese: <b>{fmtUsd(priceNum, lang)}</b>.</>,
                   zh: <>附近类似别墅通常 <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>。这套 <b>{fmtUsd(priceNum, lang)}</b>。</>,
-                  nl: <>Vergelijkbare villa's kosten <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Deze: <b>{fmtUsd(priceNum, lang)}</b>.</>,
+                  nl: <>Vergelijkbare villa&apos;s kosten <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Deze: <b>{fmtUsd(priceNum, lang)}</b>.</>,
                   ban: <>Villa mirip ring sekitar <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Niki <b>{fmtUsd(priceNum, lang)}</b>.</>,
                   pl: <>Podobne wille kosztują <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Ta: <b>{fmtUsd(priceNum, lang)}</b>.</>,
                   uk: <>Схожі вілли коштують <b>{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</b>. Ця - <b>{fmtUsd(priceNum, lang)}</b>.</>,
@@ -1667,7 +1668,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           />
         )}
         {landPrices && land != null && land > 0 && priceNum != null && priceNum > 0 && (
-          <section className="scroll-mt-24">
+          <section className="scroll-mt-24 lg:hidden">
             <LandPriceBlock data={landPrices} landM2={land} priceUsd={priceNum} lang={lang} />
           </section>
         )}
@@ -1786,47 +1787,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         {/* ── Main column ── */}
         <div className="min-w-0 flex flex-col gap-12" style={{ flex: '999 1 720px' }}>
 
-        <section className="flex flex-col gap-2">
-          <div className="relative">
-            {photos[0] && (
-              <Image
-                src={photos[0]}
-                alt={photoAlts?.[0] ?? title}
-                width={920}
-                height={480}
-                sizes="(min-width: 1024px) 720px, 100vw"
-                priority
-                className="w-full h-[300px] sm:h-[400px] md:h-[480px] object-cover rounded-xl"
-              />
-            )}
-            <div className="absolute left-1/2 bottom-4 -translate-x-1/2 flex bg-[rgb(16_24_20/0.8)] rounded-lg overflow-hidden">
-              <span className="text-white text-[14px] font-semibold px-4 py-2.5 bg-white/[0.16]">{photos.length} {pickCopy({ ru: 'фото', en: 'photos', id: 'foto', fr: 'photos', de: 'Fotos', zh: '照片', nl: 'foto\'s', ban: 'poto', pl: 'zdjęć', uk: 'фото' }, lang)}</span>
-              {videos.length > 0 && <span className="text-white text-[14px] px-4 py-2.5">{videos.length} {pickCopy({ ru: 'видео', en: 'videos', id: 'video', fr: 'vidéos', de: 'Videos', zh: '视频', nl: 'video\'s', ban: 'vidéo', pl: 'wideo', uk: 'відео' }, lang)}</span>}
-              {plan3dUrl && <span className="text-white text-[14px] px-4 py-2.5">{pickCopy({ ru: 'Планировка', en: 'Floor plan', id: 'Denah', fr: 'Plan', de: 'Grundriss', zh: '平面图', nl: 'Plattegrond', ban: 'Denah', pl: 'Rzut', uk: 'Планування' }, lang)}</span>}
-            </div>
-          </div>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-            {photos.slice(1, 4).map((p, i) => (
-              <Image key={i} src={p} alt={photoAlts?.[i + 1] ?? title} width={160} height={72} sizes="160px" className="w-full h-[72px] object-cover rounded-lg" />
-            ))}
-            {photos.length > 4 && (
-              <div className="h-[72px] rounded-lg bg-[#F3F7F4] flex items-center justify-center text-[14px] text-[#36413B]">
-                +{photos.length - 4} {pickCopy({ ru: 'фото', en: 'photos', id: 'foto', fr: 'photos', de: 'Fotos', zh: '照片', nl: 'foto\'s', ban: 'poto', pl: 'zdjęć', uk: 'фото' }, lang)}
-              </div>
-            )}
-            {photos[4] && (
-              <Image src={photos[4]} alt={photoAlts?.[4] ?? title} width={160} height={72} sizes="160px" className="w-full h-[72px] object-cover rounded-lg hidden sm:block" />
-            )}
-            {plan3dUrl ? (
-              <a href={plan3dUrl} target="_blank" rel="noopener" className="h-[72px] rounded-lg bg-[#EEF6F1] flex-col items-center justify-center gap-0.5 no-underline hidden sm:flex">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B6E4A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>
-                <span className="text-[11px] text-[#1B6E4A] font-medium">{pickCopy({ ru: 'Планировка', en: 'Floor plan', id: 'Denah', fr: 'Plan', de: 'Grundriss', zh: '平面图', nl: 'Plattegrond', ban: 'Denah', pl: 'Rzut', uk: 'Планування' }, lang)}</span>
-              </a>
-            ) : photos[5] ? (
-              <Image src={photos[5]} alt={photoAlts?.[5] ?? title} width={160} height={72} sizes="160px" className="w-full h-[72px] object-cover rounded-lg hidden sm:block" />
-            ) : null}
-          </div>
-        </section>
+        <VillaGallery
+          photos={photos}
+          alts={photoAlts}
+          title={title}
+          videoCount={videos.length}
+          hasPlan={!!plan3dUrl}
+          lang={lang}
+        />
 
         {seoText && (
           <section>
@@ -1868,6 +1836,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               )}
             </div>
           </section>
+        )}
+
+        {plan3dUrl && (
+          <div id="plan" className="scroll-mt-24">
+            <Villa3DPlan src={plan3dUrl} lang={lang} />
+          </div>
         )}
 
         {analytics}
@@ -1917,6 +1891,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </section>
         )}
 
+        {videos.length > 0 && (
+          <div id="video" className="scroll-mt-24">
+            <VideoGrid videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
+          </div>
+        )}
+
         <section>
           <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-2">
             {c.faqHeading}
@@ -1956,6 +1936,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               dealRows={[
                 ...(priceM2 != null ? [{ label: c.factPriceM2, valueUsd: priceM2 }] : []),
                 ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
+                ...(landPrices && land != null && land > 0 ? [{ label: pickCopy({ ru: 'Земля под виллой', en: 'Land under the villa', id: 'Tanah di bawah vila', fr: 'Terrain de la villa', de: 'Grundstück der Villa', zh: '别墅土地', nl: 'Grond onder de villa', ban: 'Tanah vila', pl: 'Grunt pod willą', uk: 'Земля під віллою' }, lang), valueUsd: Math.round(landPrices.medianPpm * land), approx: true }] : []),
                 ...(priceNum != null && leaseYears != null && leaseYears > 0 ? [{ label: c.factPricePerYear, valueUsd: Math.round(priceNum / leaseYears) }] : []),
                 { label: c.factSeller, valueText: isResale ? c.factSellerResale : c.factSellerDev },
               ]}

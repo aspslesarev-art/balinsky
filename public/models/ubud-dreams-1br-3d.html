@@ -562,7 +562,7 @@ for(const x of [fitBox.min.x,fitBox.max.x])
  */
 function layoutBox(){
   const W = innerWidth, H = innerHeight;
-  const wide = W >= 900;
+  const wide = W > 640;   // совпадает с @media(max-width:640px): панель слева до этой ширины
   const hud = document.querySelector('.hud');
   // Всё служебное собрано в панели слева, поэтому справа от неё вся высота
   // холста принадлежит модели. На узком экране панель лежит поверх сцены —
