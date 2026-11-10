@@ -83,8 +83,20 @@ async function countSince(table: 'reservations', statuses: string[], fromIso: st
   return count ?? 0
 }
 
+// День, с которого ведётся отчёт (app_config.crm_report_start). Всё, что
+// раньше, в цифры не попадает, даже если выбран период «30 дней».
+async function reportStart(): Promise<string | null> {
+  const { data } = await sb.from('app_config').select('value').eq('key', 'crm_report_start').maybeSingle()
+  const v = (data as { value: string } | null)?.value
+  return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null
+}
+
 export async function touchStats(period: TouchPeriodKey): Promise<TouchStats> {
-  const { from, to } = periodRange(period)
+  const range = periodRange(period)
+  const start = await reportStart()
+  const to = range.to
+  // Если период целиком раньше старта отчёта, from > to, и выборки пустые — это честный ноль.
+  const from = start && start > range.from ? start : range.from
   const fromIso = dayStartIso(from)
   const toIso = new Date(Date.parse(dayStartIso(to)) + DAY_MS).toISOString()
 
