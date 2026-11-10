@@ -15,6 +15,7 @@ import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ManagerCard } from '@/components/ManagerCard'
+import { EcoWoodChessBoard, type VillaUnit } from '@/components/EcoWoodChessBoard'
 import { asList } from '@/lib/as-list'
 import { loadManagersByDeveloperSlug } from '@/lib/managers'
 import { loadAllNews } from '@/lib/news'
@@ -244,6 +245,30 @@ async function loadProjectsByDeveloper(devName: string): Promise<{
     })
 
   return { complexes, apartmentCount: 0 }
+}
+
+async function loadChessBoardVillas(complexIds: string[]): Promise<VillaUnit[]> {
+  const ecoId = complexIds.find(id => id === 'adm_ecowood_001')
+  if (!ecoId) return []
+  const { data } = await sb.from('raw_villas')
+    .select('airtable_id, data')
+    .like('airtable_id', 'adm_ecowood_%')
+  if (!data) return []
+  return data
+    .map(r => {
+      const d = r.data as Record<string, unknown>
+      const unit = parseInt(String(r.airtable_id).replace('adm_ecowood_v', ''), 10)
+      return {
+        unit,
+        bedrooms: Number(d['Спальни']) || 1,
+        area: Number(d['Площадь']) || 70,
+        price: Number(d['Цена']) || 159000,
+        sold: d['Продано'] === true || d['Продано'] === 'true',
+        slug: String(d['SEO:Slug'] ?? ''),
+      }
+    })
+    .filter(v => v.slug && v.unit >= 1 && v.unit <= 10)
+    .sort((a, b) => a.unit - b.unit)
 }
 
 const COPY = {
@@ -656,6 +681,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     loadProjectsByDeveloper(name),
     loadManagersByDeveloperSlug(slug),
   ])
+  const chessBoardVillas = await loadChessBoardVillas(complexes.map(c => c.id))
   const districts = [...new Set(complexes.map(c => c.location).filter(Boolean) as string[])]
   const complexSlugs = complexes.map(c => c.slug).filter((s): s is string => !!s)
 
@@ -805,6 +831,13 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {complexes.map(it => <ComplexCard key={it.id} c={it} lang={lang} />)}
             </div>
+            {chessBoardVillas.length > 0 && (
+              <EcoWoodChessBoard
+                villas={chessBoardVillas}
+                masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/masterplan.jpg"
+                lang={lang}
+              />
+            )}
           </section>
         )}
 
