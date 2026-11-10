@@ -33,6 +33,11 @@ export async function POST(request: Request) {
     // source (EN text with its _hash) — flush it too, or EN stays stale for
     // the translations TTL (a day).
     revalidateTag(`translations:${k}`, 'max')
+    // Photo audit / alt texts (<bucket>/_vision.json, lib/listing-features.ts)
+    // are cached for a week under vision:<singular>; scripted edits to them
+    // (e.g. marking floor plans) must show without waiting for that TTL.
+    const visionKind = ({ villas: 'villa', apartments: 'apartment', complexes: 'complex' } as Record<string, string>)[k]
+    if (visionKind) revalidateTag(`vision:${visionKind}`, 'max')
     for (const route of KIND_TO_PATHS[k]) {
       revalidatePath(route.path, route.type)
     }
