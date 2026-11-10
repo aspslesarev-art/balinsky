@@ -13,6 +13,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { NewsBody } from '@/components/NewsBody'
 import { RelatedContent } from '@/components/RelatedContent'
+import { NewsBuyLinks } from '@/components/NewsBuyLinks'
 import { loadAllNews, loadNewsBySlug } from '@/lib/news'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap, SITE_ORIGIN } from '@/lib/hreflang'
@@ -226,6 +227,8 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
         </article>
 
         <RelatedContent lang={lang} developers={n.developers} complexNames={n.complexNames} title={n.title} />
+
+        <NewsBuyLinks lang={lang} text={`${n.title}\n${n.body ?? ''}`} />
 
         {related.length > 0 && (
           <section className="mt-14">
