@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { Sun, Umbrella } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import type { BeachProfile } from '@/lib/beaches'
 import type { Climate } from '@/lib/complex-access'
@@ -199,10 +200,10 @@ export function BeachWeatherDesign({ beach, beachKm, beachPhoto, climate, lang }
           <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mt-0 mb-0">{c.weather}</h2>
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-[22px] font-semibold">{year.sunny}</span>
-            <span className="text-[13px] text-[#4C5751]">{c.sunnyDays} ({year.days})</span>
+            <span className="text-[13px] text-[#4C5751]">{c.sunnyDays}</span>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {Array.from({ length: 12 }, (_, i) => {
               const mo = climate[String(i + 1).padStart(2, '0')]
               if (!mo) return null
@@ -212,10 +213,15 @@ export function BeachWeatherDesign({ beach, beachKm, beachPhoto, climate, lang }
                 ? 'bg-[#F3F7F4]'
                 : 'bg-[rgb(80_140_255/0.10)]'
               return (
-                <div key={i} className={`flex flex-col gap-0.5 rounded-lg px-2.5 py-2 ${tone}`}>
+                <div key={i} className={`flex flex-col gap-1 min-w-0 rounded-lg px-2.5 py-2 ${tone}`}>
                   <span className="text-[12px] text-[#4C5751]">{months[i]}</span>
-                  <span className="text-[17px] font-semibold">☀ {mo.sunny}</span>
-                  <span className="text-[12px] text-[#4C5751]">{mo.t_max != null ? `${Math.round(mo.t_max)}°` : ''} · ☂ {mo.wet}</span>
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap text-[17px] font-semibold tabular-nums leading-none">
+                    <Sun size={14} strokeWidth={2} aria-hidden className="shrink-0" />{mo.sunny}
+                  </span>
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap text-[12px] text-[#4C5751] tabular-nums leading-none">
+                    {mo.t_max != null && <>{Math.round(mo.t_max)}°</>}
+                    <Umbrella size={12} strokeWidth={2} aria-hidden className="shrink-0 ml-1" />{mo.wet}
+                  </span>
                 </div>
               )
             })}
