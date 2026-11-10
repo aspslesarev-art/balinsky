@@ -1187,6 +1187,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   // Генплан комплекса с подсвеченной этой виллой — вкладка «Генплан» в
   // галерее (владелец 2026-11-10). Только если шахматка комплекса ведёт на
   // эту страницу.
+  let masterplanCover: string | null = null
   const masterplanNode = await (async () => {
     const complexId = firstString(d['Комплекс'])
     if (!complexId) return null
@@ -1210,6 +1211,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         url: switchLangPath(`/ru/villy/o/${s2}`, lang), photoUrl: manifest[id]?.[0] ?? null,
       }
     }
+    const hl = hotspots.find(h => h.targetUnitSlug === slug)
+    masterplanCover = layers.find(l => l.id === hl?.layerId)?.photoUrl ?? layers[0].photoUrl
     return (
       <ComplexVisualizationViewer
         layers={layers.map(l => ({ id: l.id, parentLayerId: l.parentLayerId, title: l.title, photoUrl: l.photoUrl }))}
@@ -1837,6 +1840,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           title={title}
           lang={lang}
           masterplan={masterplanNode}
+          masterplanCover={masterplanCover}
         />
 
         {seoText && (

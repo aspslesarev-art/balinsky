@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, X, Play, Box } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Play, Box, MapPinned } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { WishlistButton, type WishlistInput } from './WishlistButton'
 
@@ -38,7 +38,7 @@ const chip = 'text-white text-[14px] px-4 py-2.5 hover:bg-white/[0.12] focus-vis
 const tile = 'relative h-[72px] rounded-lg overflow-hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraChips, masterplan }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraChips, masterplan, masterplanCover }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -52,6 +52,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   extraChips?: ReactNode
   /** Генплан комплекса с подсвеченной виллой — вкладка справа от планировок. */
   masterplan?: ReactNode
+  /** Картинка для плитки «Генплан» в ленте превью. */
+  masterplanCover?: string | null
 }) {
   const c = pickCopy(COPY, lang)
   const [open, setOpen] = useState<{ tab: Tab; i: number } | null>(null)
@@ -62,7 +64,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   // Strip: up to 4 photo thumbs, then a video tile and a plans tile when present.
   // The strip is 4 cells on phones and 5 from sm, so the photo thumbs fill
   // whatever the video/plan tiles leave, and «+N» sits on the last visible one.
-  const extra = (videos.length > 0 ? 1 : 0) + (planCount > 0 ? 1 : 0)
+  const extra = (videos.length > 0 ? 1 : 0) + (planCount > 0 ? 1 : 0) + (masterplan ? 1 : 0)
   const thumbs = photos.slice(1, 1 + Math.max(1, 5 - extra))
   const mobileN = Math.min(thumbs.length, Math.max(1, 4 - extra))
   const restMobile = photos.length - 1 - mobileN
@@ -116,7 +118,16 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
               {/* Как «+7 фото»: тёмная плашка и белый текст — светлая была почти не видна. */}
               <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.62)] text-white text-[14px] font-semibold">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>
-                {c.plans}
+                {c.plans}{planCount > 1 ? ` ${planCount}` : ''}
+              </span>
+            </button>
+          )}
+          {masterplan && (
+            <button type="button" onClick={() => setOpen({ tab: 'master', i: 0 })} className={tile} aria-label={c.master}>
+              {masterplanCover && <Image src={masterplanCover} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover" />}
+              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.55)] text-white text-[14px] font-semibold">
+                <MapPinned size={18} aria-hidden />
+                {c.master}
               </span>
             </button>
           )}
