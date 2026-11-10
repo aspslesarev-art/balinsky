@@ -345,27 +345,28 @@ const EDEM_II: SitePlan = {
  * повторяют косую границу поля). Вилла 1 — у дороги и канала, участок 120 м².
  *
  * Оси плана: X — вдоль ряда (вилла 1 → 6), Z — от бассейна (минус) ко входу.
- * На местности: поле за галереей Mega Sari Art Studio, бассейны смотрят на
- * рисовые поля к востоку. Привязка и разворот — стартовые, доводятся в
- * /admin/sun/citrine по снимку.
+ * На местности (разметка владельца 10.11.2026): ряд вдоль северной стены
+ * галереи Mega Sari Art Studio, вилла 1 на западе, вход со стороны галереи,
+ * бассейны смотрят на север — на рисовые террасы. Лесенка ряда параллельна
+ * стене галереи (азимут стены ≈101°), отсюда азимут оси X 80°.
  */
 const CITRINE_PITCH = 6.96, CITRINE_STAGGER = 2.74, CITRINE_W = 6.2, CITRINE_D = 9.14
 const CITRINE: SitePlan = {
   title: 'CITRINE',
   district: 'Лодтундух, Убуд',
   utcOffsetHours: 8,
-  defaults: { rowAzimuth: 170, latitude: -8.559784, longitude: 115.263214 },
-  // glb — тот же план, развёрнутый на азимут ряда 170° (scripts/make-citrine-glb.py);
+  defaults: { rowAzimuth: 80, latitude: -8.559913, longitude: 115.263228 },
+  // glb — тот же план, развёрнутый на азимут ряда 80° (scripts/make-citrine-glb.py);
   // при смене азимута в /admin/sun/citrine модель нужно пересобрать.
   google3d: {
     modelUrl: '/sun/citrine.glb',
-    latitude: -8.559784,
-    longitude: 115.263214,
+    latitude: -8.559913,
+    longitude: 115.263228,
     heading: 0,
     // 6 вилл на ~45 м: с 1.1 км их не видно, начинаем с 220 м.
     range: 220,
-    // Камера с рисовых полей на восток от участка смотрит на запад — на бассейны и фасады.
-    cameraHeading: 270,
+    // Камера с рисовых террас к северу смотрит на юг — на бассейны и фасады, за ними галерея.
+    cameraHeading: 170,
   },
   buildingDepth: CITRINE_D,
   units: [{ id: 1, x0: 0, x1: CITRINE_W }],
@@ -397,7 +398,7 @@ const CITRINE: SitePlan = {
     url: '/sun/citrine.jpg',
     sizePx: 1280,
     metersPerPixel: 0.2953,
-    anchorPx: { x: 825, y: 440 },
+    anchorPx: { x: 830, y: 489.5 },
   },
 }
 
