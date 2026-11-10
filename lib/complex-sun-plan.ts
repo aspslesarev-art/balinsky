@@ -112,6 +112,12 @@ export type SitePlan = {
   viewRadius?: number
   /** Показ на 3D-карте Google. Не задан — кнопки на странице нет. */
   google3d?: Google3DView
+  /**
+   * Детальная модель дома вместо коробки: 'modern-villa' — два этажа со
+   * сдвинутым вторым, вальмовая тёмная крыша, панорамное остекление в рамах,
+   * балкон с ящиками зелени, деревянная терраса (вариант A, владелец 10.11.2026).
+   */
+  houseStyle?: 'modern-villa'
   /** Контур участка [x, z] по часовой стрелке. */
   plot: [number, number][]
   pools: PlanPool[]
@@ -393,10 +399,11 @@ const CITRINE: SitePlan = {
     // Камера стоит за виллами, низко, и смотрит туда же, куда фасады, —
     // на рисовые террасы и вулканы Батур и Агунг на горизонте (владелец
     // 10.11.2026, скриншот). Курс 35° — между Батуром (19°) и Агунгом (48°).
-    range: 330,
+    range: 190,
     cameraHeading: 35,
     cameraTilt: 80,
   },
+  houseStyle: 'modern-villa',
   buildingDepth: CITRINE_D,
   units: [{ id: 1, x0: 0, x1: CITRINE_W }],
   blocks: Array.from({ length: 6 }, (_, i) => ({

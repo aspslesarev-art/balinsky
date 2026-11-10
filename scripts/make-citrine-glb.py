@@ -34,20 +34,38 @@ def boxp(x0, x1, z0, z1, h0, h1, color):
     faces = [(4,5,6,7),(0,3,2,1),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)]
     for f in faces: quad(*(c[i] for i in f), color)
 
+# Детальная вилла, вариант A (владелец 10.11.2026) — как houseStyle
+# 'modern-villa' в components/sun/sun-model.ts: два этажа, второй сдвинут от
+# фасада, вальмовая тёмная крыша, остекление в рамах, ящик с зеленью,
+# деревянная терраса, садовая стена, бассейн.
+FRAME = (0.11, 0.11, 0.12); DECK = (0.55, 0.42, 0.29); PLANTER = (0.73, 0.70, 0.65)
+LEAF = (0.25, 0.48, 0.23); YARD = (0.90, 0.88, 0.84); GLASS = (0.10, 0.15, 0.18)
+H1, SLAB = 3.1, 0.22
 for i in range(6):
     ox, oz = i*PITCH, i*STAG
     PIV[0], PIV[1] = ox + W/2, oz + D/2  # поворот вокруг центра дома
-    boxp(ox, ox+W, oz, oz+D, 0, EAVE, WALL)
-    # glazed pool-side facade
-    boxp(ox+0.25, ox+W-0.25, oz-0.06, oz, 0.25, EAVE-0.45, GLASS)
-    # gable roof, ridge along the house depth (as in sun-model.ts)
-    x0, x1, xm = ox-OVER, ox+W+OVER, ox+W/2
-    z0, z1 = oz-OVER, oz+D+OVER
-    a0, b0, r0 = enu(x0,z0,EAVE), enu(x1,z0,EAVE), enu(xm,z0,EAVE+RIDGE)
-    a1, b1, r1 = enu(x0,z1,EAVE), enu(x1,z1,EAVE), enu(xm,z1,EAVE+RIDGE)
-    quad(a0, r0, r1, a1, ROOF); quad(r0, b0, b1, r1, ROOF)
-    tri(a0, b0, r0, ROOF); tri(b1, a1, r1, ROOF)
-    tri(r0, a0, b0, ROOF); tri(r1, b1, a1, ROOF)
+    B = lambda x0, x1, h0, h1, z0, z1, c: boxp(ox+x0, ox+x1, oz+z0, oz+z1, h0, h1, c)
+    B(0, W, 0, H1, 0.2, D, WALL)
+    B(-0.15, W+0.15, H1, H1+SLAB, -0.6, D+0.15, WALL)
+    B(0, W, H1+SLAB, EAVE, 0.6, D, WALL)
+    B(0.25, W-0.25, 0.1, H1-0.15, 0.15, 0.22, GLASS)
+    for k in range(5):
+        x = 0.2 + k*(W-0.4)/4; B(x-0.04, x+0.04, 0.05, H1-0.1, 0.1, 0.24, FRAME)
+    B(0.2, W-0.2, H1-0.2, H1-0.1, 0.1, 0.24, FRAME)
+    for a, b in ((0.5, W/2-0.4), (W/2+0.4, W-0.5)):
+        B(a, b, H1+0.6, EAVE-0.3, 0.55, 0.62, GLASS)
+        for x in (a, (a+b)/2, b): B(x-0.04, x+0.04, H1+0.55, EAVE-0.25, 0.52, 0.64, FRAME)
+    B(-0.1, W+0.1, H1+SLAB, H1+0.7, -0.6, -0.3, PLANTER)
+    for k in range(7):
+        x = 0.3 + k*(W-0.6)/6; B(x-0.22, x+0.22, H1+0.7, H1+1.05, -0.62, -0.28, LEAF)
+    B(0, W, 0, 0.12, -2.88, 0.2, DECK)
+    B(-0.5, -0.32, 0, 1.9, -5.8, D, YARD)
+    # вальмовая крыша
+    x0, x1, z0, z1 = ox-0.35, ox+W+0.35, oz+0.25, oz+D+0.35
+    xm = (x0+x1)/2; ins = (x1-x0)*0.45; y = EAVE; yr = EAVE+RIDGE
+    A_, B_, C_, D_ = enu(x0,z0,y), enu(x1,z0,y), enu(x1,z1,y), enu(x0,z1,y)
+    R0, R1 = enu(xm,z0+ins,yr), enu(xm,z1-ins,yr)
+    tri(A_, B_, R0, ROOF); quad(B_, C_, R1, R0, ROOF); tri(C_, D_, R1, ROOF); quad(D_, A_, R0, R1, ROOF)
     # pool
     boxp(ox+1.27, ox+1.27+4.61, oz-5.1, oz-2.88, 0, 0.12, POOL)
 

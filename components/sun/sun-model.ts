@@ -236,6 +236,74 @@ function applyShear(obj: THREE.Object3D, k: number) {
   obj.matrixAutoUpdate = false
 }
 
+/**
+ * Детальная вилла (houseStyle 'modern-villa'), локальные оси корпуса:
+ * x 0..width, z 0 = стеклянный фасад к бассейну, +z — к входу.
+ * Первый этаж 3.1 м, перекрытие с балконом-навесом, второй этаж сдвинут
+ * от фасада на 0.6 м, вальмовая крыша. Высоты подгоняются под eaveHeight.
+ */
+function modernVilla(
+  materials: Record<string, THREE.Material>,
+  width: number,
+  depth: number,
+  heights: ModelHeights,
+) {
+  const g = new THREE.Group()
+  const add = (m: THREE.Material, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, shadow = true) => {
+    const mesh = box(m, { width: x1 - x0, height: y1 - y0, depth: z1 - z0, x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: (z0 + z1) / 2 })
+    mesh.castShadow = shadow
+    g.add(mesh)
+    return mesh
+  }
+  const eave = heights.eaveHeight
+  const h1 = Math.min(3.1, eave * 0.5)
+  const slab = 0.22
+  const top = eave
+
+  add(materials.wall, 0, width, 0, h1, 0.2, depth)                        // первый этаж
+  add(materials.wall, -0.15, width + 0.15, h1, h1 + slab, -0.6, depth + 0.15) // перекрытие + навес
+  add(materials.wall, 0, width, h1 + slab, top, 0.6, depth)               // второй этаж
+  // остекление первого этажа с рамами
+  add(materials.glazing, 0.25, width - 0.25, 0.1, h1 - 0.15, 0.15, 0.22, false)
+  for (let i = 0; i <= 4; i++) {
+    const x = 0.2 + (i * (width - 0.4)) / 4
+    add(materials.frame, x - 0.04, x + 0.04, 0.05, h1 - 0.1, 0.1, 0.24, false)
+  }
+  add(materials.frame, 0.2, width - 0.2, h1 - 0.2, h1 - 0.1, 0.1, 0.24, false)
+  // окна второго этажа
+  for (const [a, b] of [[0.5, width / 2 - 0.4], [width / 2 + 0.4, width - 0.5]]) {
+    add(materials.glazing, a, b, h1 + 0.6, top - 0.3, 0.55, 0.62, false)
+    for (const x of [a, (a + b) / 2, b]) add(materials.frame, x - 0.04, x + 0.04, h1 + 0.55, top - 0.25, 0.52, 0.64, false)
+  }
+  // ящик с зеленью по краю балкона
+  add(materials.planter, -0.1, width + 0.1, h1 + slab, h1 + 0.7, -0.6, -0.3)
+  const leafGeo = new THREE.IcosahedronGeometry(0.25, 1)
+  for (let i = 0; i < 7; i++) {
+    const leaf = new THREE.Mesh(leafGeo, materials.leaf)
+    leaf.position.set(0.3 + i * ((width - 0.6) / 6), h1 + 0.85, -0.45)
+    leaf.castShadow = true
+    g.add(leaf)
+  }
+  // деревянная терраса у фасада
+  add(materials.deck, 0, width, 0, 0.12, -2.88, 0.2, false)
+  // садовая стена между соседними двориками (с запада)
+  add(materials.yardWall, -0.5, -0.32, 0, Math.max(1.6, heights.yardWall), -5.8, depth)
+  // вальмовая крыша
+  const x0 = -0.35, x1 = width + 0.35, z0 = 0.25, z1 = depth + 0.35, y = top, rise = heights.ridgeRise
+  const xm = (x0 + x1) / 2, inset = (x1 - x0) * 0.45
+  const A = [x0, y, z0], B = [x1, y, z0], C = [x1, y, z1], D = [x0, y, z1]
+  const R0 = [xm, y + rise, z0 + inset], R1 = [xm, y + rise, z1 - inset]
+  const tris = [A, R0, B, B, R0, R1, B, R1, C, C, R1, D, D, R1, R0, D, R0, A]
+  const roofGeo = new THREE.BufferGeometry()
+  roofGeo.setAttribute('position', new THREE.Float32BufferAttribute(tris.flat(), 3))
+  roofGeo.computeVertexNormals()
+  const roof = new THREE.Mesh(roofGeo, materials.roofDouble)
+  roof.castShadow = true
+  roof.receiveShadow = true
+  g.add(roof)
+  return g
+}
+
 /** Плоская отмостка участка — на неё ложатся тени. */
 function plotPad(materials: Record<string, THREE.Material>, plan: SitePlan) {
   const shape = new THREE.Shape()
@@ -258,6 +326,12 @@ export function buildComplexModel(plan: SitePlan, heights: ModelHeights): Comple
     pool: standard(COLORS.pool, { roughness: 0.12, metalness: 0.35 }),
     poolRim: standard(COLORS.poolRim),
     ground: standard(COLORS.ground, { roughness: 1 }),
+    // детали 'modern-villa'
+    frame: standard(0x1c1d1f),
+    planter: standard(0xb9b2a6),
+    leaf: standard(0x3f7a3a),
+    deck: standard(0x8b6a4b),
+    roofDouble: standard(COLORS.roof, { roughness: 0.6, side: THREE.DoubleSide }),
   }
 
   const group = new THREE.Group()
@@ -269,12 +343,14 @@ export function buildComplexModel(plan: SitePlan, heights: ModelHeights): Comple
     // разворачивается. Дворовые стены и бассейны — принадлежность одного
     // прямого ряда, у таких планов их нет.
     for (const block of plan.blocks) {
-      const row = buildingBlock(
-        materials,
-        { ...plan, units: block.units, buildingDepth: block.depth },
-        { ...heights, eaveHeight: block.eaveHeight ?? heights.eaveHeight },
-        block.roof,
-      )
+      const row = plan.houseStyle === 'modern-villa'
+        ? modernVilla(materials, (block.units[0]?.x1 ?? 6) - (block.units[0]?.x0 ?? 0), block.depth, { ...heights, eaveHeight: block.eaveHeight ?? heights.eaveHeight })
+        : buildingBlock(
+          materials,
+          { ...plan, units: block.units, buildingDepth: block.depth },
+          { ...heights, eaveHeight: block.eaveHeight ?? heights.eaveHeight },
+          block.roof,
+        )
       row.rotation.y = -(block.azimuth * Math.PI) / 180
       row.position.set(block.origin.x, 0, block.origin.z)
       if (block.shear) applyShear(row, block.shear)
