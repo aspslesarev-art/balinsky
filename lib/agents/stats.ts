@@ -1,116 +1,151 @@
-// Касания по агентам за период — данные для вкладки «Дашборд».
+// Отчётность по работе с агентами — данные для вкладки «Дашборд».
 //
-// Касание = одно сообщение в переписке бота, в любую сторону. Считаем по
-// сырым сообщениям (tg_messages), а не по отметкам в карточке: карточка
-// хранит только tg_chat_id, вся история живёт у бота-наблюдателя, и так
-// дашборд не расходится с разделом «Переписка Андрея».
-//
-// Отдельной SQL-функции для подсчёта нет намеренно: раздел закрытый,
-// открывают его несколько раз в день, а за сутки у бота сотни сообщений —
-// три колонки на такую выборку дешевле, чем миграция под каждый разрез.
+// Переписки на сайте нет и не должно быть: текст сообщений остаётся на Маке
+// Андрея. Мак каждые 15 минут присылает только счётчики — сколько сообщений
+// за сутки по Бали написал Андрей и сколько собеседник (crm_touch_daily), и
+// кому ушла рассылка и кто на неё ответил (crm_outreach). Встречи берём из
+// Google Календаря, брони и сделки — из reservations.
 
 import { createClient } from '@supabase/supabase-js'
-import { splitContact, type TouchRow, type TouchStats } from './types'
-import { listAgents } from './store'
+import type { AgentStatus, CalMeeting, TouchPeriodKey, TouchRow, TouchStats } from './types'
+import { GoogleNotConnectedError, listEvents, BOOKING_PROP } from '@/lib/meetings/google'
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
-// Бали — UTC+8 круглый год, переходов на летнее время нет. Считать «сегодня»
-// по UTC нельзя: до 8 утра по Бали это ещё вчерашние сутки, и утренняя
-// переписка уезжала бы в предыдущий день.
+// Бали — UTC+8 круглый год, без летнего времени.
 const WITA_OFFSET_MS = 8 * 3600_000
 const DAY_MS = 86400_000
 
-// Начало суток по Бали, days=1 → сегодняшние, days=7 → шесть дней назад.
-export function periodStart(days: number): string {
+function baliDay(offsetDays: number): string {
   const startOfTodayWita = Math.floor((Date.now() + WITA_OFFSET_MS) / DAY_MS) * DAY_MS
-  return new Date(startOfTodayWita - (days - 1) * DAY_MS - WITA_OFFSET_MS).toISOString()
+  return new Date(startOfTodayWita + offsetDays * DAY_MS).toISOString().slice(0, 10)
 }
 
-type MsgRow = { chat_id: number; direction: 'in' | 'out'; contact: string | null; ts: string }
+// Начало суток по Бали в UTC для дня YYYY-MM-DD.
+function dayStartIso(day: string): string {
+  return new Date(Date.parse(day + 'T00:00:00Z') - WITA_OFFSET_MS).toISOString()
+}
 
-// PostgREST отдаёт максимум 1000 строк за запрос, поэтому листаем
-// страницами. Потолок — чтобы случайный запрос на год не вычитал базу.
-const PAGE = 1000
-const MAX_ROWS = 20_000
+export function periodRange(p: TouchPeriodKey): { from: string; to: string } {
+  switch (p) {
+    case 'yesterday': return { from: baliDay(-1), to: baliDay(-1) }
+    case '7d':        return { from: baliDay(-6), to: baliDay(0) }
+    case '30d':       return { from: baliDay(-29), to: baliDay(0) }
+    default:          return { from: baliDay(0), to: baliDay(0) }
+  }
+}
 
-async function messagesSince(since: string): Promise<MsgRow[]> {
-  const out: MsgRow[] = []
-  for (let from = 0; out.length < MAX_ROWS; from += PAGE) {
-    const { data, error } = await sb
-      .from('tg_messages')
-      .select('chat_id,direction,contact,ts')
-      .gte('ts', since)
-      .order('ts', { ascending: true })
-      .range(from, from + PAGE - 1)
+type DailyRow = { day: string; chat_id: number; out_cnt: number; in_cnt: number; label: string | null; kind: TouchRow['kind'] }
+type AgentLite = { id: string; name: string; agency: string | null; status: AgentStatus; tg_chat_id: number | null; deals_count: number | null; deals_volume_usd: number | null }
+
+async function dailyRows(from: string, to: string): Promise<DailyRow[]> {
+  const out: DailyRow[] = []
+  for (let off = 0; off < 50_000; off += 1000) {
+    const { data, error } = await sb.from('crm_touch_daily')
+      .select('day,chat_id,out_cnt,in_cnt,label,kind')
+      .gte('day', from).lte('day', to)
+      .order('day', { ascending: true })
+      .range(off, off + 999)
     if (error) throw new Error(error.message)
-    const rows = (data ?? []) as MsgRow[]
-    out.push(...rows)
-    if (rows.length < PAGE) break
+    out.push(...((data ?? []) as DailyRow[]))
+    if (!data || data.length < 1000) break
   }
   return out
 }
 
-export async function touchStats(days: number): Promise<TouchStats> {
-  const since = periodStart(days)
-  const [messages, agents] = await Promise.all([messagesSince(since), listAgents()])
+// Встреча или зум из календаря. Свои записи с сайта (BOOKING_PROP) — тоже
+// встречи, их считаем; отменённые и «свободен» — нет.
+const ZOOM_RE = /zoom|зум|созвон|call|meet\.google|google meet/i
 
-  type Acc = { incoming: number; outgoing: number; last_ts: string; contact: string | null }
-  const byChat = new Map<number, Acc>()
-  for (const m of messages) {
-    const acc = byChat.get(m.chat_id) ?? { incoming: 0, outgoing: 0, last_ts: m.ts, contact: m.contact }
-    if (m.direction === 'out') acc.outgoing++
-    else acc.incoming++
-    // Сообщения отсортированы по времени, так что последнее и есть последнее.
-    acc.last_ts = m.ts
-    acc.contact = m.contact ?? acc.contact
-    byChat.set(m.chat_id, acc)
+async function calendarMeetings(fromIso: string, toIso: string): Promise<{ list: CalMeeting[]; state: TouchStats['calendar'] }> {
+  try {
+    const events = await listEvents(fromIso, toIso)
+    const list: CalMeeting[] = []
+    for (const e of events) {
+      if (e.status === 'cancelled' || e.transparency === 'transparent') continue
+      if (!e.start.dateTime) continue // события на весь день — не встречи
+      if (e.attendees?.some(a => a.self && a.responseStatus === 'declined')) continue
+      const title = e.summary?.trim() || (e.extendedProperties?.private?.[BOOKING_PROP] ? 'Запись с сайта' : 'Без названия')
+      list.push({ title, start: e.start.dateTime, zoom: Boolean(e.hangoutLink) || ZOOM_RE.test(title) })
+    }
+    return { list, state: 'ok' }
+  } catch (err) {
+    if (err instanceof GoogleNotConnectedError) return { list: [], state: 'not_connected' }
+    console.error('[agents] calendar', err)
+    return { list: [], state: 'error' }
   }
+}
 
-  const rows: TouchRow[] = []
-  const matched = new Set<number>()
-  for (const a of agents) {
-    if (a.tg_chat_id == null) continue
-    const acc = byChat.get(a.tg_chat_id)
-    if (!acc) continue
-    matched.add(a.tg_chat_id)
-    rows.push({
-      agent_id: a.id,
-      name: a.name,
-      agency: a.agency,
-      status: a.status,
-      incoming: acc.incoming,
-      outgoing: acc.outgoing,
-      total: acc.incoming + acc.outgoing,
-      last_ts: acc.last_ts,
-      deals_count: a.deals_count,
-      deals_volume_usd: a.deals_volume_usd,
-    })
-  }
-  rows.sort((x, y) => y.total - x.total || y.last_ts.localeCompare(x.last_ts))
+async function countSince(table: 'reservations', statuses: string[], fromIso: string, toIso: string): Promise<number> {
+  const { count, error } = await sb.from(table).select('id', { count: 'exact', head: true })
+    .in('status', statuses).gte('created_at', fromIso).lt('created_at', toIso)
+  if (error) throw new Error(error.message)
+  return count ?? 0
+}
 
-  // Переписки без карточки — их видно во «Входящих», но в сводке важно
-  // знать, что часть дня ушла в разговоры, которых в воронке нет.
-  const unlinked: TouchStats['unlinked'] = { chats: 0, touches: 0, names: [] }
-  for (const [chatId, acc] of byChat) {
-    if (matched.has(chatId)) continue
-    unlinked.chats++
-    unlinked.touches += acc.incoming + acc.outgoing
-    const { name, username } = splitContact(acc.contact)
-    if (unlinked.names.length < 5) unlinked.names.push(name || (username ? `@${username}` : `Чат ${chatId}`))
+export async function touchStats(period: TouchPeriodKey): Promise<TouchStats> {
+  const { from, to } = periodRange(period)
+  const fromIso = dayStartIso(from)
+  const toIso = new Date(Date.parse(dayStartIso(to)) + DAY_MS).toISOString()
+
+  const [daily, agentsRes, outreachRes, syncRes, cal, reservations, deals] = await Promise.all([
+    dailyRows(from, to),
+    sb.from('agents').select('id,name,agency,status,tg_chat_id,deals_count,deals_volume_usd').eq('archived', false).not('tg_chat_id', 'is', null),
+    sb.from('crm_outreach').select('sent_at,replied_at').gte('sent_at', fromIso).lt('sent_at', toIso),
+    sb.from('crm_sync_status').select('synced_at').eq('id', 1).maybeSingle(),
+    calendarMeetings(fromIso, toIso),
+    countSince('reservations', ['confirmed', 'invoice_sent', 'paid'], fromIso, toIso),
+    countSince('reservations', ['paid'], fromIso, toIso),
+  ])
+  if (agentsRes.error) throw new Error(agentsRes.error.message)
+  if (outreachRes.error) throw new Error(outreachRes.error.message)
+
+  const agents = new Map<number, AgentLite>()
+  for (const a of (agentsRes.data ?? []) as AgentLite[]) if (a.tg_chat_id != null) agents.set(Number(a.tg_chat_id), a)
+
+  const byChat = new Map<number, TouchRow>()
+  for (const d of daily) {
+    const a = agents.get(Number(d.chat_id))
+    const row = byChat.get(d.chat_id) ?? {
+      chat_id: d.chat_id,
+      agent_id: a?.id ?? null,
+      name: a?.name ?? d.label ?? `Чат ${d.chat_id}`,
+      agency: a?.agency ?? null,
+      status: a?.status ?? null,
+      kind: a ? 'agent' : d.kind,
+      incoming: 0, outgoing: 0, total: 0,
+      last_day: d.day,
+      deals_count: a?.deals_count ?? null,
+      deals_volume_usd: a?.deals_volume_usd ?? null,
+    }
+    row.outgoing += d.out_cnt
+    row.incoming += d.in_cnt
+    row.total = row.incoming + row.outgoing
+    if (d.day > row.last_day) row.last_day = d.day
+    byChat.set(d.chat_id, row)
   }
+  const rows = [...byChat.values()].sort((x, y) => y.total - x.total || y.last_day.localeCompare(x.last_day))
+
+  const outreach = (outreachRes.data ?? []) as Array<{ sent_at: string; replied_at: string | null }>
 
   return {
-    days,
-    since,
-    rows,
-    totals: {
-      touches: rows.reduce((s, r) => s + r.total, 0),
-      agents: rows.length,
-      incoming: rows.reduce((s, r) => s + r.incoming, 0),
-      outgoing: rows.reduce((s, r) => s + r.outgoing, 0),
+    period, from, to,
+    syncedAt: (syncRes.data as { synced_at: string } | null)?.synced_at ?? null,
+    funnel: {
+      wroteChats: rows.filter(r => r.outgoing > 0).length,
+      wroteMsgs: rows.reduce((s, r) => s + r.outgoing, 0),
+      gotChats: rows.filter(r => r.incoming > 0).length,
+      gotMsgs: rows.reduce((s, r) => s + r.incoming, 0),
+      dialogs: rows.filter(r => r.incoming > 0 && r.outgoing > 0).length,
+      outreachSent: outreach.length,
+      outreachReplied: outreach.filter(o => o.replied_at).length,
+      meetings: cal.list.length,
+      zooms: cal.list.filter(m => m.zoom).length,
+      reservations,
+      deals,
     },
-    unlinked,
-    truncated: messages.length >= MAX_ROWS,
+    rows,
+    meetings: cal.list,
+    calendar: cal.state,
   }
 }

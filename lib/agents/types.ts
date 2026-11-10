@@ -149,38 +149,54 @@ export type AgentNote = {
   created_at: string
 }
 
-// Строка дашборда: сколько сообщений было с агентом за период.
+// Строка дашборда: сколько сообщений было с человеком за период.
+// Текста переписки на сайте нет — только счётчики, их присылает Мак Андрея
+// (tg-business-observer/crm_sync) в crm_touch_daily.
 export type TouchRow = {
-  agent_id: string
+  chat_id: number
+  // Карточка агента, если есть; без неё строку не открыть, но посчитать надо.
+  agent_id: string | null
   name: string
   agency: string | null
-  status: AgentStatus
-  // incoming — написал агент, outgoing — написали мы.
+  status: AgentStatus | null
+  // Откуда человек: карточка агента, чат «Брокеры Бали», рассылка.
+  kind: 'agent' | 'brokers' | 'outreach' | null
+  // incoming — написал собеседник, outgoing — написал Андрей.
   incoming: number
   outgoing: number
   total: number
-  last_ts: string
-  // Сделки едут вместе со строкой: продающий агент должен быть виден и
-  // в сводке за день, а не только на доске.
+  last_day: string
   deals_count: number | null
   deals_volume_usd: number | null
 }
 
+export type CalMeeting = { title: string; start: string; zoom: boolean }
+
 export type TouchStats = {
-  days: number
-  since: string
+  period: TouchPeriodKey
+  from: string   // день по Бали, включительно
+  to: string     // день по Бали, включительно
+  syncedAt: string | null
+  funnel: {
+    wroteChats: number; wroteMsgs: number      // кому написал Андрей
+    gotChats: number; gotMsgs: number          // кто написал Андрею
+    dialogs: number                            // писали обе стороны
+    outreachSent: number; outreachReplied: number
+    meetings: number; zooms: number
+    reservations: number; deals: number
+  }
   rows: TouchRow[]
-  totals: { touches: number; agents: number; incoming: number; outgoing: number }
-  // Переписки без карточки агента: в воронке их нет, но время они забрали.
-  unlinked: { chats: number; touches: number; names: string[] }
-  truncated: boolean
+  meetings: CalMeeting[]
+  calendar: 'ok' | 'not_connected' | 'error'
 }
 
 // Периоды дашборда. День считается по Бали (UTC+8).
-export const TOUCH_PERIODS: Array<{ days: number; label: string; note: string }> = [
-  { days: 1,  label: 'Сегодня',  note: 'с начала дня по Бали' },
-  { days: 7,  label: '7 дней',   note: 'включая сегодня' },
-  { days: 30, label: '30 дней',  note: 'включая сегодня' },
+export type TouchPeriodKey = 'today' | 'yesterday' | '7d' | '30d'
+export const TOUCH_PERIODS: Array<{ key: TouchPeriodKey; label: string; note: string }> = [
+  { key: 'today',     label: 'Сегодня', note: 'с начала дня по Бали' },
+  { key: 'yesterday', label: 'Вчера',   note: 'прошлые сутки по Бали' },
+  { key: '7d',        label: '7 дней',  note: 'включая сегодня' },
+  { key: '30d',       label: '30 дней', note: 'включая сегодня' },
 ]
 
 // Чат бота, у которого ещё нет карточки.
