@@ -2,7 +2,7 @@
 
 import { useState, useMemo, type ReactNode } from 'react'
 import { computeEconomics } from '@/lib/investment/economics'
-import { computeMonthlyEconomics, AGENT_FEE_PCT, MONTHS_RENTED } from '@/lib/investment/monthly'
+import { computeMonthlyEconomics, AGENT_FEE_PCT } from '@/lib/investment/monthly'
 import type { RegionDefaults } from '@/lib/investment/regions'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { useCurrency } from './CurrencyContext'
@@ -87,6 +87,7 @@ type CalcProps = {
 }
 
 const OCC_PRESETS = [60, 75, 90] as const
+const MONTHLY_OCC_PRESETS = [80, 90, 100] as const
 
 function nearestOcc(pct: number): number {
   let best: number = OCC_PRESETS[0]
@@ -117,6 +118,7 @@ export function IncomeCalculator({
   const [occ, setOcc] = useState(nearestOcc(defaultOccupancyPct))
   const [monthlyPrice, setMonthlyPrice] = useState(monthlyPresets?.p50 ?? 0)
   const [monthlyPreset, setMonthlyPreset] = useState<'p25' | 'p50' | 'p75' | null>('p50')
+  const [monthlyOcc, setMonthlyOcc] = useState(90)
 
   const dailyResult = useMemo(() => {
     if (!dailyPresets || dailyPrice <= 0) return null
@@ -141,7 +143,7 @@ export function IncomeCalculator({
     if (!monthlyPresets || monthlyPrice <= 0) return null
     const e = computeMonthlyEconomics({
       rentMonth: monthlyPrice,
-      monthsRented: MONTHS_RENTED.median,
+      monthsRented: monthlyOcc / 100 * 12,
       agentFeePct: AGENT_FEE_PCT,
       area: villa.area,
       bedrooms: villa.bedrooms,
@@ -153,7 +155,7 @@ export function IncomeCalculator({
       region,
     })
     return e
-  }, [monthlyPrice, monthlyPresets, villa, region])
+  }, [monthlyPrice, monthlyOcc, monthlyPresets, villa, region])
 
   if (!hasDaily && !hasMonthly) return null
 
@@ -249,9 +251,18 @@ export function IncomeCalculator({
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-[14px] text-[#36413B]">{c.occupancy}</span>
-              <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex justify-between text-[16px]">
-                <span>{occ}</span>
-                <span className="text-[#4C5751]">{c.pctSuffix}</span>
+              <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex items-center text-[16px] focus-within:border-[#1B6E4A] focus-within:ring-1 focus-within:ring-[#1B6E4A]/30 transition-colors">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={occ > 0 ? String(occ) : ''}
+                  onChange={e => {
+                    const n = parseInt(e.target.value.replace(/\D/g, ''), 10)
+                    setOcc(Number.isFinite(n) && n <= 100 ? n : 0)
+                  }}
+                  className="w-full bg-transparent outline-none tabular-nums"
+                />
+                <span className="text-[#4C5751] ml-1">{c.pctSuffix}</span>
               </div>
               <div className="flex gap-1.5 flex-wrap">
                 {OCC_PRESETS.map(o => (
@@ -282,32 +293,57 @@ export function IncomeCalculator({
 
       {tab === 'monthly' && hasMonthly && (
         <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-2">
-            <span className="text-[14px] text-[#36413B]">{c.priceMonth}</span>
-            <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex items-center text-[16px] focus-within:border-[#1B6E4A] focus-within:ring-1 focus-within:ring-[#1B6E4A]/30 transition-colors">
-              <span className="text-[#4C5751] mr-1">$</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={monthlyPrice > 0 ? String(monthlyPrice) : ''}
-                onChange={e => {
-                  const n = parseInt(e.target.value.replace(/\D/g, ''), 10)
-                  setMonthlyPrice(Number.isFinite(n) ? n : 0)
-                  setMonthlyPreset(null)
-                }}
-                className="w-full bg-transparent outline-none tabular-nums"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="flex flex-col gap-2">
+              <span className="text-[14px] text-[#36413B]">{c.priceMonth}</span>
+              <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex items-center text-[16px] focus-within:border-[#1B6E4A] focus-within:ring-1 focus-within:ring-[#1B6E4A]/30 transition-colors">
+                <span className="text-[#4C5751] mr-1">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={monthlyPrice > 0 ? String(monthlyPrice) : ''}
+                  onChange={e => {
+                    const n = parseInt(e.target.value.replace(/\D/g, ''), 10)
+                    setMonthlyPrice(Number.isFinite(n) ? n : 0)
+                    setMonthlyPreset(null)
+                  }}
+                  className="w-full bg-transparent outline-none tabular-nums"
+                />
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                <button type="button" className={chipCls(monthlyPreset === 'p25')} onClick={() => selectMonthly('p25')}>
+                  {fmtUsd(monthlyPresets!.p25)}
+                </button>
+                <button type="button" className={chipCls(monthlyPreset === 'p50')} onClick={() => selectMonthly('p50')}>
+                  {fmtUsd(monthlyPresets!.p50)}
+                </button>
+                <button type="button" className={chipCls(monthlyPreset === 'p75')} onClick={() => selectMonthly('p75')}>
+                  {fmtUsd(monthlyPresets!.p75)}
+                </button>
+              </div>
             </div>
-            <div className="flex gap-1.5 flex-wrap">
-              <button type="button" className={chipCls(monthlyPreset === 'p25')} onClick={() => selectMonthly('p25')}>
-                {fmtUsd(monthlyPresets!.p25)}
-              </button>
-              <button type="button" className={chipCls(monthlyPreset === 'p50')} onClick={() => selectMonthly('p50')}>
-                {fmtUsd(monthlyPresets!.p50)}
-              </button>
-              <button type="button" className={chipCls(monthlyPreset === 'p75')} onClick={() => selectMonthly('p75')}>
-                {fmtUsd(monthlyPresets!.p75)}
-              </button>
+            <div className="flex flex-col gap-2">
+              <span className="text-[14px] text-[#36413B]">{c.occupancy}</span>
+              <div className="border border-[#CFD8D3] rounded-lg px-3.5 py-3 flex items-center text-[16px] focus-within:border-[#1B6E4A] focus-within:ring-1 focus-within:ring-[#1B6E4A]/30 transition-colors">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={monthlyOcc > 0 ? String(monthlyOcc) : ''}
+                  onChange={e => {
+                    const n = parseInt(e.target.value.replace(/\D/g, ''), 10)
+                    setMonthlyOcc(Number.isFinite(n) && n <= 100 ? n : 0)
+                  }}
+                  className="w-full bg-transparent outline-none tabular-nums"
+                />
+                <span className="text-[#4C5751] ml-1">{c.pctSuffix}</span>
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                {MONTHLY_OCC_PRESETS.map(o => (
+                  <button key={o} type="button" className={chipCls(monthlyOcc === o)} onClick={() => setMonthlyOcc(o)}>
+                    {o}%
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
