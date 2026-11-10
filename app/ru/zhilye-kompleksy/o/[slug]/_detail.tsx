@@ -1721,6 +1721,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     <>
       <SunShadowBlock
         tile={{ cover: slidesPhotos[1] ?? slidesPhotos[0] ?? null }}
+        wind={geoFacts?.climate?.wind ?? null}
         plan={sunPlan!}
         latitude={sunSettings!.latitude}
         longitude={sunSettings!.longitude}

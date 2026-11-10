@@ -41,6 +41,7 @@ import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import dynamic from 'next/dynamic'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { loadComplexMedia } from '@/lib/complex-media'
+import type { Wind } from '@/lib/complex-access'
 import { getSitePlan } from '@/lib/complex-sun-plan'
 import { loadSunSettings } from '@/lib/complex-sun'
 const SunShadowBlock = dynamic(() => import('@/components/sun/SunShadowBlock').then(m => ({ default: m.SunShadowBlock })))
@@ -1197,10 +1198,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ slug: null, tourUrl: null }))
   const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
   const sunSettings = sunPlan && complexMedia.slug ? await loadSunSettings(complexMedia.slug).catch(() => null) : null
-  const sunTiles = sunPlan && sunSettings?.enabled ? (
+  const renderSunTiles = (wind: Wind | null) => sunPlan && sunSettings?.enabled ? (
     <>
       <SunShadowBlock
         tile={{ cover: photos[2] ?? photos[0] ?? null }}
+        wind={wind}
         plan={sunPlan}
         latitude={sunSettings.latitude}
         longitude={sunSettings.longitude}
@@ -1882,7 +1884,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           masterplan={masterplanNode}
           masterplanCover={masterplanCover}
           tourUrl={complexMedia.tourUrl}
-          extraTiles={sunTiles}
+          extraTiles={renderSunTiles(geoFacts?.climate?.wind ?? null)}
         />
 
         {seoText && (

@@ -19,6 +19,7 @@ import {
   sunVector,
 } from '@/lib/solar'
 import { buildComplexModel, type ComplexModel, type ModelHeights } from './sun-model'
+import type { Wind, WindRoseData } from '@/lib/complex-access'
 
 const DEG = Math.PI / 180
 const SUN_DISTANCE = 160
@@ -45,6 +46,8 @@ export type SunSceneProps = {
   heights: ModelHeights
   /** UI language: Russian on /ru, English everywhere else. */
   en?: boolean
+  /** Роза ветров у объекта (ERA5-Land): струи ветра по сцене, сезон — по дате. */
+  wind?: Wind | null
 }
 
 type SceneContext = {
@@ -59,9 +62,10 @@ type SceneContext = {
   basemapBase: { x: number; z: number }
   wideMaps: { mesh: THREE.Mesh; base: { x: number; z: number } }[]
   model: ComplexModel | null
+  windLines: THREE.LineSegments
 }
 
-export function SunScene({ plan, latitude, longitude, placement, heights, en = false }: SunSceneProps) {
+export function SunScene({ plan, latitude, longitude, placement, heights, en = false, wind = null }: SunSceneProps) {
   const { rowAzimuth } = placement
   const mountRef = useRef<HTMLDivElement | null>(null)
   const sceneRef = useRef<SceneContext | null>(null)
@@ -70,9 +74,11 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
   const [minutes, setMinutes] = useState(720)
   const [playing, setPlaying] = useState(false)
   const [topView, setTopView] = useState(false)
+  const [showWind, setShowWind] = useState(true)
+  const windNow = wind ? seasonWind(wind, dayOfYear) : null
 
-  const stateRef = useRef({ dayOfYear, minutes, playing, latitude, longitude })
-  stateRef.current = { dayOfYear, minutes, playing, latitude, longitude }
+  const stateRef = useRef({ dayOfYear, minutes, playing, latitude, longitude, windNow, showWind })
+  stateRef.current = { dayOfYear, minutes, playing, latitude, longitude, windNow, showWind }
 
   const year = new Date().getUTCFullYear()
 
@@ -204,7 +210,29 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
     )
     scene.add(sunMarker)
 
+    // Ветер: короткие белые штрихи летят по направлению ветра над участком
+    // и возвращаются к наветренному краю (макет «Ветер», вариант A).
+    const WIND_N = 90
+    const windExtent = 48 * reach
+    const windPos = new Float32Array(WIND_N * 6)
+    const windSeeds = Array.from({ length: WIND_N }, () => ({
+      u: (Math.random() * 2 - 1) * windExtent,
+      v: (Math.random() * 2 - 1) * windExtent,
+      y: 1.5 + Math.random() * 10,
+      len: (3 + Math.random() * 4) * reach,
+    }))
+    const windGeom = new THREE.BufferGeometry()
+    windGeom.setAttribute('position', new THREE.BufferAttribute(windPos, 3))
+    const windLines = new THREE.LineSegments(
+      windGeom,
+      new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false }),
+    )
+    windLines.frustumCulled = false
+    windLines.renderOrder = 5
+    scene.add(windLines)
+
     sceneRef.current = {
+      windLines,
       renderer,
       scene,
       camera,
@@ -260,6 +288,23 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
         new THREE.Color(0x9dc4e8),
         Math.min(1, day * 1.6),
       )
+
+      const w = current.windNow
+      windLines.visible = !!w && current.showWind
+      if (w && current.showWind) {
+        // u — вдоль ветра, v — поперёк; направление «куда дует» = от сектора.
+        const b = w.fromSector * 45 * DEG
+        const dx = -Math.sin(b), dz = Math.cos(b)
+        const speed = Math.max(0.6, w.ms) * 4.5 * reach
+        for (let i = 0; i < WIND_N; i++) {
+          const sd = windSeeds[i]
+          sd.u += speed * delta / 1000
+          if (sd.u > windExtent) { sd.u = -windExtent; sd.v = (Math.random() * 2 - 1) * windExtent }
+          const hx = sd.u * dx - sd.v * dz, hz = sd.u * dz + sd.v * dx
+          windPos.set([hx, sd.y, hz, hx - dx * sd.len, sd.y, hz - dz * sd.len], i * 6)
+        }
+        windGeom.attributes.position.needsUpdate = true
+      }
 
       controls.update()
       renderer.render(scene, camera)
@@ -327,7 +372,25 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
 
   return (
     <div className="flex h-full w-full flex-col bg-[#0e1116]">
-      <div ref={mountRef} className="min-h-0 flex-1" />
+      <div className="relative min-h-0 flex-1">
+        <div ref={mountRef} className="absolute inset-0" />
+        {windNow && showWind && (
+          <div className="pointer-events-none absolute left-3 top-3 max-w-[300px] rounded-xl bg-[#0e1116]/85 px-3.5 py-3 text-white">
+            <div className="text-[11px] uppercase tracking-wide text-white/60">
+              {en ? `Wind · ${windNow.dry ? 'dry season, Apr–Oct' : 'rainy season, Nov–Mar'}` : `Ветер · ${windNow.dry ? 'сухой сезон, апр–окт' : 'сезон дождей, ноя–мар'}`}
+            </div>
+            <div className="mt-1 text-[16px] font-semibold">
+              {en ? `From the ${SECTOR_EN[windNow.fromSector]}, ${windNow.ms.toFixed(1)} m/s` : `${SECTOR_RU[windNow.fromSector]}, ${windNow.ms.toFixed(1).replace('.', ',')} м/с`}
+            </div>
+            <div className="mt-1 text-[13px] leading-snug text-white/80">
+              {en
+                ? `${Math.round(windNow.pct)}% of the time it blows from here. ${beaufortEn(windNow.ms)}.`
+                : `${Math.round(windNow.pct)}% времени дует отсюда. ${beaufortRu(windNow.ms)}.`}
+            </div>
+            <div className="mt-1 text-[11px] text-white/50">{en ? 'Data: Copernicus ERA5-Land' : 'Данные: Copernicus ERA5-Land'}{wind ? `, ${wind.years} ${en ? 'yrs hourly' : 'лет почасово'}` : ''}</div>
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 bg-[#12161c] px-4 py-3">
         <label className="flex min-w-[200px] flex-1 flex-col gap-1">
@@ -387,6 +450,20 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
           >
             {en ? 'Top view' : 'Вид сверху'}
           </button>
+          {wind && (
+            <button
+              type="button"
+              onClick={() => setShowWind((v) => !v)}
+              aria-pressed={showWind}
+              className={`rounded-lg border px-3 py-1.5 text-xs ${
+                showWind
+                  ? 'border-transparent bg-white font-semibold text-[#0e1116]'
+                  : 'border-white/15 text-white hover:bg-white/10'
+              }`}
+            >
+              {en ? 'Wind' : 'Ветер'}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -477,4 +554,25 @@ function addCompass(scene: THREE.Scene, reach = 1, en = false) {
     sprite.renderOrder = 10
     scene.add(sprite)
   })
+}
+
+const SECTOR_RU = ['С севера', 'С северо-востока', 'С востока', 'С юго-востока', 'С юга', 'С юго-запада', 'С запада', 'С северо-запада']
+const SECTOR_EN = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west']
+
+/** Сезон по дню года: апрель — октябрь сухой (пассат с юго-востока), остальное — дожди. */
+function seasonWind(wind: Wind, dayOfYear: number): { dry: boolean; fromSector: number; pct: number; ms: number } | null {
+  const dry = dayOfYear >= 91 && dayOfYear <= 304
+  const rose: WindRoseData | undefined = dry ? wind.dry : wind.wet
+  if (!rose?.pct?.length) return null
+  let k = 0
+  rose.pct.forEach((p, i) => { if (p > rose.pct[k]) k = i })
+  return { dry, fromSector: k, pct: rose.pct[k], ms: rose.ms[k] ?? rose.avg_ms }
+}
+
+// Шкала Бофорта для 10 м: слова вместо цифр.
+function beaufortRu(ms: number): string {
+  return ms < 0.5 ? 'Штиль' : ms < 1.6 ? 'Тихий ветер, почти не ощущается' : ms < 3.4 ? 'Лёгкий бриз — продувает террасу и бассейн' : ms < 5.5 ? 'Слабый ветер, листья шелестят' : 'Умеренный ветер'
+}
+function beaufortEn(ms: number): string {
+  return ms < 0.5 ? 'Calm' : ms < 1.6 ? 'Light air, barely felt' : ms < 3.4 ? 'Light breeze — airs the terrace and pool' : ms < 5.5 ? 'Gentle breeze, leaves rustle' : 'Moderate breeze'
 }

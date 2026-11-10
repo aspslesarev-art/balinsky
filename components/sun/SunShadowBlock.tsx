@@ -1,6 +1,7 @@
 'use client'
 
 import { MEDIA_TILE, MediaTileLabel } from '@/components/media-tile'
+import type { Wind } from '@/lib/complex-access'
 // Публичный блок «Солнце и тень» на странице ЖК.
 //
 // Ради скорости страницы и Core Web Vitals сам блок — это кнопка и текст:
@@ -37,6 +38,8 @@ export type SunShadowBlockProps = {
   en?: boolean
   /** Компактная плашка для полосы кнопок над фото (медиаблок вверху страницы). */
   chip?: boolean
+  /** Роза ветров у объекта — струи ветра в сцене. */
+  wind?: Wind | null
   /** Плитка в ряду «фишек» под главным фото; cover — картинка под затемнением. */
   tile?: { cover?: string | null }
 }
@@ -51,6 +54,7 @@ export function SunShadowBlock({
   en = false,
   chip = false,
   tile,
+  wind = null,
 }: SunShadowBlockProps) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
@@ -72,14 +76,14 @@ export function SunShadowBlock({
   return (
     <>
       {tile ? (
-        <button type="button" onClick={() => setOpen(true)} className={MEDIA_TILE} aria-label={en ? 'Sun & shade' : 'Солнце и тени'}>
+        <button type="button" onClick={() => setOpen(true)} className={MEDIA_TILE} aria-label={en ? 'Sun & wind' : 'Солнце и ветер'}>
           {tile.cover && <img src={tile.cover} alt="" className="w-full h-full object-cover" />}
-          <MediaTileLabel icon={<Sun size={18} aria-hidden />}>{en ? 'Sun & shade' : 'Солнце и тени'}</MediaTileLabel>
+          <MediaTileLabel icon={<Sun size={18} aria-hidden />}>{en ? 'Sun & wind' : 'Солнце и ветер'}</MediaTileLabel>
         </button>
       ) : chip ? (
         <button type="button" onClick={() => setOpen(true)} className="text-white text-[14px] px-4 py-2.5 inline-flex items-center gap-1.5 hover:bg-white/[0.12] focus-visible:bg-white/[0.12] transition-colors disabled:cursor-wait disabled:opacity-70">
           <Sun size={15} aria-hidden />
-          {en ? 'Sun & shade' : 'Солнце и тени'}
+          {en ? 'Sun & wind' : 'Солнце и ветер'}
         </button>
       ) : (
         <button
@@ -96,7 +100,7 @@ export function SunShadowBlock({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`${title} — ${en ? 'sun and shade' : 'солнце и тень'}`}
+          aria-label={`${title} — ${en ? (wind ? 'sun and wind' : 'sun and shade') : (wind ? 'солнце и ветер' : 'солнце и тень')}`}
           className="fixed inset-0 z-[100] flex flex-col bg-black/80 sm:p-6"
           onClick={close}
         >
@@ -105,7 +109,7 @@ export function SunShadowBlock({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <div className="text-sm font-semibold text-white">{title} — {en ? 'sun and shade' : 'солнце и тень'}</div>
+              <div className="text-sm font-semibold text-white">{title} — {en ? (wind ? 'sun and wind' : 'sun and shade') : (wind ? 'солнце и ветер' : 'солнце и тень')}</div>
               <button
                 type="button"
                 onClick={close}
@@ -124,6 +128,7 @@ export function SunShadowBlock({
                 longitude={longitude}
                 placement={placement}
                 heights={heights}
+                wind={wind}
               />
             </div>
           </div>
