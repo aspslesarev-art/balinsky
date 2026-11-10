@@ -36,7 +36,9 @@ function cleanVideoUrl(url: string): string {
   }
 }
 
-export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[]; title?: string }) {
+// jsonLdOnly: the clips are shown elsewhere (villa page media viewer), keep
+// only the VideoObject markup so video rich results don't disappear.
+export function VideoGrid({ videos, title = 'Видео', jsonLdOnly = false }: { videos: VideoItem[]; title?: string; jsonLdOnly?: boolean }) {
   if (videos.length === 0) return null
   // VideoObject JSON-LD per embedded YouTube clip. Google uses the
   // thumbnail and title for video-carousel rich results, and the
@@ -58,6 +60,11 @@ export function VideoGrid({ videos, title = 'Видео' }: { videos: VideoItem[
         contentUrl: cleanVideoUrl(v.url),
         embedUrl: cleanVideoUrl(v.embedUrl ?? v.url),
       })),
+  }
+  if (jsonLdOnly) {
+    return videosJsonLd['@graph'].length > 0
+      ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videosJsonLd) }} />
+      : null
   }
   return (
     <section className="mb-10">

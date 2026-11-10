@@ -108,7 +108,6 @@ import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel } from '@/lib/filter-i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
-import { Villa3DPlan } from '@/components/Villa3DPlan'
 import { VillaGallery } from '@/components/VillaGallery'
 import { metaSnippet } from '@/lib/seo'
 
@@ -1790,9 +1789,10 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         <VillaGallery
           photos={photos}
           alts={photoAlts}
+          plans={curated.plans}
+          plan3dUrl={plan3dUrl}
+          videos={videos.map(vd => ({ url: vd.url, name: vd.name }))}
           title={title}
-          videoCount={videos.length}
-          hasPlan={!!plan3dUrl}
           lang={lang}
         />
 
@@ -1836,12 +1836,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               )}
             </div>
           </section>
-        )}
-
-        {plan3dUrl && (
-          <div id="plan" className="scroll-mt-24">
-            <Villa3DPlan src={plan3dUrl} lang={lang} />
-          </div>
         )}
 
         {analytics}
@@ -1892,9 +1886,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         )}
 
         {videos.length > 0 && (
-          <div id="video" className="scroll-mt-24">
-            <VideoGrid videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
-          </div>
+          <VideoGrid jsonLdOnly videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
         )}
 
         <section>
