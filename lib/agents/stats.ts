@@ -35,14 +35,14 @@ export function periodRange(p: TouchPeriodKey): { from: string; to: string } {
   }
 }
 
-type DailyRow = { day: string; chat_id: number; out_cnt: number; in_cnt: number; label: string | null; kind: TouchRow['kind'] }
+type DailyRow = { day: string; chat_id: number; out_cnt: number; in_cnt: number; calls: number; calls_sec: number; label: string | null; kind: TouchRow['kind'] }
 type AgentLite = { id: string; name: string; agency: string | null; status: AgentStatus; tg_chat_id: number | null; deals_count: number | null; deals_volume_usd: number | null; data: { not_agent?: boolean } | null }
 
 async function dailyRows(from: string, to: string): Promise<DailyRow[]> {
   const out: DailyRow[] = []
   for (let off = 0; off < 50_000; off += 1000) {
     const { data, error } = await sb.from('crm_touch_daily')
-      .select('day,chat_id,out_cnt,in_cnt,label,kind')
+      .select('day,chat_id,out_cnt,in_cnt,calls,calls_sec,label,kind')
       .gte('day', from).lte('day', to)
       .order('day', { ascending: true })
       .range(off, off + 999)
@@ -144,6 +144,20 @@ export async function touchStats(period: TouchPeriodKey): Promise<TouchStats> {
   }
   const rows = [...byChat.values()].sort((x, y) => y.total - x.total || y.last_day.localeCompare(x.last_day))
 
+  const dayAcc = new Map<string, TouchStats['byDay'][number]>()
+  for (const d of daily) {
+    if (!agents.has(Number(d.chat_id))) continue
+    const acc = dayAcc.get(d.day) ?? { day: d.day, wroteChats: 0, wroteMsgs: 0, gotChats: 0, gotMsgs: 0, dialogs: 0, calls: 0 }
+    if (d.out_cnt > 0) { acc.wroteChats++; acc.wroteMsgs += d.out_cnt }
+    if (d.in_cnt > 0) { acc.gotChats++; acc.gotMsgs += d.in_cnt }
+    if (d.out_cnt > 0 && d.in_cnt > 0) acc.dialogs++
+    acc.calls += d.calls ?? 0
+    dayAcc.set(d.day, acc)
+  }
+  let calls = 0, callsSec = 0
+  for (const d of daily) if (agents.has(Number(d.chat_id))) { calls += d.calls ?? 0; callsSec += d.calls_sec ?? 0 }
+  const byDay = [...dayAcc.values()].sort((a, b) => b.day.localeCompare(a.day))
+
   const outreach = (outreachRes.data ?? []) as Array<{ sent_at: string; replied_at: string | null }>
 
   return {
@@ -157,12 +171,15 @@ export async function touchStats(period: TouchPeriodKey): Promise<TouchStats> {
       dialogs: rows.filter(r => r.incoming > 0 && r.outgoing > 0).length,
       outreachSent: outreach.length,
       outreachReplied: outreach.filter(o => o.replied_at).length,
+      calls,
+      callsMin: Math.round(callsSec / 60),
       meetings: cal.list.length,
       zooms: cal.list.filter(m => m.zoom).length,
       reservations,
       deals,
     },
     rows,
+    byDay,
     meetings: cal.list,
     calendar: cal.state,
   }

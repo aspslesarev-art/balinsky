@@ -131,10 +131,11 @@ export function AgentsDashboard({ onOpen }: { onOpen: (id: string) => void; onIn
           {/* Воронка */}
           <section className="flex flex-col gap-2">
             <h2 className="text-[13px] font-semibold text-[var(--ax-fg)]">Воронка</h2>
-            <ol className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <ol className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
               <Step label="Я написал" value={f.wroteChats} sub={`${f.wroteMsgs} ${plural(f.wroteMsgs, ['сообщение', 'сообщения', 'сообщений'])}`} />
               <Step label="Мне написали" value={f.gotChats} sub={`${f.gotMsgs} ${plural(f.gotMsgs, ['сообщение', 'сообщения', 'сообщений'])}`} />
               <Step label="Диалогов" value={f.dialogs} sub={`писали обе стороны · ${pct(f.dialogs, f.wroteChats)} от написанных`} accent />
+              <Step label="Звонки" value={f.calls} sub={`${f.callsMin} мин в Телеграме`} />
               <Step label="Встречи и зумы" value={f.meetings} sub={stats.calendar === 'ok' ? `из них зумов: ${f.zooms}` : stats.calendar === 'not_connected' ? 'календарь не подключён' : 'календарь не ответил'} />
               <Step label="Брони" value={f.reservations} sub="подтверждённые" />
               <Step label="Сделки" value={f.deals} sub="оплаченные брони" accent />

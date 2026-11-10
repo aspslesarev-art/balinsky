@@ -182,10 +182,13 @@ export type TouchStats = {
     gotChats: number; gotMsgs: number          // кто написал Андрею
     dialogs: number                            // писали обе стороны
     outreachSent: number; outreachReplied: number
+    calls: number; callsMin: number           // состоявшиеся звонки в Телеграме
     meetings: number; zooms: number
     reservations: number; deals: number
   }
   rows: TouchRow[]
+  // По дням, без имён: для открытого отчёта.
+  byDay: Array<{ day: string; wroteChats: number; wroteMsgs: number; gotChats: number; gotMsgs: number; dialogs: number; calls: number }>
   meetings: CalMeeting[]
   calendar: 'ok' | 'not_connected' | 'error'
 }

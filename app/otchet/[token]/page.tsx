@@ -4,8 +4,7 @@
 // /otchet/<код>. Код лежит в app_config.crm_report_token; сменить код =
 // старая ссылка перестаёт работать. Поисковикам страница закрыта.
 //
-// Здесь только цифры. Текста переписки на сайте нет вообще, а названия
-// встреч из календаря наружу не показываем — только их количество.
+// Здесь только цифры: ни имён агентов, ни названий встреч, ни текста переписки.
 
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -29,8 +28,6 @@ async function validToken(token: string): Promise<boolean> {
   if (!real || token.length !== real.length) return false
   return timingSafeEqual(Buffer.from(token), Buffer.from(real))
 }
-
-const KIND_LABEL: Record<string, string> = { brokers: 'Брокеры Бали', outreach: 'рассылка' }
 
 function fmtDay(day: string): string {
   return new Date(day + 'T00:00:00Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', timeZone: 'UTC' })
@@ -60,6 +57,7 @@ export default async function ReportPage({ params, searchParams }: {
     { label: 'Я написал', value: f.wroteChats, sub: msgs(f.wroteMsgs) },
     { label: 'Мне написали', value: f.gotChats, sub: msgs(f.gotMsgs) },
     { label: 'Диалогов', value: f.dialogs, sub: `писали обе стороны · ${pct(f.dialogs, f.wroteChats)}`, strong: true },
+    { label: 'Звонки', value: f.calls, sub: `${f.callsMin} мин в Телеграме` },
     { label: 'Встречи и зумы', value: f.meetings, sub: s.calendar === 'ok' ? `из них зумов: ${f.zooms}` : 'календарь недоступен' },
     { label: 'Брони', value: f.reservations, sub: 'подтверждённые' },
     { label: 'Сделки', value: f.deals, sub: 'оплаченные брони', strong: true },
@@ -86,7 +84,7 @@ export default async function ReportPage({ params, searchParams }: {
 
         <section className="flex flex-col gap-3" aria-labelledby="funnel">
           <h2 id="funnel" className="text-[15px] font-semibold">Воронка</h2>
-          <ol className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <ol className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {steps.map(st => (
               <li key={st.label} className="rounded-xl border border-[#DDE3DF] bg-white p-4 min-w-0">
                 <div className="text-[12px] uppercase tracking-[0.06em] text-[#5B6B62]">{st.label}</div>
@@ -98,9 +96,9 @@ export default async function ReportPage({ params, searchParams }: {
         </section>
 
 
-        <section className="flex flex-col gap-3" aria-labelledby="who">
-          <h2 id="who" className="text-[15px] font-semibold">Агенты, с кем была переписка · {s.rows.length}</h2>
-          {s.rows.length === 0 ? (
+        <section className="flex flex-col gap-3" aria-labelledby="days">
+          <h2 id="days" className="text-[15px] font-semibold">По дням</h2>
+          {s.byDay.length === 0 ? (
             <p className="rounded-xl border border-[#DDE3DF] bg-white px-5 py-10 text-center text-[14px] text-[#5B6B62]">
               {period === 'today' ? 'Сегодня переписки с агентами ещё не было.' : 'За этот период переписки с агентами не было.'}
             </p>
@@ -109,34 +107,32 @@ export default async function ReportPage({ params, searchParams }: {
               <table className="w-full text-[14px]">
                 <thead>
                   <tr className="text-left text-[12px] uppercase tracking-[0.06em] text-[#5B6B62] border-b border-[#DDE3DF]">
-                    <th className="pl-4 pr-2 sm:px-4 py-3 font-medium">Агент</th>
+                    <th className="pl-4 pr-2 sm:px-4 py-3 font-medium">День</th>
                     <th className="px-2 sm:px-4 py-3 font-medium text-right whitespace-nowrap"><span className="sm:hidden">Я</span><span className="hidden sm:inline">Я написал</span></th>
                     <th className="px-2 sm:px-4 py-3 font-medium text-right whitespace-nowrap"><span className="sm:hidden">Мне</span><span className="hidden sm:inline">Мне написали</span></th>
-                    <th className="pl-2 pr-4 sm:px-4 py-3 font-medium text-right">Всего</th>
+                    <th className="px-2 sm:px-4 py-3 font-medium text-right">Диалогов</th>
+                    <th className="pl-2 pr-4 sm:px-4 py-3 font-medium text-right">Звонков</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {s.rows.map(r => (
-                    <tr key={r.chat_id} className="border-b border-[#EEF1EF] last:border-0">
-                      <td className="pl-4 pr-2 sm:px-4 py-3">
-                        <div className="font-medium">{r.name}</div>
-                        <div className="text-[12.5px] text-[#5B6B62]">
-                          {[r.agency, r.kind && r.kind !== 'agent' ? KIND_LABEL[r.kind] : null].filter(Boolean).join(' · ') || ' '}
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 text-right tabular-nums">{r.outgoing}</td>
-                      <td className="px-2 sm:px-4 py-3 text-right tabular-nums">{r.incoming}</td>
-                      <td className="pl-2 pr-4 sm:px-4 py-3 text-right tabular-nums font-semibold">{r.total}</td>
+                  {s.byDay.map(d => (
+                    <tr key={d.day} className="border-b border-[#EEF1EF] last:border-0">
+                      <td className="pl-4 pr-2 sm:px-4 py-3 whitespace-nowrap">{fmtDay(d.day)}</td>
+                      <td className="px-2 sm:px-4 py-3 text-right tabular-nums">{d.wroteChats} <span className="text-[#5B6B62] text-[12.5px]">· {d.wroteMsgs}</span></td>
+                      <td className="px-2 sm:px-4 py-3 text-right tabular-nums">{d.gotChats} <span className="text-[#5B6B62] text-[12.5px]">· {d.gotMsgs}</span></td>
+                      <td className="px-2 sm:px-4 py-3 text-right tabular-nums font-semibold">{d.dialogs}</td>
+                      <td className="pl-2 pr-4 sm:px-4 py-3 text-right tabular-nums font-semibold">{d.calls}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <p className="px-4 py-3 text-[12.5px] text-[#5B6B62] border-t border-[#EEF1EF]">Число агентов · число сообщений</p>
             </div>
           )}
         </section>
 
         <footer className="text-[12.5px] text-[#5B6B62] max-w-[68ch] leading-relaxed">
-          В отчёте только агенты по недвижимости. Касание - одно сообщение в личной переписке в Телеграме. Диалог - переписка, где за период писали обе стороны. Текст переписки в отчёт не попадает.
+          В отчёте только агенты по недвижимости. Касание - одно сообщение в личной переписке в Телеграме. Звонок - состоявшийся звонок в Телеграме. Диалог - переписка, где за период писали обе стороны. Текст переписки в отчёт не попадает.
         </footer>
       </div>
     </main>
