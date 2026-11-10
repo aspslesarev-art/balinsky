@@ -116,7 +116,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={tile} aria-label={c.plans}>
               {plans[0] && <Image src={plans[0]} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover" />}
               {/* Как «+7 фото»: тёмная плашка и белый текст — светлая была почти не видна. */}
-              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.62)] text-white text-[14px] font-semibold">
+              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.62)] text-white text-[12px] sm:text-[14px] leading-tight text-center px-1 font-semibold">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>
                 {c.plans}{planCount > 1 ? ` ${planCount}` : ''}
               </span>
@@ -125,7 +125,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           {masterplan && (
             <button type="button" onClick={() => setOpen({ tab: 'master', i: 0 })} className={tile} aria-label={c.master}>
               {masterplanCover && <Image src={masterplanCover} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover" />}
-              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.55)] text-white text-[14px] font-semibold">
+              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.55)] text-white text-[12px] sm:text-[14px] leading-tight text-center px-1 font-semibold">
                 <MapPinned size={18} aria-hidden />
                 {c.master}
               </span>
