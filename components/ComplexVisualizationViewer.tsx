@@ -161,6 +161,25 @@ export function ComplexVisualizationViewer({
           : 'Tap a highlighted area to drill in or open the unit\'s page.'}
       </div>
 
+      {(() => {
+        // Легенда шахматки: что значит цвет и сколько юнитов в каждом
+        // статусе — без неё зелёные/жёлтые/красные зоны приходилось угадывать.
+        const counts = { free: 0, reserved: 0, sold: 0 }
+        for (const h of currentHotspots) if (h.availability) counts[h.availability]++
+        if (counts.free + counts.reserved + counts.sold === 0) return null
+        return (
+          <div className="flex flex-wrap gap-x-5 gap-y-2 mb-3 text-[14px] text-[var(--color-text)]">
+            {(['free', 'reserved', 'sold'] as const).map(k => (
+              <span key={k} className="inline-flex items-center gap-2">
+                <span className="w-3 h-3 rounded-[3px]" style={{ backgroundColor: STATUS_STYLE[k].stroke }} aria-hidden />
+                <span className="first-letter:uppercase">{statusWord(k, lang)}</span>
+                <span className="font-semibold tabular-nums">{counts[k]}</span>
+              </span>
+            ))}
+          </div>
+        )
+      })()}
+
       <div className="rounded-2xl overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">
         {stack.length > 1 && (
           <div className="absolute top-3 left-3 z-10">
@@ -247,6 +266,38 @@ export function ComplexVisualizationViewer({
               )
             })}
           </svg>
+
+          {/* Подпись на каждой зоне: номер и статус видны сразу, без
+              наведения. HTML, а не SVG-текст: svg растянут без сохранения
+              пропорций и исказил бы шрифт. */}
+          {currentHotspots.map(h => {
+            if (h.shape === 'marker' || !h.label || h.polygon.length < 3) return null
+            const palette = STATUS_STYLE[h.availability ?? 'neutral'] ?? STATUS_STYLE.neutral
+            const cx = h.polygon.reduce((a, [x]) => a + x, 0) / h.polygon.length
+            const cy = h.polygon.reduce((a, [, y]) => a + y, 0) / h.polygon.length
+            const short = h.label.split(' · ')[0]
+            // На телефоне зоны мелкие и полные подписи наезжают — там только
+            // номер в кружке цвета статуса (легенда над картинкой объясняет цвет).
+            const num = short.match(/\d+/)?.[0] ?? short.slice(0, 2)
+            const pos = { left: `${cx * 100}%`, top: `${cy * 100}%`, transform: 'translate(-50%, -50%)' }
+            return (
+              <span key={`lbl-${h.id}`}>
+                <span
+                  className="sm:hidden absolute z-[5] pointer-events-none inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-[12px] font-semibold shadow-md ring-2 ring-white"
+                  style={{ ...pos, backgroundColor: palette.stroke }}
+                >
+                  {num}
+                </span>
+                <span
+                  className="hidden sm:flex absolute z-[5] pointer-events-none flex-col items-center px-2 py-1 rounded-md bg-white/95 shadow-md text-center leading-tight whitespace-nowrap"
+                  style={{ ...pos, borderLeft: `3px solid ${palette.stroke}` }}
+                >
+                  <span className="text-[13px] font-semibold text-[var(--color-text)]">{short}</span>
+                  {h.availability && <span className="text-[12px]" style={{ color: palette.stroke }}>{statusWord(h.availability, lang)}</span>}
+                </span>
+              </span>
+            )
+          })}
 
           {/* Markers render as absolutely-positioned HTML so they
               stay perfectly round on any image aspect ratio (an SVG
