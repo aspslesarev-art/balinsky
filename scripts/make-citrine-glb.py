@@ -6,14 +6,15 @@ import json, math, struct, sys
 
 ROW_AZ = float(sys.argv[1]); OUT = sys.argv[2]
 EAVE, RIDGE, OVER = 6.1, 2.2, 0.3
-PITCH, STAG, W, D = 6.96, 0.0, 6.2, 9.14  # ряд прямой, без лесенки (10.11.2026)
-SHEAR = 0.0  # дома прямоугольные, как на генплане
+PITCH, STAG, W, D = 7.68, 0.0, 6.2, 9.14  # ряд прямой, шаг по генплану (10.11.2026)
+TILT = math.radians(10)  # каждая вилла повёрнута вокруг своего центра к террасам
 PIV = [0.0, 0.0]
-plot = [(-0.5, -6.0), (5*PITCH+W+0.5, 5*STAG-6.0), (5*PITCH+W+0.5, 5*STAG+D+3), (-0.5, D+3)]
+plot = [(-1, -7.0), (5*PITCH+W+1, -7.0), (5*PITCH+W+1, D+3), (-1, D+3)]
 cx = sum(p[0] for p in plot)/4; cz = sum(p[1] for p in plot)/4
 ax = math.radians(ROW_AZ); az = math.radians(ROW_AZ + 90)
 def enu(x, z, h):
-    x = x - SHEAR * (z - PIV[1])
+    dx, dz = x - PIV[0], z - PIV[1]
+    x = PIV[0] + dx*math.cos(TILT) - dz*math.sin(TILT); z = PIV[1] + dx*math.sin(TILT) + dz*math.cos(TILT)
     x -= cx; z -= cz
     return (x*math.sin(ax) + z*math.sin(az), x*math.cos(ax) + z*math.cos(az), h)
 
@@ -35,7 +36,7 @@ def boxp(x0, x1, z0, z1, h0, h1, color):
 
 for i in range(6):
     ox, oz = i*PITCH, i*STAG
-    PIV[0], PIV[1] = ox, oz
+    PIV[0], PIV[1] = ox + W/2, oz + D/2  # поворот вокруг центра дома
     boxp(ox, ox+W, oz, oz+D, 0, EAVE, WALL)
     # glazed pool-side facade
     boxp(ox+0.25, ox+W-0.25, oz-0.06, oz, 0.25, EAVE-0.45, GLASS)

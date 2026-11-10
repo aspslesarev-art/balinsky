@@ -203,13 +203,13 @@ function poolMeshes(materials: Record<string, THREE.Material>, plan: SitePlan) {
     water.position.set(centerX, 0.02, centerZ)
     water.receiveShadow = true
     // Бассейн, развёрнутый вместе со своим домом: поворот вокруг угла дома.
-    if (pool.shear && pool.pivot) {
+    if (pool.azimuth && pool.pivot) {
       const holder = new THREE.Group()
       holder.position.set(pool.pivot.x, 0, pool.pivot.z)
       rim.position.x -= pool.pivot.x; rim.position.z -= pool.pivot.z
       water.position.x -= pool.pivot.x; water.position.z -= pool.pivot.z
+      holder.rotation.y = -(pool.azimuth * Math.PI) / 180
       holder.add(rim, water)
-      applyShear(holder, pool.shear)
       group.add(holder)
     } else {
       group.add(rim, water)
