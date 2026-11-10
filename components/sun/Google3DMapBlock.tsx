@@ -8,6 +8,8 @@
 // /api/map3d/open, которое держит суточный лимит (lib/map3d-quota.ts).
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Globe } from 'lucide-react'
 
 import type { Google3DView } from '@/lib/complex-sun-plan'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
@@ -20,6 +22,8 @@ export type Google3DMapBlockProps = {
   title: string
   /** Russian UI on /ru, English on every other locale. */
   en?: boolean
+  /** Компактная плашка для полосы кнопок над фото (медиаблок вверху страницы). */
+  chip?: boolean
 }
 
 /** Камера облёта: точка, вокруг которой крутимся, и положение на орбите. */
@@ -44,7 +48,7 @@ function topDown(view: Google3DView): Orbit {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
-export function Google3DMapBlock({ apiKey, view, title, en = false }: Google3DMapBlockProps) {
+export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false }: Google3DMapBlockProps) {
   const [status, setStatus] = useState<Status>('idle')
   const [topView, setTopView] = useState(false)
   const mountRef = useRef<HTMLDivElement | null>(null)
@@ -230,6 +234,13 @@ export function Google3DMapBlock({ apiKey, view, title, en = false }: Google3DMa
 
   return (
     <>
+      {chip ? (
+        <button type="button" onClick={open} disabled={status === 'checking'} className="text-white text-[14px] px-4 py-2.5 inline-flex items-center gap-1.5 hover:bg-white/[0.12] focus-visible:bg-white/[0.12] transition-colors disabled:cursor-wait disabled:opacity-70"
+          title={status === 'limit' ? (en ? 'The 3D map is unavailable for today' : '3D-карта на сегодня недоступна') : status === 'error' ? (en ? 'Could not open the 3D map' : 'Не получилось открыть 3D-карту') : undefined}>
+          <Globe size={15} aria-hidden />
+          {status === 'checking' ? (en ? 'Opening…' : 'Открываю…') : status === 'limit' ? (en ? '3D map: tomorrow' : '3D-карта: завтра') : (en ? '3D map' : '3D-карта')}
+        </button>
+      ) : (<>
       <button
         type="button"
         onClick={open}
@@ -253,7 +264,9 @@ export function Google3DMapBlock({ apiKey, view, title, en = false }: Google3DMa
         </p>
       )}
 
-      {status === 'open' && (
+      </>)}
+
+      {status === 'open' && createPortal((
         <div
           role="dialog"
           aria-modal="true"
@@ -312,7 +325,7 @@ export function Google3DMapBlock({ apiKey, view, title, en = false }: Google3DMa
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </>
   )
 }

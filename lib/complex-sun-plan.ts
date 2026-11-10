@@ -331,7 +331,70 @@ const EDEM_II: SitePlan = {
   },
 }
 
+/**
+ * CITRINE (KAMRITA), Лодтундух, Убуд: 6 двухэтажных вилл одним рядом.
+ *
+ * Дом — по слайдам планировок застройщика (масштаб по бассейну 10.25 м²):
+ * 6.2 × 9.14 м с входным тамбуром, бассейн 4.61 × 2.22 м в 2.9 м от стеклянной
+ * стены. Шаг ряда и «лесенка» — по виду сверху из презентации: каждая
+ * следующая вилла на 6.96 м в сторону и на 2.74 м ближе ко входу (участки
+ * повторяют косую границу поля). Вилла 1 — у дороги и канала, участок 120 м².
+ *
+ * Оси плана: X — вдоль ряда (вилла 1 → 6), Z — от бассейна (минус) ко входу.
+ * На местности: поле за галереей Mega Sari Art Studio, бассейны смотрят на
+ * рисовые поля к востоку. Привязка и разворот — стартовые, доводятся в
+ * /admin/sun/citrine по снимку.
+ */
+const CITRINE_PITCH = 6.96, CITRINE_STAGGER = 2.74, CITRINE_W = 6.2, CITRINE_D = 9.14
+const CITRINE: SitePlan = {
+  title: 'CITRINE',
+  district: 'Лодтундух, Убуд',
+  utcOffsetHours: 8,
+  defaults: { rowAzimuth: 170, latitude: -8.559784, longitude: 115.263214 },
+  // glb — тот же план, развёрнутый на азимут ряда 170° (scripts/make-citrine-glb.py);
+  // при смене азимута в /admin/sun/citrine модель нужно пересобрать.
+  google3d: {
+    modelUrl: '/sun/citrine.glb',
+    latitude: -8.559784,
+    longitude: 115.263214,
+    heading: 0,
+  },
+  buildingDepth: CITRINE_D,
+  units: [{ id: 1, x0: 0, x1: CITRINE_W }],
+  blocks: Array.from({ length: 6 }, (_, i) => ({
+    id: `villa-${i + 1}`,
+    origin: { x: i * CITRINE_PITCH, z: i * CITRINE_STAGGER },
+    azimuth: 0,
+    depth: CITRINE_D,
+    units: [{ id: i + 1, x0: 0, x1: CITRINE_W }],
+    roof: 'pitched' as const,
+  })),
+  plot: [
+    [-0.5, -6.0],
+    [5 * CITRINE_PITCH + CITRINE_W + 0.5, 5 * CITRINE_STAGGER - 6.0],
+    [5 * CITRINE_PITCH + CITRINE_W + 0.5, 5 * CITRINE_STAGGER + CITRINE_D + 3],
+    [-0.5, CITRINE_D + 3],
+  ],
+  pools: Array.from({ length: 6 }, (_, i) => ({
+    unit: i + 1,
+    x: i * CITRINE_PITCH + 1.27,
+    width: 4.61,
+    zNear: i * CITRINE_STAGGER - 2.88,
+    zFar: i * CITRINE_STAGGER - 5.1,
+  })),
+  // Esri World Imagery, зум 19 (как у EDEM II): 1280 px ≈ 378 м. Снимок
+  // отцентрован по точке застройщика у галереи; якорь — пиксель центра
+  // участка, поле к северу от галереи.
+  basemap: {
+    url: '/sun/citrine.jpg',
+    sizePx: 1280,
+    metersPerPixel: 0.2953,
+    anchorPx: { x: 825, y: 440 },
+  },
+}
+
 const SITE_PLANS: Record<string, SitePlan> = {
+  citrine: CITRINE,
   'u-villas-i': U_VILLAS_I,
   // Два ключа на один план: в базе у комплекса SEO:Slug =
   // 'ubud-dream-ubud-bali', а страница детали резолвится по короткому

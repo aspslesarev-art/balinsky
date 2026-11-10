@@ -18,7 +18,8 @@ import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
 import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
-import { PhotoGalleryHero } from '@/components/PhotoGalleryHero'
+import { VillaGallery } from '@/components/VillaGallery'
+import { curatePhotos } from '@/lib/listing-photos'
 import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
 import { parseGeoOverlay } from '@/lib/geo-placement'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
@@ -1629,6 +1630,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     : (nativeBody ?? kb?.body ?? rawBody))
   const vision = await loadListingVision('complex', c.airtable_id)
   const photoAlts = slidesPhotos.map((_, i) => altFor(vision, i, lang, name))
+  // Картинки планировок (аудит пометил их «document») — во вкладку «Планировки».
+  const complexPlans = curatePhotos(photoManifest[c.airtable_id] ?? [], vision).plans
 
   const gmap = firstString(d['Link from Google maps on location'] ?? d['Google maps'] ?? d['Google map'])
 
@@ -1710,6 +1713,43 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     ? await loadSunSettings(slug).catch(() => null)
     : null
   const showSunBlock = Boolean(sunPlan && sunSettings?.enabled)
+  // Солнце и 3D-карта Google — плашками в полосе над фото (верхний медиаблок),
+  // рядом с «фото / видео / планировки». Окна открываются поверх страницы.
+  const sunChips = showSunBlock ? (
+    <>
+      <SunShadowBlock
+        chip
+        plan={sunPlan!}
+        latitude={sunSettings!.latitude}
+        longitude={sunSettings!.longitude}
+        placement={{
+          rowAzimuth: sunSettings!.rowAzimuth,
+          modelScale: sunSettings!.modelScale,
+          offsetX: sunSettings!.offsetX,
+          offsetZ: sunSettings!.offsetZ,
+          basemapOffsetX: sunSettings!.basemapOffsetX,
+          basemapOffsetZ: sunSettings!.basemapOffsetZ,
+          basemapScale: sunSettings!.basemapScale,
+        }}
+        heights={{
+          eaveHeight: sunSettings!.eaveHeight,
+          ridgeRise: sunSettings!.ridgeRise,
+          yardWall: sunSettings!.yardWall,
+        }}
+        title={sunPlan!.title}
+        en={lang !== 'ru'}
+      />
+      {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
+        <Google3DMapBlock
+          chip
+          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+          view={sunPlan!.google3d}
+          title={sunPlan!.title}
+          en={lang !== 'ru'}
+        />
+      )}
+    </>
+  ) : null
   // For the popup we prefer the optimised single-image attachment
   // (`Image Opt` in Airtable — a pre-compressed thumbnail) over the
   // full-quality first photo from the manifest. The interactive plan
@@ -1877,10 +1917,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* PHOTO GALLERY */}
         <section className="mb-6 mt-2">
-          <PhotoGalleryHero
+          <VillaGallery
             photos={slidesPhotos}
-            alt={name}
             alts={photoAlts}
+            plans={complexPlans}
+            plan3dUrl={null}
+            videos={complexVideos.map(vd => ({ url: vd.url, name: vd.name }))}
+            title={name}
+            lang={lang}
+            extraChips={sunChips}
             wishlistItem={{
               kind: 'complex', slug, title: name,
               photo: slidesPhotos[0] ?? null,
@@ -1996,6 +2041,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           />
         )}
 
+
         {/* UNITS in this complex */}
         {units.length > 0 && (
           <section className="mb-10">
@@ -2089,49 +2135,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
                   lng={lng}
                 />
               </div>
-              {showSunBlock && (
-                <div className="mb-4 rounded-2xl border border-[var(--color-border)] bg-white p-5">
-                  <div>
-                    <p className="mb-3 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
-                      {lang === 'ru'
-                        ? 'Объёмная модель комплекса на карте: видно, куда падает тень от корпусов и заборов и сколько солнца достаётся двору с бассейном в любой день года.'
-                        : 'A 3D model of the complex on the map: see where the buildings and walls cast shade and how much sun the pool courtyard gets on any day of the year.'}
-                    </p>
-                    <SunShadowBlock
-                      plan={sunPlan!}
-                      latitude={sunSettings!.latitude}
-                      longitude={sunSettings!.longitude}
-                      placement={{
-                        rowAzimuth: sunSettings!.rowAzimuth,
-                        modelScale: sunSettings!.modelScale,
-                        offsetX: sunSettings!.offsetX,
-                        offsetZ: sunSettings!.offsetZ,
-                        basemapOffsetX: sunSettings!.basemapOffsetX,
-                        basemapOffsetZ: sunSettings!.basemapOffsetZ,
-                        basemapScale: sunSettings!.basemapScale,
-                      }}
-                      heights={{
-                        eaveHeight: sunSettings!.eaveHeight,
-                        ridgeRise: sunSettings!.ridgeRise,
-                        yardWall: sunSettings!.yardWall,
-                      }}
-                      title={sunPlan!.title}
-                      en={lang !== 'ru'}
-                    />
-                    {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-                      <div className="mt-3">
-                        <Google3DMapBlock
-                          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-                          view={sunPlan!.google3d}
-                          title={sunPlan!.title}
-                          en={lang !== 'ru'}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
                 <GatedBlock kind="heatmap" lang={lang}>
                   <div className="mb-4">
@@ -2274,7 +2277,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* VIDEOS */}
         {complexVideos.length > 0 && (
-          <VideoGrid videos={complexVideos} title={copy.videosTitle(name)} />
+          <VideoGrid jsonLdOnly videos={complexVideos} title={copy.videosTitle(name)} />
         )}
 
         {/* OTHER COMPLEXES */}

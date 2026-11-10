@@ -9,6 +9,8 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Sun } from 'lucide-react'
 
 import type { SitePlan } from '@/lib/complex-sun-plan'
 import type { ModelHeights } from './sun-model'
@@ -32,6 +34,8 @@ export type SunShadowBlockProps = {
   title: string
   /** Russian UI on /ru, English on every other locale. */
   en?: boolean
+  /** Компактная плашка для полосы кнопок над фото (медиаблок вверху страницы). */
+  chip?: boolean
 }
 
 export function SunShadowBlock({
@@ -42,6 +46,7 @@ export function SunShadowBlock({
   heights,
   title,
   en = false,
+  chip = false,
 }: SunShadowBlockProps) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
@@ -62,16 +67,23 @@ export function SunShadowBlock({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-amber-400/10 px-4 py-2.5 text-sm font-medium transition hover:bg-amber-400/20"
-      >
-        <span aria-hidden>☀️</span>
-        {en ? 'See sun and shade in 3D' : 'Посмотреть солнце и тень в 3D'}
-      </button>
+      {chip ? (
+        <button type="button" onClick={() => setOpen(true)} className="text-white text-[14px] px-4 py-2.5 inline-flex items-center gap-1.5 hover:bg-white/[0.12] focus-visible:bg-white/[0.12] transition-colors disabled:cursor-wait disabled:opacity-70">
+          <Sun size={15} aria-hidden />
+          {en ? 'Sun & shade' : 'Солнце и тени'}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-2 rounded-xl border border-amber-400/50 bg-amber-400/10 px-4 py-2.5 text-sm font-medium transition hover:bg-amber-400/20"
+        >
+          <span aria-hidden>☀️</span>
+          {en ? 'See sun and shade in 3D' : 'Посмотреть солнце и тень в 3D'}
+        </button>
+      )}
 
-      {open && (
+      {open && createPortal((
         <div
           role="dialog"
           aria-modal="true"
@@ -107,7 +119,7 @@ export function SunShadowBlock({
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </>
   )
 }
