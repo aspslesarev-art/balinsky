@@ -2092,7 +2092,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {chessBoardVillas.length > 0 && (
           <EcoWoodChessBoard
             villas={chessBoardVillas}
-            masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/masterplan.jpg"
+            masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/render.jpg"
             lang={lang}
           />
         )}
