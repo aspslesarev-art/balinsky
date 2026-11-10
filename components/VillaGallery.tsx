@@ -13,19 +13,19 @@ import { pickCopy, type Lang } from '@/lib/i18n'
 import { WishlistButton, type WishlistInput } from './WishlistButton'
 
 export type GalleryVideo = { url: string; name: string | null }
-type Tab = 'photos' | 'videos' | 'plans'
+type Tab = 'photos' | 'videos' | 'plans' | 'master'
 
 const COPY = {
-  ru: { photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', open: 'Открыть фото', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', more: (n: number) => `+${n} фото` },
-  en: { photos: 'Photos', videos: 'Videos', plans: 'Floor plans', model3d: '3D model', open: 'Open photo', close: 'Close', prev: 'Previous', next: 'Next', more: (n: number) => `+${n} photos` },
-  id: { photos: 'Foto', videos: 'Video', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', more: (n: number) => `+${n} foto` },
-  fr: { photos: 'Photos', videos: 'Vidéos', plans: 'Plans', model3d: 'Modèle 3D', open: 'Ouvrir la photo', close: 'Fermer', prev: 'Précédent', next: 'Suivant', more: (n: number) => `+${n} photos` },
-  de: { photos: 'Fotos', videos: 'Videos', plans: 'Grundrisse', model3d: '3D-Modell', open: 'Foto öffnen', close: 'Schließen', prev: 'Zurück', next: 'Weiter', more: (n: number) => `+${n} Fotos` },
-  zh: { photos: '照片', videos: '视频', plans: '平面图', model3d: '3D 模型', open: '查看照片', close: '关闭', prev: '上一张', next: '下一张', more: (n: number) => `+${n} 张` },
-  nl: { photos: "Foto's", videos: "Video's", plans: 'Plattegronden', model3d: '3D-model', open: 'Foto openen', close: 'Sluiten', prev: 'Vorige', next: 'Volgende', more: (n: number) => `+${n} foto's` },
-  ban: { photos: 'Poto', videos: 'Vidéo', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', more: (n: number) => `+${n} poto` },
-  pl: { photos: 'Zdjęcia', videos: 'Wideo', plans: 'Rzuty', model3d: 'Model 3D', open: 'Otwórz zdjęcie', close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', more: (n: number) => `+${n} zdjęć` },
-  uk: { photos: 'Фото', videos: 'Відео', plans: 'Планування', model3d: '3D-модель', open: 'Відкрити фото', close: 'Закрити', prev: 'Назад', next: 'Вперед', more: (n: number) => `+${n} фото` },
+  ru: { master: 'Генплан', photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', open: 'Открыть фото', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', more: (n: number) => `+${n} фото` },
+  en: { master: 'Master plan', photos: 'Photos', videos: 'Videos', plans: 'Floor plans', model3d: '3D model', open: 'Open photo', close: 'Close', prev: 'Previous', next: 'Next', more: (n: number) => `+${n} photos` },
+  id: { master: 'Masterplan', photos: 'Foto', videos: 'Video', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', more: (n: number) => `+${n} foto` },
+  fr: { master: 'Plan masse', photos: 'Photos', videos: 'Vidéos', plans: 'Plans', model3d: 'Modèle 3D', open: 'Ouvrir la photo', close: 'Fermer', prev: 'Précédent', next: 'Suivant', more: (n: number) => `+${n} photos` },
+  de: { master: 'Lageplan', photos: 'Fotos', videos: 'Videos', plans: 'Grundrisse', model3d: '3D-Modell', open: 'Foto öffnen', close: 'Schließen', prev: 'Zurück', next: 'Weiter', more: (n: number) => `+${n} Fotos` },
+  zh: { master: '总平面图', photos: '照片', videos: '视频', plans: '平面图', model3d: '3D 模型', open: '查看照片', close: '关闭', prev: '上一张', next: '下一张', more: (n: number) => `+${n} 张` },
+  nl: { master: 'Masterplan', photos: "Foto's", videos: "Video's", plans: 'Plattegronden', model3d: '3D-model', open: 'Foto openen', close: 'Sluiten', prev: 'Vorige', next: 'Volgende', more: (n: number) => `+${n} foto's` },
+  ban: { master: 'Masterplan', photos: 'Poto', videos: 'Vidéo', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', more: (n: number) => `+${n} poto` },
+  pl: { master: 'Plan osiedla', photos: 'Zdjęcia', videos: 'Wideo', plans: 'Rzuty', model3d: 'Model 3D', open: 'Otwórz zdjęcie', close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', more: (n: number) => `+${n} zdjęć` },
+  uk: { master: 'Генплан', photos: 'Фото', videos: 'Відео', plans: 'Планування', model3d: '3D-модель', open: 'Відкрити фото', close: 'Закрити', prev: 'Назад', next: 'Вперед', more: (n: number) => `+${n} фото` },
 } as const
 
 function ytId(url: string): string | null {
@@ -38,7 +38,7 @@ const chip = 'text-white text-[14px] px-4 py-2.5 hover:bg-white/[0.12] focus-vis
 const tile = 'relative h-[72px] rounded-lg overflow-hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraChips }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraChips, masterplan }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -50,6 +50,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   wishlistItem?: WishlistInput
   /** Extra buttons in the chip bar — sun & shade, Google 3D map (complex page). */
   extraChips?: ReactNode
+  /** Генплан комплекса с подсвеченной виллой — вкладка справа от планировок. */
+  masterplan?: ReactNode
 }) {
   const c = pickCopy(COPY, lang)
   const [open, setOpen] = useState<{ tab: Tab; i: number } | null>(null)
@@ -81,6 +83,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           {photos.length > 0 && <button type="button" onClick={() => setOpen({ tab: 'photos', i: 0 })} className={`${chip} font-semibold bg-white/[0.16]`}>{photos.length} {c.photos.toLowerCase()}</button>}
           {videos.length > 0 && <button type="button" onClick={() => setOpen({ tab: 'videos', i: 0 })} className={chip}>{videos.length} {c.videos.toLowerCase()}</button>}
           {planCount > 0 && <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={chip}>{c.plans}{planCount > 1 ? ` ${planCount}` : ''}</button>}
+          {masterplan && <button type="button" onClick={() => setOpen({ tab: 'master', i: 0 })} className={chip}>{c.master}</button>}
           {extraChips}
         </div>
       </div>
@@ -122,7 +125,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
 
       {open && (
         <MediaViewer
-          photos={photos} plans={plans} plan3dUrl={plan3dUrl} videos={videos} alts={alts} title={title} lang={lang}
+          photos={photos} plans={plans} plan3dUrl={plan3dUrl} videos={videos} alts={alts} title={title} lang={lang} masterplan={masterplan}
           tab={open.tab} index={open.i} onChange={(tab, i) => setOpen({ tab, i })} onClose={() => setOpen(null)}
         />
       )}
@@ -130,14 +133,14 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   )
 }
 
-function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab, index, onChange, onClose }: {
-  photos: string[]; plans: string[]; plan3dUrl: string | null; videos: GalleryVideo[]
+function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab, index, onChange, onClose, masterplan }: {
+  photos: string[]; plans: string[]; plan3dUrl: string | null; videos: GalleryVideo[]; masterplan?: ReactNode
   alts?: (string | undefined)[]; title: string; lang: Lang
   tab: Tab; index: number; onChange: (tab: Tab, i: number) => void; onClose: () => void
 }) {
   const c = pickCopy(COPY, lang)
   // Plans tab: the 3D model first (it is the richest view), then plan images.
-  type Item = { kind: 'img'; src: string; alt: string } | { kind: 'video'; url: string; name: string | null } | { kind: '3d'; src: string }
+  type Item = { kind: 'img'; src: string; alt: string } | { kind: 'video'; url: string; name: string | null } | { kind: '3d'; src: string } | { kind: 'node' }
   const lists: Record<Tab, Item[]> = {
     photos: photos.map((src, i) => ({ kind: 'img' as const, src, alt: alts?.[i] ?? title })),
     videos: videos.map(v => ({ kind: 'video' as const, url: v.url, name: v.name })),
@@ -145,6 +148,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
       ...(plan3dUrl ? [{ kind: '3d' as const, src: `${plan3dUrl}?lang=${lang}` }] : []),
       ...plans.map(src => ({ kind: 'img' as const, src, alt: `${title} - ${c.plans.toLowerCase()}` })),
     ],
+    master: masterplan ? [{ kind: 'node' as const }] : [],
   }
   const items = lists[tab]
   const count = items.length
@@ -164,7 +168,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
   }, [go, onClose])
 
-  const tabs = (['photos', 'videos', 'plans'] as Tab[]).filter(t => lists[t].length > 0)
+  const tabs = (['photos', 'videos', 'plans', 'master'] as Tab[]).filter(t => lists[t].length > 0)
   const navBtn = 'absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 focus-visible:bg-white/20 text-white flex items-center justify-center transition-colors'
 
   return (
@@ -174,7 +178,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
           {tabs.map(t => (
             <button key={t} type="button" onClick={() => onChange(t, 0)}
               className={`shrink-0 rounded-full px-4 py-2 text-[14px] font-medium transition-colors ${t === tab ? 'bg-white text-[#101814]' : 'text-white/80 hover:bg-white/10'}`}>
-              {c[t]} <span className="opacity-60">{lists[t].length}</span>
+              {c[t]}{t !== 'master' && <> <span className="opacity-60">{lists[t].length}</span></>}
             </button>
           ))}
         </div>
@@ -198,6 +202,9 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
             <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-white underline">{item.name ?? item.url}</a>
           )
         })()}
+        {item?.kind === 'node' && (
+          <div className="w-full max-w-[1200px] max-h-full overflow-y-auto">{masterplan}</div>
+        )}
         {item?.kind === '3d' && (
           <iframe key={item.src} src={item.src} title={c.model3d} className="w-full h-full max-w-[1200px] rounded-lg border-0 bg-white" />
         )}

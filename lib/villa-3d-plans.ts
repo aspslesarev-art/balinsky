@@ -16,6 +16,10 @@ const VILLA_3D_PLANS: Readonly<Record<string, string>> = {
   'green-village-nusa-dua-100m2-2-bedroom': '/models/green-village-2br-3d.html',
   // Одна модель на оба варианта второго этажа (А / Б) — переключатель внутри.
   'citrine-ubud-109-4m2-2-bedroom': '/models/citrine-3d.html',
+  'citrine-ubud-villa-1-109-4m2-2-bedroom': '/models/citrine-3d.html',
+  'citrine-ubud-villa-3-109-4m2-2-bedroom': '/models/citrine-3d.html',
+  'citrine-ubud-villa-4-109-4m2-2-bedroom': '/models/citrine-3d.html',
+  'citrine-ubud-villa-5-109-4m2-2-bedroom': '/models/citrine-3d.html',
 }
 
 /** Публичный URL 3D-планировки виллы либо null, если модели нет. */

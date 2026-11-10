@@ -39,6 +39,10 @@ import { GatedBlock } from '@/components/GatedBlock'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import dynamic from 'next/dynamic'
+import { listLayers, listHotspots } from '@/lib/complex-visualizations'
+const ComplexVisualizationViewer = dynamic(
+  () => import('@/components/ComplexVisualizationViewer').then(m => ({ default: m.ComplexVisualizationViewer })),
+)
 // Heavy client widgets — pulled off the initial JS bundle. Both
 // render below the fold on detail pages, so late hydration is invisible.
 // LandProfileBlock — 474 LOC of charts/sliders; InvestmentWidget — 626 +
@@ -1180,6 +1184,43 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const visionRaw = await loadListingVision('villa', v.airtable_id)
   const curated = curatePhotos(manifest[v.airtable_id] ?? [], visionRaw)
   const photos = curated.photos.slice(0, 12)
+  // Генплан комплекса с подсвеченной этой виллой — вкладка «Генплан» в
+  // галерее (владелец 2026-11-10). Только если шахматка комплекса ведёт на
+  // эту страницу.
+  const masterplanNode = await (async () => {
+    const complexId = firstString(d['Комплекс'])
+    if (!complexId) return null
+    const layers = await listLayers(complexId).catch(() => [] as Awaited<ReturnType<typeof listLayers>>)
+    if (!layers.length) return null
+    const hotspots = await listHotspots(layers.map(l => l.id)).catch(() => [] as Awaited<ReturnType<typeof listHotspots>>)
+    if (!hotspots.some(h => h.targetUnitSlug === slug)) return null
+    const slugs = [...new Set(hotspots.map(h => h.targetUnitSlug).filter((x): x is string => !!x))]
+    const idx = await _loadVillaIndex().catch(() => [] as IndexEntry[])
+    const idBySlug = new Map(idx.filter(e => slugs.includes(e.slug)).map(e => [e.slug, e.id]))
+    const { data: rows } = await sb.from('raw_villas').select('airtable_id, data').in('airtable_id', [...idBySlug.values()])
+    const rowById = new Map((rows ?? []).map(r => [r.airtable_id as string, r.data as Record<string, unknown>]))
+    const unitsBySlug: Record<string, { kind: 'villa'; slug: string; title: string; bedrooms: number | null; area: number | null; priceUsd: number | null; url: string; photoUrl: string | null }> = {}
+    for (const [s2, id] of idBySlug) {
+      const r = rowById.get(id)
+      if (!r) continue
+      const t = (lang === 'ru' ? firstString(r['SEO:Title']) : firstString(r['SEO:Title EN']) ?? firstString(r['SEO:Title'])) ?? s2
+      unitsBySlug[s2] = {
+        kind: 'villa', slug: s2, title: t.replace(/\s*\|\s*Balinsky\s*$/, ''),
+        bedrooms: numberOrNull(r['Комнаты']), area: numberOrNull(r['Площадь']), priceUsd: numberOrNull(r['price'] ?? r['Цена']),
+        url: switchLangPath(`/ru/villy/o/${s2}`, lang), photoUrl: manifest[id]?.[0] ?? null,
+      }
+    }
+    return (
+      <ComplexVisualizationViewer
+        layers={layers.map(l => ({ id: l.id, parentLayerId: l.parentLayerId, title: l.title, photoUrl: l.photoUrl }))}
+        hotspots={hotspots}
+        unitsBySlug={unitsBySlug}
+        lang={lang}
+        highlightSlug={slug}
+        bare
+      />
+    )
+  })()
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   // Show Cyrillic district on /ru, raw Latin on /en. Raw form is
   // kept around for the JSON-LD address + canonical-path matching.
@@ -1795,6 +1836,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           videos={videos.map(vd => ({ url: vd.url, name: vd.name }))}
           title={title}
           lang={lang}
+          masterplan={masterplanNode}
         />
 
         {seoText && (

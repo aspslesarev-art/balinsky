@@ -82,19 +82,25 @@ function statusWord(a: string, lang: Lang): string {
 }
 
 export function ComplexVisualizationViewer({
-  layers, hotspots, unitsBySlug, lang = 'ru',
+  layers, hotspots, unitsBySlug, lang = 'ru', highlightSlug = null, bare = false,
 }: {
   layers: Layer[]
   hotspots: Hotspot[]
   unitsBySlug: Record<string, UnitInfo>
   lang?: Lang
+  /** Юнит, со страницы которого открыт генплан: его зона обведена и подписана
+   *  «Эта вилла», и вид сразу открывается на слое, где она есть. */
+  highlightSlug?: string | null
+  /** Без заголовка и подсказки — для вкладки в галерее. */
+  bare?: boolean
 }) {
   // Root-level layers — top-level "views" the visitor can switch
   // between (Апартаменты / Вилла / Апарты 2 …). Trust the order the
   // server gave us (listLayers already ORDER BY sort_order), so
   // drag-and-drop in admin flows through to the public side.
   const rootLayers = layers.filter(l => l.parentLayerId == null)
-  const root = rootLayers[0] ?? layers[0]
+  const hlLayer = highlightSlug ? hotspots.find(h => h.targetUnitSlug === highlightSlug)?.layerId : undefined
+  const root = rootLayers.find(l => l.id === hlLayer) ?? rootLayers[0] ?? layers[0]
   const [stack, setStack] = useState<Layer[]>(root ? [root] : [])
 
   function switchRoot(layer: Layer) {
@@ -151,7 +157,8 @@ export function ComplexVisualizationViewer({
     : { back: 'Back', open: 'Open', sqm: 'm²', br: 'BR' }
 
   return (
-    <section className="mb-10">
+    <section className={bare ? '' : 'mb-10'}>
+      {!bare && <>
       <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
         {pickCopy({ ru: 'Интерактивный план', en: 'Interactive plan', id: 'Denah interaktif', fr: 'Plan interactif', de: 'Interaktiver Plan', zh: '交互式平面图', nl: 'Interactieve plattegrond', ban: 'Denah interaktif', pl: 'Plan interaktywny', uk: 'Інтерактивний план' }, lang)}
       </h2>
@@ -160,6 +167,7 @@ export function ComplexVisualizationViewer({
           ? 'Тап по подсвеченной зоне — детализация или страница юнита.'
           : 'Tap a highlighted area to drill in or open the unit\'s page.'}
       </div>
+      </>}
 
       {(() => {
         // Легенда шахматки: что значит цвет и сколько юнитов в каждом
@@ -168,7 +176,7 @@ export function ComplexVisualizationViewer({
         for (const h of currentHotspots) if (h.availability) counts[h.availability]++
         if (counts.free + counts.reserved + counts.sold === 0) return null
         return (
-          <div className="flex flex-wrap gap-x-5 gap-y-2 mb-3 text-[14px] text-[var(--color-text)]">
+          <div className={`flex flex-wrap gap-x-5 gap-y-2 mb-3 text-[14px] ${bare ? 'text-white' : 'text-[var(--color-text)]'}`}>
             {(['free', 'reserved', 'sold'] as const).map(k => (
               <span key={k} className="inline-flex items-center gap-2">
                 <span className="w-3 h-3 rounded-[3px]" style={{ backgroundColor: STATUS_STYLE[k].stroke }} aria-hidden />
@@ -257,8 +265,8 @@ export function ComplexVisualizationViewer({
                   onClick={ev => onPolygonClick(h, ev)}
                   fill={palette.fill}
                   strokeLinejoin="round"
-                  stroke="rgba(255,255,255,0.95)"
-                  strokeWidth={2}
+                  stroke={h.targetUnitSlug && h.targetUnitSlug === highlightSlug ? '#FFFFFF' : 'rgba(255,255,255,0.95)'}
+                  strokeWidth={h.targetUnitSlug && h.targetUnitSlug === highlightSlug ? 5 : 2}
                   vectorEffect="non-scaling-stroke"
                   className={`pointer-events-auto ${isSold ? 'cursor-not-allowed' : 'cursor-pointer'} ${palette.hover}`}
                 >
@@ -277,6 +285,8 @@ export function ComplexVisualizationViewer({
             const cx = h.polygon.reduce((a, [x]) => a + x, 0) / h.polygon.length
             const cy = h.polygon.reduce((a, [, y]) => a + y, 0) / h.polygon.length
             const short = h.label.split(' · ')[0]
+            const mine = !!h.targetUnitSlug && h.targetUnitSlug === highlightSlug
+            const here = pickCopy({ ru: 'Эта вилла', en: 'This villa', id: 'Vila ini', fr: 'Cette villa', de: 'Diese Villa', zh: '本别墅', nl: 'Deze villa', ban: 'Vila puniki', pl: 'Ta willa', uk: 'Ця вілла' }, lang)
             // На телефоне зоны мелкие и полные подписи наезжают — там только
             // номер в кружке цвета статуса (легенда над картинкой объясняет цвет).
             const num = short.match(/\d+/)?.[0] ?? short.slice(0, 2)
@@ -284,16 +294,17 @@ export function ComplexVisualizationViewer({
             return (
               <span key={`lbl-${h.id}`}>
                 <span
-                  className="sm:hidden absolute z-[5] pointer-events-none inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-[12px] font-semibold shadow-md ring-2 ring-white"
-                  style={{ ...pos, backgroundColor: palette.stroke }}
+                  className={`sm:hidden absolute z-[5] pointer-events-none inline-flex items-center justify-center rounded-full text-white text-[12px] font-semibold shadow-md ring-2 ring-white ${mine ? 'w-8 h-8 bg-[#101814] ring-[3px] text-[13px]' : 'w-6 h-6'}`}
+                  style={{ ...pos, ...(mine ? {} : { backgroundColor: palette.stroke }) }}
                 >
                   {num}
                 </span>
                 <span
-                  className="hidden sm:flex absolute z-[5] pointer-events-none flex-col items-center px-2 py-1 rounded-md bg-white/95 shadow-md text-center leading-tight whitespace-nowrap"
+                  className={`hidden sm:flex absolute z-[5] pointer-events-none flex-col items-center px-2 py-1 rounded-md shadow-md text-center leading-tight whitespace-nowrap ${mine ? 'bg-[#101814] text-white' : 'bg-white/95'}`}
                   style={{ ...pos, borderLeft: `3px solid ${palette.stroke}` }}
                 >
-                  <span className="text-[13px] font-semibold text-[var(--color-text)]">{short}</span>
+                  {mine && <span className="text-[11px] font-semibold uppercase tracking-wide">{here}</span>}
+                  <span className={`text-[13px] font-semibold ${mine ? 'text-white' : 'text-[var(--color-text)]'}`}>{short}</span>
                   {h.availability && <span className="text-[12px]" style={{ color: palette.stroke }}>{statusWord(h.availability, lang)}</span>}
                 </span>
               </span>
