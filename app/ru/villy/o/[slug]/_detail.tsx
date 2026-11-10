@@ -40,6 +40,11 @@ import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
 import dynamic from 'next/dynamic'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
+import { loadComplexMedia } from '@/lib/complex-media'
+import { getSitePlan } from '@/lib/complex-sun-plan'
+import { loadSunSettings } from '@/lib/complex-sun'
+const SunShadowBlock = dynamic(() => import('@/components/sun/SunShadowBlock').then(m => ({ default: m.SunShadowBlock })))
+const Google3DMapBlock = dynamic(() => import('@/components/sun/Google3DMapBlock').then(m => ({ default: m.Google3DMapBlock })))
 const ComplexVisualizationViewer = dynamic(
   () => import('@/components/ComplexVisualizationViewer').then(m => ({ default: m.ComplexVisualizationViewer })),
 )
@@ -1188,6 +1193,41 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   // галерее (владелец 2026-11-10). Только если шахматка комплекса ведёт на
   // эту страницу.
   let masterplanCover: string | null = null
+  // Медиа комплекса для ряда «фишек» под фото: 3D-тур, солнце и 3D-карта.
+  const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ slug: null, tourUrl: null }))
+  const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
+  const sunSettings = sunPlan && complexMedia.slug ? await loadSunSettings(complexMedia.slug).catch(() => null) : null
+  const sunTiles = sunPlan && sunSettings?.enabled ? (
+    <>
+      <SunShadowBlock
+        tile={{ cover: photos[2] ?? photos[0] ?? null }}
+        plan={sunPlan}
+        latitude={sunSettings.latitude}
+        longitude={sunSettings.longitude}
+        placement={{
+          rowAzimuth: sunSettings.rowAzimuth,
+          modelScale: sunSettings.modelScale,
+          offsetX: sunSettings.offsetX,
+          offsetZ: sunSettings.offsetZ,
+          basemapOffsetX: sunSettings.basemapOffsetX,
+          basemapOffsetZ: sunSettings.basemapOffsetZ,
+          basemapScale: sunSettings.basemapScale,
+        }}
+        heights={{ eaveHeight: sunSettings.eaveHeight, ridgeRise: sunSettings.ridgeRise, yardWall: sunSettings.yardWall }}
+        title={sunPlan.title}
+        en={lang !== 'ru'}
+      />
+      {sunPlan.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
+        <Google3DMapBlock
+          tile={{ cover: sunPlan.basemap?.url ?? null }}
+          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+          view={sunPlan.google3d}
+          title={sunPlan.title}
+          en={lang !== 'ru'}
+        />
+      )}
+    </>
+  ) : null
   const masterplanNode = await (async () => {
     const complexId = firstString(d['Комплекс'])
     if (!complexId) return null
@@ -1841,6 +1881,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           lang={lang}
           masterplan={masterplanNode}
           masterplanCover={masterplanCover}
+          tourUrl={complexMedia.tourUrl}
+          extraTiles={sunTiles}
         />
 
         {seoText && (

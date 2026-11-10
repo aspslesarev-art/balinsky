@@ -1,5 +1,6 @@
 'use client'
 
+import { MEDIA_TILE, MediaTileLabel } from '@/components/media-tile'
 // Кнопка «3D-карта Google» на странице ЖК: фотореалистичная 3D-карта Google
 // (рельеф, снимок, где есть — объёмная застройка) и на ней модель комплекса.
 //
@@ -24,6 +25,8 @@ export type Google3DMapBlockProps = {
   en?: boolean
   /** Компактная плашка для полосы кнопок над фото (медиаблок вверху страницы). */
   chip?: boolean
+  /** Плитка в ряду «фишек» под главным фото; cover — картинка под затемнением. */
+  tile?: { cover?: string | null }
 }
 
 /** Камера облёта: точка, вокруг которой крутимся, и положение на орбите. */
@@ -48,7 +51,7 @@ function topDown(view: Google3DView): Orbit {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
-export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false }: Google3DMapBlockProps) {
+export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false, tile }: Google3DMapBlockProps) {
   const [status, setStatus] = useState<Status>('idle')
   const [topView, setTopView] = useState(false)
   const mountRef = useRef<HTMLDivElement | null>(null)
@@ -234,7 +237,13 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
 
   return (
     <>
-      {chip ? (
+      {tile ? (
+        <button type="button" onClick={open} disabled={status === 'checking'} className={MEDIA_TILE} aria-label={en ? '3D map' : '3D-карта'}
+          title={status === 'limit' ? (en ? 'The 3D map is unavailable for today' : '3D-карта на сегодня недоступна') : status === 'error' ? (en ? 'Could not open the 3D map' : 'Не получилось открыть 3D-карту') : undefined}>
+          {tile.cover && <img src={tile.cover} alt="" className="w-full h-full object-cover" />}
+          <MediaTileLabel icon={<Globe size={18} aria-hidden />}>{status === 'checking' ? (en ? 'Opening…' : 'Открываю…') : status === 'limit' ? (en ? '3D map: tomorrow' : '3D-карта: завтра') : (en ? '3D map' : '3D-карта')}</MediaTileLabel>
+        </button>
+      ) : chip ? (
         <button type="button" onClick={open} disabled={status === 'checking'} className="text-white text-[14px] px-4 py-2.5 inline-flex items-center gap-1.5 hover:bg-white/[0.12] focus-visible:bg-white/[0.12] transition-colors disabled:cursor-wait disabled:opacity-70"
           title={status === 'limit' ? (en ? 'The 3D map is unavailable for today' : '3D-карта на сегодня недоступна') : status === 'error' ? (en ? 'Could not open the 3D map' : 'Не получилось открыть 3D-карту') : undefined}>
           <Globe size={15} aria-hidden />

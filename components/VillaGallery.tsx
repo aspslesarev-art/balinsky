@@ -1,31 +1,33 @@
 'use client'
 
-// The villa page's media block: one big photo plus a thumbnail strip, and a
-// full-screen viewer with three tabs, Photos / Videos / Floor plans. All media
-// lives here at the top of the page, nothing scrolls the visitor away.
+// The villa page's media block: one big photo that pages left/right in place,
+// and under it a row of «feature» tiles — floor plans, master plan, video, sun,
+// 3D map (owner's mock-up «Медиаблок виллы», variant A, 2026-11-10). Clicking
+// the photo or a tile opens the full-screen viewer on that tab.
 // Floor plans = audit «document» images (lib/listing-photos.ts) + the 3D model,
 // when the villa has one (lib/villa-3d-plans.ts).
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, X, Play, Box, MapPinned } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Play, Box, MapPinned, Rotate3d } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { WishlistButton, type WishlistInput } from './WishlistButton'
+import { MEDIA_TILE, MediaTileLabel } from './media-tile'
 
 export type GalleryVideo = { url: string; name: string | null }
-type Tab = 'photos' | 'videos' | 'plans' | 'master'
+type Tab = 'photos' | 'videos' | 'plans' | 'master' | 'tour'
 
 const COPY = {
-  ru: { master: 'Генплан', photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', open: 'Открыть фото', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', more: (n: number) => `+${n} фото` },
-  en: { master: 'Master plan', photos: 'Photos', videos: 'Videos', plans: 'Floor plans', model3d: '3D model', open: 'Open photo', close: 'Close', prev: 'Previous', next: 'Next', more: (n: number) => `+${n} photos` },
-  id: { master: 'Masterplan', photos: 'Foto', videos: 'Video', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', more: (n: number) => `+${n} foto` },
-  fr: { master: 'Plan masse', photos: 'Photos', videos: 'Vidéos', plans: 'Plans', model3d: 'Modèle 3D', open: 'Ouvrir la photo', close: 'Fermer', prev: 'Précédent', next: 'Suivant', more: (n: number) => `+${n} photos` },
-  de: { master: 'Lageplan', photos: 'Fotos', videos: 'Videos', plans: 'Grundrisse', model3d: '3D-Modell', open: 'Foto öffnen', close: 'Schließen', prev: 'Zurück', next: 'Weiter', more: (n: number) => `+${n} Fotos` },
-  zh: { master: '总平面图', photos: '照片', videos: '视频', plans: '平面图', model3d: '3D 模型', open: '查看照片', close: '关闭', prev: '上一张', next: '下一张', more: (n: number) => `+${n} 张` },
-  nl: { master: 'Masterplan', photos: "Foto's", videos: "Video's", plans: 'Plattegronden', model3d: '3D-model', open: 'Foto openen', close: 'Sluiten', prev: 'Vorige', next: 'Volgende', more: (n: number) => `+${n} foto's` },
-  ban: { master: 'Masterplan', photos: 'Poto', videos: 'Vidéo', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', more: (n: number) => `+${n} poto` },
-  pl: { master: 'Plan osiedla', photos: 'Zdjęcia', videos: 'Wideo', plans: 'Rzuty', model3d: 'Model 3D', open: 'Otwórz zdjęcie', close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', more: (n: number) => `+${n} zdjęć` },
-  uk: { master: 'Генплан', photos: 'Фото', videos: 'Відео', plans: 'Планування', model3d: '3D-модель', open: 'Відкрити фото', close: 'Закрити', prev: 'Назад', next: 'Вперед', more: (n: number) => `+${n} фото` },
+  ru: { tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', open: 'Открыть фото', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', more: (n: number) => `+${n} фото` },
+  en: { tour: '3D tour', master: 'Master plan', photos: 'Photos', videos: 'Videos', plans: 'Floor plans', model3d: '3D model', open: 'Open photo', close: 'Close', prev: 'Previous', next: 'Next', more: (n: number) => `+${n} photos` },
+  id: { tour: 'Tur 3D', master: 'Masterplan', photos: 'Foto', videos: 'Video', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', more: (n: number) => `+${n} foto` },
+  fr: { tour: 'Visite 3D', master: 'Plan masse', photos: 'Photos', videos: 'Vidéos', plans: 'Plans', model3d: 'Modèle 3D', open: 'Ouvrir la photo', close: 'Fermer', prev: 'Précédent', next: 'Suivant', more: (n: number) => `+${n} photos` },
+  de: { tour: '3D-Rundgang', master: 'Lageplan', photos: 'Fotos', videos: 'Videos', plans: 'Grundrisse', model3d: '3D-Modell', open: 'Foto öffnen', close: 'Schließen', prev: 'Zurück', next: 'Weiter', more: (n: number) => `+${n} Fotos` },
+  zh: { tour: '3D 漫游', master: '总平面图', photos: '照片', videos: '视频', plans: '平面图', model3d: '3D 模型', open: '查看照片', close: '关闭', prev: '上一张', next: '下一张', more: (n: number) => `+${n} 张` },
+  nl: { tour: '3D-tour', master: 'Masterplan', photos: "Foto's", videos: "Video's", plans: 'Plattegronden', model3d: '3D-model', open: 'Foto openen', close: 'Sluiten', prev: 'Vorige', next: 'Volgende', more: (n: number) => `+${n} foto's` },
+  ban: { tour: 'Tur 3D', master: 'Masterplan', photos: 'Poto', videos: 'Vidéo', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', more: (n: number) => `+${n} poto` },
+  pl: { tour: 'Spacer 3D', master: 'Plan osiedla', photos: 'Zdjęcia', videos: 'Wideo', plans: 'Rzuty', model3d: 'Model 3D', open: 'Otwórz zdjęcie', close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', more: (n: number) => `+${n} zdjęć` },
+  uk: { tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Відео', plans: 'Планування', model3d: '3D-модель', open: 'Відкрити фото', close: 'Закрити', prev: 'Назад', next: 'Вперед', more: (n: number) => `+${n} фото` },
 } as const
 
 function ytId(url: string): string | null {
@@ -34,11 +36,9 @@ function ytId(url: string): string | null {
 }
 const ytThumb = (url: string) => { const id = ytId(url); return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null }
 
-const chip = 'text-white text-[14px] px-4 py-2.5 hover:bg-white/[0.12] focus-visible:bg-white/[0.12] transition-colors'
-const tile = 'relative h-[72px] rounded-lg overflow-hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraChips, masterplan, masterplanCover }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -48,95 +48,96 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   lang: Lang
   /** Heart toggle in the top-right corner of the cover (apartment page). */
   wishlistItem?: WishlistInput
-  /** Extra buttons in the chip bar — sun & shade, Google 3D map (complex page). */
-  extraChips?: ReactNode
+  /** Extra tiles after the gallery's own — sun & shade, Google 3D map
+   *  (SunShadowBlock / Google3DMapBlock with `tile`). */
+  extraTiles?: ReactNode
   /** Генплан комплекса с подсвеченной виллой — вкладка справа от планировок. */
   masterplan?: ReactNode
   /** Картинка для плитки «Генплан» в ленте превью. */
   masterplanCover?: string | null
+  /** 3D-тур комплекса (lib/tour3d.ts), встраивается окном. */
+  tourUrl?: string | null
+  /** `plans` — генплан комплекса, а не планировки (страница ЖК): другая подпись. */
+  plansAreMasterplan?: boolean
 }) {
-  const c = pickCopy(COPY, lang)
+  const base = pickCopy(COPY, lang)
+  const c = plansAreMasterplan ? { ...base, plans: base.master } : base
   const [open, setOpen] = useState<{ tab: Tab; i: number } | null>(null)
+  const [cur, setCur] = useState(0)
+  const swipe = useRef<number | null>(null)
   const planCount = plans.length + (plan3dUrl ? 1 : 0)
   if (photos.length === 0 && planCount === 0 && videos.length === 0) return null
 
-  const cover = photos[0] ?? plans[0] ?? null
-  // Strip: up to 4 photo thumbs, then a video tile and a plans tile when present.
-  // The strip is 4 cells on phones and 5 from sm, so the photo thumbs fill
-  // whatever the video/plan tiles leave, and «+N» sits on the last visible one.
-  const extra = (videos.length > 0 ? 1 : 0) + (planCount > 0 ? 1 : 0) + (masterplan ? 1 : 0)
-  const thumbs = photos.slice(1, 1 + Math.max(1, 5 - extra))
-  const mobileN = Math.min(thumbs.length, Math.max(1, 4 - extra))
-  const restMobile = photos.length - 1 - mobileN
-  const restDesk = photos.length - 1 - thumbs.length
+  const slides = photos.length ? photos : plans.slice(0, 1)
+  const n = slides.length
+  const shown = slides[Math.min(cur, n - 1)] ?? null
+  const step = (d: number) => setCur(i => (i + d + n) % n)
+  const openAt = () => setOpen({ tab: photos.length ? 'photos' : 'plans', i: photos.length ? Math.min(cur, n - 1) : 0 })
+  const arrow = 'absolute top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[rgb(16_24_20/0.55)] hover:bg-[rgb(16_24_20/0.75)] text-white flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-white'
+  const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles
 
   return (
     <section className="flex flex-col gap-2">
-      <div className="relative">
-        {cover && (
-          <button type="button" onClick={() => setOpen({ tab: photos.length ? 'photos' : 'plans', i: 0 })} aria-label={c.open}
+      <div className="relative"
+        onPointerDown={e => { if (e.pointerType !== 'mouse') swipe.current = e.clientX }}
+        onPointerUp={e => {
+          const x0 = swipe.current; swipe.current = null
+          if (x0 == null || n < 2) return
+          const dx = e.clientX - x0
+          if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1)
+        }}>
+        {shown && (
+          <button type="button" onClick={openAt} aria-label={c.open}
             className="block w-full cursor-zoom-in rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-            <Image src={cover} alt={alts?.[0] ?? title} width={920} height={480} sizes="(min-width: 1024px) 720px, 100vw" priority
-              className="w-full h-[300px] sm:h-[400px] md:h-[480px] object-cover rounded-xl" />
+            <Image key={shown} src={shown} alt={alts?.[Math.min(cur, n - 1)] ?? title} width={920} height={480} sizes="(min-width: 1024px) 720px, 100vw" priority={cur === 0}
+              className="w-full h-[300px] sm:h-[400px] md:h-[480px] object-cover rounded-xl" draggable={false} />
           </button>
         )}
+        {n > 1 && <>
+          <button type="button" onClick={() => step(-1)} aria-label={c.prev} className={`${arrow} left-3 hidden sm:flex`}><ChevronLeft size={22} /></button>
+          <button type="button" onClick={() => step(1)} aria-label={c.next} className={`${arrow} right-3 hidden sm:flex`}><ChevronRight size={22} /></button>
+          <span className="absolute right-3 bottom-3 z-10 pointer-events-none px-3 py-1.5 rounded-lg bg-[rgb(16_24_20/0.72)] text-white text-[13px] sm:text-[14px] font-semibold tabular-nums">
+            {Math.min(cur, n - 1) + 1} / {n}{photos.length ? ` ${c.photos.toLowerCase()}` : ''}
+          </span>
+        </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
-        <div className={`absolute bottom-4 flex bg-[rgb(16_24_20/0.8)] rounded-lg overflow-hidden whitespace-nowrap ${extraChips ? 'left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 overflow-x-auto [scrollbar-width:none]' : 'left-1/2 -translate-x-1/2'}`}>
-          {photos.length > 0 && <button type="button" onClick={() => setOpen({ tab: 'photos', i: 0 })} className={`${chip} font-semibold bg-white/[0.16]`}>{photos.length} {c.photos.toLowerCase()}</button>}
-          {videos.length > 0 && <button type="button" onClick={() => setOpen({ tab: 'videos', i: 0 })} className={chip}>{videos.length} {c.videos.toLowerCase()}</button>}
-          {planCount > 0 && <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={chip}>{c.plans}{planCount > 1 ? ` ${planCount}` : ''}</button>}
-          {masterplan && <button type="button" onClick={() => setOpen({ tab: 'master', i: 0 })} className={chip}>{c.master}</button>}
-          {extraChips}
-        </div>
       </div>
 
-      {(thumbs.length > 0 || extra > 0) && (
-        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-          {thumbs.map((p, i) => {
-            const idx = i + 1
-            const more = 'absolute inset-0 items-center justify-center bg-[rgb(16_24_20/0.55)] text-white text-[14px] font-semibold'
-            return (
-              <button key={p} type="button" onClick={() => setOpen({ tab: 'photos', i: idx })} aria-label={`${c.open} ${idx + 1}`}
-                className={`${tile} cursor-zoom-in ${i >= mobileN ? 'hidden sm:block' : ''}`}>
-                <Image src={p} alt={alts?.[idx] ?? title} width={160} height={72} sizes="160px" className="w-full h-full object-cover" />
-                {i === mobileN - 1 && restMobile > 0 && <span className={`${more} flex sm:hidden`}>{c.more(restMobile)}</span>}
-                {i === thumbs.length - 1 && restDesk > 0 && <span className={`${more} hidden sm:flex`}>{c.more(restDesk)}</span>}
-              </button>
-            )
-          })}
-          {videos.length > 0 && (
-            <button type="button" onClick={() => setOpen({ tab: 'videos', i: 0 })} className={tile} aria-label={c.videos}>
-              {ytThumb(videos[0].url) && <Image src={ytThumb(videos[0].url)!} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover" unoptimized />}
-              <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 bg-[rgb(16_24_20/0.72)] text-white text-[12px] font-semibold">
-                <Play size={18} fill="currentColor" aria-hidden />{c.videos}
-              </span>
-            </button>
-          )}
+      {hasTiles && (
+        <div className="grid grid-cols-3 sm:grid-flow-col sm:auto-cols-fr gap-2">
           {planCount > 0 && (
-            <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={tile} aria-label={c.plans}>
-              {plans[0] && <Image src={plans[0]} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover" />}
-              {/* Как «+7 фото»: тёмная плашка и белый текст — светлая была почти не видна. */}
-              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.62)] text-white text-[12px] sm:text-[14px] leading-tight text-center px-1 font-semibold">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>
+            <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={MEDIA_TILE} aria-label={c.plans}>
+              {plans[0] && <Image src={plans[0]} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
+              <MediaTileLabel icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>}>
                 {c.plans}{planCount > 1 ? ` ${planCount}` : ''}
-              </span>
+              </MediaTileLabel>
             </button>
           )}
           {masterplan && (
-            <button type="button" onClick={() => setOpen({ tab: 'master', i: 0 })} className={tile} aria-label={c.master}>
-              {masterplanCover && <Image src={masterplanCover} alt="" width={160} height={72} sizes="160px" className="w-full h-full object-cover" />}
-              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[rgb(16_24_20/0.55)] text-white text-[12px] sm:text-[14px] leading-tight text-center px-1 font-semibold">
-                <MapPinned size={18} aria-hidden />
-                {c.master}
-              </span>
+            <button type="button" onClick={() => setOpen({ tab: 'master', i: 0 })} className={MEDIA_TILE} aria-label={c.master}>
+              {masterplanCover && <Image src={masterplanCover} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
+              <MediaTileLabel icon={<MapPinned size={18} aria-hidden />}>{c.master}</MediaTileLabel>
             </button>
           )}
+          {videos.length > 0 && (
+            <button type="button" onClick={() => setOpen({ tab: 'videos', i: 0 })} className={MEDIA_TILE} aria-label={c.videos}>
+              {ytThumb(videos[0].url) && <Image src={ytThumb(videos[0].url)!} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" unoptimized />}
+              <MediaTileLabel icon={<Play size={18} fill="currentColor" aria-hidden />}>{c.videos}{videos.length > 1 ? ` ${videos.length}` : ''}</MediaTileLabel>
+            </button>
+          )}
+          {tourUrl && (
+            <button type="button" onClick={() => setOpen({ tab: 'tour', i: 0 })} className={MEDIA_TILE} aria-label={c.tour}>
+              {(photos[1] ?? photos[0]) && <Image src={photos[1] ?? photos[0]} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
+              <MediaTileLabel icon={<Rotate3d size={18} aria-hidden />}>{c.tour}</MediaTileLabel>
+            </button>
+          )}
+          {extraTiles}
         </div>
       )}
 
       {open && (
         <MediaViewer
-          photos={photos} plans={plans} plan3dUrl={plan3dUrl} videos={videos} alts={alts} title={title} lang={lang} masterplan={masterplan}
+          photos={photos} plans={plans} plan3dUrl={plan3dUrl} videos={videos} alts={alts} title={title} lang={lang} masterplan={masterplan} tourUrl={tourUrl} plansLabel={c.plans}
           tab={open.tab} index={open.i} onChange={(tab, i) => setOpen({ tab, i })} onClose={() => setOpen(null)}
         />
       )}
@@ -144,12 +145,13 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   )
 }
 
-function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab, index, onChange, onClose, masterplan }: {
-  photos: string[]; plans: string[]; plan3dUrl: string | null; videos: GalleryVideo[]; masterplan?: ReactNode
+function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab, index, onChange, onClose, masterplan, tourUrl, plansLabel }: {
+  photos: string[]; plans: string[]; plan3dUrl: string | null; videos: GalleryVideo[]; masterplan?: ReactNode; tourUrl?: string | null; plansLabel?: string
   alts?: (string | undefined)[]; title: string; lang: Lang
   tab: Tab; index: number; onChange: (tab: Tab, i: number) => void; onClose: () => void
 }) {
-  const c = pickCopy(COPY, lang)
+  const base = pickCopy(COPY, lang)
+  const c = plansLabel ? { ...base, plans: plansLabel } : base
   // Plans tab: the 3D model first (it is the richest view), then plan images.
   type Item = { kind: 'img'; src: string; alt: string } | { kind: 'video'; url: string; name: string | null } | { kind: '3d'; src: string } | { kind: 'node' }
   const lists: Record<Tab, Item[]> = {
@@ -160,6 +162,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
       ...plans.map(src => ({ kind: 'img' as const, src, alt: `${title} - ${c.plans.toLowerCase()}` })),
     ],
     master: masterplan ? [{ kind: 'node' as const }] : [],
+    tour: tourUrl ? [{ kind: '3d' as const, src: tourUrl }] : [],
   }
   const items = lists[tab]
   const count = items.length
@@ -179,7 +182,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
   }, [go, onClose])
 
-  const tabs = (['photos', 'videos', 'plans', 'master'] as Tab[]).filter(t => lists[t].length > 0)
+  const tabs = (['photos', 'videos', 'plans', 'master', 'tour'] as Tab[]).filter(t => lists[t].length > 0)
   const navBtn = 'absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 focus-visible:bg-white/20 text-white flex items-center justify-center transition-colors'
 
   return (
@@ -189,7 +192,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
           {tabs.map(t => (
             <button key={t} type="button" onClick={() => onChange(t, 0)}
               className={`shrink-0 rounded-full px-4 py-2 text-[14px] font-medium transition-colors ${t === tab ? 'bg-white text-[#101814]' : 'text-white/80 hover:bg-white/10'}`}>
-              {c[t]}{t !== 'master' && <> <span className="opacity-60">{lists[t].length}</span></>}
+              {c[t]}{t !== 'master' && t !== 'tour' && <> <span className="opacity-60">{lists[t].length}</span></>}
             </button>
           ))}
         </div>
@@ -217,7 +220,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
           <div className="w-full max-w-[1200px] max-h-full overflow-y-auto">{masterplan}</div>
         )}
         {item?.kind === '3d' && (
-          <iframe key={item.src} src={item.src} title={c.model3d} className="w-full h-full max-w-[1200px] rounded-lg border-0 bg-white" />
+          <iframe key={item.src} src={item.src} title={tab === 'tour' ? c.tour : c.model3d} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer" className="w-full h-full max-w-[1200px] rounded-lg border-0 bg-white" />
         )}
         {count > 1 && (
           <>

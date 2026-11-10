@@ -77,6 +77,7 @@ import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
+import { loadComplexMedia } from '@/lib/complex-media'
 import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
@@ -1004,6 +1005,8 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   // Parent complex (best-effort by name match in title)
   const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const parentComplexName = parentComplex?.name ?? null
+  // 3D-тур комплекса — плиткой «3D-тур» в галерее.
+  const aptTourUrl = (await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ slug: null, tourUrl: null }))).tourUrl
 
   const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
@@ -1331,6 +1334,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             plans={curated.plans}
             plan3dUrl={null}
             videos={aptVideos.map(vd => ({ url: vd.url, name: vd.name }))}
+            tourUrl={aptTourUrl}
             title={title}
             lang={lang}
             wishlistItem={{

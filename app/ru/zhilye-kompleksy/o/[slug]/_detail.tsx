@@ -36,6 +36,7 @@ import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { getSitePlan } from '@/lib/complex-sun-plan'
+import { embeddableTourUrl } from '@/lib/tour3d'
 import { loadSunSettings } from '@/lib/complex-sun'
 import dynamic from 'next/dynamic'
 // Heavy client widgets — code-split off the initial JS bundle.
@@ -1714,12 +1715,12 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     ? await loadSunSettings(slug).catch(() => null)
     : null
   const showSunBlock = Boolean(sunPlan && sunSettings?.enabled)
-  // Солнце и 3D-карта Google — плашками в полосе над фото (верхний медиаблок),
-  // рядом с «фото / видео / планировки». Окна открываются поверх страницы.
+  // Солнце и 3D-карта Google — плитками в ряду «фишек» под главным фото
+  // (макет «Медиаблок виллы», вариант A). Окна открываются поверх страницы.
   const sunChips = showSunBlock ? (
     <>
       <SunShadowBlock
-        chip
+        tile={{ cover: slidesPhotos[1] ?? slidesPhotos[0] ?? null }}
         plan={sunPlan!}
         latitude={sunSettings!.latitude}
         longitude={sunSettings!.longitude}
@@ -1742,7 +1743,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       />
       {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
         <Google3DMapBlock
-          chip
+          tile={{ cover: sunPlan!.basemap?.url ?? null }}
           apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
           view={sunPlan!.google3d}
           title={sunPlan!.title}
@@ -1926,7 +1927,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             videos={complexVideos.map(vd => ({ url: vd.url, name: vd.name }))}
             title={name}
             lang={lang}
-            extraChips={sunChips}
+            extraTiles={sunChips}
+            plansAreMasterplan
+            tourUrl={embeddableTourUrl(c.data['3D tours'])}
             wishlistItem={{
               kind: 'complex', slug, title: name,
               photo: slidesPhotos[0] ?? null,

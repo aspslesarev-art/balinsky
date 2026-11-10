@@ -1,5 +1,6 @@
 'use client'
 
+import { MEDIA_TILE, MediaTileLabel } from '@/components/media-tile'
 // Публичный блок «Солнце и тень» на странице ЖК.
 //
 // Ради скорости страницы и Core Web Vitals сам блок — это кнопка и текст:
@@ -36,6 +37,8 @@ export type SunShadowBlockProps = {
   en?: boolean
   /** Компактная плашка для полосы кнопок над фото (медиаблок вверху страницы). */
   chip?: boolean
+  /** Плитка в ряду «фишек» под главным фото; cover — картинка под затемнением. */
+  tile?: { cover?: string | null }
 }
 
 export function SunShadowBlock({
@@ -47,6 +50,7 @@ export function SunShadowBlock({
   title,
   en = false,
   chip = false,
+  tile,
 }: SunShadowBlockProps) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
@@ -67,7 +71,12 @@ export function SunShadowBlock({
 
   return (
     <>
-      {chip ? (
+      {tile ? (
+        <button type="button" onClick={() => setOpen(true)} className={MEDIA_TILE} aria-label={en ? 'Sun & shade' : 'Солнце и тени'}>
+          {tile.cover && <img src={tile.cover} alt="" className="w-full h-full object-cover" />}
+          <MediaTileLabel icon={<Sun size={18} aria-hidden />}>{en ? 'Sun & shade' : 'Солнце и тени'}</MediaTileLabel>
+        </button>
+      ) : chip ? (
         <button type="button" onClick={() => setOpen(true)} className="text-white text-[14px] px-4 py-2.5 inline-flex items-center gap-1.5 hover:bg-white/[0.12] focus-visible:bg-white/[0.12] transition-colors disabled:cursor-wait disabled:opacity-70">
           <Sun size={15} aria-hidden />
           {en ? 'Sun & shade' : 'Солнце и тени'}
