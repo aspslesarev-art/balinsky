@@ -156,6 +156,35 @@
       ru: 'Паркинг', en: 'Parking', id: 'Parkir', fr: 'Parking', de: 'Stellplatz',
       zh: '车位', nl: 'Parkeren', pl: 'Parking', uk: 'Паркінг',
     },
+    masterBedroom: {
+      ru: 'Мастер-спальня', en: 'Master bedroom', id: 'Kamar utama', fr: 'Suite parentale',
+      de: 'Hauptschlafzimmer', zh: '主卧', nl: 'Master slaapkamer', pl: 'Sypialnia główna',
+      uk: 'Майстер-спальня',
+    },
+    study: {
+      ru: 'Кабинет', en: 'Study', id: 'Ruang kerja', fr: 'Bureau', de: 'Arbeitszimmer',
+      zh: '书房', nl: 'Werkkamer', pl: 'Gabinet', uk: 'Кабінет',
+    },
+    laundry: {
+      ru: 'Постирочная', en: 'Laundry', id: 'Ruang cuci', fr: 'Buanderie', de: 'Waschraum',
+      zh: '洗衣房', nl: 'Wasruimte', pl: 'Pralnia', uk: 'Пральня',
+    },
+    terrace: {
+      ru: 'Терраса', en: 'Terrace', id: 'Teras', fr: 'Terrasse', de: 'Terrasse',
+      zh: '露台', nl: 'Terras', pl: 'Taras', uk: 'Тераса',
+    },
+    entrance: {
+      ru: 'Вход', en: 'Entrance', id: 'Pintu masuk', fr: 'Entrée', de: 'Eingang',
+      zh: '入口', nl: 'Ingang', pl: 'Wejście', uk: 'Вхід',
+    },
+    layoutA: {
+      ru: 'Вариант А', en: 'Layout A', id: 'Denah A', fr: 'Plan A', de: 'Variante A',
+      zh: '户型 A', nl: 'Indeling A', pl: 'Wariant A', uk: 'Варіант А',
+    },
+    layoutB: {
+      ru: 'Вариант Б', en: 'Layout B', id: 'Denah B', fr: 'Plan B', de: 'Variante B',
+      zh: '户型 B', nl: 'Indeling B', pl: 'Wariant B', uk: 'Варіант Б',
+    },
 
     // ——— группы в строке состава и прочие слова ———
     livingBlock: {
