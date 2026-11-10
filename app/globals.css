@@ -565,6 +565,8 @@ html[data-goal="live"] #dokhodnost { display: none; }
 
 /* Точка объекта на картах MapLibre (components/ListingMap.tsx). */
 .bx-map-me {
+  /* Не перехватывает мышь: иначе над точкой курсор менялся с «руки» на стрелку. */
+  pointer-events: none;
   width: 16px;
   height: 16px;
   border-radius: 50%;

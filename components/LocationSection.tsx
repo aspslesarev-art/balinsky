@@ -179,7 +179,7 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
           )}
 
           {tab === 'nearby' && mapGroups.length > 0 && (
-            <div className="absolute left-4 right-4 bottom-4 flex gap-2 flex-wrap">
+            <div className="absolute left-4 right-14 bottom-4 flex gap-2 flex-wrap pointer-events-none">
               {mapGroups.map(g => (
                 <span key={g.key} className="text-[14px] px-3.5 py-2 rounded-lg bg-white/95 shadow-[0_1px_2px_rgb(0_0_0/.08)] flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: g.color }} />
