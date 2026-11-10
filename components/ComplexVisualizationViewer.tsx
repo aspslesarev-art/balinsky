@@ -256,8 +256,9 @@ export function ComplexVisualizationViewer({
                   points={points}
                   onClick={ev => onPolygonClick(h, ev)}
                   fill={palette.fill}
-                  stroke={palette.stroke}
-                  strokeWidth={0.003}
+                  strokeLinejoin="round"
+                  stroke="rgba(255,255,255,0.95)"
+                  strokeWidth={2}
                   vectorEffect="non-scaling-stroke"
                   className={`pointer-events-auto ${isSold ? 'cursor-not-allowed' : 'cursor-pointer'} ${palette.hover}`}
                 >
