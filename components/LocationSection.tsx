@@ -9,6 +9,7 @@ import { ROUTE_COLOR, nearPoints as computeNearPoints, NEAR_GROUPS } from '@/lib
 import type { NearbyPlace } from '@/lib/nearby-places'
 import { ListingMap, type MapRoute, type MapPoint } from './ListingMap'
 import { LazyMount } from './LazyMount'
+import { NearbyHighlights } from './NearbyHighlights'
 
 type TabKey = 'nearby' | 'routes' | 'tourists'
 
@@ -203,6 +204,8 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
           ))}
         </div>
       )}
+
+      {tab === 'nearby' && nearby && <NearbyHighlights byCategory={nearby.byCategory} lang={lang} />}
 
       {tab === 'routes' && hasRoutes && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
