@@ -6,11 +6,14 @@ import json, math, struct, sys
 
 ROW_AZ = float(sys.argv[1]); OUT = sys.argv[2]
 EAVE, RIDGE, OVER = 6.1, 2.2, 0.3
-PITCH, STAG, W, D = 6.96, 2.74, 6.2, 9.14
+PITCH, STAG, W, D = 6.96, 0.0, 6.2, 9.14  # ряд прямой, без лесенки (10.11.2026)
+SHEAR = math.tan(math.radians(15))  # дом-параллелограмм к террасам, как в lib/complex-sun-plan.ts
+PIV = [0.0, 0.0]
 plot = [(-0.5, -6.0), (5*PITCH+W+0.5, 5*STAG-6.0), (5*PITCH+W+0.5, 5*STAG+D+3), (-0.5, D+3)]
 cx = sum(p[0] for p in plot)/4; cz = sum(p[1] for p in plot)/4
 ax = math.radians(ROW_AZ); az = math.radians(ROW_AZ + 90)
 def enu(x, z, h):
+    x = x - SHEAR * (z - PIV[1])
     x -= cx; z -= cz
     return (x*math.sin(ax) + z*math.sin(az), x*math.cos(ax) + z*math.cos(az), h)
 
@@ -32,6 +35,7 @@ def boxp(x0, x1, z0, z1, h0, h1, color):
 
 for i in range(6):
     ox, oz = i*PITCH, i*STAG
+    PIV[0], PIV[1] = ox, oz
     boxp(ox, ox+W, oz, oz+D, 0, EAVE, WALL)
     # glazed pool-side facade
     boxp(ox+0.25, ox+W-0.25, oz-0.06, oz, 0.25, EAVE-0.45, GLASS)

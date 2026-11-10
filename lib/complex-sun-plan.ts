@@ -33,7 +33,12 @@ export type SunSettingsInput = Omit<SunSettings, 'complexSlug'>
 export type PlanUnit = { id: number; x0: number; x1: number }
 
 /** Бассейн: x — левая кромка, zNear ближе к фасаду дома. */
-export type PlanPool = { unit: number; x: number; width: number; zNear: number; zFar: number }
+export type PlanPool = {
+  unit: number; x: number; width: number; zNear: number; zFar: number
+  /** Скос вместе с домом (как `shear` корпуса) относительно `pivot`. */
+  shear?: number
+  pivot?: { x: number; z: number }
+}
 
 /**
  * Отдельный корпус: свой ряд секций, своя глубина, свой разворот.
@@ -49,6 +54,8 @@ export type PlanBlock = {
   origin: { x: number; z: number }
   /** Разворот локальной оси X относительно оси X участка, градусы по часовой. */
   azimuth: number
+  /** Скос корпуса: сдвиг по локальной X на метр к стороне бассейна (−Z) — дом-параллелограмм, как на генплане. */
+  shear?: number
   /** Глубина корпуса вдоль его локальной оси Z, метры. */
   depth: number
   units: PlanUnit[]
@@ -350,13 +357,22 @@ const EDEM_II: SitePlan = {
  * бассейны смотрят на север — на рисовые террасы. Лесенка ряда параллельна
  * стене галереи (азимут стены ≈101°), отсюда азимут оси X 80°.
  */
-const CITRINE_PITCH = 6.96, CITRINE_STAGGER = 2.74, CITRINE_W = 6.2, CITRINE_D = 9.14
+// Ряд прямой, без лесенки (разметка владельца 10.11.2026 по виду сверху):
+// на генплане застройщика «ступеньки» — это наклон всего ряда к осям
+// картинки, а сами виллы стоят в линию и перпендикулярно ряду. Ряд идёт вдоль
+// северной стены галереи, азимут ≈104°; бассейны смотрят на север-северо-восток.
+const CITRINE_PITCH = 6.96, CITRINE_STAGGER = 0, CITRINE_W = 6.2, CITRINE_D = 9.14
+// Виллы скошены фасадом к рисовым террасам на северо-восток (владелец
+// 10.11.2026: «чуть поверни в сторону террас, как на генплане»). Поворот
+// сталкивал соседние дома (шаг 6.96 м при ширине 6.2), поэтому скос — дом
+// параллелограммом, как на генплане: фасад сдвинут на tan 15° на метр глубины.
+const CITRINE_SHEAR = Math.tan(15 * Math.PI / 180)
 const CITRINE: SitePlan = {
   title: 'CITRINE',
   district: 'Лодтундух, Убуд',
   utcOffsetHours: 8,
-  defaults: { rowAzimuth: 80, latitude: -8.559913, longitude: 115.263228 },
-  // glb — тот же план, развёрнутый на азимут ряда 80° (scripts/make-citrine-glb.py);
+  defaults: { rowAzimuth: 104, latitude: -8.559913, longitude: 115.263228 },
+  // glb — тот же план, развёрнутый на азимут ряда 104° (scripts/make-citrine-glb.py);
   // при смене азимута в /admin/sun/citrine модель нужно пересобрать.
   google3d: {
     modelUrl: '/sun/citrine.glb',
@@ -374,6 +390,7 @@ const CITRINE: SitePlan = {
     id: `villa-${i + 1}`,
     origin: { x: i * CITRINE_PITCH, z: i * CITRINE_STAGGER },
     azimuth: 0,
+    shear: CITRINE_SHEAR,
     depth: CITRINE_D,
     units: [{ id: i + 1, x0: 0, x1: CITRINE_W }],
     roof: 'pitched' as const,
@@ -390,6 +407,8 @@ const CITRINE: SitePlan = {
     width: 4.61,
     zNear: i * CITRINE_STAGGER - 2.88,
     zFar: i * CITRINE_STAGGER - 5.1,
+    shear: CITRINE_SHEAR,
+    pivot: { x: i * CITRINE_PITCH, z: i * CITRINE_STAGGER },
   })),
   // Esri World Imagery, зум 19 (как у EDEM II): 1280 px ≈ 378 м. Снимок
   // отцентрован по точке застройщика у галереи; якорь — пиксель центра

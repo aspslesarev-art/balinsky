@@ -197,16 +197,43 @@ function poolMeshes(materials: Record<string, THREE.Material>, plan: SitePlan) {
       z: centerZ,
     })
     rim.castShadow = false
-    group.add(rim)
 
     const water = new THREE.Mesh(new THREE.PlaneGeometry(pool.width, length), materials.pool)
     water.rotation.x = -Math.PI / 2
     water.position.set(centerX, 0.02, centerZ)
     water.receiveShadow = true
-    group.add(water)
+    // Бассейн, развёрнутый вместе со своим домом: поворот вокруг угла дома.
+    if (pool.shear && pool.pivot) {
+      const holder = new THREE.Group()
+      holder.position.set(pool.pivot.x, 0, pool.pivot.z)
+      rim.position.x -= pool.pivot.x; rim.position.z -= pool.pivot.z
+      water.position.x -= pool.pivot.x; water.position.z -= pool.pivot.z
+      holder.add(rim, water)
+      applyShear(holder, pool.shear)
+      group.add(holder)
+    } else {
+      group.add(rim, water)
+    }
   })
 
   return group
+}
+
+/**
+ * Скос группы в её локальных осях: x' = x − k·z (сторона бассейна, −Z,
+ * уезжает в +X). Поворот и сдвиг группы сохраняются — матрица собирается
+ * вручную, потому что у Object3D нет скоса среди свойств.
+ */
+function applyShear(obj: THREE.Object3D, k: number) {
+  obj.updateMatrix()
+  const shear = new THREE.Matrix4().set(
+    1, 0, -k, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  )
+  obj.matrix.multiply(shear)
+  obj.matrixAutoUpdate = false
 }
 
 /** Плоская отмостка участка — на неё ложатся тени. */
@@ -250,6 +277,7 @@ export function buildComplexModel(plan: SitePlan, heights: ModelHeights): Comple
       )
       row.rotation.y = -(block.azimuth * Math.PI) / 180
       row.position.set(block.origin.x, 0, block.origin.z)
+      if (block.shear) applyShear(row, block.shear)
       casters.add(row)
     }
   } else {
