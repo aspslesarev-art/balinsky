@@ -32,7 +32,7 @@ const COPY = {
 } as const
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [] }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -57,6 +57,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   promo?: PromoKit | null
   /** Свои вкладки окна с плитками (после видео/3D-тура, перед «Рекламой»). */
   viewerTabs?: ViewerTab[]
+  /** Под плитками: кнопка «Скачать презентацию PDF» (страница виллы). */
+  belowTiles?: ReactNode
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansAreMasterplan ? { ...base, plans: base.master } : base
@@ -154,6 +156,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           )}
         </div>
       )}
+
+      {belowTiles}
 
       {open && (
         <MediaViewer

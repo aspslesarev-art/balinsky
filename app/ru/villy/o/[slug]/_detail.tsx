@@ -47,6 +47,7 @@ import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
+import { Money } from '@/components/Money'
 import { RDTR_BASE, pctText, plotLabel, zoneRows, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
@@ -1477,7 +1478,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   ].filter(Boolean) as { Icon: typeof BedDouble; label: string; value: ReactNode }[]
 
   const viewText = lang === 'ru' ? firstString(d['Вид']) : (firstString(d['Вид EN']) ?? null)
-  type KV = { label: string; value: string }
+  type KV = { label: string; value: React.ReactNode }
   const villaFacts: KV[] = ([
     parentComplex ? { label: c.factType, value: c.factTypeVillaComplex } : { label: c.factType, value: c.factTypeVilla },
     area != null ? { label: c.factHouse, value: `${area} ${c.sqm}` } : null,
@@ -1493,6 +1494,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lease ? { label: c.factOwnership, value: c.factOwnershipLease } : null,
     lease ? { label: c.factLeasehold, value: c.factLeaseValue(lease) } : null,
     land != null ? { label: c.factLand, value: `${land} ${c.sqm}` } : null,
+    landPrices && land != null && land > 0 ? { label: pickCopy({ ru: 'Стоимость земли', en: 'Land value', id: 'Nilai tanah', fr: 'Valeur du terrain', de: 'Grundstückswert', zh: '土地价值', nl: 'Grondwaarde', ban: 'Aji tanah', pl: 'Wartość gruntu', uk: 'Вартість землі' }, lang), value: <>≈ <Money usd={Math.round(landPrices.medianPpm * land)} lang={lang} /></> } : null,
   ] as (KV | null)[]).filter(Boolean) as KV[]
 
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
@@ -1894,6 +1896,28 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   )
   if (analyticsOnly) return analytics
 
+  const presentationPdf = (
+  <VillaPresentationButton
+    variant="outline"
+    lang={lang}
+    villaId={v.airtable_id}
+    slug={slug}
+    title={title}
+    district={district}
+    photos={photos}
+    priceUsd={priceNum}
+    pricePerM2={priceM2}
+    bedrooms={bedrooms}
+    area={area}
+    land={land}
+    yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
+    lease={lease}
+    permit={permit}
+    lat={lat}
+    lng={lng}
+    seoText={seoText}
+  />
+  )
   const presentationBtn = priceNum != null ? (
     <span className="bx-pro-only">
     <AddToCollection kind="villa" slug={slug} snapshot={{
@@ -1902,26 +1926,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
       leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
       id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
     }} />
-    <VillaPresentationButton
-      variant="outline"
-      lang={lang}
-      villaId={v.airtable_id}
-      slug={slug}
-      title={title}
-      district={district}
-      photos={photos}
-      priceUsd={priceNum}
-      pricePerM2={priceM2}
-      bedrooms={bedrooms}
-      area={area}
-      land={land}
-      yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
-      lease={lease}
-      permit={permit}
-      lat={lat}
-      lng={lng}
-      seoText={seoText}
-    />
+    {presentationPdf}
     </span>
   ) : null
 
@@ -2008,6 +2013,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           tourUrl={complexMedia.tourUrl}
           promo={promoKit}
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
+          belowTiles={priceNum != null ? <span className="bx-pro-only block">{presentationPdf}</span> : null}
         />
 
         {seoText && (
@@ -2144,9 +2150,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               reservedUntil={activeReservation?.expires_at ?? null}
               presentationButton={presentationBtn}
               dealRows={[
-                ...(landPrices && land != null && land > 0 ? [{ label: pickCopy({ ru: 'Земля под виллой', en: 'Land under the villa', id: 'Tanah di bawah vila', fr: 'Terrain de la villa', de: 'Grundstück der Villa', zh: '别墅土地', nl: 'Grond onder de villa', ban: 'Tanah vila', pl: 'Grunt pod willą', uk: 'Земля під віллою' }, lang), valueUsd: Math.round(landPrices.medianPpm * land), approx: true }] : []),
-                ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
                 ...(paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : []),
+                ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
               ]}
               priceCompDiffPct={saleComps?.diffPct ?? null}
             />
