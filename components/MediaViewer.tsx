@@ -15,8 +15,9 @@ export type BaseTab = 'photos' | 'videos' | 'plans' | 'master' | 'tour' | 'promo
 // Свои вкладки окна (солнце и ветер, 3D-карта, документы) — ключ `x:<key>`.
 export type Tab = BaseTab | `x:${string}`
 
-/** Вкладка окна медиаблока со своей плиткой. `bleed` — без отступов (документы). */
-export type ViewerTab = { key: string; label: string; icon: ReactNode; cover?: string | null; content: ReactNode; bleed?: boolean }
+/** Вкладка окна медиаблока со своей плиткой. `bleed` — без отступов (документы),
+ *  `hideTile` — без плитки под фото, открывается событием bx:open-media (зоны). */
+export type ViewerTab = { key: string; label: string; icon: ReactNode; cover?: string | null; content: ReactNode; bleed?: boolean; hideTile?: boolean }
 
 const COPY = {
   ru: { promo: 'Реклама', tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', plan: (n: number) => `План ${n}`, model3dSub: 'Покрутить дом', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', dlPhoto: 'Скачать фото', dlPlan: 'Скачать план', zoomIn: 'Приблизить', zoomOut: 'Отдалить', swipe: 'Листайте пальцем', pinch: 'Двумя пальцами - приблизить', nowPlaying: 'Сейчас играет', upNext: 'Дальше', videosN: (n: number) => `${n} видео`, rotate: 'Поверните телефон - на весь экран',

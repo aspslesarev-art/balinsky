@@ -7,7 +7,7 @@
 // Floor plans = audit «document» images (lib/listing-photos.ts) + the 3D model,
 // when the villa has one (lib/villa-3d-plans.ts).
 
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Play, MapPinned, Rotate3d, Megaphone } from 'lucide-react'
 import type { PromoKit } from '@/lib/promo-kits'
@@ -64,6 +64,15 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const [cur, setCur] = useState(0)
   const swipe = useRef<number | null>(null)
   const planCount = plans.length + (plan3dUrl ? 1 : 0)
+  // Вкладку окна можно открыть снаружи (карточка «Зоны вокруг» в разделе «Участок»).
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const tab = (e as CustomEvent<{ tab?: Tab }>).detail?.tab
+      if (tab && (!tab.startsWith('x:') || viewerTabs.some(v => `x:${v.key}` === tab))) setOpen({ tab, i: 0 })
+    }
+    window.addEventListener('bx:open-media', onOpen)
+    return () => window.removeEventListener('bx:open-media', onOpen)
+  }, [viewerTabs])
   if (photos.length === 0 && planCount === 0 && videos.length === 0) return null
 
   const slides = photos.length ? photos : plans.slice(0, 1)
@@ -72,7 +81,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const step = (d: number) => setCur(i => (i + d + n) % n)
   const openAt = () => setOpen({ tab: photos.length ? 'photos' : 'plans', i: photos.length ? Math.min(cur, n - 1) : 0 })
   const arrow = 'absolute top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[rgb(16_24_20/0.55)] hover:bg-[rgb(16_24_20/0.75)] text-white flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-white'
-  const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.length > 0
+  const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.some(v => !v.hideTile)
 
   return (
     <section className="flex flex-col gap-2">
@@ -130,7 +139,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             </button>
           )}
           {extraTiles}
-          {viewerTabs.map(v => (
+          {viewerTabs.filter(v => !v.hideTile).map(v => (
             <button key={v.key} type="button" onClick={() => setOpen({ tab: `x:${v.key}`, i: 0 })} className={MEDIA_TILE} aria-label={v.label}>
               {v.cover && <Image src={v.cover} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
               <MediaTileLabel icon={v.icon}>{v.label}</MediaTileLabel>

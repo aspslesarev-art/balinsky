@@ -15,7 +15,7 @@ import { revisionedCache } from '@/lib/revisioned-cache'
 import { contentRev } from '@/lib/content-version'
 import {
   BedDouble, Square, Trees, Calendar, FileCheck2, Lock, MapPin, Plane,
-  ChevronRight, HardHat, Star, Palette, Sun, Globe, FileText,
+  ChevronRight, HardHat, Star, Palette, Sun, Globe, FileText, Layers,
 } from 'lucide-react'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 
@@ -46,6 +46,8 @@ import { complexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
 import { ZoningMap } from '@/components/ZoningMap'
+import { ZoningCard } from '@/components/ZoningCard'
+import { RDTR_BASE, pctText, plotLabel, zoneRows, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -1206,10 +1208,18 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const promoKit = await loadPromoKit(firstString(d['Комплекс']))
   const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))
   const docsForTile = complexDocs(complexMedia.slug)
-  // Карта «Зоны вокруг» - только если scripts/rdtr_zones.py уже скачал зоны.
-  const hasZones = complexMedia.slug
-    ? await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/feeds/_rdtr-zones/${complexMedia.slug}.json`, { method: 'HEAD', next: { revalidate: 86400 } }).then(r => r.ok).catch(() => false)
-    : false
+  // Зоны плана застройки вокруг (scripts/rdtr_zones.py): карточка в колонке
+  // «Участок» и вкладка «Зоны» в окне медиаблока.
+  const rdtr: RdtrData | null = complexMedia.slug
+    ? await fetch(`${RDTR_BASE}/${complexMedia.slug}.json`, { next: { revalidate: 86400 } }).then(r => (r.ok ? r.json() : null)).catch(() => null)
+    : null
+  const rdtrRows = rdtr ? zoneRows(rdtr, lang) : []
+  const rdtrAround = (() => {
+    const b = rdtrRows.find(r => r.group === 'build')
+    const n = rdtrRows.find(r => r.group === 'nobuild')
+    const parts = [b ? `${pctText(b.share)} ${b.label.toLowerCase()}` : null, n ? `${pctText(n.share)} ${n.label.toLowerCase()}` : null].filter(Boolean)
+    return parts.length ? parts.join(', ') : null
+  })()
   const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
   // Юридическая проверка комплекса (документы застройщика) — тот же блок, что
   // на странице ЖК, и так же только в Pro (bx-auth-block).
@@ -1272,6 +1282,16 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           ),
         })
       }
+    }
+    if (rdtr && complexMedia.slug) {
+      tabs.push({
+        key: 'zones',
+        label: pickCopy({ ru: 'Зоны', en: 'Zoning', id: 'Zonasi', fr: 'Zonage', de: 'Zonen', zh: '规划分区', nl: 'Bestemming', ban: 'Zonasi', pl: 'Strefy', uk: 'Зони' }, lang),
+        icon: <Layers size={18} aria-hidden />,
+        hideTile: true,
+        bleed: true,
+        content: <ZoningMap slug={complexMedia.slug} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
+      })
     }
     if (docsForTile) {
       tabs.push({
@@ -2015,13 +2035,15 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                       <span className="text-right">{f.value}</span>
                     </div>
                   ))}
+                  {rdtr && complexMedia.slug && (
+                    <ZoningCard thumb={`${RDTR_BASE}/${complexMedia.slug}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} plot={plotLabel(rdtr, lang)} around={rdtrAround} lang={lang} />
+                  )}
                 </div>
               )}
             </div>
           </section>
         )}
 
-        {hasZones && complexMedia.slug && <ZoningMap slug={complexMedia.slug} lang={lang} />}
 
         {analytics}
 
