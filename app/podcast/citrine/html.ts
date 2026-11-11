@@ -1,5 +1,5 @@
 // Сценарий подкаста CITRINE (2026-11-11). Отдаётся целиком как HTML-страница
-// через route.ts, только вошедшему админу. Копия опубликована как artifact.
+// через route.ts по прямой ссылке /podcast/citrine. Копия опубликована как artifact.
 export const PODCAST_CITRINE_HTML = `<!doctype html>
 <html lang="ru">
 <head>
