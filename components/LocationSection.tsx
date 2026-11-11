@@ -17,6 +17,10 @@ const EMOJI: Record<string, string> = {
   school: '🎓', beach: '🏖️', health: '🏥', shop: '🛒', cafes: '☕', quiet: '🤫', volcano: '🌋',
 }
 
+type TouristLevel = 'busy' | 'some' | 'quiet'
+// Отзывы считаем только у мест, куда ходят туристы, — аптеки, школы и супермаркеты не в счёт.
+const LEISURE = new Set(['restaurant', 'cafe', 'nightlife', 'wellness', 'attraction', 'beachclub', 'beach'])
+
 const COPY = {
   ru: {
     title: 'Расположение',
@@ -30,12 +34,14 @@ const COPY = {
     cafesCount: (n: number) => `${n} в 500 м`,
     routeLabels: { airport: '✈ Аэропорт', canggu: 'Чангу', ubud: 'Убуд', uluwatu: 'Улувату', sanur: 'Санур' } as Record<string, string>,
     min: 'мин',
-    reviewsNearby: 'отзывов на Google Maps в радиусе 1 км',
-    touristNote: (beach: string | null) => beach
-      ? `Район с высокой плотностью отзывов — туристы здесь активны. ${beach} и рестораны рядом получают стабильный поток гостей.`
-      : 'Район с высокой плотностью отзывов — туристы здесь активны. Рестораны и кафе рядом получают стабильный поток гостей.',
-    restNearby: 'ресторанов рядом',
-    cafesNearby: 'кафе рядом',
+    reviewsNearby: 'отзывов у кафе, ресторанов и мест отдыха в радиусе 1 км',
+    touristNote: (level: TouristLevel) => level === 'busy'
+      ? 'Оживлённое место: в пешей доступности много кафе и ресторанов, туристы здесь бывают постоянно.'
+      : level === 'some'
+      ? 'Кафе и ресторанов рядом немного. Это не туристический центр - за шумом и выбором едут в соседние районы.'
+      : 'Тихое место: кафе и ресторанов в пешей доступности почти нет.',
+    restNearby: (n: number) => `${n % 10 === 1 && n % 100 !== 11 ? 'ресторан' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'ресторана' : 'ресторанов'} рядом`,
+    cafesNearby: (_n: number) => 'кафе рядом',
   },
   en: {
     title: 'Location',
@@ -49,12 +55,14 @@ const COPY = {
     cafesCount: (n: number) => `${n} within 500 m`,
     routeLabels: { airport: '✈ Airport', canggu: 'Canggu', ubud: 'Ubud', uluwatu: 'Uluwatu', sanur: 'Sanur' } as Record<string, string>,
     min: 'min',
-    reviewsNearby: 'reviews on Google Maps within 1 km',
-    touristNote: (beach: string | null) => beach
-      ? `High review density area — tourists are active here. ${beach} and nearby restaurants enjoy a steady flow of guests.`
-      : 'High review density area — tourists are active here. Restaurants and cafés nearby enjoy a steady flow of guests.',
-    restNearby: 'restaurants nearby',
-    cafesNearby: 'cafés nearby',
+    reviewsNearby: 'reviews of cafés, restaurants and leisure spots within 1 km',
+    touristNote: (level: TouristLevel) => level === 'busy'
+      ? 'A lively spot: plenty of cafés and restaurants within walking distance, with a steady flow of visitors.'
+      : level === 'some'
+      ? 'Only a few cafés and restaurants nearby. Not a tourist hub - people head to neighbouring areas for choice and nightlife.'
+      : 'A quiet spot: almost no cafés or restaurants within walking distance.',
+    restNearby: (n: number) => (n === 1 ? 'restaurant nearby' : 'restaurants nearby'),
+    cafesNearby: (n: number) => (n === 1 ? 'café nearby' : 'cafés nearby'),
   },
 } as const
 
@@ -117,19 +125,21 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
   }, [routes, c.routeLabels])
 
   const touristStats = useMemo(() => {
-    if (!nearby) return { totalReviews: 0, restaurants: 0, cafes: 0 }
+    if (!nearby) return { totalReviews: 0, restaurants: 0, cafes: 0, level: 'quiet' as TouristLevel }
     let totalReviews = 0
     let restaurants = 0
     let cafes = 0
     for (const [cat, places] of Object.entries(nearby.byCategory)) {
       for (const p of places) {
         if (p.distanceKm > 1) continue
-        totalReviews += p.reviews ?? 0
+        if (LEISURE.has(cat)) totalReviews += p.reviews ?? 0
         if (cat === 'restaurant') restaurants++
         if (cat === 'cafe') cafes++
       }
     }
-    return { totalReviews, restaurants, cafes }
+    const food = restaurants + cafes
+    const level: TouristLevel = food >= 6 ? 'busy' : food >= 2 ? 'some' : 'quiet'
+    return { totalReviews, restaurants, cafes, level }
   }, [nearby])
 
   const poiCards = useMemo(() => {
@@ -237,7 +247,7 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
                 <span className="text-[14px] text-[#4C5751]">{c.reviewsNearby}</span>
               </div>
               <p className="m-0 text-[15px] leading-[1.55] text-[#36413B]">
-                {c.touristNote(beach?.name ?? null)}
+                {c.touristNote(touristStats.level)}
               </p>
             </div>
           )}
@@ -251,13 +261,13 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
             {touristStats.restaurants > 0 && (
               <div className="p-4 border border-[#EEF2EF] rounded-[10px] flex flex-col gap-1">
                 <span className="text-[22px] font-semibold">{touristStats.restaurants}</span>
-                <span className="text-[13px] text-[#4C5751]">{c.restNearby}</span>
+                <span className="text-[13px] text-[#4C5751]">{c.restNearby(touristStats.restaurants)}</span>
               </div>
             )}
             {touristStats.cafes > 0 && (
               <div className="p-4 border border-[#EEF2EF] rounded-[10px] flex flex-col gap-1">
                 <span className="text-[22px] font-semibold">{touristStats.cafes}</span>
-                <span className="text-[13px] text-[#4C5751]">{c.cafesNearby}</span>
+                <span className="text-[13px] text-[#4C5751]">{c.cafesNearby(touristStats.cafes)}</span>
               </div>
             )}
           </div>
