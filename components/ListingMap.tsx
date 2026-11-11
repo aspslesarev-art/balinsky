@@ -72,7 +72,7 @@ export function ListingMap({ lat, lng, name, routes, points, rings, heat = false
         container: ref.current,
         style: aerial ? AERIAL_STYLE : STYLE,
         center,
-        zoom: routes ? 9.5 : heat ? 13 : aerial ? 14.6 : 15,
+        zoom: routes ? 9.5 : heat ? 10.8 : aerial ? 14.6 : 15,
         ...(aerial ? { pitch: 62, maxPitch: 85, interactive: false } : {}),
         // Колесо и один палец листают страницу, а не карту.
         cooperativeGestures: true,
