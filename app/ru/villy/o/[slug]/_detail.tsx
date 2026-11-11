@@ -2056,9 +2056,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               presentationButton={presentationBtn}
               dealRows={[
                 ...(landPrices && land != null && land > 0 ? [{ label: pickCopy({ ru: 'Земля под виллой', en: 'Land under the villa', id: 'Tanah di bawah vila', fr: 'Terrain de la villa', de: 'Grundstück der Villa', zh: '别墅土地', nl: 'Grond onder de villa', ban: 'Tanah vila', pl: 'Grunt pod willą', uk: 'Земля під віллою' }, lang), valueUsd: Math.round(landPrices.medianPpm * land), approx: true }] : []),
-                ...(priceM2 != null ? [{ label: c.factPriceM2, valueUsd: priceM2 }] : []),
                 ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
-                ...(priceNum != null && leaseYears != null && leaseYears > 0 ? [{ label: c.factPricePerYear, valueUsd: Math.round(priceNum / leaseYears) }] : []),
                 { label: c.factSeller, valueText: isResale ? c.factSellerResale : c.factSellerDev },
               ]}
               priceCompDiffPct={saleComps?.diffPct ?? null}
