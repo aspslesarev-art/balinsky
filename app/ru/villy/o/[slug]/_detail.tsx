@@ -1481,7 +1481,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lease ? { label: c.factOwnership, value: c.factOwnershipLease } : null,
     lease ? { label: c.factLeasehold, value: c.factLeaseValue(lease) } : null,
     land != null ? { label: c.factLand, value: `${land} ${c.sqm}` } : null,
-    district ? { label: c.factDistrict, value: district } : null,
   ] as (KV | null)[]).filter(Boolean) as KV[]
 
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
