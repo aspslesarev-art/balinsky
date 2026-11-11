@@ -1272,6 +1272,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         icon: <FileText size={18} aria-hidden />,
         cover: photos[3] ?? photos[0] ?? null,
         content: <ComplexDocsView docs={docsForTile} lang={lang} listingTitle={title} />,
+        bleed: true,
       })
     }
     return tabs
