@@ -55,13 +55,6 @@ const COPY = {
     promYes: 'есть', promNo: 'нет',
     weather: 'Погода',
     sunnyDays: 'солнечных дней в году',
-    windDir: ['Север', 'Северо-восток', 'Восток', 'Юго-восток', 'Юг', 'Юго-запад', 'Запад', 'Северо-запад'],
-    windCardinal: ['С', 'В', 'Ю', 'З'],
-    mainDir: 'основное направление',
-    avgSpeed: 'ср. скорость',
-    ms: 'м/с',
-    drySeason: 'апр–окт: ЮВ (сухой сезон)',
-    wetSeason: 'ноя–мар: З (влажный сезон)',
   },
   en: {
     swimL: 'Swimming', kidsL: 'With kids', surfL: 'Surf', actL: 'Also',
@@ -69,13 +62,6 @@ const COPY = {
     promYes: 'yes', promNo: 'no',
     weather: 'Weather',
     sunnyDays: 'sunny days a year',
-    windDir: ['North', 'North-east', 'East', 'South-east', 'South', 'South-west', 'West', 'North-west'],
-    windCardinal: ['N', 'E', 'S', 'W'],
-    mainDir: 'prevailing direction',
-    avgSpeed: 'avg speed',
-    ms: 'm/s',
-    drySeason: 'Apr–Oct: SE (dry season)',
-    wetSeason: 'Nov–Mar: W (wet season)',
   },
 } as const
 
@@ -115,35 +101,6 @@ function beachRows(b: BeachProfile, lang: Lang): { k: string; v: string }[] {
   return rows
 }
 
-function WindRoseSvg({ pct, avgMs, lang }: { pct: number[]; avgMs: number; lang: Lang }) {
-  const c = pickCopy(COPY, lang)
-  const cx = 80, cy = 80, maxR = 44
-  const maxPct = Math.max(...pct, 1)
-  const ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]
-  return (
-    <svg viewBox="0 0 160 160" width="120" height="120" className="shrink-0">
-      <circle cx={cx} cy={cy} r={44} fill="none" stroke="#E4E9E6" strokeWidth="0.5" />
-      <circle cx={cx} cy={cy} r={22} fill="none" stroke="#E4E9E6" strokeWidth="0.5" />
-      <line x1={cx} y1={32} x2={cx} y2={128} stroke="#EEF2EF" strokeWidth="0.5" />
-      <line x1={32} y1={cy} x2={128} y2={cy} stroke="#EEF2EF" strokeWidth="0.5" />
-      {pct.map((p, i) => {
-        if (p < 1) return null
-        const r = (p / maxPct) * maxR
-        const rad = (ANGLES[i] * Math.PI) / 180
-        const x2 = cx + r * Math.sin(rad)
-        const y2 = cy - r * Math.cos(rad)
-        const opacity = 0.25 + (p / maxPct) * 0.75
-        return <line key={i} x1={cx} y1={cy} x2={x2} y2={y2} stroke="#1B6E4A" strokeWidth="8" strokeLinecap="round" opacity={opacity} />
-      })}
-      <circle cx={cx} cy={cy} r={3} fill="#FFFFFF" stroke="#1B6E4A" strokeWidth="1.5" />
-      <text x={cx} y={24} textAnchor="middle" fontSize="10" fill="#4C5751" fontFamily="inherit">{c.windCardinal[0]}</text>
-      <text x={138} y={83} textAnchor="middle" fontSize="10" fill="#4C5751" fontFamily="inherit">{c.windCardinal[1]}</text>
-      <text x={cx} y={146} textAnchor="middle" fontSize="10" fill="#4C5751" fontFamily="inherit">{c.windCardinal[2]}</text>
-      <text x={22} y={83} textAnchor="middle" fontSize="10" fill="#4C5751" fontFamily="inherit">{c.windCardinal[3]}</text>
-    </svg>
-  )
-}
-
 type Props = {
   beach: BeachProfile | null
   beachKm: number
@@ -164,9 +121,7 @@ export function BeachWeatherDesign({ beach, beachKm, beachPhoto, climate, lang }
   const head = beach ? [beach.sand ? pickCopy(SAND[beach.sand] ?? {}, lang) : null, beach.water ? pickCopy(WATER[beach.water] ?? {}, lang) : null].filter(Boolean).join(', ') : null
   const photo = beachPhoto ?? beach?.photos?.[0]?.src ?? null
   const year = climate?.year
-  const wind = climate?.wind
-
-  const mainSector = wind ? wind.all.pct.indexOf(Math.max(...wind.all.pct)) : -1
+  const full = !beach
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
@@ -196,14 +151,14 @@ export function BeachWeatherDesign({ beach, beachKm, beachPhoto, climate, lang }
       )}
 
       {climate && year && (
-        <div className="flex flex-col gap-3">
+        <div className={`flex flex-col gap-3${full ? ' md:col-span-2' : ''}`}>
           <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mt-0 mb-0">{c.weather}</h2>
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-[22px] font-semibold">{year.sunny}</span>
             <span className="text-[13px] text-[#4C5751]">{c.sunnyDays}</span>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          <div className={full ? 'grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2' : 'grid grid-cols-3 sm:grid-cols-4 gap-2'}>
             {Array.from({ length: 12 }, (_, i) => {
               const mo = climate[String(i + 1).padStart(2, '0')]
               if (!mo) return null
@@ -213,31 +168,22 @@ export function BeachWeatherDesign({ beach, beachKm, beachPhoto, climate, lang }
                 ? 'bg-[#F3F7F4]'
                 : 'bg-[rgb(80_140_255/0.10)]'
               return (
-                <div key={i} className={`flex flex-col gap-1 min-w-0 rounded-lg px-2.5 py-2 ${tone}`}>
+                <div key={i} className={`flex flex-col gap-1 min-w-0 rounded-lg ${full ? 'px-2.5 lg:px-2' : 'px-2.5'} py-2 ${tone}`}>
                   <span className="text-[12px] text-[#4C5751]">{months[i]}</span>
                   <span className="inline-flex items-center gap-1 whitespace-nowrap text-[17px] font-semibold tabular-nums leading-none">
                     <Sun size={14} strokeWidth={2} aria-hidden className="shrink-0" />{mo.sunny}
                   </span>
-                  <span className="inline-flex items-center gap-1 whitespace-nowrap text-[12px] text-[#4C5751] tabular-nums leading-none">
-                    {mo.t_max != null && <>{Math.round(mo.t_max)}°</>}
-                    <Umbrella size={12} strokeWidth={2} aria-hidden className="shrink-0 ml-1" />{mo.wet}
+                  <span className={`inline-flex ${full ? 'lg:flex-col lg:items-start lg:gap-1.5' : ''} items-center gap-1 whitespace-nowrap text-[12px] text-[#4C5751] tabular-nums leading-none`}>
+                    {mo.t_max != null && <span>{Math.round(mo.t_max)}°</span>}
+                    <span className={`inline-flex items-center gap-1 ml-1 ${full ? 'lg:ml-0' : ''}`}>
+                      <Umbrella size={12} strokeWidth={2} aria-hidden className="shrink-0" />{mo.wet}
+                    </span>
                   </span>
                 </div>
               )
             })}
           </div>
 
-          {wind && (
-            <div className="flex gap-4 items-center mt-3">
-              <WindRoseSvg pct={wind.all.pct} avgMs={wind.all.avg_ms} lang={lang} />
-              <div className="flex flex-col gap-1">
-                <span className="text-[15px] font-semibold">{mainSector >= 0 ? c.windDir[mainSector] : ''}</span>
-                <span className="text-[13px] text-[#4C5751]">{c.mainDir}</span>
-                <span className="text-[13px] text-[#4C5751]">{c.avgSpeed} {wind.all.avg_ms.toFixed(0)} {c.ms}</span>
-                <span className="text-[12px] text-[#94A29A] mt-1">{c.drySeason}<br />{c.wetSeason}</span>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
