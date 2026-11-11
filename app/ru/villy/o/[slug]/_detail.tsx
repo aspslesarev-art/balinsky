@@ -45,6 +45,7 @@ import { loadPromoKit } from '@/lib/promo-kits'
 import { complexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
+import { ZoningMap } from '@/components/ZoningMap'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -134,7 +135,7 @@ const COPY = {
     sqm: 'м²', house: 'дом', land: 'земля', bali: 'Бали',
     completed: 'Сдан',
     factsHeading: 'Характеристики',
-    aboutVillaHeading: 'О вилле', aboutLandHeading: 'Участок и аренда земли',
+    aboutVillaHeading: 'О вилле', aboutLandHeading: 'Участок',
     factBedrooms: 'Спальни', factHouse: 'Площадь дома', factLand: 'Земля', factCompletion: 'Сдача',
     factPermits: 'Разрешение на стройку', factLeasehold: 'Срок аренды', factDistrict: 'Район',
     factAirport: 'До аэропорта', factStyle: 'Стиль', factPriceM2: 'Цена за м²',
@@ -191,7 +192,7 @@ const COPY = {
     sqm: 'm²', house: 'house', land: 'land', bali: 'Bali',
     completed: 'Completed',
     factsHeading: 'Specs',
-    aboutVillaHeading: 'About the villa', aboutLandHeading: 'Land & lease',
+    aboutVillaHeading: 'About the villa', aboutLandHeading: 'Land',
     factBedrooms: 'Bedrooms', factHouse: 'House area', factLand: 'Land', factCompletion: 'Completion',
     factPermits: 'Building permit', factLeasehold: 'Lease term', factDistrict: 'District',
     factAirport: 'To airport', factStyle: 'Style', factPriceM2: 'Price per m²',
@@ -248,7 +249,7 @@ const COPY = {
     sqm: 'm²', house: 'rumah', land: 'tanah', bali: 'Bali',
     completed: 'Selesai',
     factsHeading: 'Spesifikasi',
-    aboutVillaHeading: 'Tentang vila', aboutLandHeading: 'Tanah & sewa',
+    aboutVillaHeading: 'Tentang vila', aboutLandHeading: 'Tanah',
     factBedrooms: 'Kamar tidur', factHouse: 'Luas rumah', factLand: 'Tanah', factCompletion: 'Serah terima',
     factPermits: 'Izin bangun', factLeasehold: 'Masa sewa', factDistrict: 'Wilayah',
     factAirport: 'Ke bandara', factStyle: 'Gaya', factPriceM2: 'Harga per m²',
@@ -305,7 +306,7 @@ const COPY = {
     sqm: 'm²', house: 'maison', land: 'terrain', bali: 'Bali',
     completed: 'Livré',
     factsHeading: 'Caractéristiques',
-    aboutVillaHeading: 'La villa', aboutLandHeading: 'Terrain & bail',
+    aboutVillaHeading: 'La villa', aboutLandHeading: 'Terrain',
     factBedrooms: 'Chambres', factHouse: 'Surface maison', factLand: 'Terrain', factCompletion: 'Livraison',
     factPermits: 'Permis de construire', factLeasehold: 'Durée du bail', factDistrict: 'Quartier',
     factAirport: "Vers l'aéroport", factStyle: 'Style', factPriceM2: 'Prix au m²',
@@ -362,7 +363,7 @@ const COPY = {
     sqm: 'm²', house: 'Haus', land: 'Grundstück', bali: 'Bali',
     completed: 'Fertiggestellt',
     factsHeading: 'Eckdaten',
-    aboutVillaHeading: 'Über die Villa', aboutLandHeading: 'Grundstück & Pacht',
+    aboutVillaHeading: 'Über die Villa', aboutLandHeading: 'Grundstück',
     factBedrooms: 'Schlafzimmer', factHouse: 'Wohnfläche', factLand: 'Grundstück', factCompletion: 'Fertigstellung',
     factPermits: 'Baugenehmigung', factLeasehold: 'Pachtdauer', factDistrict: 'Gegend',
     factAirport: 'Zum Flughafen', factStyle: 'Stil', factPriceM2: 'Preis pro m²',
@@ -419,7 +420,7 @@ const COPY = {
     sqm: 'm²', house: '房屋', land: '土地', bali: '巴厘岛',
     completed: '已交付',
     factsHeading: '核心信息',
-    aboutVillaHeading: '别墅信息', aboutLandHeading: '土地与租赁',
+    aboutVillaHeading: '别墅信息', aboutLandHeading: '土地',
     factBedrooms: '卧室', factHouse: '房屋面积', factLand: '土地', factCompletion: '交付',
     factPermits: '建筑许可', factLeasehold: '租赁期限', factDistrict: '区域',
     factAirport: '到机场', factStyle: '风格', factPriceM2: '每平米价格',
@@ -476,7 +477,7 @@ const COPY = {
     sqm: 'm²', house: 'huis', land: 'grond', bali: 'Bali',
     completed: 'Opgeleverd',
     factsHeading: 'Kerngegevens',
-    aboutVillaHeading: 'Over de villa', aboutLandHeading: 'Grond & pacht',
+    aboutVillaHeading: 'Over de villa', aboutLandHeading: 'Grond',
     factBedrooms: 'Slaapkamers', factHouse: 'Woonoppervlak', factLand: 'Grond', factCompletion: 'Oplevering',
     factPermits: 'Bouwvergunning', factLeasehold: 'Pachtduur', factDistrict: 'Wijk',
     factAirport: 'Naar vliegveld', factStyle: 'Stijl', factPriceM2: 'Prijs per m²',
@@ -533,7 +534,7 @@ const COPY = {
     sqm: 'm²', house: 'umah', land: 'tanah', bali: 'Bali',
     completed: 'Puput',
     factsHeading: 'Fakta utama',
-    aboutVillaHeading: 'Indik vila', aboutLandHeading: 'Tanah & sewa',
+    aboutVillaHeading: 'Indik vila', aboutLandHeading: 'Tanah',
     factBedrooms: 'Kamar pules', factHouse: 'Wiyasan umah', factLand: 'Tanah', factCompletion: 'Serah terima',
     factPermits: 'Ijin bangun', factLeasehold: 'Masa sewa', factDistrict: 'Wewidangan',
     factAirport: 'Ka bandara', factStyle: 'Gaya', factPriceM2: 'Aji per m²',
@@ -590,7 +591,7 @@ const COPY = {
     sqm: 'm²', house: 'dom', land: 'działka', bali: 'Bali',
     completed: 'Ukończony',
     factsHeading: 'Parametry',
-    aboutVillaHeading: 'O willi', aboutLandHeading: 'Działka i dzierżawa',
+    aboutVillaHeading: 'O willi', aboutLandHeading: 'Działka',
     factBedrooms: 'Sypialnie', factHouse: 'Powierzchnia domu', factLand: 'Działka', factCompletion: 'Oddanie',
     factPermits: 'Pozwolenie na budowę', factLeasehold: 'Okres dzierżawy', factDistrict: 'Dzielnica',
     factAirport: 'Do lotniska', factStyle: 'Styl', factPriceM2: 'Cena za m²',
@@ -647,7 +648,7 @@ const COPY = {
     sqm: 'м²', house: 'будинок', land: 'ділянка', bali: 'Балі',
     completed: 'Зданий',
     factsHeading: 'Характеристики',
-    aboutVillaHeading: 'Про віллу', aboutLandHeading: 'Ділянка та оренда землі',
+    aboutVillaHeading: 'Про віллу', aboutLandHeading: 'Ділянка',
     factBedrooms: 'Спальні', factHouse: 'Площа будинку', factLand: 'Ділянка', factCompletion: 'Здача',
     factPermits: 'Дозвіл на будівництво', factLeasehold: 'Термін оренди', factDistrict: 'Район',
     factAirport: 'До аеропорту', factStyle: 'Стиль', factPriceM2: 'Ціна за м²',
@@ -1205,6 +1206,10 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const promoKit = await loadPromoKit(firstString(d['Комплекс']))
   const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))
   const docsForTile = complexDocs(complexMedia.slug)
+  // Карта «Зоны вокруг» - только если scripts/rdtr_zones.py уже скачал зоны.
+  const hasZones = complexMedia.slug
+    ? await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/feeds/_rdtr-zones/${complexMedia.slug}.json`, { method: 'HEAD', next: { revalidate: 86400 } }).then(r => r.ok).catch(() => false)
+    : false
   const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
   // Юридическая проверка комплекса (документы застройщика) — тот же блок, что
   // на странице ЖК, и так же только в Pro (bx-auth-block).
@@ -1457,7 +1462,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lease ? { label: c.factLeasehold, value: c.factLeaseValue(lease) } : null,
     land != null ? { label: c.factLand, value: `${land} ${c.sqm}` } : null,
     district ? { label: c.factDistrict, value: district } : null,
-    fmtAirportDistance(lat, lng, lang) ? { label: c.factAirport, value: fmtAirportDistance(lat, lng, lang)! } : null,
   ] as (KV | null)[]).filter(Boolean) as KV[]
 
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
@@ -2016,6 +2020,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             </div>
           </section>
         )}
+
+        {hasZones && complexMedia.slug && <ZoningMap slug={complexMedia.slug} lang={lang} />}
 
         {analytics}
 
