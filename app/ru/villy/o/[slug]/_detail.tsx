@@ -45,6 +45,8 @@ import { loadPromoKit } from '@/lib/promo-kits'
 import { complexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
+import { VillaChapter, VillaBlock } from '@/components/VillaChapter'
+import { VillaChapterNav } from '@/components/VillaChapterNav'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
 import { Money } from '@/components/Money'
@@ -73,7 +75,6 @@ const LandProfileBlock = dynamic(
 )
 import { saleCompsNear, type CatalogSale } from '@/lib/sale-comps'
 import { landPricesNear } from '@/lib/land-prices'
-import { LandPriceBlock } from '@/components/LandPriceBlock'
 import { loadAll as loadVillaCatalog } from '@/app/ru/villy/_lib'
 import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
@@ -1737,10 +1738,27 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     }
   })()
 
+  // Главы страницы (макет «Структура страницы», вариант A, владелец 2026-11-11).
+  const CH = pickCopy({
+    ru: { obekt: ['Объект', 'Вилла и участок'], proverka: ['Проверка', 'Можно ли доверять', 'Документы, застройщик, участок и природные риски.'], dengi: ['Деньги', 'Цена и доход', 'Сравнение с соседями, а не обещания застройщика.'], mesto: ['Место', 'Что вокруг и какая погода'], zastroyshchik: ['Застройщик'], voprosy: ['Вопросы'] },
+    en: { obekt: ['Property', 'Villa and land'], proverka: ['Checks', 'Can you trust it', 'Documents, developer, plot and natural risks.'], dengi: ['Money', 'Price and income', 'Compared with neighbours, not the developer’s promises.'], mesto: ['Location', 'Surroundings and weather'], zastroyshchik: ['Developer'], voprosy: ['FAQ'] },
+  }, lang)
+  const hasMoney = !!(saleComps && saleComps.diffPct != null && priceNum != null) || !!(!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null)
+  const hasMesto = !!(hasPlace && lat != null && lng != null) || !!(beach || geoFacts?.climate)
+  const chapterNav = [
+    (villaFacts.length > 0 || landFacts.length > 0) && { id: 'obekt', no: '01', label: CH.obekt[0] },
+    { id: 'proverka', no: '02', label: CH.proverka[0] },
+    hasMoney && { id: 'dengi', no: '03', label: CH.dengi[0] },
+    hasMesto && { id: 'mesto', no: '04', label: CH.mesto[0] },
+    (developer || developerName) && { id: 'zastroyshchik', no: '05', label: CH.zastroyshchik[0] },
+    { id: 'voprosy', no: '06', label: CH.voprosy[0] },
+  ].filter((x): x is { id: string; no: string; label: string } => !!x)
+
   const analytics = (
     <>
         <ProPendingNote lang={lang} />
 
+        <VillaChapter id="proverka" no="02" eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]} band>
         <section id="uchastok" className="scroll-mt-24">
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
@@ -1763,8 +1781,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </div>
         )}
 
+        </VillaChapter>
+
+        {hasMoney && (
+        <VillaChapter id="dengi" no="03" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]}>
         {saleComps && saleComps.diffPct != null && priceNum != null && (
-          <section className="flex flex-col gap-4 scroll-mt-24">
+          <VillaBlock><section className="flex flex-col gap-4 scroll-mt-24">
             <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
               {pickCopy({
                 ru: Math.abs(saleComps.diffPct) < 15 ? 'Цена нормальная для района' : saleComps.diffPct < 0 ? 'Цена ниже рынка' : 'Цена выше рынка',
@@ -1832,11 +1854,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                 </CompareButton>
               )}
             </div>
-          </section>
+          </section></VillaBlock>
         )}
 
         {!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null && (
-          <section id="kalkulyator" className="scroll-mt-24">
+          <VillaBlock><section id="kalkulyator" className="scroll-mt-24">
             <IncomeCalculator
               villa={{
                 askingPrice: verdictSnap.villa.askingPrice,
@@ -1861,9 +1883,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               lang={lang}
               compareData={compareData}
             />
-          </section>
+          </section></VillaBlock>
+        )}
+        </VillaChapter>
         )}
 
+        {hasMesto && (
+        <VillaChapter id="mesto" no="04" eyebrow={CH.mesto[0]} title={CH.mesto[1]} band>
         {hasPlace && lat != null && lng != null && (
           <LocationSection
             lat={lat}
@@ -1877,11 +1903,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             lang={lang}
           />
         )}
-        {landPrices && land != null && land > 0 && priceNum != null && priceNum > 0 && (
-          <section className="scroll-mt-24 lg:hidden">
-            <LandPriceBlock data={landPrices} landM2={land} priceUsd={priceNum} lang={lang} />
-          </section>
-        )}
         {(beach || geoFacts?.climate) && (
           <BeachWeatherDesign
             beach={beach && beachPick ? beach : null}
@@ -1891,7 +1912,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             lang={lang}
           />
         )}
-
+        </VillaChapter>
+        )}
     </>
   )
   if (analyticsOnly) return analytics
@@ -2029,12 +2051,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </section>
         )}
 
+        {chapterNav.length > 1 && <VillaChapterNav items={chapterNav} />}
+
         {(villaFacts.length > 0 || landFacts.length > 0) && (
-          <section>
+          <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} title={CH.obekt[1]}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
               {villaFacts.length > 0 && (
                 <div>
-                  <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-3 mt-0">{c.aboutVillaHeading}</h2>
+                  <h3 className="text-[20px] font-semibold text-[var(--color-text)] mb-2 mt-0">{c.aboutVillaHeading}</h3>
                   {villaFacts.map(f => (
                     <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
                       <span className="text-[var(--color-text-muted)]">{f.label}</span>
@@ -2045,7 +2069,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               )}
               {landFacts.length > 0 && (
                 <div>
-                  <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-3 mt-0">{c.aboutLandHeading}</h2>
+                  <h3 className="text-[20px] font-semibold text-[var(--color-text)] mb-2 mt-0">{c.aboutLandHeading}</h3>
                   {landFacts.map(f => (
                     <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
                       <span className="text-[var(--color-text-muted)]">{f.label}</span>
@@ -2058,14 +2082,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                 </div>
               )}
             </div>
-          </section>
+          </VillaChapter>
         )}
 
 
         {analytics}
 
         {(developer || developerName) && (
-          <section>
+          <VillaChapter id="zastroyshchik" no="05" eyebrow={CH.zastroyshchik[0]}>
             <div className="rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4">
               <div className="text-[13px] text-[#4C5751]">{c.developerLabel}</div>
               <div className="flex justify-between items-center">
@@ -2106,17 +2130,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                 </Link>
               )}
             </div>
-          </section>
+          </VillaChapter>
         )}
 
         {videos.length > 0 && (
           <VideoGrid jsonLdOnly videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
         )}
 
-        <section>
-          <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)] mb-2">
-            {c.faqHeading}
-          </h2>
+        <VillaChapter id="voprosy" no="06" eyebrow={CH.voprosy[0]} title={c.faqHeading}>
           <div>
             {faqItems.map((it, i) => (
               <details key={i} className="group border-b border-[#E4E9E6]">
@@ -2128,7 +2149,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               </details>
             ))}
           </div>
-        </section>
+        </VillaChapter>
 
 
         </div>{/* ── /Main column ── */}

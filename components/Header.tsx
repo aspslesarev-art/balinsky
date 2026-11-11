@@ -59,6 +59,14 @@ export function Header({ active }: { active?: NavKey }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Метка для прилипающих полос под шапкой (строка глав виллы): когда шапка
+  // на телефоне уехала вверх, они поднимаются на её место.
+  useEffect(() => {
+    const h = document.documentElement
+    if (hidden && !open) h.setAttribute('data-header-hidden', '1')
+    else h.removeAttribute('data-header-hidden')
+  }, [hidden, open])
+
   return (
     <header
       className={`sticky top-0 z-20 w-full bg-[var(--color-header-bg)] border-b border-[var(--color-border)] transition-transform duration-300 will-change-transform md:translate-y-0 ${
