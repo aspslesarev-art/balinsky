@@ -187,7 +187,8 @@ export async function POST(req: Request) {
   }
   // Форма у карточки менеджера (ContactLeadDialog) — заявки только владельцу
   // в админ-чат, застройщику он передаёт сам.
-  const ownerOnly = isResale || body.page === 'manager-card'
+  // Запрос документов (плитка «Документы») — тоже только владельцу.
+  const ownerOnly = isResale || body.page === 'manager-card' || body.page === 'docs'
   const devChat = ownerOnly ? null : await developerChatId({ name: developerName, slug: developerSlug })
 
   const lines: string[] = [

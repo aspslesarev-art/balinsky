@@ -42,6 +42,8 @@ import dynamic from 'next/dynamic'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { loadComplexMedia } from '@/lib/complex-media'
 import { loadPromoKit } from '@/lib/promo-kits'
+import { complexDocs } from '@/lib/complex-docs'
+import { ComplexDocsTile } from '@/components/ComplexDocsTile'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -1201,6 +1203,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   // Медиа комплекса для ряда «фишек» под фото: 3D-тур, солнце и 3D-карта.
   const promoKit = await loadPromoKit(firstString(d['Комплекс']))
   const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))
+  const docsForTile = complexDocs(complexMedia.slug)
   const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
   // Юридическая проверка комплекса (документы застройщика) — тот же блок, что
   // на странице ЖК, и так же только в Pro (bx-auth-block).
@@ -1922,7 +1925,10 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           masterplanCover={masterplanCover}
           tourUrl={complexMedia.tourUrl}
           promo={promoKit}
-          extraTiles={renderSunTiles(geoFacts?.climate?.wind ?? null)}
+          extraTiles={(sunPlan && sunSettings?.enabled) || docsForTile ? <>
+            {renderSunTiles(geoFacts?.climate?.wind ?? null)}
+            {docsForTile && <ComplexDocsTile docs={docsForTile} cover={photos[3] ?? photos[0] ?? null} lang={lang} listingTitle={title} />}
+          </> : null}
         />
 
         {seoText && (
