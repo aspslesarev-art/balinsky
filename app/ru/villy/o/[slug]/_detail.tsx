@@ -1208,6 +1208,18 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const promoKit = await loadPromoKit(firstString(d['Комплекс']))
   const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))
   const docsForTile = complexDocs(complexMedia.slug)
+  // Рассрочка комплекса («Payment plan,%»): «30%+20%+20%+20%+10%» ->
+  // «30 / 20 / 20 / 20 / 10%», хвост «/12» - число месяцев, «100%» - без рассрочки.
+  const paymentPlanText = (() => {
+    const raw = (firstString(complexMedia.data?.['Payment plan,%']) ?? '').replace(/\s+/g, ' ').trim()
+    if (!raw || raw.includes('...')) return null
+    const ru = lang === 'ru' || lang === 'uk'
+    if (/^100\s*%?$/.test(raw)) return ru ? 'нет, 100% сразу' : 'no, 100% upfront'
+    const m = raw.match(/^(.*?)\s*\/\s*(\d+)$/)
+    const parts = (m ? m[1] : raw).split('+').map(x => x.replace(/[^\d.]/g, '')).filter(Boolean)
+    if (parts.length < 2) return null
+    return `${parts.join(' / ')}%${m ? (ru ? ` · на ${m[2]} мес.` : ` · over ${m[2]} mo.`) : ''}`
+  })()
   // Зоны плана застройки вокруг (scripts/rdtr_zones.py): карточка в колонке
   // «Участок» и вкладка «Зоны» в окне медиаблока.
   const rdtr: RdtrData | null = complexMedia.slug
@@ -2134,6 +2146,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               dealRows={[
                 ...(landPrices && land != null && land > 0 ? [{ label: pickCopy({ ru: 'Земля под виллой', en: 'Land under the villa', id: 'Tanah di bawah vila', fr: 'Terrain de la villa', de: 'Grundstück der Villa', zh: '别墅土地', nl: 'Grond onder de villa', ban: 'Tanah vila', pl: 'Grunt pod willą', uk: 'Земля під віллою' }, lang), valueUsd: Math.round(landPrices.medianPpm * land), approx: true }] : []),
                 ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
+                ...(paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : []),
               ]}
               priceCompDiffPct={saleComps?.diffPct ?? null}
             />
