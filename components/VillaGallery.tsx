@@ -16,7 +16,12 @@ import { WishlistButton, type WishlistInput } from './WishlistButton'
 import { MEDIA_TILE, MediaTileLabel } from './media-tile'
 
 export type GalleryVideo = { url: string; name: string | null }
-type Tab = 'photos' | 'videos' | 'plans' | 'master' | 'tour' | 'promo'
+type BaseTab = 'photos' | 'videos' | 'plans' | 'master' | 'tour' | 'promo'
+// Свои вкладки окна (солнце и ветер, 3D-карта, документы) — ключ `x:<key>`.
+type Tab = BaseTab | `x:${string}`
+
+/** Вкладка окна медиаблока со своей плиткой: солнце и ветер, 3D-карта, документы. */
+export type ViewerTab = { key: string; label: string; icon: ReactNode; cover?: string | null; content: ReactNode }
 
 const COPY = {
   ru: { promo: 'Реклама', tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', open: 'Открыть фото', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', more: (n: number) => `+${n} фото` },
@@ -39,7 +44,7 @@ const ytThumb = (url: string) => { const id = ytId(url); return id ? `https://i.
 
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [] }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -62,6 +67,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   plansAreMasterplan?: boolean
   /** Готовые сторис для агентов (lib/promo-kits.ts). */
   promo?: PromoKit | null
+  /** Свои вкладки окна с плитками (после видео/3D-тура, перед «Рекламой»). */
+  viewerTabs?: ViewerTab[]
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansAreMasterplan ? { ...base, plans: base.master } : base
@@ -77,7 +84,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const step = (d: number) => setCur(i => (i + d + n) % n)
   const openAt = () => setOpen({ tab: photos.length ? 'photos' : 'plans', i: photos.length ? Math.min(cur, n - 1) : 0 })
   const arrow = 'absolute top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[rgb(16_24_20/0.55)] hover:bg-[rgb(16_24_20/0.75)] text-white flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-white'
-  const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo
+  const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.length > 0
 
   return (
     <section className="flex flex-col gap-2">
@@ -135,6 +142,12 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             </button>
           )}
           {extraTiles}
+          {viewerTabs.map(v => (
+            <button key={v.key} type="button" onClick={() => setOpen({ tab: `x:${v.key}`, i: 0 })} className={MEDIA_TILE} aria-label={v.label}>
+              {v.cover && <Image src={v.cover} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
+              <MediaTileLabel icon={v.icon}>{v.label}</MediaTileLabel>
+            </button>
+          ))}
           {promo && (
             <button type="button" onClick={() => setOpen({ tab: 'promo', i: 0 })} className={MEDIA_TILE} aria-label={c.promo}>
               {/* eslint-disable-next-line @next/next/no-img-element -- лёгкое превью сторис */}
@@ -147,7 +160,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
 
       {open && (
         <MediaViewer
-          photos={photos} plans={plans} plan3dUrl={plan3dUrl} videos={videos} alts={alts} title={title} lang={lang} masterplan={masterplan} tourUrl={tourUrl} plansLabel={c.plans} promo={promo}
+          photos={photos} plans={plans} plan3dUrl={plan3dUrl} videos={videos} alts={alts} title={title} lang={lang} masterplan={masterplan} tourUrl={tourUrl} plansLabel={c.plans} promo={promo} viewerTabs={viewerTabs}
           tab={open.tab} index={open.i} onChange={(tab, i) => setOpen({ tab, i })} onClose={() => setOpen(null)}
         />
       )}
@@ -155,16 +168,16 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   )
 }
 
-function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab, index, onChange, onClose, masterplan, tourUrl, plansLabel, promo }: {
-  photos: string[]; plans: string[]; plan3dUrl: string | null; videos: GalleryVideo[]; masterplan?: ReactNode; tourUrl?: string | null; plansLabel?: string; promo?: PromoKit | null
+function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab, index, onChange, onClose, masterplan, tourUrl, plansLabel, promo, viewerTabs = [] }: {
+  photos: string[]; plans: string[]; plan3dUrl: string | null; videos: GalleryVideo[]; masterplan?: ReactNode; tourUrl?: string | null; plansLabel?: string; promo?: PromoKit | null; viewerTabs?: ViewerTab[]
   alts?: (string | undefined)[]; title: string; lang: Lang
   tab: Tab; index: number; onChange: (tab: Tab, i: number) => void; onClose: () => void
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansLabel ? { ...base, plans: plansLabel } : base
   // Plans tab: the 3D model first (it is the richest view), then plan images.
-  type Item = { kind: 'img'; src: string; alt: string } | { kind: 'video'; url: string; name: string | null } | { kind: '3d'; src: string } | { kind: 'node' } | { kind: 'promo' }
-  const lists: Record<Tab, Item[]> = {
+  type Item = { kind: 'img'; src: string; alt: string } | { kind: 'video'; url: string; name: string | null } | { kind: '3d'; src: string } | { kind: 'node' } | { kind: 'promo' } | { kind: 'custom'; content: ReactNode }
+  const lists: Record<string, Item[]> = {
     photos: photos.map((src, i) => ({ kind: 'img' as const, src, alt: alts?.[i] ?? title })),
     videos: videos.map(v => ({ kind: 'video' as const, url: v.url, name: v.name })),
     plans: [
@@ -174,8 +187,10 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
     master: masterplan ? [{ kind: 'node' as const }] : [],
     tour: tourUrl ? [{ kind: '3d' as const, src: tourUrl }] : [],
     promo: promo ? [{ kind: 'promo' as const }] : [],
+    ...Object.fromEntries(viewerTabs.map(v => [`x:${v.key}`, [{ kind: 'custom' as const, content: v.content }]])),
   }
-  const items = lists[tab]
+  const labelOf = (t: Tab) => t.startsWith('x:') ? viewerTabs.find(v => `x:${v.key}` === t)?.label ?? '' : c[t as BaseTab]
+  const items = lists[tab] ?? []
   const count = items.length
   const i = Math.min(index, Math.max(count - 1, 0))
   const item = items[i]
@@ -193,7 +208,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
   }, [go, onClose])
 
-  const tabs = (['photos', 'videos', 'plans', 'master', 'tour', 'promo'] as Tab[]).filter(t => lists[t].length > 0)
+  const tabs = ([...(['photos', 'videos', 'plans', 'master', 'tour'] as Tab[]), ...viewerTabs.map(v => `x:${v.key}` as Tab), 'promo'] as Tab[]).filter(t => (lists[t] ?? []).length > 0)
   const navBtn = 'absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 focus-visible:bg-white/20 text-white flex items-center justify-center transition-colors'
 
   return (
@@ -203,7 +218,7 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
           {tabs.map(t => (
             <button key={t} type="button" onClick={() => onChange(t, 0)}
               className={`shrink-0 rounded-full px-4 py-2 text-[14px] font-medium transition-colors ${t === tab ? 'bg-white text-[#101814]' : 'text-white/80 hover:bg-white/10'}`}>
-              {c[t]}{t !== 'master' && t !== 'tour' && t !== 'promo' && <> <span className="opacity-60">{lists[t].length}</span></>}
+              {labelOf(t)}{(t === 'photos' || t === 'videos' || t === 'plans') && <> <span className="opacity-60">{lists[t].length}</span></>}
             </button>
           ))}
         </div>
@@ -253,6 +268,9 @@ function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lang, tab,
               </section>
             ))}
           </div>
+        )}
+        {item?.kind === 'custom' && (
+          <div key={tab} className="w-full h-full">{item.content}</div>
         )}
         {item?.kind === 'node' && (
           <div className="w-full max-w-[1200px] max-h-full overflow-y-auto">{masterplan}</div>

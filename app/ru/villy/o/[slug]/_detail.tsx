@@ -15,7 +15,7 @@ import { revisionedCache } from '@/lib/revisioned-cache'
 import { contentRev } from '@/lib/content-version'
 import {
   BedDouble, Square, Trees, Calendar, FileCheck2, Lock, MapPin, Plane,
-  ChevronRight, HardHat, Star, Palette,
+  ChevronRight, HardHat, Star, Palette, Sun, Globe, FileText,
 } from 'lucide-react'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 
@@ -43,7 +43,7 @@ import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { loadComplexMedia } from '@/lib/complex-media'
 import { loadPromoKit } from '@/lib/promo-kits'
 import { complexDocs } from '@/lib/complex-docs'
-import { ComplexDocsTile } from '@/components/ComplexDocsTile'
+import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -124,7 +124,7 @@ import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel } from '@/lib/filter-i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
-import { VillaGallery } from '@/components/VillaGallery'
+import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { metaSnippet } from '@/lib/seo'
 
 const COPY = {
@@ -1214,38 +1214,68 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const villaLegalQuestions = parseAuditItems(firstString(cd[LEGAL_QUESTIONS_FIELD])).length
   const villaLegalBalance = parseBalance(firstString(cd[LEGAL_BALANCE_FIELD]))
   const sunSettings = sunPlan && complexMedia.slug ? await loadSunSettings(complexMedia.slug).catch(() => null) : null
-  const renderSunTiles = (wind: Wind | null) => sunPlan && sunSettings?.enabled ? (
-    <>
-      <SunShadowBlock
-        tile={{ cover: photos[2] ?? photos[0] ?? null }}
-        wind={wind}
-        plan={sunPlan}
-        latitude={sunSettings.latitude}
-        longitude={sunSettings.longitude}
-        placement={{
-          rowAzimuth: sunSettings.rowAzimuth,
-          modelScale: sunSettings.modelScale,
-          offsetX: sunSettings.offsetX,
-          offsetZ: sunSettings.offsetZ,
-          basemapOffsetX: sunSettings.basemapOffsetX,
-          basemapOffsetZ: sunSettings.basemapOffsetZ,
-          basemapScale: sunSettings.basemapScale,
-        }}
-        heights={{ eaveHeight: sunSettings.eaveHeight, ridgeRise: sunSettings.ridgeRise, yardWall: sunSettings.yardWall }}
-        title={sunPlan.title}
-        en={lang !== 'ru'}
-      />
-      {sunPlan.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-        <Google3DMapBlock
-          tile={{ cover: sunPlan.basemap?.url ?? null }}
-          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-          view={sunPlan.google3d}
-          title={sunPlan.title}
-          en={lang !== 'ru'}
-        />
-      )}
-    </>
-  ) : null
+  // Солнце и ветер, 3D-карта и документы — вкладки окна медиаблока, как фото
+  // и планировки (решение владельца 2026-11-11).
+  const buildViewerTabs = (wind: Wind | null): ViewerTab[] => {
+    const tabs: ViewerTab[] = []
+    const en = lang !== 'ru'
+    if (sunPlan && sunSettings?.enabled) {
+      tabs.push({
+        key: 'sun',
+        label: en ? 'Sun & wind' : 'Солнце и ветер',
+        icon: <Sun size={18} aria-hidden />,
+        cover: photos[2] ?? photos[0] ?? null,
+        content: (
+          <SunShadowBlock
+            inline
+            wind={wind}
+            plan={sunPlan}
+            latitude={sunSettings.latitude}
+            longitude={sunSettings.longitude}
+            placement={{
+              rowAzimuth: sunSettings.rowAzimuth,
+              modelScale: sunSettings.modelScale,
+              offsetX: sunSettings.offsetX,
+              offsetZ: sunSettings.offsetZ,
+              basemapOffsetX: sunSettings.basemapOffsetX,
+              basemapOffsetZ: sunSettings.basemapOffsetZ,
+              basemapScale: sunSettings.basemapScale,
+            }}
+            heights={{ eaveHeight: sunSettings.eaveHeight, ridgeRise: sunSettings.ridgeRise, yardWall: sunSettings.yardWall }}
+            title={sunPlan.title}
+            en={en}
+          />
+        ),
+      })
+      if (sunPlan.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) {
+        tabs.push({
+          key: 'map3d',
+          label: en ? '3D map' : '3D-карта',
+          icon: <Globe size={18} aria-hidden />,
+          cover: sunPlan.basemap?.url ?? null,
+          content: (
+            <Google3DMapBlock
+              inline
+              apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+              view={sunPlan.google3d}
+              title={sunPlan.title}
+              en={en}
+            />
+          ),
+        })
+      }
+    }
+    if (docsForTile) {
+      tabs.push({
+        key: 'docs',
+        label: pickCopy({ ru: 'Документы', en: 'Documents', id: 'Dokumen', fr: 'Documents', de: 'Dokumente', zh: '文件', nl: 'Documenten', ban: 'Dokumen', pl: 'Dokumenty', uk: 'Документи' }, lang),
+        icon: <FileText size={18} aria-hidden />,
+        cover: photos[3] ?? photos[0] ?? null,
+        content: <ComplexDocsView docs={docsForTile} lang={lang} listingTitle={title} />,
+      })
+    }
+    return tabs
+  }
   const masterplanNode = await (async () => {
     const complexId = firstString(d['Комплекс'])
     if (!complexId) return null
@@ -1925,10 +1955,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           masterplanCover={masterplanCover}
           tourUrl={complexMedia.tourUrl}
           promo={promoKit}
-          extraTiles={(sunPlan && sunSettings?.enabled) || docsForTile ? <>
-            {renderSunTiles(geoFacts?.climate?.wind ?? null)}
-            {docsForTile && <ComplexDocsTile docs={docsForTile} cover={photos[3] ?? photos[0] ?? null} lang={lang} listingTitle={title} />}
-          </> : null}
+          viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
         />
 
         {seoText && (

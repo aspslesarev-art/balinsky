@@ -27,6 +27,8 @@ export type Google3DMapBlockProps = {
   chip?: boolean
   /** Плитка в ряду «фишек» под главным фото; cover — картинка под затемнением. */
   tile?: { cover?: string | null }
+  /** Карта сразу, без кнопки и своего окна — вкладка в окне медиаблока. */
+  inline?: boolean
 }
 
 /** Камера облёта: точка, вокруг которой крутимся, и положение на орбите. */
@@ -51,7 +53,7 @@ function topDown(view: Google3DView): Orbit {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
-export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false, tile }: Google3DMapBlockProps) {
+export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false, tile, inline = false }: Google3DMapBlockProps) {
   const [status, setStatus] = useState<Status>('idle')
   const [topView, setTopView] = useState(false)
   const mountRef = useRef<HTMLDivElement | null>(null)
@@ -70,6 +72,15 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
       setStatus('error')
     }
   }, [])
+
+  // Во вкладке окна медиаблока карта открывается сразу (тот же суточный лимит).
+  // Ref — чтобы двойной запуск эффекта в dev не списал лимит дважды.
+  const autoOpened = useRef(false)
+  useEffect(() => {
+    if (!inline || autoOpened.current) return
+    autoOpened.current = true
+    void open()
+  }, [inline, open])
 
   /** Переносит состояние орбиты в камеру карты. */
   const applyOrbit = useCallback(() => {
@@ -222,7 +233,7 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
   }, [status, applyOrbit])
 
   useEffect(() => {
-    if (status !== 'open') return
+    if (status !== 'open' || inline) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
     }
@@ -233,7 +244,61 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = previousOverflow
     }
-  }, [status, close])
+  }, [status, close, inline])
+
+  const body = (
+    <>
+    <div ref={mountRef} className="relative min-h-0 flex-1">
+      {/* Прозрачный слой ловит жесты облёта поверх карты. Снизу
+          оставлен зазор, чтобы подпись Google оставалась видна. */}
+      <div
+        className="absolute inset-x-0 top-0 bottom-8 z-10 cursor-grab touch-none active:cursor-grabbing"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onContextMenu={(e) => e.preventDefault()}
+      />
+    </div>
+
+    <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
+      <p className="text-xs text-white/50">
+        <span className="hidden sm:inline">
+          {en ? 'Drag to rotate · wheel to zoom · right button to pan' : 'Тяните — вращать · колесо — приблизить · правая кнопка — сдвинуть'}
+        </span>
+        <span className="sm:hidden">{en ? 'One finger to rotate · two to zoom and pan' : 'Палец — вращать · два пальца — приблизить и сдвинуть'}</span>
+      </p>
+      <button
+        type="button"
+        onClick={() => setTopView((v) => !v)}
+        aria-pressed={topView}
+        className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs ${
+          topView
+            ? 'border-transparent bg-amber-400 font-semibold text-[#191308]'
+            : 'border-white/15 text-white hover:bg-white/10'
+        }`}
+      >
+        {en ? 'Top view' : 'Вид сверху'}
+      </button>
+    </div>
+    </>
+  )
+
+  if (inline) {
+    return (
+      <div className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-[#0e1116]">
+        {status === 'open' ? body : (
+          <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-white/70">
+            {status === 'limit'
+              ? (en ? 'The 3D map is unavailable for today — try again tomorrow.' : '3D-карта на сегодня недоступна — загляните завтра.')
+              : status === 'error'
+                ? (en ? 'Could not open the 3D map. Check your connection and try again.' : 'Не получилось открыть 3D-карту. Проверьте интернет и попробуйте ещё раз.')
+                : (en ? 'Opening the 3D map…' : 'Открываю 3D-карту…')}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <>
@@ -299,39 +364,7 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
               </button>
             </div>
 
-            <div ref={mountRef} className="relative min-h-0 flex-1">
-              {/* Прозрачный слой ловит жесты облёта поверх карты. Снизу
-                  оставлен зазор, чтобы подпись Google оставалась видна. */}
-              <div
-                className="absolute inset-x-0 top-0 bottom-8 z-10 cursor-grab touch-none active:cursor-grabbing"
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onPointerCancel={onPointerUp}
-                onContextMenu={(e) => e.preventDefault()}
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
-              <p className="text-xs text-white/50">
-                <span className="hidden sm:inline">
-                  {en ? 'Drag to rotate · wheel to zoom · right button to pan' : 'Тяните — вращать · колесо — приблизить · правая кнопка — сдвинуть'}
-                </span>
-                <span className="sm:hidden">{en ? 'One finger to rotate · two to zoom and pan' : 'Палец — вращать · два пальца — приблизить и сдвинуть'}</span>
-              </p>
-              <button
-                type="button"
-                onClick={() => setTopView((v) => !v)}
-                aria-pressed={topView}
-                className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs ${
-                  topView
-                    ? 'border-transparent bg-amber-400 font-semibold text-[#191308]'
-                    : 'border-white/15 text-white hover:bg-white/10'
-                }`}
-              >
-                {en ? 'Top view' : 'Вид сверху'}
-              </button>
-            </div>
+            {body}
           </div>
         </div>
       ), document.body)}

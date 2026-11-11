@@ -42,6 +42,8 @@ export type SunShadowBlockProps = {
   wind?: Wind | null
   /** Плитка в ряду «фишек» под главным фото; cover — картинка под затемнением. */
   tile?: { cover?: string | null }
+  /** Сцена сразу, без кнопки и своего окна — вкладка в окне медиаблока. */
+  inline?: boolean
 }
 
 export function SunShadowBlock({
@@ -55,12 +57,13 @@ export function SunShadowBlock({
   chip = false,
   tile,
   wind = null,
+  inline = false,
 }: SunShadowBlockProps) {
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
 
   useEffect(() => {
-    if (!open) return
+    if (!open || inline) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
     }
@@ -71,7 +74,15 @@ export function SunShadowBlock({
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = previousOverflow
     }
-  }, [open, close])
+  }, [open, close, inline])
+
+  if (inline) {
+    return (
+      <div className="mx-auto h-full w-full max-w-6xl overflow-hidden rounded-lg bg-[#0e1116]">
+        <SunScene en={en} plan={plan} latitude={latitude} longitude={longitude} placement={placement} heights={heights} wind={wind} />
+      </div>
+    )
+  }
 
   return (
     <>
