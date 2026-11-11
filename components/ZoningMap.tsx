@@ -97,8 +97,10 @@ export function ZoningMap({ slug, lang }: { slug: string; lang: Lang }) {
     import('maplibre-gl').then(({ default: ml }) => {
       if (cancelled || !mapRef.current) return
       const kx = 111320 * Math.cos((data.center[1] * Math.PI) / 180)
-      const dLon = (data.radius * 1.08) / kx
-      const dLat = (data.radius * 1.08) / 111320
+      // На телефоне карта квадратная и сверху карточка участка - берём запас.
+      const pad = window.innerWidth < 640 ? 1.45 : 1.08
+      const dLon = (data.radius * pad) / kx
+      const dLat = (data.radius * pad) / 111320
       map = new ml.Map({
         container: mapRef.current,
         style: {
