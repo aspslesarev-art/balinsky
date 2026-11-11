@@ -2,13 +2,12 @@
 
 // Вкладка «Документы» окна медиаблока (макеты «Окно медиаблока» 7, 8 и
 // телефон, владелец 2026-11-11). Компьютер: слева что проверено с кнопками
-// документов, справа выбранный PDF; до заявки справа форма. Телефон: список,
-// документ открывается на весь экран; до заявки снизу кнопка и форма.
-// Файлы: /api/complex/[slug]/docs, кука bx_lead; заявка page='docs' - только
-// владельцу.
+// документов, справа выбранный PDF. Телефон: список, документ открывается
+// на весь экран. Файлы видят только вошедшие с Pro (/api/complex/[slug]/docs,
+// решение владельца 2026-11-11); остальным - кнопка «Открыть в Pro».
 
 import { useEffect, useState } from 'react'
-import { Check, Download, ExternalLink, FileText, Lock, X } from 'lucide-react'
+import { Check, Download, ExternalLink, FileText, Lock } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import type { ComplexDoc, ComplexDocs } from '@/lib/complex-docs'
 
@@ -16,7 +15,7 @@ const COPY = {
   ru: {
     summary: 'Что проверено',
     summaryOpen: (n: number) => `${n} документов от застройщика`,
-    summaryLocked: 'Пункты видны всем, файлы - после заявки',
+    summaryLocked: 'Пункты видны всем, файлы - в Pro',
     allBtn: (n: number) => `Все ${n} документов по разделам`,
     checksBtn: 'Назад к проверке',
     newTab: 'Открыть отдельно',
@@ -24,27 +23,17 @@ const COPY = {
     open: 'Открыть',
     mb: 'МБ',
     tapHint: 'Нажмите на документ - он откроется на весь экран',
-    unlockBtn: (n: number) => `Открыть ${n} документов`,
-    unlockHint: 'Имя и контакт - и файлы откроются сразу',
-    formTitle: (n: number) => `Откройте ${n} документов`,
-    formText: 'Сертификаты на землю, разрешения, справки нотариуса и проверка участка. Оставьте контакт - файлы откроются сразу.',
-    name: 'Имя',
-    namePh: 'Как к вам обращаться',
-    contact: 'Telegram или телефон',
-    contactPh: '@name или +7…',
-    send: 'Открыть документы',
-    sending: 'Отправляем…',
-    errName: 'Напишите имя',
-    errContact: 'Нужен ник Telegram (@name) или телефон',
-    errSend: 'Не получилось отправить. Попробуйте ещё раз.',
-    formNote: 'Пишем только по этому объекту.',
+    proBtn: 'Открыть в Pro',
+    proHint: 'Войдите и откройте Pro - файлы откроются здесь',
+    proTitle: (n: number) => `${n} документов - в Pro`,
+    proText: 'Сертификаты на землю, разрешения, справки нотариуса и проверка участка. Войдите и откройте Pro - все файлы откроются прямо здесь.',
     note: 'Паспорта собственников земли не публикуем.',
     close: 'Закрыть',
   },
   en: {
     summary: 'What was checked',
     summaryOpen: (n: number) => `${n} documents from the developer`,
-    summaryLocked: 'Checks are public, files open after a request',
+    summaryLocked: 'Checks are public, files are in Pro',
     allBtn: (n: number) => `All ${n} documents by section`,
     checksBtn: 'Back to checks',
     newTab: 'Open separately',
@@ -52,36 +41,14 @@ const COPY = {
     open: 'Open',
     mb: 'MB',
     tapHint: 'Tap a document to open it full screen',
-    unlockBtn: (n: number) => `Open ${n} documents`,
-    unlockHint: 'Name and contact - files open right away',
-    formTitle: (n: number) => `Open ${n} documents`,
-    formText: 'Land certificates, permits, notary covernotes and the plot check. Leave a contact and the files open right away.',
-    name: 'Name',
-    namePh: 'Your name',
-    contact: 'Telegram or phone',
-    contactPh: '@name or +1…',
-    send: 'Open documents',
-    sending: 'Sending…',
-    errName: 'Enter your name',
-    errContact: 'Telegram handle (@name) or phone number needed',
-    errSend: 'Could not send. Please try again.',
-    formNote: 'We only write about this property.',
+    proBtn: 'Open in Pro',
+    proHint: 'Sign in with Pro and the files open here',
+    proTitle: (n: number) => `${n} documents - in Pro`,
+    proText: 'Land certificates, permits, notary covernotes and the plot check. Sign in with Pro and every file opens right here.',
     note: 'Landowners’ ID documents are not published.',
     close: 'Close',
   },
 } as const
-
-const STORE_KEY = 'bx_lead_contact'
-
-function isPhone(s: string): boolean {
-  if (!/^\+?[\d\s()\-.]+$/.test(s)) return false
-  const digits = s.replace(/\D/g, '')
-  return digits.length >= 8 && digits.length <= 15
-}
-function tgHandle(s: string): string | null {
-  const m = s.trim().match(/^(?:@|(?:https?:\/\/)?t\.me\/)?([a-zA-Z][a-zA-Z0-9_]{4,31})$/)
-  return m ? `@${m[1]}` : null
-}
 
 function useWide() {
   const [wide, setWide] = useState(true)
@@ -95,7 +62,7 @@ function useWide() {
   return wide
 }
 
-export function ComplexDocsView({ docs, lang, listingTitle }: { docs: ComplexDocs; lang: Lang; listingTitle: string }) {
+export function ComplexDocsView({ docs, lang }: { docs: ComplexDocs; lang: Lang; listingTitle?: string }) {
   const c = pickCopy(COPY, lang)
   const isRu = lang === 'ru' || lang === 'uk'
   const t = (x: { ru: string; en: string }) => (isRu ? x.ru : x.en)
@@ -105,7 +72,6 @@ export function ComplexDocsView({ docs, lang, listingTitle }: { docs: ComplexDoc
   const [unlocked, setUnlocked] = useState<boolean | null>(null)
   const [selected, setSelected] = useState<string>(docs.checks[0]?.files[0] ?? docs.docs[0]?.file ?? '')
   const [showAll, setShowAll] = useState(false)
-  const [sheet, setSheet] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -121,13 +87,13 @@ export function ComplexDocsView({ docs, lang, listingTitle }: { docs: ComplexDoc
   const size = (d: ComplexDoc) => `${d.mb < 0.1 ? '0,1' : String(Math.round(d.mb * 10) / 10).replace('.', isRu ? ',' : '.')} ${c.mb}`
   const filesOf = (files: string[]) => files.map(f => byFile.get(f)).filter((d): d is ComplexDoc => !!d)
   const cur = byFile.get(selected) ?? docs.docs[0]
-  const onDone = () => { setUnlocked(true); setSheet(false) }
+  const proHref = () => `/pro?next=${encodeURIComponent(window.location.pathname)}`
 
   function pick(d: ComplexDoc) {
     setSelected(d.file)
     if (!wide) {
       if (unlocked) window.open(href(d), '_blank', 'noopener')
-      else setSheet(true)
+      else window.location.href = proHref()
     }
   }
 
@@ -174,18 +140,10 @@ export function ComplexDocsView({ docs, lang, listingTitle }: { docs: ComplexDoc
         </div>
         {unlocked === false && (
           <div className="shrink-0 px-4 pt-3 pb-2 flex flex-col gap-1.5 bg-[#0C100E] shadow-[0_-8px_24px_rgb(0_0_0/.4)]">
-            <button type="button" onClick={() => setSheet(true)} className="h-[52px] rounded-xl bg-white text-[#101814] text-[16px] font-semibold inline-flex items-center justify-center gap-2 cursor-pointer">
-              <Lock size={16} aria-hidden />{c.unlockBtn(n)}
-            </button>
-            <span className="text-center text-[12px] text-white/55">{c.unlockHint}</span>
-          </div>
-        )}
-        {sheet && unlocked === false && (
-          <div className="absolute inset-0 z-10 flex items-end bg-black/50" onMouseDown={e => { if (e.target === e.currentTarget) setSheet(false) }}>
-            <div className="relative w-full rounded-t-2xl bg-white p-5 pb-6">
-              <button type="button" onClick={() => setSheet(false)} aria-label={c.close} className="absolute right-3 top-3 w-11 h-11 rounded-full flex items-center justify-center text-[#4C5751] cursor-pointer"><X size={18} /></button>
-              <LeadForm lang={lang} n={n} listingTitle={listingTitle} onDone={onDone} />
-            </div>
+            <a href={proHref()} className="h-[52px] rounded-xl bg-white text-[#101814] text-[16px] font-semibold inline-flex items-center justify-center gap-2 no-underline">
+              <Lock size={16} aria-hidden />{c.proBtn}
+            </a>
+            <span className="text-center text-[12px] text-white/55">{c.proHint}</span>
           </div>
         )}
       </div>
@@ -254,91 +212,23 @@ export function ComplexDocsView({ docs, lang, listingTitle }: { docs: ComplexDoc
         )}
         <div className="relative flex-1 min-h-0 bg-[#151B18] flex items-center justify-center">
           {unlocked && cur ? (
-            <iframe key={cur.file} src={href(cur)} title={t(cur.name)} className="absolute inset-6 w-[calc(100%-48px)] h-[calc(100%-48px)] border-0 rounded bg-white" />
+            <iframe key={cur.file} src={`${href(cur)}#toolbar=0&navpanes=0&view=FitH`} title={t(cur.name)} className="absolute inset-6 w-[calc(100%-48px)] h-[calc(100%-48px)] border-0 rounded bg-white" />
           ) : unlocked === false ? (
             <>
               <div className="absolute inset-6 flex justify-center blur-[6px] opacity-35" aria-hidden>
                 <div className="w-[520px] h-full max-h-[736px] bg-white rounded-sm" />
               </div>
               <div className="relative w-[440px] max-w-[calc(100%-48px)] p-8 rounded-2xl bg-white shadow-[0_1px_2px_rgb(0_0_0/.2),0_16px_40px_rgb(0_0_0/.35)]">
-                <LeadForm lang={lang} n={n} listingTitle={listingTitle} onDone={onDone} />
+                <div className="flex flex-col gap-4 text-[#18201C]">
+                  <h3 className="m-0 text-[24px] font-semibold tracking-[-0.01em] leading-[1.2]">{c.proTitle(n)}</h3>
+                  <p className="m-0 text-[15px] leading-[1.55] text-[#4C5751]">{c.proText}</p>
+                  <a href={proHref()} className="h-[52px] rounded-xl bg-[var(--color-primary)] text-white text-[16px] font-semibold inline-flex items-center justify-center gap-2 no-underline hover:brightness-110 transition-[filter] duration-[120ms]"><Lock size={16} aria-hidden />{c.proBtn}</a>
+                </div>
               </div>
             </>
           ) : null}
         </div>
       </main>
     </div>
-  )
-}
-
-function LeadForm({ lang, n, listingTitle, onDone }: { lang: Lang; n: number; listingTitle: string; onDone: () => void }) {
-  const c = pickCopy(COPY, lang)
-  const [name, setName] = useState('')
-  const [contact, setContact] = useState('')
-  const [website, setWebsite] = useState('') // honeypot
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') as { name?: string; phone?: string; telegram?: string } | null
-      if (saved) { setName(saved.name ?? ''); setContact(saved.telegram || saved.phone || '') }
-    } catch { /* приватный режим */ }
-  }, [])
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    const nm = name.trim()
-    const raw = contact.trim()
-    if (!nm) { setError(c.errName); return }
-    const phone = isPhone(raw) ? raw : ''
-    const telegram = phone ? '' : tgHandle(raw) ?? ''
-    if (!phone && !telegram) { setError(c.errContact); return }
-    setError(null)
-    setBusy(true)
-    try {
-      const r = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: nm, phone: phone || undefined, telegram: telegram || undefined, website,
-          listingTitle, message: 'Хочет посмотреть документы', page: 'docs', pagePath: window.location.pathname,
-        }),
-      })
-      if (!r.ok) throw new Error(`status ${r.status}`)
-      try {
-        const prev = JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}') as Record<string, string>
-        localStorage.setItem(STORE_KEY, JSON.stringify({ ...prev, name: nm, ...(phone ? { phone } : { telegram }) }))
-      } catch { /* не критично */ }
-      onDone()
-    } catch (err) {
-      console.error('[docs] lead failed', err)
-      setError(c.errSend)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const inputCls = 'h-12 px-4 rounded-xl border border-[#D5DDD8] bg-white text-[16px] text-[#18201C] outline-none focus-visible:border-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20 transition-[border-color,box-shadow] duration-[120ms]'
-  return (
-    <form onSubmit={submit} className="flex flex-col gap-4 text-[#18201C]">
-      <div className="flex flex-col gap-2 pr-8">
-        <h3 className="m-0 text-[22px] lg:text-[24px] font-semibold tracking-[-0.01em] leading-[1.2]">{c.formTitle(n)}</h3>
-        <p className="m-0 text-[15px] leading-[1.55] text-[#4C5751]">{c.formText}</p>
-      </div>
-      <label className="flex flex-col gap-1.5 text-[13px] text-[#4C5751]">{c.name}
-        <input value={name} onChange={e => setName(e.target.value)} placeholder={c.namePh} autoComplete="name" className={inputCls} />
-      </label>
-      <label className="flex flex-col gap-1.5 text-[13px] text-[#4C5751]">{c.contact}
-        <input value={contact} onChange={e => setContact(e.target.value)} placeholder={c.contactPh} autoComplete="tel" className={inputCls} />
-      </label>
-      <input tabIndex={-1} aria-hidden="true" autoComplete="off" value={website} onChange={e => setWebsite(e.target.value)} className="hidden" />
-      {error && <p role="alert" className="m-0 text-[14px] text-[#B42318]">{error}</p>}
-      <button type="submit" disabled={busy}
-        className="h-[52px] rounded-xl bg-[var(--color-primary)] text-white text-[16px] font-semibold cursor-pointer hover:brightness-110 active:brightness-95 disabled:opacity-60 disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-[filter] duration-[120ms]">
-        {busy ? c.sending : c.send}
-      </button>
-      <span className="text-[13px] text-[#4C5751]">{c.formNote}</span>
-    </form>
   )
 }

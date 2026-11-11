@@ -286,7 +286,7 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
 
   if (inline) {
     return (
-      <div className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-[#0e1116]">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-[#0e1116]">
         {status === 'open' ? body : (
           <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-white/70">
             {status === 'limit'

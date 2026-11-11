@@ -1,11 +1,11 @@
 // Документы комплекса (lib/complex-docs.ts) из закрытого бакета complex-docs.
-// Открываются только после заявки: /api/contact ставит httpOnly-куку bx_lead.
+// Открываются только вошедшим с Pro (isProSession, решение владельца 2026-11-11).
 //   ?check=1          → { unlocked } — показать файлы или форму
 //   ?f=<file>[&dl=1]  → редирект на подписанную ссылку на 5 минут
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import { complexDocFile } from '@/lib/complex-docs'
+import { isProSession } from '@/lib/site-auth'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   }
   const { slug } = await params
   const url = new URL(req.url)
-  const unlocked = (await cookies()).get('bx_lead')?.value === '1'
+  const unlocked = await isProSession()
 
   if (url.searchParams.has('check')) {
     return NextResponse.json({ unlocked }, { headers: NO_INDEX })
@@ -29,7 +29,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
   const doc = complexDocFile(slug, url.searchParams.get('f') ?? '')
   if (!doc) return NextResponse.json({ error: 'not_found' }, { status: 404, headers: NO_INDEX })
-  if (!unlocked) return NextResponse.json({ error: 'lead_required' }, { status: 403, headers: NO_INDEX })
+  if (!unlocked) return NextResponse.json({ error: 'pro_required' }, { status: 403, headers: NO_INDEX })
   if (!SUPABASE_URL || !SERVICE_KEY) {
     return NextResponse.json({ error: 'unconfigured' }, { status: 503, headers: NO_INDEX })
   }

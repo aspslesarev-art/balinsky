@@ -44,6 +44,7 @@ import { loadComplexMedia } from '@/lib/complex-media'
 import { loadPromoKit } from '@/lib/promo-kits'
 import { complexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
+import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -1225,6 +1226,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         label: en ? 'Sun & wind' : 'Солнце и ветер',
         icon: <Sun size={18} aria-hidden />,
         cover: photos[2] ?? photos[0] ?? null,
+        bleed: true,
         content: (
           <SunShadowBlock
             inline
@@ -1253,6 +1255,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           label: en ? '3D map' : '3D-карта',
           icon: <Globe size={18} aria-hidden />,
           cover: sunPlan.basemap?.url ?? null,
+          bleed: true,
           content: (
             <Google3DMapBlock
               inline
@@ -1302,7 +1305,19 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     }
     const hl = hotspots.find(h => h.targetUnitSlug === slug)
     masterplanCover = layers.find(l => l.id === hl?.layerId)?.photoUrl ?? layers[0].photoUrl
-    return (
+    // Список вилл справа от шахматки: по хотспотам слоя с этой виллой.
+    const rowLayer = hl?.layerId ?? layers[0].id
+    const seen = new Set<string>()
+    const listRows: MasterplanRow[] = hotspots
+      .filter(h => h.layerId === rowLayer && h.label)
+      .sort((a, b) => a.sortOrder - b.sortOrder || (a.label ?? '').localeCompare(b.label ?? '', undefined, { numeric: true }))
+      .filter(h => { const k = h.label!; if (seen.has(k)) return false; seen.add(k); return true })
+      .map(h => {
+        const u = h.targetUnitSlug ? unitsBySlug[h.targetUnitSlug] : undefined
+        const sub = u ? [u.area ? `${String(u.area).replace('.', lang === 'ru' ? ',' : '.')} ${lang === 'ru' ? 'м²' : 'm²'}` : null, u.bedrooms ? `${u.bedrooms} ${lang === 'ru' ? 'сп.' : 'bd'}` : null].filter(Boolean).join(' · ') : null
+        return { label: h.label!, status: h.availability, sub: sub || null, priceUsd: u?.priceUsd ?? null, url: u?.url ?? null, current: h.targetUnitSlug === slug }
+      })
+    const planNode = (
       <ComplexVisualizationViewer
         layers={layers.map(l => ({ id: l.id, parentLayerId: l.parentLayerId, title: l.title, photoUrl: l.photoUrl }))}
         hotspots={hotspots}
@@ -1312,6 +1327,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         bare
       />
     )
+    return listRows.length ? <MasterplanWithList plan={planNode} rows={listRows} lang={lang} /> : planNode
   })()
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   // Show Cyrillic district on /ru, raw Latin on /en. Raw form is

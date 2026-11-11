@@ -141,7 +141,7 @@ export function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lan
         {tab === 'photos' && <PhotosPane items={items as Extract<Item, { kind: 'img' }>[]} i={i} go={go} pick={k => onChange(tab, k)} c={c} wide={wide} />}
         {tab === 'plans' && <PlansPane items={items} i={i} pick={k => onChange(tab, k)} c={c} wide={wide} />}
         {tab === 'videos' && <VideosPane items={items as Extract<Item, { kind: 'video' }>[]} i={i} pick={k => onChange(tab, k)} c={c} wide={wide} title={title} />}
-        {tab === 'master' && <div className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6"><div className="max-w-[1200px] mx-auto">{masterplan}</div></div>}
+        {tab === 'master' && <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">{masterplan}</div>}
         {tab === 'tour' && item?.kind === '3d' && <div className="flex-1 min-h-0 p-4 lg:p-6"><iframe src={item.src} title={c.tour} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer" className="w-full h-full rounded-lg border-0 bg-white" /></div>}
         {tab === 'promo' && promo && <PromoPane promo={promo} c={c} wide={wide} />}
         {item?.kind === 'custom' && <div key={tab} className={`flex-1 min-h-0 ${item.bleed ? '' : 'p-3 lg:p-6'}`}>{item.content}</div>}
