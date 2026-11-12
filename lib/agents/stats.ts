@@ -66,6 +66,7 @@ async function calendarMeetings(fromIso: string, toIso: string): Promise<{ list:
       if (!e.start.dateTime) continue // события на весь день — не встречи
       if (e.attendees?.some(a => a.self && a.responseStatus === 'declined')) continue
       const title = e.summary?.trim() || (e.extendedProperties?.private?.[BOOKING_PROP] ? 'Запись с сайта' : 'Без названия')
+      if (/^дорога[\s:]/i.test(title)) continue // время в пути до встречи — не отдельная встреча
       list.push({ title, start: e.start.dateTime, zoom: Boolean(e.hangoutLink) || ZOOM_RE.test(title) })
     }
     return { list, state: 'ok' }
@@ -132,12 +133,15 @@ export async function touchStats(period: TouchPeriodKey): Promise<TouchStats> {
       status: a?.status ?? null,
       kind: a ? 'agent' : d.kind,
       incoming: 0, outgoing: 0, total: 0,
+      calls: 0, calls_sec: 0,
       last_day: d.day,
       deals_count: a?.deals_count ?? null,
       deals_volume_usd: a?.deals_volume_usd ?? null,
     }
     row.outgoing += d.out_cnt
     row.incoming += d.in_cnt
+    row.calls += d.calls ?? 0
+    row.calls_sec += d.calls_sec ?? 0
     row.total = row.incoming + row.outgoing
     if (d.day > row.last_day) row.last_day = d.day
     byChat.set(d.chat_id, row)

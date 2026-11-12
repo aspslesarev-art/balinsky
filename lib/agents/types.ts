@@ -165,6 +165,8 @@ export type TouchRow = {
   incoming: number
   outgoing: number
   total: number
+  calls: number      // состоявшиеся звонки в Телеграме
+  calls_sec: number
   last_day: string
   deals_count: number | null
   deals_volume_usd: number | null
