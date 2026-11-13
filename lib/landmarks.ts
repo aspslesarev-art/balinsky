@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { TA_RANK } from './tripadvisor-top'
 
 // «Что посмотреть рядом» — то, ради чего едут туристы: лес обезьян, водопады,
 // зоопарки, храмы, рынки (владелец 13.11.2026: у CITRINE показывали галереи,
@@ -16,6 +17,8 @@ export type Landmark = {
   rating: number | null
   distanceKm: number
   mapsUrl: string
+  /** Место в топ‑90 TripAdvisor по Бали, если есть */
+  taRank: number | null
 }
 
 const NEAR_KM = 5
@@ -54,6 +57,7 @@ export async function loadLandmarks(lat: number, lng: number, limit = 8): Promis
       rating: r.rating != null ? Number(r.rating) : null,
       distanceKm: distKm(lat, lng, Number(r.lat), Number(r.lng)),
       mapsUrl: `https://www.google.com/maps/place/?q=place_id:${r.id}`,
+      taRank: TA_RANK[r.id as string] ?? null,
     }))
     .filter(r => r.distanceKm <= FAR_KM)
   // Сначала всё в 5 км по популярности; если мало — добираем дальними (до 10 км).

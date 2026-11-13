@@ -116,6 +116,9 @@ const BUCKET_LABEL: Record<string, { ru: string; en: string }> = {
 
 // «Что посмотреть рядом» — главные места для отдыха (лес обезьян, водопады,
 // зоопарки, храмы) из bali_places, см. lib/landmarks.ts.
+// Подсказка к метке: что за номер и когда снят (lib/tripadvisor-top.ts).
+const TA_TITLE = { ru: 'Место в рейтинге «Что посмотреть на Бали» на TripAdvisor, ноябрь 2026', en: 'Rank in TripAdvisor “Things to Do in Bali”, Nov 2026', id: 'Peringkat di TripAdvisor “Things to Do in Bali”, Nov 2026', fr: 'Classement TripAdvisor « À faire à Bali », nov. 2026', de: 'Platz im TripAdvisor-Ranking „Aktivitäten auf Bali“, Nov. 2026', zh: 'TripAdvisor“巴厘岛必做之事”排名，2026年11月', nl: 'Positie in TripAdvisor “Things to Do in Bali”, nov 2026', ban: 'Peringkat ring TripAdvisor “Things to Do in Bali”, Nov 2026', pl: 'Miejsce w rankingu TripAdvisor „Atrakcje na Bali”, lis 2026', uk: 'Місце в рейтингу TripAdvisor «Що подивитися на Балі», листопад 2026' }
+
 export function LandmarksList({ items, lang }: { items: Landmark[]; lang: Lang }) {
   const ru = lang === 'ru' || lang === 'uk'
   const km = (d: number) => d < 1 ? `${Math.round(d * 1000 / 50) * 50} ${ru ? 'м' : 'm'}` : `${d.toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'км' : 'km'}`
@@ -135,6 +138,11 @@ export function LandmarksList({ items, lang }: { items: Landmark[]; lang: Lang }
               <span className="flex flex-col min-w-0">
                 <span className="text-[15px] font-medium truncate">{p.name}</span>
                 <span className="text-[13px] text-[#4C5751]">{label(p)} · {km(p.distanceKm)}</span>
+                {p.taRank != null && (
+                  <span className="text-[13px] font-medium text-[var(--color-primary-pressed)]" title={pickCopy(TA_TITLE, lang)}>
+                    {ru ? '№' : '#'}{p.taRank} TripAdvisor
+                  </span>
+                )}
               </span>
               {p.rating != null && (
                 <span className="shrink-0 inline-flex items-center gap-1 text-[13px] text-[#4C5751] tabular-nums">
