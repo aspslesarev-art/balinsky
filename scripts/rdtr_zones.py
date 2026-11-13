@@ -54,9 +54,14 @@ def get(url, **params):
 
 def point_zone(lat, lon):
     for kab in BALI_KAB:
-        try:
-            j = get(f"{API}/data", id_wilayah=kab, latitude=lat, longitude=lon)
-        except Exception:
+        j = None
+        for attempt in range(3):  # GISTARU часто отвечает 5xx/таймаутом - иначе «зон нет»
+            try:
+                j = get(f"{API}/data", id_wilayah=kab, latitude=lat, longitude=lon)
+                break
+            except Exception:
+                __import__("time").sleep(3 * (attempt + 1))
+        if j is None:
             continue
         d = j.get("data")
         if isinstance(d, dict) and d.get("kodszn"):

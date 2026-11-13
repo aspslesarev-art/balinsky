@@ -1748,7 +1748,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const hasMoney = !!(saleComps && saleComps.diffPct != null && priceNum != null) || !!(!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null)
   const hasMesto = !!(hasPlace && lat != null && lng != null) || !!(beach || geoFacts?.climate)
   const chapterNav = [
-    (villaFacts.length > 0 || landFacts.length > 0) && { id: 'obekt', no: '01', label: CH.obekt[0] },
+    (villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && { id: 'obekt', no: '01', label: CH.obekt[0] },
     hasMesto && { id: 'mesto', no: '02', label: CH.mesto[0] },
     { id: 'proverka', no: '03', label: CH.proverka[0] },
     hasMoney && { id: 'dengi', no: '04', label: CH.dengi[0] },
@@ -2038,7 +2038,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
         {chapterNav.length > 1 && <VillaChapterNav items={chapterNav} />}
 
-        {(villaFacts.length > 0 || landFacts.length > 0) && (
+        {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
           <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} title={CH.obekt[1]}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
               {villaFacts.length > 0 && (
@@ -2060,7 +2060,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   )}
                 </div>
               )}
-              {landFacts.length > 0 && (
+              {(landFacts.length > 0 || !!rdtr) && (
                 <div>
                   <h3 className="text-[20px] font-semibold text-[var(--color-text)] mb-2 mt-0">{c.aboutLandHeading}</h3>
                   {landFacts.map(f => (
