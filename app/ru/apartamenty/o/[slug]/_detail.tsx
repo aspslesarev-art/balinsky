@@ -1432,7 +1432,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
               presentationButton={
                 // PDF-презентация — только для Pro (.bx-pro-only в globals.css).
                 <span className="bx-pro-only">
-                <AddToCollection kind="apartment" slug={slug} snapshot={{
+                <AddToCollection kind="apartment" slug={slug} lang={lang} snapshot={{
                   title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
                   district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
                   leaseYears: lease ? Number(lease) || null : null, status: status ?? null,

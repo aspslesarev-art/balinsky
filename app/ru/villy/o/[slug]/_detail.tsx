@@ -1384,6 +1384,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const priceM2 = numberOrNull(d['Цена м²'])
   const priceUpdatedAt = firstString(d['Обновление цены']) ?? firstString(d['Последнее обновление']) ?? firstString(d['Обновлено'])
   const yearRaw = firstString(d['Year of completion'])
+  // Источник пишет «4 кв. 2027» по-русски; для показа на других языках — «Q4 2027».
+  const yearShown = yearRaw && lang !== 'ru' ? yearRaw.replace(/(\d)\s*кв\.?\s*/i, 'Q$1 ') : yearRaw
   const status = firstString(d['Статус'])
   const permit = firstString(d['Разрешение'])
   const lease = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
@@ -1470,7 +1472,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     bedrooms != null && { Icon: BedDouble, label: c.factBedrooms, value: lang === 'ru' ? String(bedrooms) : `${bedrooms} BR` },
     area != null && { Icon: Square, label: c.factHouse, value: `${area} ${c.sqm}` },
     land != null && { Icon: Trees, label: c.factLand, value: `${land} ${c.sqm}` },
-    yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
+    yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearShown },
     permitLabel(permit, lang) && { Icon: FileCheck2, label: c.factPermits, value: permitLabel(permit, lang)! },
     lease && { Icon: Lock, label: c.factLeasehold, value: c.factLeaseValue(lease) },
     district && { Icon: MapPin, label: c.factDistrict, value: district },
@@ -1487,7 +1489,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     area != null ? { label: c.factHouse, value: `${area} ${c.sqm}` } : null,
     bedrooms != null ? { label: c.factBedrooms, value: String(bedrooms) } : null,
     interiorStyle ? { label: c.factStyle, value: facetLabel('style', interiorStyle, lang) } : null,
-    yearRaw ? { label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw } : null,
+    yearRaw ? { label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearShown } : null,
     permitLabel(permit, lang) ? { label: c.factPermits, value: permitLabel(permit, lang)! } : null,
     // Вид из окон — поле «Вид» (рус) / «Вид EN»; заполняется вручную по 3D-карте.
     viewText ? { label: pickCopy({ ru: 'Вид из окон', en: 'View', id: 'Pemandangan', fr: 'Vue', de: 'Aussicht', zh: '景观', nl: 'Uitzicht', ban: 'Pemandangan', pl: 'Widok', uk: 'Вид з вікон' }, lang), value: viewText } : null,
@@ -1938,7 +1940,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     bedrooms={bedrooms}
     area={area}
     land={land}
-    yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
+    yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearShown ?? null)}
     lease={lease}
     permit={permit}
     lat={lat}
@@ -1948,7 +1950,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   )
   const presentationBtn = priceNum != null ? (
     <span className="bx-pro-only">
-    <AddToCollection kind="villa" slug={slug} snapshot={{
+    <AddToCollection kind="villa" slug={slug} lang={lang} snapshot={{
       title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
       district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
       leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
@@ -2046,7 +2048,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   <h3 className="text-[20px] font-semibold text-[var(--color-text)] mb-2 mt-0">{c.aboutVillaHeading}</h3>
                   {villaFacts.map(f => (
                     <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
-                      <span className="text-[var(--color-text-muted)]">{f.label}</span>
+                      <span className="shrink-0 text-[var(--color-text-muted)]">{f.label}</span>
                       <span className="text-right">{f.value}</span>
                     </div>
                   ))}
@@ -2065,7 +2067,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   <h3 className="text-[20px] font-semibold text-[var(--color-text)] mb-2 mt-0">{c.aboutLandHeading}</h3>
                   {landFacts.map(f => (
                     <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
-                      <span className="text-[var(--color-text-muted)]">{f.label}</span>
+                      <span className="shrink-0 text-[var(--color-text-muted)]">{f.label}</span>
                       <span className="text-right">{f.value}</span>
                     </div>
                   ))}

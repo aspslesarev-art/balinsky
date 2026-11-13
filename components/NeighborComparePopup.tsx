@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { X, ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import { InlinePrice } from './InlinePrice'
 import { pickCopy, type Lang } from '@/lib/i18n'
@@ -196,36 +196,90 @@ function CellVal({ children, highlighted }: { children: ReactNode; highlighted?:
   return <div className={base}>{children}</div>
 }
 
+// Настоящая подложка (Esri World Street Map, как в StaticMap) вместо сетки: тайлы обычными
+// <img>, без библиотеки. Зум подбирается так, чтобы все точки влезли в окно.
+const MAP_TILE = 256
+function mapWorldPx(lat: number, lng: number, z: number) {
+  const n = 2 ** z * MAP_TILE
+  const s = Math.sin((lat * Math.PI) / 180)
+  return { x: ((lng + 180) / 360) * n, y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n }
+}
+
 function MiniMap({ pins, radius, district, lang }: {
   pins: { lat: number; lng: number; label: string; main?: boolean }[]
   radius: number; district: string | null; lang: Lang
 }) {
   const c = pickCopy(COPY, lang)
+  const box = useRef<HTMLDivElement>(null)
+  const [w, setW] = useState(0)
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setW(Math.round(e.contentRect.width)))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   if (pins.length === 0) return null
+  const H = 280
+  const PAD = 28
   const lats = pins.map(p => p.lat)
   const lngs = pins.map(p => p.lng)
   const cLat = (Math.min(...lats) + Math.max(...lats)) / 2
   const cLng = (Math.min(...lngs) + Math.max(...lngs)) / 2
-  const span = Math.max(0.005, Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs)) * 1.4)
-  const toX = (lng: number) => ((lng - cLng) / span + 0.5) * 100
-  const toY = (lat: number) => (0.5 - (lat - cLat) / span) * 100
+  let z = 16
+  if (w > 0) {
+    for (; z > 10; z--) {
+      const a = mapWorldPx(Math.max(...lats), Math.min(...lngs), z)
+      const b = mapWorldPx(Math.min(...lats), Math.max(...lngs), z)
+      if (b.x - a.x <= w - PAD * 2 && b.y - a.y <= H - PAD * 2) break
+    }
+  }
+  const ctr = mapWorldPx(cLat, cLng, z)
+  const x0 = ctr.x - w / 2
+  const y0 = ctr.y - H / 2
+  const tiles: { key: string; src: string; left: number; top: number }[] = []
+  if (w > 0) {
+    const n = 2 ** z
+    for (let tx = Math.floor(x0 / MAP_TILE); tx <= Math.floor((x0 + w) / MAP_TILE); tx++) {
+      for (let ty = Math.floor(y0 / MAP_TILE); ty <= Math.floor((y0 + H) / MAP_TILE); ty++) {
+        if (ty < 0 || ty >= n) continue
+        tiles.push({
+          key: `${tx}/${ty}`,
+          src: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${ty}/${((tx % n) + n) % n}`,
+          left: tx * MAP_TILE - x0, top: ty * MAP_TILE - y0,
+        })
+      }
+    }
+  }
+  // Главную точку рисуем последней, чтобы соседи её не перекрывали.
+  const ordered = [...pins].sort((a, b) => Number(!!a.main) - Number(!!b.main))
 
   return (
-    <div className="relative mt-4 h-[140px] rounded-xl bg-[var(--color-search-bg)] overflow-hidden">
-      <div className="absolute inset-0 opacity-[.12]" style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 27px, var(--color-text-muted) 27px, var(--color-text-muted) 28px), repeating-linear-gradient(90deg, transparent, transparent 27px, var(--color-text-muted) 27px, var(--color-text-muted) 28px)' }} />
-      {pins.map((p, i) => {
-        const x = Math.max(8, Math.min(92, toX(p.lng)))
-        const y = Math.max(12, Math.min(88, toY(p.lat)))
+    <div ref={box} className="relative mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-search-bg)]" style={{ height: H }}>
+      {tiles.map(t => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={t.key} src={t.src} alt="" aria-hidden draggable={false} loading="lazy"
+          className="pointer-events-none absolute max-w-none select-none" style={{ left: t.left, top: t.top, width: MAP_TILE, height: MAP_TILE }} />
+      ))}
+      <div className="pointer-events-none absolute inset-0 bg-white/30" aria-hidden />
+      {w > 0 && ordered.map((p, i) => {
+        const pt = mapWorldPx(p.lat, p.lng, z)
         return (
-          <div key={i} className="absolute flex flex-col items-center" style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -100%)' }}>
-            <div className={`rounded-full border-2 border-white ${p.main ? 'h-6 w-6 bg-[var(--color-primary)]' : 'h-4 w-4 bg-[var(--color-text-muted)]'}`} style={{ boxShadow: '0 2px 6px rgb(0 0 0/.15)' }} />
-            <span className={`mt-0.5 text-[10px] whitespace-nowrap ${p.main ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]'}`}>{p.label}</span>
+          <div key={i} title={p.label} className={`absolute ${p.main ? 'z-[2]' : 'z-[1]'}`}
+            style={{ left: pt.x - x0, top: pt.y - y0, transform: 'translate(-50%, -50%)' }}>
+            <div className={`rounded-full border-2 border-white ${p.main ? 'h-5 w-5 bg-[var(--color-primary)]' : 'h-3.5 w-3.5 bg-[var(--color-text)]'}`}
+              style={{ boxShadow: '0 1px 2px rgb(0 0 0/.12), 0 2px 6px rgb(0 0 0/.18)' }} />
+            {p.main && (
+              <span className="absolute left-1/2 top-[calc(100%+4px)] -translate-x-1/2 whitespace-nowrap rounded-md bg-white px-2 py-0.5 text-[12px] font-semibold text-[var(--color-primary-pressed)]"
+                style={{ boxShadow: '0 1px 2px rgb(0 0 0/.06), 0 2px 8px rgb(0 0 0/.10)' }}>{p.label}</span>
+            )}
           </div>
         )
       })}
-      <span className="absolute right-2 bottom-2 text-[11px] text-[var(--color-text-muted)] opacity-60">
+      <span className="absolute left-2 bottom-2 z-[3] rounded-md bg-white/90 px-2 py-0.5 text-[12px] text-[var(--color-text-soft)]">
         {c.radius(radius, district)}
       </span>
+      <span className="absolute right-1 bottom-1 z-[3] rounded bg-white/80 px-1 text-[10px] text-[var(--color-text-muted)]">© Esri</span>
     </div>
   )
 }
