@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baza Kedungu AM — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Слайд «Односпальные апартаменты AM, 29,8 м²». Площади с плана: коридор
+// 4.0, ванная 4.6, кухня 5.1, гостиная 16.1. Размеров нет — метры сняты
+// по масштабу кровати (≈4.1 × 6.55 м). Спальная ниша отделена от
+// гостиной шторой и стеллажом.
+const PLAN = { name: 'Baza Kedungu · AM', W: 4.1, HD: 6.55, BACK: 0.4, FRONT: 0.6, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -0.4, HD + 0.4, -0.4, W + 0.4, -0.3, 0.3, M.stone)
+const y = 0.12
+const UB = 4.49, VB = 1.67
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.planks, 1.6)
+  floorPatch(g, UB, HD, VB, W, y + 0.004, T.tiles, 0.8)
+
+  glassWall(g, 0, 0, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 0.9, H1); wall(HD, 1.55, HD, W, H1)
+  door(g, HD, 0.9, 1.55, y)
+  // ванная: дверь из коридора
+  wall(UB, VB, UB, W, H1)
+  wall(UB, VB, 4.9, VB, H1); wall(5.6, VB, HD, VB, H1)
+  door(g, VB, 4.9, 5.6, y, false, 0.6)
+  toilet(g, 5.9, 2.4, y); shower(g, UB + 0.1, HD - 0.1, 3.1, W - 0.1, y); vanity(g, UB + 0.1, UB + 0.55, 1.85, 2.95, y)
+  // коридор со шкафом, кухня вдоль левой стены
+  rr(g, UB + 0.1, HD - 0.1, 0.05, 0.6, y, 2.1, M.wood, 0.04)
+  rr(g, 2.4, UB, 0.05, 0.65, y, 0.82, M.sage, 0.03); rect(g, 2.4, UB, 0.03, 0.67, 0.94, 0.05, M.white)
+  rr(g, 2.4, UB, 0.05, 0.4, H1 - 1.0, 0.7, M.sage, 0.03)
+  // спальная ниша: кровать изголовьем к ванной, стеллаж
+  bedU(g, 2.4, 4.35, 2.4, W - 0.05, 4.35, y, M.teal)
+  rr(g, 2.4, 4.3, VB + 0.05, 2.3, y, 1.9, M.woodL, 0.04)
+  // гостиная: круглый стол на 4, диван, столик
+  roundTable(g, 1.05, 0.95, y, 0.4)
+  for (const [u, v] of [[0.45, 0.95], [1.65, 0.95], [1.05, 0.4], [1.05, 1.55]]) chair(g, u, v, y)
+  rr(g, 0.6, 1.4, 1.9, 3.1, y, 0.012, M.mustard, 0.005, false)
+  rr(g, 0.3, 1.8, 3.3, W - 0.05, y, 0.42, M.sofa, 0.12); rr(g, 0.3, 1.8, W - 0.35, W - 0.05, y, 0.85, M.sofa, 0.12)
+  cyl(g, 0.95, 2.6, 0.32, 0.3, 0.38, y, M.woodL, 24)
+  plant(g, 2.0, W - 0.3, y, 0.55)
+}
+P(floor1G, 1.65, 2.0, 1.2, Math.PI, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '29.8 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['living', 16.1], ['kitchen', 5.1], ['hall', 4.0], ['bathroom', 4.6]] }],
+  L1: [
+    Lb('living', 16.1, 1.0, 2.0, 2.2),
+    Lb('kitchen', 5.1, 3.2, 1.4, 1.1),
+    Lb('hall', 4.0, 5.6, 2.0, 0.8),
+    Lb('bathroom', 4.6, 5.5, 2.5, 2.9),
+  ],
+})
+</script>
+</body>
+</html>

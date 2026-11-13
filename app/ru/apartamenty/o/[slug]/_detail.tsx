@@ -1,6 +1,7 @@
 // Shared apartment-detail renderer for both /ru/apartamenty/o/[slug]
 // and /en/apartments/o/[slug]. Layout / data fetching live here only.
 
+import { getApartment3DPlanUrl } from '@/lib/villa-3d-plans'
 import { TouristHeatMap } from '@/components/TouristHeatMap'
 import { ProPendingNote } from '@/components/ProPendingNote'
 import type { ReactNode } from 'react'
@@ -56,6 +57,7 @@ import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
+import { localizeSnapshot } from '@/lib/competitor-names-en'
 import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPdf, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
@@ -77,7 +79,7 @@ import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
-import { districtRu } from '@/lib/district-ru'
+import { districtRu, districtLatin } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
@@ -908,7 +910,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   const districtRaw = firstString(d['Location filter'])
   // Cyrillic district on /ru, raw Latin on /en. Raw is preserved for
   // Schema.org address fields where Latin is canonical.
-  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
   const price = fmtUsd(numberOrNull(d['price_usd'] ?? d['Цена']), lang)
   const description = gen?.meta
     ? metaSnippet(gen.meta)
@@ -967,7 +969,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const curated = curatePhotos(manifest[a.airtable_id] ?? [], visionRaw)
   const photos = curated.photos.slice(0, 12)
   const districtRaw = firstString(d['Location filter'])
-  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
   // District orientation card: only when the district maps to a real hub
   // slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
   const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
@@ -1047,7 +1049,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     loadNearbyPlaces(a.airtable_id).catch(() => null),
     loadGeoFacts('apartment', a.airtable_id).catch(() => null),
     loadOneUnitDemand('apartment', a.airtable_id, lang).catch(() => null),
-    loadVerdictSnapshot(a.airtable_id, 'apartment'),
+    loadVerdictSnapshot(a.airtable_id, 'apartment').then(snap => localizeSnapshot(snap, lang)),
     loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
     loadAirbnbNearby(lat, lng, bedrooms),
     // «Что посмотреть рядом» с местом в топе TripAdvisor - как у вилл.
@@ -1369,7 +1371,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             photos={photos}
             alts={photoAlts}
             plans={curated.plans}
-            plan3dUrl={null}
+            plan3dUrl={getApartment3DPlanUrl(slug)}
             videos={aptVideos.map(vd => ({ url: vd.url, name: vd.name }))}
             tourUrl={aptTourUrl}
             viewerTabs={aptViewerTabs}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edem II Apartment E2.1 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// План «Apartment E2.1, Edem-2». Площади из таблицы: комната 19.80,
+// санузел 4.20, балкон 3.60, всего 28.00 м². Второй план группы (A2-3.9,
+// Block E.2) — зеркальная копия с площадями 20.00 / 4.30 / 3.70; модель
+// по E2.1. Размеров нет — метры сняты по масштабу кровати (≈3.3 × 6.75 м).
+const PLAN = { name: 'Edem II · Apartment E2.1', W: 3.3, HD: 6.75, BACK: 1.05, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -1.4, HD + 0.4, -0.4, W + 0.4, -0.3, 0.3, M.stone)
+const y = 0.12
+const UB = 4.15, VB = 1.38
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.planks, 1.6)
+  floorPatch(g, UB, HD, 0, VB, y + 0.004, T.tiles, 0.8)
+
+  glassWall(g, 0, 0, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 2.2, H1); wall(HD, 3.1, HD, W, H1)
+  door(g, HD, 2.2, 3.1, y)
+  // санузел у входа: раковина, унитаз, душ; дверь из прихожей
+  wall(UB, 0, UB, VB, H1)
+  wall(UB, VB, 5.8, VB, H1); wall(6.6, VB, HD, VB, H1)
+  door(g, VB, 5.8, 6.6, y, false, 0.6)
+  vanity(g, HD - 0.55, HD - 0.08, 0.1, 0.8, y); toilet(g, 5.75, 0.4, y); shower(g, UB + 0.1, 5.1, 0.1, VB - 0.1, y)
+  // кухня-колонна, шкаф поперёк комнаты, кресло
+  rr(g, 4.0, 5.75, VB + 0.1, 2.07, y, 0.82, M.sage, 0.03); rect(g, 4.0, 5.75, VB + 0.08, 2.09, 0.94, 0.05, M.white)
+  rr(g, 5.2, 5.75, VB + 0.1, 2.07, y, 1.9, M.steel, 0.06)
+  rr(g, 3.45, 4.0, 0.05, 2.07, y, 2.1, M.wood, 0.04)
+  chair(g, 3.1, 1.55, y, M.mustard)
+  // кровать изголовьем к левой стене, тумбы
+  bed(g, 0.8, 2.4, 0.1, 2.0, 0.1, y, M.teal)
+  rr(g, 2.5, 2.85, 0.1, 0.45, y, 0.45, M.woodL, 0.04); rr(g, 0.35, 0.7, 0.1, 0.45, y, 0.45, M.woodL, 0.04)
+}
+// ============ балкон с кашпо ============
+{
+  const g = floor1G
+  rect(g, -1.05, 0, 0, W, 0, 0.1, texMat(T.deck, 1.2, 0.4), true, false)
+  for (const v of [0.25, W - 0.25]) { rect(g, -1.0, -0.1, v - 0.2, v + 0.2, 0.1, 0.4, M.pot); ball(g, -0.55, v, 0.28, 0.65, M.leaf, 0.9) }
+  chair(g, -0.55, 1.3, 0.1, M.white); roundTable(g, -0.55, 1.95, 0.1, 0.25)
+  railing(g, -1.05, 0, -1.05, W, 0.1)
+}
+P(floor1G, 1.65, 3.0, 2.6, Math.PI, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '28 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['living', 19.8], ['bathroom', 4.2], ['balcony', 3.6]] }],
+  L1: [
+    Lb('living', 19.8, 2.2, 2.0, 1.6),
+    Lb('bathroom', 4.2, 5.5, 2.4, 0.7),
+    Lb('balcony', 3.6, -0.5, 1.2, 1.65, true),
+  ],
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prima Residence 2BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// План квартиры 93.1 м²: размеры с чертежа — 11.9 × 6.3 м, балконы до
+// 2.025 м. Площадей комнат на плане нет. Внутренние перегородки сняты по
+// масштабу чертежа; балконы на плане со скошенным краем — упрощены до
+// прямоугольных.
+const PLAN = { name: 'Prima Residence 2BR', W: 11.9, HD: 6.3, BACK: 2.0, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -2.4, HD + 0.4, -0.4, W + 0.4, -0.3, 0.3, M.stone)
+const y = 0.12
+const UB = 4.4                       // спальни | ванные
+const VR = 3.1, VL = 8.6             // спальни по краям
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, VR, VL, y, T.planks, 1.6)
+  floorPatch(g, 0, UB, 0, VR, y + 0.004, T.planksDark, 1.6)
+  floorPatch(g, 0, UB, VL, W, y + 0.004, T.planksDark, 1.6)
+  floorPatch(g, UB, HD, 0, VR, y + 0.004, T.tiles, 0.8)
+  floorPatch(g, UB, HD, VL, W, y + 0.004, T.tiles, 0.8)
+
+  // наружные стены; к балконам — раздвижное стекло
+  glassWall(g, 0, 0, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 3.4, H1); wall(HD, 4.0, HD, W, H1)
+  door(g, HD, 3.4, 4.0, y)
+  for (const s of [1, -1]) {
+    const V = v => (s === 1 ? v : W - v)
+    const span = (a, b) => (s === 1 ? [a, b] : [W - b, W - a])
+    const VB = s === 1 ? VR : W - VL
+    // спальня: стена к гостиной с дверью у ванной, ванная у входа
+    wall(0, V(VB), 3.6, V(VB), H1); wall(4.4, V(VB), HD, V(VB), H1)
+    wall(UB, V(0), UB, V(VB - 0.9), H1)
+    door(g, UB, ...span(VB - 0.85, VB - 0.1), y, true, s * 0.5)
+    rr(g, 3.7, 4.3, ...span(0.2, 2.0), y, 2.1, M.wood, 0.04)      // шкаф
+    bed(g, 0.7, 2.7, ...span(0.2, 2.25), V(0.2), y, s === 1 ? M.teal : M.coral)
+    rr(g, 0.25, 0.65, ...span(0.2, 0.6), y, 0.45, M.woodL, 0.04); rr(g, 2.75, 3.15, ...span(0.2, 0.6), y, 0.45, M.woodL, 0.04)
+    shower(g, UB + 0.1, HD - 0.1, ...span(0.1, 1.0), y)
+    toilet(g, HD - 0.4, V(1.4), y)
+    vanity(g, HD - 0.55, HD - 0.08, ...span(2.0, 2.8), y)
+    door(g, V(VB), 3.6, 4.4, y, false, s * 0.6)
+  }
+  // гостиная: диван с оттоманкой, ТВ на стене спальни
+  cyl(g, 2.3, 4.9, 1.1, 1.1, 0.015, y, M.mustard, 40, false)
+  rr(g, 0.9, 3.8, 5.0, 5.7, y, 0.42, M.navy, 0.12); rr(g, 0.9, 3.8, 5.4, 5.7, y, 0.85, M.navy, 0.12)
+  rr(g, 2.9, 3.8, 4.3, 5.0, y, 0.42, M.navy, 0.12)
+  rr(g, 1.4, 1.8, 5.2, 5.4, y + 0.42, 0.3, M.cush, 0.1)
+  cyl(g, 1.9, 4.5, 0.36, 0.32, 0.36, y, M.woodL, 24)
+  rr(g, 1.0, 2.6, VR + 0.05, VR + 0.4, y, 0.5, M.wood, 0.04); rect(g, 1.3, 2.3, VR + 0.08, VR + 0.12, 0.9, 0.55, M.dark)
+  // прихожая со шкафом
+  rr(g, 5.75, HD - 0.05, 4.2, 5.2, y, 2.1, M.wood, 0.04)
+  // кухня у входной стены, полуостров, обеденный стол у окна
+  rr(g, 5.65, HD - 0.05, 5.8, VL - 0.05, y, 0.82, M.sage, 0.03); rect(g, 5.63, HD - 0.03, 5.8, VL - 0.03, 0.94, 0.05, M.white)
+  rr(g, 5.65, HD - 0.05, 6.15, 6.75, y, 1.9, M.steel, 0.06)
+  rr(g, 3.55, 4.25, 7.0, VL - 0.1, y, 0.95, M.woodL, 0.04); rect(g, 3.5, 4.3, 6.95, VL - 0.05, 1.07, 0.05, M.white)
+  for (const v of [7.4, 8.0]) stool(g, 3.15, v, y)
+  rr(g, 0.8, 2.35, 6.7, 7.9, y + 0.7, 0.06, M.woodL, 0.03); rr(g, 1.4, 1.8, 7.1, 7.5, y, 0.7, M.wood, 0.03)
+  for (const u of [1.15, 2.0]) { chair(g, u, 6.4, y); chair(g, u, 8.2, y) }
+}
+// ============ два балкона ============
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, -2.0, 0, 0, W, 0, 0.1, texMat(T.deck, 4, 0.7), true, false)
+  wall(-2.0, 5.9, 0, 5.9, 1.4)
+  railing(g, -2.0, 0, -2.0, W, 0.1); railing(g, -2.0, 0, 0, 0, 0.1); railing(g, -2.0, W, 0, W, 0.1)
+  for (const b of [0, 6.0]) {
+    lounger(g, -1.75, -0.35, b + 0.4, b + 1.05, 0.1)
+    roundTable(g, -1.0, b + 3.0, 0.1, 0.35)
+    chair(g, -1.0, b + 2.3, 0.1, M.white); chair(g, -1.0, b + 3.7, 0.1, M.white)
+    plant(g, -1.6, b + 5.2, 0.1, 0.7)
+  }
+}
+P(floor1G, 1.65, 2.6, 7.3, Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, -1.0, 9.6, 0.3, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '93.1 m² · 2 ' + Model3D.roomWord('bedroomsPlural'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen'], ['bedroom', undefined, 2], ['bathroom', undefined, 2], ['balcony', undefined, 2]] }],
+  L1: [
+    Lb('livingKitchen', undefined, 2.6, 2.2, 6.0),
+    Lb('bedroom', undefined, 1.8, 2.0, 1.5),
+    Lb('bedroom', undefined, 1.8, 2.0, W - 1.5),
+    Lb('bathroom', undefined, 5.4, 2.3, 1.5),
+    Lb('bathroom', undefined, 5.4, 2.3, W - 1.5),
+    Lb('balcony', undefined, -1.0, 1.3, 3.0, true),
+    Lb('balcony', undefined, -1.0, 1.3, W - 3.0, true),
+  ],
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnum Resort Sanur 1BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Рабочий план квартиры 1BR. Площади с плана: кухня 9.9, гостиная 13.6,
+// спальня 14.7, ванная 6.7, балкон 30.3 м². Размеры с чертежа: ширина
+// по остеклению 5.76 м, гостиная 3.87 м в глубину, кухня 3.39 м, ванная
+// 3.18 м, джакузи 2.25 × 2.25 м, круглый лаунж Ø1.9 м. Скошенный край
+// балкона упрощён до прямоугольника.
+const PLAN = { name: 'Magnum Resort Sanur · 1BR', W: 6.3, HD: 7.55, BACK: 5.6, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -6.0, HD + 0.4, -0.4, W + 0.4, -0.3, 0.3, M.stone)
+const y = 0.12
+const UK = 4.1, VK = 2.97, VC = 3.5
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, UK, 0, W, y, T.planks, 1.6)
+  floorPatch(g, UK, HD, 0, VC, y, T.terrazzo, 1.5)
+  floorPatch(g, 4.3, HD, VC, W, y + 0.004, T.tiles, 0.8)
+
+  glassWall(g, 0, 0, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 2.2, H1); wall(HD, 2.95, HD, W, H1)
+  door(g, HD, 2.2, 2.95, y)
+  // ванная за шкафом прихожей, дверь со стороны спальни
+  wall(4.3, VC, HD, VC, H1)
+  wall(4.3, 4.4, 4.3, W, H1)
+  door(g, 4.3, 3.6, 4.35, y, true, 0.6)
+  shower(g, 6.0, 7.0, 5.1, 6.2, y); toilet(g, 5.4, 5.95, y); vanity(g, HD - 0.55, HD - 0.08, 3.7, 5.0, y)
+  // кухня: угловая столешница, остров, стулья
+  rr(g, 4.7, HD - 0.05, 0.05, 0.65, y, 0.82, M.sage, 0.03); rect(g, 4.7, HD - 0.03, 0.03, 0.67, 0.94, 0.05, M.white)
+  rr(g, HD - 0.62, HD - 0.05, 0.65, 2.1, y, 0.82, M.sage, 0.03); rect(g, HD - 0.64, HD - 0.03, 0.65, 2.1, 0.94, 0.05, M.white)
+  rr(g, 4.15, 4.95, 0.75, 2.0, y, 0.95, M.woodL, 0.04); rect(g, 4.1, 5.0, 0.7, 2.05, 1.07, 0.05, M.white)
+  for (const v of [1.0, 1.75]) chair(g, 3.75, v, y, M.teal)
+  rr(g, 4.4, 7.0, VK + 0.05, VC - 0.05, y, 2.1, M.wood, 0.04)                  // шкаф в прихожей
+  // гостиная: диван у стены, кресла, столик, перегородка-стеллаж
+  rr(g, 0.8, 3.25, 0.1, 0.95, y, 0.42, M.sofa, 0.12); rr(g, 0.8, 3.25, 0.1, 0.4, y, 0.85, M.sofa, 0.12)
+  rr(g, 1.4, 1.8, 0.45, 0.65, y + 0.42, 0.3, M.cush, 0.1)
+  cyl(g, 2.05, 1.6, 0.42, 0.38, 0.36, y, M.woodL, 24)
+  chair(g, 3.4, 1.5, y, M.mustard); chair(g, 0.6, 2.0, y, M.mustard)
+  rr(g, 1.0, 3.1, 3.05, 3.33, y, 1.3, M.wood, 0.04)
+  // спальня: кровать изголовьем к правой стене, шкаф у ванной
+  bed(g, 1.1, 3.0, 4.0, 6.15, 6.15, y, M.coral)
+  rr(g, 0.5, 0.95, 5.75, 6.15, y, 0.45, M.woodL, 0.04); rr(g, 3.15, 3.6, 5.75, 6.15, y, 0.45, M.woodL, 0.04)
+  rr(g, 3.7, 4.25, 4.5, 6.15, y, 2.1, M.wood, 0.04)
+}
+// ============ балкон: стол, джакузи, круглый лаунж ============
+{
+  const g = floor1G
+  rect(g, -5.5, 0, 0, W, 0, 0.1, texMat(T.deck, 2.4, 2), true, false)
+  rr(g, -2.25, -1.25, 0.6, 2.6, 0.1 + 0.7, 0.06, M.woodL, 0.03); rr(g, -1.95, -1.55, 1.4, 1.8, 0.1, 0.7, M.wood, 0.03)
+  for (const v of [1.1, 2.1]) { chair(g, -2.6, v, 0.1, M.white); chair(g, -0.9, v, 0.1, M.white) }
+  rr(g, -2.85, -0.6, 3.5, 5.75, 0.1, 0.55, M.stone, 0.25)
+  rr(g, -2.6, -0.85, 3.75, 5.5, 0.1 + 0.5, 0.06, waterMat, 0.2, false)
+  cyl(g, -3.85, 2.1, 0.95, 0.95, 0.35, 0.1, M.woodL, 32); cyl(g, -3.85, 2.1, 0.85, 0.85, 0.15, 0.45, M.white, 32)
+  for (const [u, v] of [[-4.0, 1.7], [-3.6, 2.5]]) rr(g, u - 0.2, u + 0.2, v - 0.2, v + 0.2, 0.6, 0.15, M.coral, 0.06)
+  plant(g, -4.6, 5.3, 0.1, 1); plant(g, -5.1, 0.5, 0.1, 0.9); plant(g, -3.7, 4.6, 0.1, 0.7)
+  railing(g, -5.5, 0, -5.5, W, 0.1); railing(g, -5.5, 0, 0, 0, 0.1); railing(g, -5.5, W, 0, W, 0.1)
+}
+P(floor1G, 1.65, 3.6, 2.2, Math.PI, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, -1.7, 3.1, 0.3, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['kitchen', 9.9], ['living', 13.6], ['bedroom', 14.7], ['bathroom', 6.7], ['balcony', 30.3]] }],
+  L1: [
+    Lb('kitchen', 9.9, 5.8, 2.3, 1.5),
+    Lb('living', 13.6, 2.0, 2.0, 1.6),
+    Lb('bedroom', 14.7, 2.0, 2.3, 4.9),
+    Lb('bathroom', 6.7, 6.0, 2.5, 4.9),
+    Lb('balcony', 30.3, -3.2, 1.4, 3.1, true),
+  ],
+})
+</script>
+</body>
+</html>

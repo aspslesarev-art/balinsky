@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elysium Apartment V2.4 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// План «Apartment V2.4, Block V». Площади из таблицы: комната 20.70,
+// санузел 6.30, балкон 2.00, всего 29.00 м². Размеров на плане нет —
+// метры подогнаны под эти площади по пропорциям чертежа (ширина ≈3.5 м).
+const PLAN = { name: 'Elysium · Apartment V2.4', W: 3.5, HD: 8.9, BACK: 0.6, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -0.9, HD + 0.3, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+const y = 0.12
+const UL = 6.08, UE = 7.0, VB = 2.2
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, UE, 0, W, 0, 0.12, M.slab)
+  rect(g, UE, HD, 0, VB, 0, 0.12, M.slab)
+  floorPatch(g, 0, UE, 0, W, y, T.planks, 1.6)
+  floorPatch(g, UL, HD, 0, VB, y + 0.004, T.tiles, 0.8)
+
+  glassWall(g, 0, 0, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, UE, W, H1)
+  wall(UE, VB, UE, 2.4, H1); door(g, UE, 2.4, 3.3, y)
+  wall(HD, 0, HD, VB, H1); wall(UL, VB, 6.2, VB, H1); wall(UE, VB, HD, VB, H1)
+  wall(UL, 0, UL, VB, H1)
+  door(g, VB, 6.2, 6.95, y, false, 0.6)
+  // санузел: душ, унитаз, раковина
+  shower(g, 7.6, HD - 0.1, 0.1, 1.2, y)
+  toilet(g, HD - 0.4, 1.75, y)
+  vanity(g, 6.2, 7.2, 0.05, 0.55, y)
+  // кухня поперёк комнаты, стол, кровать, шкаф
+  rr(g, 5.35, 5.95, 0.05, VB + 0.15, y, 0.82, M.sage, 0.03); rect(g, 5.33, 5.97, 0.03, VB + 0.17, 0.94, 0.05, M.white)
+  rr(g, 3.6, 4.25, 0.1, 2.3, y + 0.7, 0.05, M.woodL, 0.03); rr(g, 3.65, 4.2, 0.15, 0.6, y, 0.7, M.wood, 0.03)
+  chair(g, 3.3, 1.3, y, M.teal)
+  bed(g, 0.8, 2.8, 0.1, 2.3, 0.1, y, M.coral)
+  rr(g, 0.3, 0.7, 0.1, 0.5, y, 0.45, M.woodL, 0.04); rr(g, 2.9, 3.3, 0.1, 0.5, y, 0.45, M.woodL, 0.04)
+  rr(g, 0.5, 3.1, W - 0.45, W - 0.05, y, 2.1, M.wood, 0.04)
+  plant(g, 4.6, W - 0.35, y, 0.6)
+}
+// ============ балкон с кашпо ============
+{
+  const g = floor1G
+  rect(g, -0.6, 0, 0, W, 0, 0.1, texMat(T.deck, 1.2, 0.3), true, false)
+  for (const v of [0.6, 1.75, 2.9]) { rect(g, -0.55, -0.15, v - 0.5, v + 0.5, 0.1, 0.35, M.pot); ball(g, -0.35, v, 0.32, 0.6, M.leaf, 0.8) }
+  railing(g, -0.6, 0, -0.6, W, 0.1)
+}
+P(floor1G, 1.65, 4.6, 1.5, Math.PI, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '29 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['living', 20.7], ['bathroom', 6.3], ['balcony', 2.0]] }],
+  L1: [
+    Lb('living', 20.7, 3.0, 2.0, 1.6),
+    Lb('bathroom', 6.3, 7.6, 2.3, 1.1),
+    Lb('balcony', 2.0, -0.4, 1.2, 1.75, true),
+  ],
+})
+</script>
+</body>
+</html>

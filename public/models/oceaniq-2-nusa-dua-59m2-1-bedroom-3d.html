@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oceaniq 2 1BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Схема планировки 1BR без размеров и площадей. Метры оценены по
+// масштабу мебели (квартира ≈5.9 × 6.1 м, терраса ≈3.1 м с плунж-бассейном).
+// Скругление края террасы упрощено.
+const PLAN = { name: 'Oceaniq 2 · 1BR', W: 5.9, HD: 6.1, BACK: 3.1, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -3.5, HD + 0.4, -0.1, W + 0.4, -0.3, 0.3, M.stone)
+const y = 0.12
+const VW = 2.9, UB = 4.0
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, VW, W, y, T.planks, 1.6)
+  floorPatch(g, 0, UB, 0, VW, y + 0.004, T.planksDark, 1.6)
+  floorPatch(g, UB, HD, 0, VW, y + 0.004, T.tiles, 0.8)
+
+  glassWall(g, 0, 0, 0, VW, 0, H1); glassWall(g, 0, VW, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 4.9, H1); wall(HD, 5.6, HD, W, H1)
+  door(g, HD, 4.9, 5.6, y)
+  // спальня | гостиная, дверь посередине; ванная у входа
+  wall(0, VW, 2.45, VW, H1); wall(3.2, VW, HD, VW, H1)
+  door(g, VW, 2.45, 3.2, y, false, 0.5)
+  wall(UB, 0, UB, 1.2, H1); wall(UB, 1.75, UB, VW, H1)
+  door(g, UB, 1.2, 1.75, y, true, 0.7)
+  shower(g, 4.7, 5.9, 0.15, 0.85, y); toilet(g, 5.6, 1.4, y); vanity(g, 5.0, 5.9, 1.95, 2.75, y)
+  // спальня: кровать изголовьем к торцевой стене, шкаф
+  bed(g, 0.75, 2.55, 0.15, 2.25, 0.15, y, M.teal)
+  rr(g, 0.3, 0.7, 0.15, 0.55, y, 0.45, M.woodL, 0.04); rr(g, 2.6, 3.0, 0.15, 0.55, y, 0.45, M.woodL, 0.04)
+  rr(g, 3.35, 3.85, 0.85, 2.4, y, 1.0, M.wood, 0.04)
+  // гостиная: диван, кресло, стеллаж; круглый стол; кухня у входа
+  rr(g, 0.45, 2.1, 3.2, 4.0, y, 0.42, M.sofa, 0.12); rr(g, 0.45, 2.1, 3.2, 3.5, y, 0.85, M.sofa, 0.12)
+  rr(g, 0.25, 0.85, 4.9, 5.5, y, 0.45, M.mustard, 0.15)
+  cyl(g, 1.3, 4.6, 0.3, 0.3, 0.4, y, M.woodL, 20)
+  rr(g, 1.15, 2.6, W - 0.35, W - 0.05, y, 1.6, M.wood, 0.04)
+  roundTable(g, 4.1, 4.8, y, 0.5)
+  for (const [u, v] of [[3.5, 4.8], [4.7, 4.8], [4.1, 4.2], [4.1, 5.4]]) chair(g, u, v, y)
+  rr(g, 5.4, HD - 0.05, 3.1, 4.8, y, 0.82, M.sage, 0.03); rect(g, 5.38, HD - 0.03, 3.1, 4.8, 0.94, 0.05, M.white)
+  rr(g, 4.5, 5.35, W - 0.6, W - 0.05, y, 0.82, M.sage, 0.03); rect(g, 4.5, 5.35, W - 0.62, W - 0.03, 0.94, 0.05, M.white)
+  plant(g, 0.3, VW + 0.35, y, 0.6)
+}
+// ============ терраса с плунж-бассейном ============
+{
+  const g = floor1G
+  rect(g, -3.1, 0, 0.3, W - 0.3, 0, 0.1, texMat(T.deck, 2, 1.2), true, false)
+  rect(g, -2.8, -0.7, 1.1, 3.0, 0.1, 0.45, M.stone)
+  pool(g, -2.2, -1.05, 1.45, 2.65, 0.55)
+  lounger(g, -2.45, -1.85, 3.6, 5.4, 0.1, true)
+  lounger(g, -1.55, -0.95, 3.6, 5.4, 0.1, true)
+  railing(g, -3.1, 0.3, -3.1, W - 0.3, 0.1); railing(g, -3.1, 0.3, 0, 0.3, 0.1); railing(g, -3.1, W - 0.3, 0, W - 0.3, 0.1)
+  plant(g, -2.8, 5.3, 0.1, 0.6)
+}
+P(floor1G, 1.65, 2.8, 4.4, Math.PI, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, -0.5, 4.2, 0.3, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen'], ['bedroom'], ['bathroom'], ['terrace'], ['pool']] }],
+  L1: [
+    Lb('livingKitchen', undefined, 3.0, 2.2, 4.4),
+    Lb('bedroom', undefined, 1.6, 2.0, 1.4),
+    Lb('bathroom', undefined, 5.1, 2.3, 1.4),
+    Lb('terrace', undefined, -1.6, 1.3, 4.5, true),
+    Lb('pool', undefined, -1.6, 1.5, 2.0, true),
+  ],
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base Uluwatu Villa S1 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Чертёж «Villa S1, floor plan at EL 0.000» (Konovalov Architect, 25.07.2026,
+// М 1:50). Дом 7.35 × 7.6 м: оси 3.95 + 3.4 м по ширине, 4.6 + 3.05 м по
+// глубине; ванная 2.3 × 2.5 м. Площади с чертежа: кухня-гостиная 20.0,
+// спальня 14.3, ванная 5.7. Бассейн, лежак и стоянка байков слева —
+// по масштабу чертежа. Дом сдвинут на 3 м вправо, слева — двор.
+const PLAN = { name: 'Base Uluwatu · Villa S1', W: 10.35, HD: 7.6, BACK: 1.0, FRONT: 1.4, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+lot()
+const y = 0.12
+const O = 3.0                     // левый край дома
+const A2 = O + 3.95, UB = 3.05, UT = 4.9, VB = O + 4.9
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, UB, HD, O, W, 0, 0.12, M.slab)
+  rect(g, 0, UB, A2, W, 0, 0.12, M.slab)
+  floorPatch(g, UB, HD, O, VB, y, T.planks, 1.6)
+  floorPatch(g, UT, HD, VB, W, y + 0.004, T.tiles, 0.8)
+  floorPatch(g, 0, UB, A2, W, y + 0.004, T.planksDark, 1.6)
+  floorPatch(g, UB, UT, O + 4.5, W, y + 0.004, T.planksDark, 1.6)
+
+  // наружные стены; к бассейну — раздвижное стекло D1, у спальни — D2
+  wall(UB, O, HD, O, H1); wall(HD, O, HD, W, H1); wall(0, W, HD, W, H1)
+  glassWall(g, UB, O, UB, A2, 0, H1)
+  wall(0, A2, 0, W, H1)
+  wall(0, A2, 0.3, A2, H1); glassWall(g, 0.3, A2, 2.6, A2, 0, H1); wall(2.6, A2, UB, A2, H1)
+  // ванная
+  wall(UT, VB, HD, VB, H1); wall(UT, VB, UT, VB + 0.3, H1); wall(UT, VB + 1.1, UT, W, H1)
+  toilet(g, HD - 0.4, VB + 0.5, y); shower(g, 5.8, HD - 0.1, W - 1.1, W - 0.1, y); vanity(g, UT + 0.1, UT + 0.6, W - 1.2, W - 0.3, y)
+  // спальня: перегородка от гостиной с дверью
+  wall(UB, O + 4.5, 3.3, O + 4.5, H1); wall(4.1, O + 4.5, UT, O + 4.5, H1)
+  wall(UB, A2, UB, O + 4.5, H1)
+  door(g, O + 4.5, 3.3, 4.1, y, false, 0.4)
+  bed(g, 0.6, 2.4, W - 2.15, W - 0.15, W - 0.15, y, M.coral)
+  rr(g, 0.1, 0.5, W - 0.55, W - 0.15, y, 0.45, M.woodL, 0.04); rr(g, 2.5, 2.9, W - 0.55, W - 0.15, y, 0.45, M.woodL, 0.04)
+  rr(g, 3.2, UT - 0.15, W - 0.6, W - 0.1, y, 2.1, M.wood, 0.04)
+  rr(g, 0.8, 2.2, A2 + 0.1, A2 + 0.5, y, 0.5, M.wood, 0.04)
+  // кухня-гостиная: диван у фасада, кухня у ванной, стол
+  rr(g, HD - 0.95, HD - 0.1, O + 0.25, O + 2.7, y, 0.42, M.sofa, 0.12); rr(g, HD - 0.4, HD - 0.1, O + 0.25, O + 2.7, y, 0.85, M.sofa, 0.12)
+  rr(g, 5.6, 6.3, O + 1.0, O + 2.0, y, 0.38, M.woodL, 0.04)
+  rr(g, 5.1, HD - 0.1, VB - 0.65, VB - 0.05, y, 0.82, M.sage, 0.03); rect(g, 5.1, HD - 0.1, VB - 0.67, VB - 0.03, 0.94, 0.05, M.white)
+  rr(g, 3.9, 4.9, O + 3.2, O + 4.1, y + 0.7, 0.06, M.woodL, 0.03); rr(g, 4.25, 4.55, O + 3.5, O + 3.8, y, 0.7, M.wood, 0.03)
+  chair(g, 4.4, O + 2.8, y); chair(g, 4.4, O + 4.4 - 0.05, y)
+  plant(g, 3.4, O + 0.4, y, 0.8)
+}
+// ============ двор: настил, бассейн, лежак, байки ============
+{
+  const g = floor1G
+  rect(g, -0.6, UB, 0, A2, 0, 0.1, texMat(T.deck, 2.4, 1.2), true, false)
+  rect(g, UB, 5.4, 0, O, 0, 0.1, texMat(T.deck, 1, 0.8), true, false)
+  pool(g, -0.4, 1.8, 0.95, 5.4, 0.1)
+  lounger(g, 2.3, 4.1, 1.4, 2.1, 0.1)
+  rect(g, 5.5, HD, 0, 2.5, 0, 0.06, M.stone, true, false)
+  for (const v of [0.6, 1.5]) { rr(g, 5.9, 7.3, v - 0.15, v + 0.15, 0.15, 0.45, M.coral, 0.12); for (const u of [6.1, 7.1]) cyl(g, u, v, 0.22, 0.22, 0.08, 0.0, M.dark, 12) }
+  plant(g, 2.6, 0.3, 0.1, 0.9); plant(g, 0.0, 6.6, 0.1, 0.7)
+}
+P(floor1G, 1.65, 5.0, O + 1.6, Math.PI, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, 2.5, 4.5, 0.3, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 20.0], ['bedroom', 14.3], ['bathroom', 5.7], ['terrace'], ['pool'], ['parking']] }],
+  L1: [
+    Lb('livingKitchen', 20.0, 5.6, 2.3, O + 2.0),
+    Lb('bedroom', 14.3, 1.6, 2.1, A2 + 1.6),
+    Lb('bathroom', 5.7, 6.3, 2.5, VB + 1.2),
+    Lb('pool', undefined, 0.7, 1.3, 3.2, true),
+    Lb('parking', undefined, 6.6, 1.5, 1.1, true),
+  ],
+})
+</script>
+</body>
+</html>
