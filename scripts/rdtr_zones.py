@@ -104,7 +104,7 @@ def build(lat, lon, radius, verbose=True):
     to_ll = lambda x, y, z=None: (round(x / kx + a.lon, 6), round(y / 111320 + a.lat, 6))
     circle = Point(0, 0).buffer(a.radius, 128)
 
-    colors, parts = {}, {}
+    colors, parts, failed = {}, {}, 0
     for L in layers:
         base = ARCGIS + L["url_mapserver"] + f"/{L.get('sublayer_mapserver') or 0}"
         q = urllib.parse.urlencode({
@@ -115,6 +115,7 @@ def build(lat, lon, radius, verbose=True):
         try:
             fc = get(PROXY + base + "/query?" + q)
         except Exception as e:
+            failed += 1
             if verbose:
                 print("skip", L["rtr"], e)
             continue
@@ -136,6 +137,10 @@ def build(lat, lon, radius, verbose=True):
         if verbose:
             print(L["rtr"], len(feats))
 
+    # Слои не ответили, а зон нет - это сбой GISTARU, а не пустой участок:
+    # падаем, чтобы вызывающий повторил, а не сохранил пустую карту (Edem II, 13.11).
+    if not parts and failed:
+        raise RuntimeError(f"GISTARU: {failed} of {len(layers)} layers failed, no zones")
     zones, total = [], circle.area
     for (name, code), gs in parts.items():
         g = unary_union(gs).simplify(1.0)
