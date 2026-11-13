@@ -158,6 +158,11 @@ def main():
     dems = fetch_dem()
 
     facts = sb_get('listing_geo_facts?select=kind,airtable_id,lat,lng,climate')
+    # --ids a,b — пересчитать только эти объекты (например, после правки координат).
+    only = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--ids=')), None)
+    if only:
+        keep = set(only.split(','))
+        facts = [r for r in facts if r['airtable_id'] in keep]
     rows, stats = [], {'steep': 0, 'coast100': 0, 'river50': 0, 'far_road': 0}
     for r in facts:
         if r['lat'] is None or r['lng'] is None:

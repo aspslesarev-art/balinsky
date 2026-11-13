@@ -493,12 +493,16 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
   if (hz.length) {
     const bad = hz.filter(h => h.level === 'medium' || h.level === 'high')
     const none = hz.filter(h => h.level === 'none' || h.level === 'low').map(h => c.hz[h.key].toLowerCase())
-    rows.push({
+    // Риски и «нет риска» — отдельными строками: одной строкой «землетрясения -
+    // средний риск; нет риска: …, цунами» читали как «цунами опасно» (обзор
+    // XO Canggu, 13.11.2026).
+    if (bad.length) rows.push({
       k: c.natureT,
-      v: [bad.map(h => `${c.hz[h.key].toLowerCase()} - ${c.lvl[h.level]}`).join(', '), none.length ? `${ru ? 'нет риска' : 'no risk'}: ${none.join(', ')}` : null].filter(Boolean).join('; '),
+      v: bad.map(h => `${c.hz[h.key].toLowerCase()} - ${c.lvl[h.level]}${h.key === 'earthquake' && h.level === 'medium' ? (ru ? ', как по всему Бали' : ', as everywhere in Bali') : ''}`).join(', '),
       // Землетрясения — средний риск по всему Бали, это не минус конкретного участка.
       tone: bad.some(h => h.key !== 'earthquake') ? (bad.some(h => h.level === 'high' && h.key !== 'earthquake') ? 'minus' : 'warn') : 'plus',
     })
+    if (none.length) rows.push({ k: ru ? 'Нет риска' : 'No risk', v: none.join(', '), tone: 'plus' })
   }
   if (plot) {
     const r = plot.road
