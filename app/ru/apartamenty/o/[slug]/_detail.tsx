@@ -21,6 +21,8 @@ import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
 import { KeyFactsInline } from '@/components/KeyFactsInline'
+import { loadLandmarks } from '@/lib/landmarks'
+import { LandmarksList } from '@/components/NearbyHighlights'
 import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows } from '@/lib/rdtr-zones'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -1035,7 +1037,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     content: <ZoningMap slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
   }] : []
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps] = await Promise.all([
+  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps, landmarks] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
@@ -1048,6 +1050,8 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     loadVerdictSnapshot(a.airtable_id, 'apartment'),
     loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
     loadAirbnbNearby(lat, lng, bedrooms),
+    // «Что посмотреть рядом» с местом в топе TripAdvisor - как у вилл.
+    lat != null && lng != null ? loadLandmarks(lat, lng).catch(e => { console.error(e); return [] }) : [],
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
   // зонирования. Переводы пока генерятся только для ЖК, поэтому на
@@ -1313,6 +1317,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
               </div>
             )}
             {beach && beachPick && <div className="mb-4"><BeachBlock beach={beach} km={beachPick.km} google={beachPick.google} lang={lang} /></div>}
+            {landmarks.length > 0 && <div className="mb-4"><LandmarksList items={landmarks} lang={lang} /></div>}
             {/* «Что рядом» списком убран 23.10.2026: повторял «Главное рядом» и карту с точками. */}
             {lat != null && lng != null && (
               <div className="mt-4"><TouristHeatMap lat={lat} lng={lng} name={parentComplex?.name ?? title} lang={lang} /></div>
