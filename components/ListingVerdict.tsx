@@ -127,7 +127,7 @@ const COPY = {
     },
     // Безопасность
     docs: 'Документы и стройка', permitRow: 'Разрешение на стройку', slfRow: 'Ввод в эксплуатацию (SLF)', permitApplied: 'только заявка', permitYes: 'есть', permitUnknown: 'нет данных',
-    build: 'Стройка', notStarted: 'не начата', readiness: (p: number) => `готова на ${Math.round(p * 100)}%`, built: 'дом готов',
+    build: 'Стройка', notStarted: 'не начата', readiness: (p: number) => `готова на ${Math.round(p * 100)}%`, built: 'дом готов', underway: 'строится',
     handover: 'Сдача', payment: 'Оплата',
     docsNote: 'Без разрешения стройку могут остановить, а деньги уже будут уплачены. Попросите копию разрешения (PBG) до оплаты.',
     docsNoteUnknown: 'Мы не знаем, есть ли у проекта разрешение. Попросите копию PBG до оплаты и проверьте номер на simbg.pu.go.id.',
@@ -258,7 +258,7 @@ const COPY = {
       delays: 'What happens if construction is late: deadlines and penalties in the contract', zoneMonthly: 'Residential land - no nightly rental to tourists',
     },
     docs: 'Documents and construction', permitRow: 'Building permit', slfRow: 'Occupancy certificate (SLF)', permitApplied: 'application only', permitYes: 'yes', permitUnknown: 'no data',
-    build: 'Construction', notStarted: 'not started', readiness: (p: number) => `${Math.round(p * 100)}% done`, built: 'house ready',
+    build: 'Construction', notStarted: 'not started', readiness: (p: number) => `${Math.round(p * 100)}% done`, built: 'house ready', underway: 'under construction',
     handover: 'Handover', payment: 'Payment',
     docsNote: 'Why it matters: without a permit construction can be stopped after the money is paid. Ask for a copy of the permit (PBG) before the first payment.',
     docsNoteUnknown: 'We do not know whether the project has a permit. Ask for a copy of the PBG before paying and check its number on simbg.pu.go.id.',
@@ -461,7 +461,7 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
   const ru = lang === 'ru' || lang === 'uk'
   const p = v.safety.permit
   const built = !!status && /построен|сдан|готов|complet/i.test(status)
-  const buildVal = built ? c.built : v.safety.notStarted ? c.notStarted : complex?.readiness != null ? c.readiness(complex.readiness) : status
+  const buildVal = built ? c.built : v.safety.notStarted ? c.notStarted : complex?.readiness != null ? c.readiness(complex.readiness) : status && /стро/i.test(status) ? c.underway : status
   const docsNote = v.safety.notStarted || p === 'pbgApplied' ? c.docsNote : p === 'unknown' ? c.docsNoteUnknown : p === 'slfApplied' ? c.docsNoteSlf : undefined
   const m = (x: number) => (x < 1000 ? `${Math.round(x / 10) * 10 || x} ${ru ? 'м' : 'm'}` : `${(x / 1000).toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'км' : 'km'}`)
 

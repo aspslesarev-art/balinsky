@@ -6,6 +6,7 @@
 import { Star } from 'lucide-react'
 import type { NearbyPlace } from '@/lib/nearby-places'
 import type { Landmark } from '@/lib/landmarks'
+import { LANDMARK_EN } from '@/lib/landmarks-en'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 // Galleries and museums get their own slots: otherwise island-wide landmarks
@@ -136,7 +137,7 @@ export function LandmarksList({ items, lang }: { items: Landmark[]; lang: Lang }
               className="flex items-center justify-between gap-3 py-3 no-underline text-[#18201C] hover:text-[var(--color-primary-pressed)] focus-visible:text-[var(--color-primary-pressed)]"
             >
               <span className="flex flex-col min-w-0">
-                <span className="text-[15px] font-medium truncate">{p.name}</span>
+                <span className="text-[15px] font-medium truncate">{lang !== 'ru' ? (LANDMARK_EN[p.id] ?? p.name) : p.name}</span>
                 <span className="text-[13px] text-[#4C5751]">{label(p)} · {km(p.distanceKm)}</span>
                 {p.taRank != null && (
                   <span className="text-[13px] font-medium text-[var(--color-primary-pressed)]" title={pickCopy(TA_TITLE, lang)}>

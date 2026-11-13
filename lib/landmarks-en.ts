@@ -1,0 +1,33 @@
+// Английские названия мест из bali_places, которые Google отдал по-русски
+// (сбор шёл с русской локалью). Показываются на всех языках, кроме RU.
+// Ключ — place_id. Новые места с кириллицей добавлять сюда же.
+export const LANDMARK_EN: Record<string, string> = {
+  'ChIJ--2uiBI90i0ROpqB_tx0Kg8': 'Neka Art Museum',
+  'ChIJDYkWh4Qg0i0Rj8QITKPKAIc': 'Nungnung Waterfall',
+  'ChIJZQ6QreVH0i0RYbzxVvNaqV4': 'Mookiland Park Bali',
+  'ChIJx97hVM9E0i0RUVpPBj5miBk': 'Garuda Wisnu Kencana Cultural Park',
+  'ChIJAUB625A70i0R7crEj_IvJq8': 'Taman Ayun Temple',
+  'ChIJrXC1BngB0i0RoqNsx43HBjs': 'Lahangan Sweet',
+  'ChIJkYHLIPxP0i0RlQTbpxuNuQw': 'Pura Luhur Uluwatu',
+  'ChIJNa4uW0xB0i0RevpSX7uEVjQ': 'Barong Tanah Kilap - Sari Wisata Budaya Bali',
+  'ChIJhQyCoH1d0i0RS12LmePL6Dg': 'Geger Beach',
+  'ChIJRbNf4b5B0i0R5xfnGuTcxjY': 'Museum Pasifika',
+  'ChIJQ608L5pA0i0R2of-ez9pLfM': 'Bali Museum',
+  'ChIJky6y2ZtA0i0RMPn08WYBq9E': 'Jagatnatha Temple',
+  'ChIJD0zF-k4-0i0RLDhW9qwgiV8': 'Bali Bird Park',
+  'ChIJZ5sY9kM90i0RVsPvSxZD7LY': 'Ubud Monkey Forest',
+  'ChIJeWk_HUE90i0RLtgaWympMSw': 'Ubud Water Palace',
+  'ChIJMU6ErGo90i0RAoTslrmr-Bw': 'Museum Puri Lukisan',
+  'ChIJ4wD5Iwsi0i0R7QRsOGmJGo0': 'Tegallalang Rice Terraces',
+  'ChIJVwisn2yJ0S0RUxvb5GhlJBg': 'Ulun Danu Beratan',
+  'ChIJ0Zo39DZH0i0R0acI0bADr2U': 'Tirta Gangga Water Palace',
+  'ChIJt7JIN74c0i0RSrvRjHk5_As': 'Pura Besakih',
+  'ChIJ4WuUswqG0S0R0_F7ENm3htc': 'Munduk Waterfall',
+  'ChIJ3Q2bdlkX0i0R_eYgl2LfIf0': 'Tibumana Waterfall',
+  'ChIJPQXw4T090i0RCcZaEyy2xwM': 'Antonio Blanco Museum',
+  'ChIJq95xT4I30i0RaU3j93Diq8o': 'Pura Tanah Lot',
+  'ChIJhcDXVJQk0S0RS-3s0358Bmc': 'Baluran National Park',
+  'ChIJ671ISJrczS0RonioOg05KJo': 'Lombok Wildlife Park',
+  'ChIJuZGsKfP4tC0RYtHgcIgHobE': 'Komodo National Park',
+  'ChIJeXrQS14I0i0RrENd0wRVjug': 'Chocolate Factory',
+}

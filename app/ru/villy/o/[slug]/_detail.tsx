@@ -1484,6 +1484,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
   const viewText = lang === 'ru' ? firstString(d['Вид']) : (firstString(d['Вид EN']) ?? null)
   type KV = { label: string; value: React.ReactNode }
+  // Карточка менеджера в боковой колонке: на не-RU страницах — EN-имя и языки
+  // (как в ManagerCard), а если редактор их не заполнил — транслит и словарь.
+  const LANG_EN: Record<string, string> = { 'русский': 'Russian', 'английский': 'English', 'украинский': 'Ukrainian', 'индонезийский': 'Indonesian', 'немецкий': 'German', 'французский': 'French', 'китайский': 'Chinese', 'испанский': 'Spanish', 'итальянский': 'Italian', 'польский': 'Polish', 'нидерландский': 'Dutch', 'казахский': 'Kazakh' }
+  const m0 = managers[0]
+  const managerName = !m0 ? '' : lang === 'ru' ? m0.name : (m0.nameEn || (hasCyrillic(m0.name) ? translitPreserveCase(m0.name) : m0.name))
+  const managerLangs = !m0 ? [] : lang === 'ru' ? m0.languages
+    : (m0.languagesEn?.length ? m0.languagesEn : m0.languages.map(l => LANG_EN[l.trim().toLowerCase()] ?? l))
   const villaFacts: KV[] = ([
     parentComplex ? { label: c.factType, value: c.factTypeVillaComplex } : { label: c.factType, value: c.factTypeVilla },
     area != null ? { label: c.factHouse, value: `${area} ${c.sqm}` } : null,
@@ -2213,11 +2220,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                   )}
                   <div className="min-w-0">
                     <div className="text-[15px] font-semibold text-[var(--color-text)] truncate">
-                      {managers[0].name}{developerName ? `, ${developerName}` : ''}
+                      {managerName}{developerName ? `, ${developerName}` : ''}
                     </div>
                     <div className="text-[13px] text-[var(--color-text-muted)]">
-                      {managers[0].languages.length > 0
-                        ? `Telegram, WhatsApp · ${managers[0].languages.join(', ')}`
+                      {managerLangs.length > 0
+                        ? `Telegram, WhatsApp · ${managerLangs.join(', ')}`
                         : 'Telegram, WhatsApp'}
                     </div>
                   </div>

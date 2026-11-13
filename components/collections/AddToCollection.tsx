@@ -60,7 +60,7 @@ export function AddToCollection({ kind, slug, snapshot, lang = 'ru' }: { kind: '
     window.addEventListener('keydown', esc)
     window.addEventListener('mousedown', outside)
     return () => { off = true; window.removeEventListener('keydown', esc); window.removeEventListener('mousedown', outside) }
-  }, [open, kind, slug])
+  }, [open, kind, slug, c.loadErr])
 
   useEffect(() => {
     if (!toast) return

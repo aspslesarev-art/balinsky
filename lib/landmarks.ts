@@ -58,10 +58,20 @@ export async function loadLandmarks(lat: number, lng: number, limit = 8): Promis
       distanceKm: distKm(lat, lng, Number(r.lat), Number(r.lng)),
       mapsUrl: `https://www.google.com/maps/place/?q=place_id:${r.id}`,
       taRank: TA_RANK[r.id as string] ?? null,
+      lat: Number(r.lat), lng: Number(r.lng),
     }))
     .filter(r => r.distanceKm <= FAR_KM)
+  // Одно место — несколько карточек Google (GWK: парк, статуя, «Cultural Park»):
+  // в 400 м от более популярной карточки или с тем же местом в TripAdvisor
+  // остальные не показываем. `all` уже
+  // отсортирован по числу отзывов, поэтому остаётся самая популярная.
+  const uniq: typeof all = []
+  for (const r of all) {
+    if (!uniq.some(u => distKm(u.lat, u.lng, r.lat, r.lng) < 0.4 || (r.taRank != null && u.taRank === r.taRank))) uniq.push(r)
+  }
   // Сначала всё в 5 км по популярности; если мало — добираем дальними (до 10 км).
-  const near = all.filter(r => r.distanceKm <= NEAR_KM)
-  const far = all.filter(r => r.distanceKm > NEAR_KM)
+  const near = uniq.filter(r => r.distanceKm <= NEAR_KM)
+  const far = uniq.filter(r => r.distanceKm > NEAR_KM)
   return (near.length >= 4 ? near : [...near, ...far]).slice(0, limit)
+    .map(({ lat: _lat, lng: _lng, ...r }): Landmark => r)
 }
