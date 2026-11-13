@@ -3,6 +3,7 @@
 // when there's no usable data. Data from lib/complex-access.ts.
 import { Plane, Car, Waves, Mountain } from 'lucide-react'
 import type { ComplexAccess, Routes } from '@/lib/complex-access'
+import { showUbudSouth, UBUD_CENTER_LABEL, UBUD_SOUTH_LABEL } from '@/lib/ubud-routes'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { placeName } from '@/lib/translit'
 import { ROUTE_COLOR, type RouteLines } from '@/lib/listing-map'
@@ -60,7 +61,8 @@ export function ComplexAccessBlock({ access, lang, elevationM, routes, map }: Pr
     ? [
         { key: 'airport', label: t.airport, text: range(routes.airport), Icon: Plane },
         { key: 'canggu', label: t.canggu, text: range(routes.canggu), Icon: Car },
-        { key: 'ubud', label: t.ubud, text: range(routes.ubud), Icon: Car },
+        { key: 'ubud', label: showUbudSouth(routes) ? pickCopy(UBUD_CENTER_LABEL, lang) : t.ubud, text: range(routes.ubud), Icon: Car },
+        ...(showUbudSouth(routes) ? [{ key: 'ubud_south', label: pickCopy(UBUD_SOUTH_LABEL, lang), text: range(routes.ubud_south), Icon: Car }] : []),
         { key: 'uluwatu', label: t.uluwatu, text: range(routes.uluwatu), Icon: Car },
         { key: 'sanur', label: t.sanur, text: range(routes.sanur), Icon: Car },
       ].filter((r) => r.text != null)

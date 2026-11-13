@@ -100,7 +100,8 @@ export type Climate = Record<string, ClimateMonth> & {
 }
 /** Seconds with traffic, seconds on an empty road, metres. */
 export type RouteLeg = { s: number; static_s: number | null; m: number | null }
-export type Routes = Partial<Record<'airport' | 'canggu' | 'ubud' | 'uluwatu' | 'sanur', RouteLeg>>
+export type Routes = Partial<Record<'airport' | 'canggu' | 'ubud' | 'ubud_south' | 'uluwatu' | 'sanur', RouteLeg>>
+
 
 export type GeoFacts = {
   elevation_m: number | null

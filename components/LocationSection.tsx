@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import type { LivingFacts } from '@/lib/living'
 import type { Routes, RouteLeg } from '@/lib/complex-access'
+import { showUbudSouth, UBUD_CENTER_LABEL, UBUD_SOUTH_LABEL } from '@/lib/ubud-routes'
 import type { RouteLines } from '@/lib/listing-map'
 import { ROUTE_COLOR, nearPoints as computeNearPoints, NEAR_GROUPS } from '@/lib/listing-map'
 import type { NearbyPlace } from '@/lib/nearby-places'
@@ -115,17 +116,18 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, landmarks
 
   const routeStats = useMemo(() => {
     if (!routes) return []
-    const ORDER: (keyof Routes)[] = ['airport', 'canggu', 'ubud', 'uluwatu', 'sanur']
+    const south = showUbudSouth(routes)
+    const ORDER: (keyof Routes)[] = ['airport', 'canggu', 'ubud', ...(south ? ['ubud_south' as const] : []), 'uluwatu', 'sanur']
     return ORDER.filter(k => routes[k]).map(k => {
       const leg = routes[k]!
       return {
         key: k,
-        label: c.routeLabels[k] ?? k,
+        label: k === 'ubud_south' ? pickCopy(UBUD_SOUTH_LABEL, lang) : k === 'ubud' && south ? pickCopy(UBUD_CENTER_LABEL, lang) : c.routeLabels[k] ?? k,
         min: MINUTES(leg.s),
-        color: ROUTE_COLOR[k] ?? '#94A29A',
+        color: k === 'ubud_south' ? '#7CC48A' : (ROUTE_COLOR as Record<string, string>)[k] ?? '#94A29A',
       }
     })
-  }, [routes, c.routeLabels])
+  }, [routes, c.routeLabels, lang])
 
   const touristStats = useMemo(() => {
     if (!nearby) return { totalReviews: 0, restaurants: 0, cafes: 0, level: 'quiet' as TouristLevel }
@@ -245,7 +247,7 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, landmarks
       {tab === 'nearby' && nearby && <NearbyHighlights byCategory={nearby.byCategory} lang={lang} skipArt={landmarks.length > 0} skipIds={landmarks.map(l => l.name)} />}
 
       {tab === 'routes' && hasRoutes && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className={`grid grid-cols-2 sm:grid-cols-3 ${routeStats.length > 5 ? "lg:grid-cols-6" : "lg:grid-cols-5"} gap-3`}>
           {routeStats.map(r => (
             <div key={r.key} className="flex flex-col gap-0.5 pt-2.5" style={{ borderTop: `3px solid ${r.color}` }}>
               <span className="text-[13px] text-[#4C5751]">{r.label}</span>
