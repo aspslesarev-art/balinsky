@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Umalas Signature 1BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Рендер планировки сверху (апартамент-студия с террасой и кладовой).
+// Ни размеров, ни площадей на картинке нет — масштаб оценён по кровати
+// (1.8 м): комната ≈ 5.25 × 5.3 м, терраса ≈ 1.5 м с полосой газона.
+// Поэтому площади в подписях не указаны.
+const PLAN = { name: 'Umalas Signature 1BR', W: 5.25, HD: 5.33, BACK: 1.75, FRONT: 0.5, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -BACK - 0.3, HD + 0.3, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+const y = 0.12, BU = 3.3, BV = 2.62, SV = 1.5      // санузел: u от 3.3, v до 2.62; кладовая до v 1.5
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.terrazzo, 2)
+  floorPatch(g, BU, HD, 0, BV, y + 0.006, T.planksDark, 1.2)   // санузел (пол под дерево)
+
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 2.7, H1); wall(HD, 3.6, HD, W, H1)
+  door(g, HD, 2.7, 3.6, y)
+  wall(0, 0, 0, SV, H1); glassWall(g, 0, SV, 0, W, 0, H1)
+  // санузел, раздвижная дверь
+  wall(BU, 0, BU, BV, H1); wall(BU, BV, 3.45, BV, H1); wall(4.0, BV, HD, BV, H1)
+  door(g, BV, 3.45, 4.0, y, false, 0)
+  shower(g, 4.33, HD - 0.1, 0.1, 0.9, y)
+  glassWall(g, 4.33, 0.9, HD, 0.9, 0, 2.0)
+  toilet(g, 4.9, 1.28, y)
+  vanity(g, 4.75, HD - 0.08, 1.85, 2.45, y)
+
+  // кухня буквой Г в углу у входа, барная стойка с двумя табуретами
+  rr(g, 4.65, HD - 0.05, 3.75, W - 0.05, y, 0.82, M.steel, 0.03)
+  rect(g, 4.63, HD - 0.05, 3.7, W - 0.03, 0.94, 0.05, M.white)
+  rr(g, 3.7, 4.65, W - 0.55, W - 0.05, y, 0.82, M.steel, 0.03)
+  rect(g, 3.7, 4.65, W - 0.57, W - 0.03, 0.94, 0.05, M.white)
+  rr(g, 3.2, 3.7, 3.65, W - 0.05, y, 1.0, M.white, 0.2)
+  for (const v of [4.1, 4.9]) stool(g, 2.9, v, y, M.navy)
+  // кровать изголовьем к левой стене, ТВ-тумба, гостиная с диваном
+  rr(g, 0.45, 2.85, 0.05, 0.25, y, 1.1, M.wood, 0.04)
+  bed(g, 0.73, 2.53, 0.25, 2.1, null, y, M.white)
+  rr(g, 0.45, 0.7, 0.05, 0.55, y, 0.45, M.woodL, 0.04); rr(g, 2.6, 2.85, 0.05, 0.55, y, 0.45, M.woodL, 0.04)
+  rr(g, 0.82, 2.43, 2.53, 2.93, y, 0.5, M.white, 0.04)
+  rect(g, 1.0, 2.25, 2.85, 2.9, 0.62, 0.6, M.dark)
+  rr(g, 0.8, 2.45, 3.0, 4.4, y, 0.012, M.dark, 0.005, false)
+  rr(g, 0.8, 2.45, 4.42, W - 0.08, y, 0.42, M.navy, 0.12)
+  rr(g, 0.8, 2.45, W - 0.35, W - 0.08, y, 0.82, M.navy, 0.12)
+  rr(g, 1.9, 2.2, 4.5, 4.8, y + 0.42, 0.3, M.white, 0.1); rr(g, 1.3, 1.6, 4.5, 4.8, y + 0.42, 0.3, M.white, 0.1)
+  cyl(g, 1.9, 4.0, 0.27, 0.27, 0.4, y, M.wood, 20); cyl(g, 1.43, 4.0, 0.27, 0.27, 0.32, y, M.wood, 20)
+  rr(g, 0.2, 0.8, 3.7, 4.3, y, 0.42, M.navy, 0.1)
+}
+// ============ терраса, газон, кладовая ============
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, -1.5, 0, SV, W, 0, 0.1, texMat(T.deck, 3, 1), true, false)
+  rect(g, -BACK, -1.5, SV, W, 0, 0.1, texMat(T.grass, 2, 0.3), false, false)
+  rect(g, -BACK, 0, 0, SV, 0, 0.12, M.slab)
+  floorPatch(g, -BACK, -0.6, 0, SV, 0.12, T.tiles, 0.8)
+  wall(-BACK, 0, -BACK, SV, H1); wall(-BACK, SV, -1.45, SV, H1); wall(-0.7, SV, -0.6, SV, H1)
+  wall(-0.6, 0, -0.6, SV, H1)
+  rr(g, -0.5, -0.05, 0.1, SV - 0.1, 0.12, 0.6, M.stone, 0.04)
+  railing(g, -BACK, SV, -BACK, W, 0.1); railing(g, -BACK, W, 0, W, 0.1)
+  chair(g, -0.8, 3.0, 0.1, M.white); chair(g, -0.8, 4.0, 0.1, M.white); cyl(g, -0.8, 3.5, 0.25, 0.25, 0.5, 0.1, M.woodL, 16)
+  plant(g, -1.6, W - 0.3, 0.1, 0.7)
+}
+P(floor1G, 1.65, 3.2, 1.8, Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.75, -0.8, 2.3, 0.3, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['bedroom'], ['livingKitchen'], ['bathroom'], ['terrace']] }],
+  L1: [
+    Lb('bedroom', undefined, 1.6, 2.0, 1.2),
+    Lb('livingKitchen', undefined, 2.6, 2.3, 4.0),
+    Lb('bathroom', undefined, 4.3, 2.4, 1.3),
+    Lb('terrace', undefined, -0.8, 1.3, 3.4),
+  ],
+})
+</script>
+</body>
+</html>

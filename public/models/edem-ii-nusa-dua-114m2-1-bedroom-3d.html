@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edem II Villa Sa2 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// План «Villa Sa2 · 1 floor» с экспликацией: гостиная 19.50 м², спальня
+// 14.14, ванная 8.09, бассейн 14.95, настил у бассейна 54.16, кладовая
+// 3.15, всего 113.99. Размеров на плане нет — масштаб посчитан по площадям
+// гостиной и спальни: дом ≈ 4.05 × 12.6 м, бассейн ≈ 2.4 × 6.9 м.
+// Снаружи у кладовой — лестница на крышу.
+const PLAN = { name: 'Edem II Villa Sa2', W: 12.6, HD: 4.05, BACK: 4.9, FRONT: 1.4, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+lot(0, 0.6)
+const y = 0.12, LB = 5.25, BB = 9.12, SB = 11.3     // границы: гостиная | спальня | ванная | кладовая
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, LB, y, T.terrazzo, 2)                 // гостиная-кухня
+  floorPatch(g, 0, HD, LB, BB, y + 0.004, T.planksDark, 1.6)    // спальня
+  floorPatch(g, 0, HD, BB, SB, y + 0.006, T.tiles, 0.8)         // ванная
+  floorPatch(g, 1.4, HD, SB, W, y + 0.004, T.planks, 1.6)       // кладовая
+
+  // глухой фасад слева, к бассейну — стеклянные двери
+  wall(HD, 0, HD, W, H1); wall(0, 0, HD, 0, H1)
+  glassWall(g, 0, 0, 0, LB, 0, H1); glassWall(g, 0, LB, 0, BB, 0, H1); glassWall(g, 0, BB, 0, SB, 0, H1)
+  // перегородки: гостиная | спальня, спальня | ванная
+  wall(1.1, LB, HD, LB, H1); door(g, LB, 0.15, 1.05, y, false, 0.5)
+  wall(1.0, BB, HD, BB, H1); door(g, BB, 0.15, 0.95, y, false, -0.5)
+  wall(0, SB, HD, SB, H1)
+  // кладовая с отдельной дверью снаружи
+  wall(1.4, SB, 1.4, W, H1); wall(1.4, W, 2.95, W, H1); wall(3.85, W, HD, W, H1)
+  door(g, W, 2.95, 3.85, y, false, -0.6)
+
+  // кухня вдоль торцевой стены, остров с барными стульями
+  rr(g, 0.15, HD - 0.1, 0.08, 0.68, y, 0.82, M.sage, 0.03)
+  rect(g, 0.15, HD - 0.1, 0.05, 0.7, 0.94, 0.05, M.white)
+  rr(g, 0.15, HD - 0.1, 0.08, 0.4, H1 - 1.1, 0.7, M.sage, 0.03)
+  rr(g, 1.2, HD - 0.1, 2.27, 2.95, y, 0.92, M.woodL, 0.04)
+  rect(g, 1.15, HD - 0.08, 2.22, 3.0, 1.04, 0.05, M.white)
+  for (const u of [1.6, 2.4, 3.2]) stool(g, u, 1.95, y)
+  // диван буквой Г спиной к острову, ТВ у стены спальни
+  rr(g, 1.42, HD - 0.1, 3.15, 4.1, y, 0.42, M.sofa, 0.12)
+  rr(g, 1.42, HD - 0.1, 3.15, 3.45, y, 0.85, M.sofa, 0.12)
+  rr(g, 3.05, HD - 0.1, 4.1, 5.0, y, 0.42, M.sofa, 0.12)
+  rr(g, 3.65, HD - 0.1, 3.45, 5.0, y, 0.85, M.sofa, 0.12)
+  rr(g, 2.0, 2.4, 3.5, 3.7, y + 0.42, 0.3, M.cush, 0.1); rr(g, 3.2, 3.5, 4.3, 4.7, y + 0.42, 0.3, M.teal, 0.1)
+  rr(g, 1.2, 2.9, LB - 0.45, LB - 0.12, y, 0.45, M.wood, 0.04)
+  rect(g, 1.5, 2.6, LB - 0.2, LB - 0.14, 0.9, 0.6, M.dark)
+  plant(g, 0.4, LB - 0.45, y, 0.8)
+  // спальня: шкаф у стены гостиной, кровать изголовьем к ванной
+  rr(g, 1.2, HD - 0.1, LB + 0.15, LB + 0.75, y, 2.1, M.wood, 0.04)
+  bed(g, 1.5, 3.45, 6.85, BB - 0.12, BB - 0.12, y, M.teal)
+  cyl(g, 3.75, BB - 0.35, 0.22, 0.22, 0.5, y, M.woodL, 16); cyl(g, 1.2, BB - 0.35, 0.22, 0.22, 0.5, y, M.woodL, 16)
+  rr(g, 1.1, 3.8, 6.1, 6.8, y, 0.012, M.cush, 0.005, false)
+  // ванная: душ за стеклом, туалет, тумба
+  shower(g, 2.75, HD - 0.1, BB + 0.15, SB - 0.15, y)
+  glassWall(g, 2.7, BB + 0.1, 2.7, SB - 0.1, 0, 2.1)
+  toilet(g, 2.0, SB - 0.45, y)
+  vanity(g, 0.15, 1.3, SB - 0.65, SB - 0.1, y)
+  // кладовая: стеллаж
+  rr(g, 3.4, HD - 0.1, SB + 0.15, W - 0.15, y, 1.8, M.woodL, 0.04)
+}
+// ============ настил, бассейн, лестница на крышу ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, -0.4, W + 0.6, 0, 0.1, texMat(T.deck, 4.5, 1.8), true, false)
+  pool(g, -3.96, -1.53, 0.23, 7.13, 0.1)
+  lounger(g, -3.8, -3.15, 7.6, 9.4, 0.1, true)
+  lounger(g, -2.85, -2.2, 7.6, 9.4, 0.1, true)
+  roundTable(g, -1.2, 10.3, 0.1, 0.4); chair(g, -1.2, 11.0, 0.1, M.white); chair(g, -1.2, 9.6, 0.1, M.white)
+  plant(g, -4.5, 0.2, 0.1, 0.9); plant(g, -4.5, W, 0.1, 0.9); plant(g, -0.4, -0.1, 0.1, 0.8)
+  // наружная лестница на крышу
+  const n = 12, d = 1.9 / n
+  for (let i = 0; i < n; i++) rect(g, -0.7 + i * d, -0.7 + (i + 1) * d, SB + 0.1, W - 0.05, 0.1, H1 * (i + 1) / n, M.stone)
+}
+P(floor1G, 1.65, 2.4, 1.3, Math.PI, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, -1.0, 3.6, -Math.PI / 2, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '113.99 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 19.5], ['bedroom', 14.14], ['bathroom', 8.09], ['pool', 14.95], ['terrace', 54.16]] }],
+  L1: [
+    Lb('livingKitchen', 19.5, 2.0, 2.3, 2.6),
+    Lb('bedroom', 14.14, 2.3, 2.2, 7.0),
+    Lb('bathroom', 8.09, 1.8, 2.4, 10.2),
+    Lb('pool', 14.95, -2.7, 1.3, 3.6),
+    Lb('terrace', 54.16, -2.6, 1.2, 10.8),
+    Lb('stairs', undefined, -0.2, 3.6, 12.0, true),
+  ],
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWOI Berawa Apartment 03 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Чертёж Forms Architects «Berawa Apartments · Apartment 03» с размерами:
+// спальня 3.37 × 3.5 м, санузел с душем 1.2 × 0.92, кухонный ряд 2.4 м,
+// диван 2.7 м. Площади из экспликации: квартира-гостиная 24.7 м²,
+// спальня 11.8, санузел 4.7, балкон 1.1, всего 42.3.
+const PLAN = { name: 'SWOI Berawa Apt 03', W: 6.9, HD: 7.7, BACK: 0.55, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -0.85, HD + 0.3, -0.1, W + 0.3, -0.3, 0.3, M.stone)
+const y = 0.12, BR = 3.55, BV = 4.05, CV = 2.2, WU = 5.4, KU = 6.3, KV = 4.5
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  const slab = (u1, u2, v1, v2, t, k, dy = 0) => { rect(g, u1, u2, v1, v2, 0, 0.12, M.slab); floorPatch(g, u1, u2, v1, v2, y + dy, t, k) }
+  slab(0, BR, 0.42, BV, T.planksDark, 1.6, 0.004)               // спальня
+  slab(0, BR, BV, W, T.terrazzo, 2)                             // гостиная
+  slab(BR, WU, CV, W, T.terrazzo, 2)
+  slab(WU, KU, 2.6, W, T.terrazzo, 2)
+  slab(KU, HD, 2.6, KV, T.terrazzo, 2)                          // прихожая
+  slab(WU, HD, 0.17, 2.6, T.tiles, 0.8, 0.006)                  // санузел
+
+  // наружный контур
+  wall(HD, 0.17, HD, 2.8, H1); wall(HD, 3.7, HD, KV, H1); door(g, HD, 2.8, 3.7, y)
+  wall(HD, KV, KU, KV, H1); wall(KU, KV, KU, W, H1); wall(KU, W, 0, W, H1)
+  glassWall(g, 0, BV, 0, W, 0, H1)
+  wall(0, 0.42, 0, 1.4, H1); glassWall(g, 0, 1.4, 0, 3.7, 0, H1); wall(0, 3.7, 0, BV, H1)
+  wall(0, 0.42, BR, 0.42, H1); wall(BR, 0.42, BR, CV, H1)
+  wall(BR, CV, WU, CV, H1); wall(WU, CV, WU, 0.17, H1); wall(WU, 0.17, HD, 0.17, H1)
+  // спальня | коридор и гостиная
+  wall(BR, CV, BR, 2.95, H1); wall(BR, 3.85, BR, BV, H1)
+  door(g, BR, 2.95, 3.85, y)
+  wall(0, BV, BR, BV, H1)
+  // санузел
+  wall(WU, 2.6, 5.75, 2.6, H1); wall(6.4, 2.6, HD, 2.6, H1)
+  door(g, 2.6, 5.75, 6.4, y, false, 0.5)
+  shower(g, 6.6, HD - 0.1, 0.35, 1.7, y)
+  glassWall(g, 6.6, 1.7, HD, 1.7, 0, 2.0)
+  toilet(g, 6.25, 0.6, y)
+  vanity(g, 5.5, 5.95, 1.2, 2.35, y)
+
+  // спальня: кровать изголовьем к стене, тумба, шкафчик
+  bed(g, 0.93, 2.87, 0.55, 2.75, 0.55, y, M.teal)
+  rr(g, 0.45, 0.85, 0.55, 0.95, y, 0.45, M.woodL, 0.04); rr(g, 2.95, 3.4, 0.55, 0.95, y, 0.45, M.woodL, 0.04)
+  rr(g, 0.6, 3.2, 2.9, 3.6, y, 0.012, M.cush, 0.005, false)
+  // кухня: колонна шкафов у прихожей, ряд вдоль стены, барная стойка
+  rr(g, WU, 7.5, 3.8, KV - 0.05, y, 2.2, M.woodL, 0.04)
+  rr(g, WU, 6.0, KV, W - 0.08, y, 0.82, M.sage, 0.03)
+  rect(g, WU - 0.02, 6.02, KV, W - 0.05, 0.94, 0.05, M.white)
+  rr(g, 5.95, KU - 0.08, KV, W - 0.08, H1 - 1.1, 0.7, M.sage, 0.03)
+  rr(g, 4.15, 4.7, 4.95, 6.75, y, 0.92, M.woodL, 0.04)
+  rect(g, 4.1, 4.75, 4.9, 6.8, 1.04, 0.05, M.white)
+  for (const v of [5.4, 5.95, 6.5]) stool(g, 3.85, v, y)
+  // гостиная: диван буквой Г, круглый столик, ТВ на стене спальни
+  rr(g, 0.15, 2.8, 6.15, 6.82, y, 0.42, M.navy, 0.12); rr(g, 0.15, 2.8, 6.52, 6.82, y, 0.85, M.navy, 0.12)
+  rr(g, 0.15, 1.45, 4.9, 6.15, y, 0.42, M.navy, 0.12)
+  rr(g, 1.9, 2.3, 6.2, 6.4, y + 0.42, 0.3, M.cush, 0.1); rr(g, 0.9, 1.3, 6.2, 6.4, y + 0.42, 0.3, M.mustard, 0.1)
+  cyl(g, 2.45, 5.05, 0.33, 0.3, 0.4, y, M.woodL, 20)
+  rr(g, 1.3, 2.3, BV + 0.05, BV + 0.3, y, 0.45, M.wood, 0.04)
+  rect(g, 1.4, 2.2, BV + 0.1, BV + 0.15, 0.9, 0.6, M.dark)
+  plant(g, 0.35, BV + 0.4, y, 0.7)
+}
+// балкон спальни
+{
+  const g = floor1G
+  rect(g, -BACK, 0, 1.35, BV, 0, 0.1, texMat(T.deck, 1.4, 0.3), true, false)
+  railing(g, -BACK, 1.35, -BACK, BV, 0.1); railing(g, -BACK, 1.35, 0, 1.35, 0.1); railing(g, -BACK, BV, 0, BV, 0.1)
+  plant(g, -0.28, 3.7, 0.1, 0.55)
+}
+P(floor1G, 1.65, 4.7, 3.2, Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.75, 1.9, 3.4, -Math.PI / 2, y, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '42.3 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 24.7], ['bedroom', 11.8], ['bathroom', 4.7], ['balcony', 1.1]] }],
+  L1: [
+    Lb('livingKitchen', 24.7, 3.2, 2.3, 5.6),
+    Lb('bedroom', 11.8, 1.9, 2.2, 2.0),
+    Lb('bathroom', 4.7, 6.5, 2.4, 1.2),
+    Lb('balcony', 1.1, -0.3, 1.2, 2.7),
+    Lb('entrance', undefined, 6.9, 2.6, 3.2),
+  ],
+})
+</script>
+</body>
+</html>

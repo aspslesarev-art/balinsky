@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amani Melasti 38 м² — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// План апартамента застройщика: комната 21 м² (спальня с зоной отдыха),
+// санузел 5 м², балкон 12 м². Размеров нет — масштаб по площадям и
+// кровати 1.8 м: комната ≈ 3.8 × 5.5 м, балкон ≈ 1.85 м вдоль всей стены.
+const PLAN = { name: 'Amani Melasti 38 m²', W: 7.1, HD: 3.81, BACK: 2.3, FRONT: 0.5, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -BACK - 0.3, HD + 0.3, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+const y = 0.12, BB = 1.47       // санузел: v до 1.47
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, BB, W, y, T.planks, 1.6)
+  floorPatch(g, 0, HD, 0, BB, y + 0.006, T.tiles, 0.8)
+
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 3.3, H1); wall(HD, 4.2, HD, W, H1)
+  door(g, HD, 3.3, 4.2, y)
+  glassWall(g, 0, 0, 0, 3.6, 0, H1); glassWall(g, 0, 3.6, 0, W, 0, H1)
+  // санузел
+  wall(0.95, BB, HD, BB, H1); door(g, BB, 0.1, 0.9, y, false, -0.5)
+  rr(g, 3.5, HD - 0.05, 0.1, 1.4, y, H1 - 0.1, M.stone, 0.03)   // шахты
+  shower(g, 2.3, 3.4, 0.08, BB - 0.08, y)
+  glassWall(g, 2.25, 0.05, 2.25, BB - 0.05, 0, 2.0)
+  toilet(g, 1.8, 0.35, y)
+  vanity(g, 0.25, 1.0, 0.05, 0.6, y)
+
+  // ТВ-консоль у стены санузла, кресло
+  rr(g, 1.0, HD - 0.08, 1.61, 1.99, y, 0.5, M.white, 0.04)
+  rect(g, 1.75, 2.85, 1.75, 1.8, 0.62, 0.6, M.dark)
+  rr(g, 2.4, 3.05, 2.25, 2.9, y, 0.45, M.mustard, 0.15)
+  // ковёр, диванчик лицом к ТВ, столик
+  rr(g, 0.2, 2.85, 3.0, 6.25, y, 0.012, M.cush, 0.005, false)
+  rr(g, 0.65, 2.48, 3.7, 4.6, y, 0.42, M.sofa, 0.12)
+  rr(g, 0.65, 2.48, 4.35, 4.6, y, 0.85, M.sofa, 0.12)
+  rr(g, 1.0, 1.4, 3.8, 4.0, y + 0.42, 0.3, M.cush, 0.1); rr(g, 1.7, 2.1, 3.8, 4.0, y + 0.42, 0.3, M.mustard, 0.1)
+  rr(g, 1.1, 2.06, 3.12, 3.52, y, 0.4, M.woodL, 0.04)
+  // кровать изголовьем к дальней стене, тумбы, шкаф у входа
+  bed(g, 0.65, 2.45, 4.7, W - 0.05, W - 0.05, y, M.teal)
+  rr(g, 2.5, 3.03, W - 0.47, W - 0.07, y, 0.45, M.woodL, 0.04); rr(g, 0.08, 0.6, W - 0.47, W - 0.07, y, 0.45, M.woodL, 0.04)
+  rr(g, 3.2, HD - 0.06, 4.75, W - 0.05, y, 2.1, M.wood, 0.04)
+}
+// ============ балкон вдоль всей стены ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, -0.05, W + 0.05, 0, 0.1, texMat(T.deck, 0.8, 3.2), true, false)
+  railing(g, -BACK, -0.05, -BACK, W + 0.05, 0.1); railing(g, -BACK, -0.05, 0, -0.05, 0.1); railing(g, -BACK, W + 0.05, 0, W + 0.05, 0.1)
+  rr(g, -1.25, -0.6, 0.1, 0.75, 0.1, 0.45, M.mustard, 0.15); rr(g, -2.15, -1.5, 0.6, 1.25, 0.1, 0.45, M.mustard, 0.15)
+  rr(g, -0.95, -0.55, 1.05, 1.4, 0.1, 0.5, M.woodL, 0.04)
+  plant(g, -1.85, 1.7, 0.1, 0.8)
+  lounger(g, -2.1, -0.5, 5.7, 6.4, 0.1)
+  plant(g, -1.9, 6.75, 0.1, 0.8)
+}
+P(floor1G, 1.65, 1.6, 2.5, 0, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.75, -1.2, 3.4, -Math.PI / 2, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '38 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['bedroom', 21], ['bathroom', 5], ['balcony', 12]] }],
+  L1: [
+    Lb('bedroom', 21, 1.6, 2.2, 5.6),
+    Lb('bathroom', 5, 1.6, 2.4, 0.8),
+    Lb('balcony', 12, -1.2, 1.3, 3.6),
+  ],
+})
+</script>
+</body>
+</html>
