@@ -20,6 +20,20 @@ const VILLA_3D_PLANS: Readonly<Record<string, string>> = {
   'citrine-ubud-villa-3-109-4m2-2-bedroom': '/models/citrine-3d.html',
   'citrine-ubud-villa-4-109-4m2-2-bedroom': '/models/citrine-3d.html',
   'citrine-ubud-villa-5-109-4m2-2-bedroom': '/models/citrine-3d.html',
+  // Мультяшные 3D-планировки на общем движке public/models/_toon-kit.js (13.11.2026).
+  'ecowood-kutuh-70m2-1-bedroom': '/models/ecowood-1br-3d.html',
+  'ecowood-kutuh-70m2-1-bedroom-2': '/models/ecowood-1br-3d.html',
+  'ecowood-kutuh-70m2-1-bedroom-3': '/models/ecowood-1br-3d.html',
+  'ecowood-kutuh-70m2-1-bedroom-4': '/models/ecowood-1br-3d.html',
+  'ecowood-kutuh-90m2-2-bedroom': '/models/ecowood-2br-3d.html',
+  'ecowood-kutuh-90m2-2-bedroom-2': '/models/ecowood-2br-3d.html',
+  'ecowood-kutuh-90m2-2-bedroom-3': '/models/ecowood-2br-3d.html',
+  'ecowood-kutuh-90m2-2-bedroom-4': '/models/ecowood-2br-3d.html',
+  'ecowood-kutuh-90m2-2-bedroom-5': '/models/ecowood-2br-3d.html',
+  'ecowood-kutuh-90m2-2-bedroom-6': '/models/ecowood-2br-3d.html',
+  'seven-sky-bukit-octa-sun-residence-130m2-2-bedroom': '/models/seven-sky-villa-b-3d.html',
+  'seven-sky-bukit-octa-sun-residence-120m2-2-bedroom': '/models/seven-sky-villa-b-3d.html',
+  'seven-sky-bukit-octa-sun-residence-120m2-2-bedroom-2': '/models/seven-sky-villa-b-3d.html',
 }
 
 /** Публичный URL 3D-планировки виллы либо null, если модели нет. */
