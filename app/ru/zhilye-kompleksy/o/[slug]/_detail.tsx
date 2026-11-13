@@ -1990,47 +1990,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           )}
         </section>
 
-        {/* KEY FACTS */}
-        {facts.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {copy.keyFacts}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {facts.map(({ Icon, label, value }) => (
-                <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
-                  <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
-                    <Icon size={16} className="shrink-0" />
-                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
-                  </div>
-                  <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ABOUT (unique AI write-up, falls back to SEO Text) */}
-        {pageBody && (
-          <section className="mb-10">
-            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {lang === 'ru' ? 'Описание' : `${copy.aboutPrefix} ${name}`}
-            </h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-              <div {...edit(COMPLEX_DESCRIPTION_FIELD, 'longtext', 'Описание ЖК')} className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-                {pageBody}
-              </div>
-            </ExpandableText>
-          </section>
-        )}
-
-        {/* Pro-аналитика как у виллы: тот же код страницы юнита, на примере
-            самого доступного юнита комплекса (макет 06.11.2026). Без Pro
-            скрыта (.bx-auth-block внутри). Нет юнитов - старые разделы ниже. */}
-        {repUnit && (repUnit.kind === 'villa'
-          ? <VillaDetail slug={repUnit.slug} lang={lang} analyticsOnly />
-          : <ApartmentDetail slug={repUnit.slug} lang={lang} analyticsOnly />)}
-
+        {/* Владелец 13.11.2026: план и юниты — сразу под шапкой, остальное ниже. */}
         {/* Interactive plan — sits ABOVE the units list because the
             visitor drills from the panorama → highlighted hotspot →
             specific unit, so the natural reading flow is plan first,
@@ -2098,6 +2058,47 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
             lang={lang}
           />
         )}
+
+        {/* KEY FACTS */}
+        {facts.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
+              {copy.keyFacts}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {facts.map(({ Icon, label, value }) => (
+                <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
+                  <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
+                    <Icon size={16} className="shrink-0" />
+                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
+                  </div>
+                  <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ABOUT (unique AI write-up, falls back to SEO Text) */}
+        {pageBody && (
+          <section className="mb-10">
+            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
+              {lang === 'ru' ? 'Описание' : `${copy.aboutPrefix} ${name}`}
+            </h2>
+            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
+              <div {...edit(COMPLEX_DESCRIPTION_FIELD, 'longtext', 'Описание ЖК')} className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
+                {pageBody}
+              </div>
+            </ExpandableText>
+          </section>
+        )}
+
+        {/* Pro-аналитика как у виллы: тот же код страницы юнита, на примере
+            самого доступного юнита комплекса (макет 06.11.2026). Без Pro
+            скрыта (.bx-auth-block внутри). Нет юнитов - старые разделы ниже. */}
+        {repUnit && (repUnit.kind === 'villa'
+          ? <VillaDetail slug={repUnit.slug} lang={lang} analyticsOnly />
+          : <ApartmentDetail slug={repUnit.slug} lang={lang} analyticsOnly />)}
 
         {/* Аналитика — те же разделы, что на странице виллы: место → аренда
             рядом → участок. Калькулятора у комплекса нет — он на страницах
