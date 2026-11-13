@@ -9,7 +9,7 @@ export type PromoKit = { series: { title: string; files: string[]; thumbs?: stri
 export async function loadPromoKit(complexAirtableId: string | null): Promise<PromoKit | null> {
   if (!complexAirtableId) return null
   try {
-    const r = await fetch(URL_, { next: { revalidate: 3600, tags: ['content:villas', 'content:complexes'] } })
+    const r = await fetch(URL_, { next: { revalidate: 86400, tags: ['content:villas', 'content:complexes'] } })
     if (!r.ok) return null
     const all = (await r.json()) as Record<string, { series?: PromoKit['series'] }>
     const kit = all[complexAirtableId]
