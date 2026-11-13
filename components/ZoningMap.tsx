@@ -30,6 +30,13 @@ const COPY = {
   },
 } as const
 
+// GISTARU отдаёт «maksimum : 50%», иногда без процентов («2.5», «95») -
+// показываем только понятное «50%».
+function pct(v: string | null | undefined): string | null {
+  const m = v?.match(/(\d+(?:[.,]\d+)?)\s*%/)
+  return m ? `${m[1].replace(',', '.')}%` : null
+}
+
 function circleRing([lon, lat]: [number, number], r: number): [number, number][] {
   const kx = 111320 * Math.cos((lat * Math.PI) / 180)
   return Array.from({ length: 129 }, (_, i) => {
@@ -160,7 +167,7 @@ export function ZoningMap({ slug, lang, ver, plotOverride }: { slug: string; lan
                 <span className="w-3 h-3 rounded-[3px] shrink-0 border border-black/10" style={{ background: (picked ? pickedColor : plot.color) ?? '#BBB' }} />
                 {picked ? (pickedKind ? (ru ? pickedKind.ru : pickedKind.en) : picked) : plot.label}
               </span>
-              {!picked && plotData?.plot && (plotData.plot.kdb || plotData.plot.kdh) && <span className="text-[13px] text-[var(--color-text-muted)]">{c.rules(plotData.plot.kdb, plotData.plot.kdh)}</span>}
+              {!picked && (pct(plotData?.plot?.kdb) || pct(plotData?.plot?.kdh)) && <span className="text-[13px] text-[var(--color-text-muted)]">{c.rules(pct(plotData?.plot?.kdb), pct(plotData?.plot?.kdh))}</span>}
               {picked && <span className="text-[12px] text-[var(--color-text-muted)]">{picked}</span>}
             </div>
           )}
