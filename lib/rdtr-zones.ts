@@ -72,8 +72,7 @@ export async function loadRdtr(airtableId: string | null, complexSlug: string | 
     if (data) return { key: complexSlug, data }
   }
   if (!airtableId) return null
-  // Индекс дописывается при каждом прогоне скрипта - держим не дольше часа.
-  const index = await fetch(`${RDTR_BASE}/_index.json`, { next: { revalidate: 3600 } })
+  const index = await fetch(`${RDTR_BASE}/_index.json`, { next: { revalidate: 86400 } })
     .then(r => (r.ok ? (r.json() as Promise<Record<string, string | { k: string; n: string | null; c: string | null }>>) : null)).catch(() => null)
   const hit = index?.[airtableId]
   if (!hit) return null
