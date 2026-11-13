@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramada Nusa Dua 1BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Площади — с плана застройщика: гостиная с кухней 23 м², спальня 14,
+// холл 4, ванная 6, терраса 13, бассейн 9. Размеров на плане нет:
+// масштаб подобран по этим площадям (≈ 7.3 × 9.2 м).
+const PLAN = { name: 'Ramada Nusa Dua 1BR', W: 7.33, HD: 9.17, BACK: 0.6, FRONT: 2.0, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+lot()
+path(3.68, 4.83)
+const y = 0.12, CV = 3.36, BU = 3.5, KU = 5.9, LU = 6.1
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, CV, W, 0, 0.12, M.slab)
+  rect(g, LU, HD, 0, CV, 0, 0.12, M.slab)
+  floorPatch(g, 0, BU, CV, W, y, T.planks, 1.6)              // спальня
+  floorPatch(g, BU, KU, CV, 4.6, y, T.terrazzo, 1.4)         // холл
+  floorPatch(g, BU, KU, 4.6, W, y + 0.004, T.tiles, 0.8)     // ванная
+  floorPatch(g, KU, HD, CV, W, y, T.terrazzo, 1.4)           // кухня
+  floorPatch(g, LU, HD, 0, CV, y, T.terrazzo, 1.4)           // гостиная
+
+  // наружные стены
+  wall(0, CV, 0, W, H1); wall(0, W, HD, W, H1)
+  wall(LU, 0, HD, 0, H1)
+  wall(HD, 0, HD, 3.68, H1); wall(HD, 4.83, HD, W, H1)
+  door(g, HD, 3.68, 4.83, y)
+  // спальня и холл выходят на террасу, гостиная — складными стеклянными дверями
+  wall(0, CV, 0.8, CV, H1); glassWall(g, 0.8, CV, 3.0, CV, 0, H1); wall(3.0, CV, LU, CV, H1)
+  glassWall(g, LU, 0, LU, CV, 0, H1)
+  // спальня | холл и ванная
+  wall(BU, CV, BU, 3.5, H1); wall(BU, 4.4, BU, W, H1)
+  // ванная
+  wall(BU, 4.6, 4.3, 4.6, H1); wall(5.2, 4.6, KU, 4.6, H1); wall(KU, 4.6, KU, W, H1)
+
+  // спальня: шкаф вдоль стены, кровать изголовьем к правой стене
+  rr(g, 0.15, 0.6, CV + 0.1, W - 0.25, y, 2.1, M.wood, 0.04)
+  bed(g, 1.28, 3.08, 5.2, W - 0.2, W - 0.2, y, M.coral)
+  rr(g, 0.85, 1.22, W - 0.55, W - 0.15, y, 0.45, M.woodL, 0.04); rr(g, 3.12, 3.45, W - 0.55, W - 0.15, y, 0.45, M.woodL, 0.04)
+  cyl(g, 1.03, W - 0.35, 0.1, 0.14, 0.22, y + 0.45, M.mustard, 12)
+  rr(g, 1.1, 3.3, 4.8, W - 0.3, y, 0.012, M.white, 0.005, false)
+  // ванная
+  tub(g, 4.0, 5.6, W - 0.7, W - 0.1, y)
+  toilet(g, 5.4, 6.05, y)
+  vanity(g, 5.3, 5.8, 4.75, 5.55, y)
+  shower(g, 3.6, 4.4, 5.4, 6.4, y)
+  // кухня вдоль стены ванной, холодильник, круглый стол
+  rr(g, KU + 0.05, KU + 0.5, 4.77, 6.6, y, 0.82, M.sage, 0.03)
+  rect(g, KU + 0.03, KU + 0.52, 4.77, 6.6, 0.94, 0.05, M.white)
+  rr(g, KU + 0.05, 7.4, 6.6, W - 0.1, y, 1.9, M.steel, 0.06)
+  roundTable(g, 7.86, 5.26, y, 0.48)
+  chair(g, 7.6, 4.55, y, M.coral); chair(g, 7.25, 5.75, y, M.coral)
+  // гостиная: угловой диван, столик
+  rr(g, 8.4, 9.05, 0.86, 3.2, y, 0.42, M.coral, 0.12)
+  rr(g, 8.75, 9.05, 0.86, 3.2, y, 0.85, M.coral, 0.12)
+  rr(g, 7.4, 8.4, 2.5, 3.2, y, 0.42, M.coral, 0.12)
+  rr(g, 7.4, 8.4, 2.95, 3.2, y, 0.85, M.coral, 0.12)
+  rr(g, 8.5, 8.7, 1.4, 1.9, y + 0.42, 0.3, M.white, 0.1)
+  rr(g, 7.2, 8.0, 0.5, 2.1, y, 0.38, M.dark, 0.04)
+  plant(g, 6.5, 0.4, y, 0.8)
+}
+// ============ терраса и бассейн ============
+{
+  const g = floor1G, fence = makeWall(g, 0)
+  rect(g, 0, LU, 0, CV, 0, 0.1, M.stone, true, false)
+  floorPatch(g, 0, LU, 0, CV, 0.1, T.terrazzo, 1.4)
+  pool(g, 0.45, 3.65, 0.56, 2.6, 0.12)
+  fence(0, 0, 0, CV, 1.8); fence(0, 0, LU, 0, 1.8)
+  for (const v of [0.8, 1.95]) lounger(g, 3.9, 5.7, v, v + 0.75, 0.1)
+  plant(g, 5.7, 3.0, 0.1, 0.8)
+}
+P(floor1G, 1.65, 6.9, 2.2, Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.75, 3.9, 2.9, 0.6, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 23], ['bedroom', 14], ['hall', 4], ['bathroom', 6], ['terrace', 13], ['pool', 9]] }],
+  L1: [
+    Lb('livingKitchen', 23, 7.8, 2.3, 3.4),
+    Lb('bedroom', 14, 1.9, 2.4, 5.0),
+    Lb('hall', 4, 4.7, 2.0, 3.9),
+    Lb('bathroom', 6, 4.6, 2.6, 6.2),
+    Lb('terrace', 13, 4.8, 1.6, 1.2),
+    Lb('pool', 9, 2.0, 1.3, 1.6),
+  ],
+})
+</script>
+</body>
+</html>

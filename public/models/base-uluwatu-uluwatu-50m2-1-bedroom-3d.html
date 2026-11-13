@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base Uluwatu Villa M1 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Размеры и площади — с чертежа «Villa M1 · Floor plan at EL 0.000»
+// (Konovalov Architect, 1:50): дом 9.4 × 4.6 м по осям, спальня выступает
+// к бассейну ещё на 3.0 м (3.4 м по ширине). Кухня-гостиная 27.7 м²,
+// спальня 17.8, ванная 4.5. Итог 50 м² — сумма этих площадей.
+// Положение бассейна и лежака снято по масштабу чертежа.
+const PLAN = { name: 'Base Uluwatu M1', W: 9.4, HD: 4.6, BACK: 4.1, FRONT: 0.9, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+lot(0.6)
+const y = 0.12, PV = 6.2, BU = 2.95, BB = -3.0
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  rect(g, BB, 0, 6.0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, PV, y, T.terrazzo, 1.4)             // кухня-гостиная
+  floorPatch(g, BB, BU, PV, W, y, T.planks, 1.6)               // спальня
+  floorPatch(g, BU, HD, PV, W, y + 0.004, T.tiles, 0.8)        // ванная
+
+  // наружные стены
+  wall(HD, 0, HD, W, H1)
+  wall(0, 0, 0.6, 0, H1); glassWall(g, 0.6, 0, 3.5, 0, 0, H1); wall(3.5, 0, HD, 0, H1)
+  wall(BB, W, HD, W, H1)
+  glassWall(g, 0, 0, 0, 4.9, 0, H1)                             // W2, W3 к террасе
+  wall(0, 4.9, 0, 5.0, H1); door(g, 0, 5.0, 5.95, y)            // D1
+  wall(BB, PV, BB, W, H1)
+  wall(BB, PV, -2.7, PV, H1); glassWall(g, -2.7, PV, -0.2, PV, 0, H1); wall(-0.2, PV, 0, PV, H1)  // W4
+  // спальня | гостиная, ванная
+  wall(0, PV, 0.4, PV, H1); wall(1.3, PV, HD, PV, H1)
+  wall(BU, PV, BU, 7.3, H1); wall(BU, 8.4, BU, W, H1)
+
+  // гостиная: диван у задней стены, столик, скамья у окна
+  rr(g, 3.5, 4.45, 0.1, 2.37, y, 0.42, M.sofa, 0.12)
+  rr(g, 4.1, 4.45, 0.1, 2.37, y, 0.85, M.sofa, 0.12)
+  rr(g, 3.6, 3.9, 0.5, 0.9, y + 0.42, 0.3, M.cush, 0.1)
+  rr(g, 3.6, 3.9, 1.5, 1.9, y + 0.42, 0.3, M.mustard, 0.1)
+  rr(g, 2.2, 2.9, 0.75, 1.45, y, 0.38, M.woodL, 0.04)
+  rr(g, 0.15, 0.55, 0.15, 2.3, y, 0.45, M.grey, 0.08)
+  // кухня вдоль задней стены, обеденный стол у перегородки
+  rr(g, HD - 0.55, HD - 0.05, 2.37, 6.05, y, 0.82, M.sage, 0.03)
+  rect(g, HD - 0.57, HD - 0.05, 2.37, 6.05, 0.94, 0.05, M.white)
+  rr(g, HD - 0.4, HD - 0.05, 2.37, 6.05, H1 - 1.1, 0.7, M.sage, 0.03)
+  rr(g, 1.58, 2.96, 5.35, 5.96, y + 0.72, 0.05, M.woodL, 0.03)
+  rr(g, 2.1, 2.45, 5.5, 5.8, y, 0.72, M.wood, 0.03)
+  chair(g, 1.95, 4.95, y); chair(g, 2.6, 4.95, y)
+  plant(g, 0.4, 3.0, y, 0.8)
+
+  // ванная: душ, раковина, унитаз
+  shower(g, 3.05, 4.5, 6.3, 7.3, y)
+  vanity(g, 4.07, 4.5, 7.45, 8.5, y)
+  toilet(g, 3.5, 8.8, y)
+  // спальня: шкаф, стол, кровать изголовьем к правой стене
+  rr(g, 1.05, 2.8, 6.3, 6.85, y, 2.1, M.wood, 0.04)
+  rr(g, 0.1, 2.6, W - 0.6, W - 0.12, y, 0.75, M.woodL, 0.04)
+  bed(g, -2.2, -0.57, 7.1, W - 0.15, W - 0.15, y, M.teal)
+  rr(g, -2.75, -2.35, W - 0.5, W - 0.12, y, 0.45, M.woodL, 0.04); rr(g, -0.45, -0.05, W - 0.5, W - 0.12, y, 0.45, M.woodL, 0.04)
+  cyl(g, -0.25, W - 0.3, 0.1, 0.14, 0.22, y + 0.45, M.mustard, 12)
+}
+// ============ терраса и бассейн ============
+{
+  const g = floor1G
+  rect(g, -4.1, 0, -2.0, 6.0, 0, 0.1, M.stone, true, false)
+  rect(g, -4.1, BB, 6.0, W, 0, 0.1, M.stone, true, false)
+  pool(g, -3.8, -1.24, -1.84, 2.63, 0.1)
+  lounger(g, -3.0, -1.1, 3.4, 4.4, 0.1)
+  plant(g, -0.4, 5.6, 0.1, 0.8)
+}
+P(floor1G, 1.65, 1.5, 3.4, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, -0.7, 4.3, 0.3, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '50 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 27.7], ['bedroom', 17.8], ['bathroom', 4.5], ['pool'], ['terrace']] }],
+  L1: [
+    Lb('livingKitchen', 27.7, 2.2, 2.3, 3.2),
+    Lb('bedroom', 17.8, -1.2, 2.3, 7.8),
+    Lb('bathroom', 4.5, 3.7, 2.6, 7.8),
+    Lb('pool', undefined, -2.5, 1.3, 0.4),
+    Lb('terrace', undefined, -1.2, 1.2, 4.0),
+  ],
+})
+</script>
+</body>
+</html>

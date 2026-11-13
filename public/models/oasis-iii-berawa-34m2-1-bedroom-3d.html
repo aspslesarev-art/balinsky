@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oasis III Apartment 2.2 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// С плана «Apartment № 2.2 (№ 2.7 — mirror layout)» и таблицы к нему:
+// гостиная с кухней 27.60 м², ванная 4.30, балкон 2.00, итого 33.90 м².
+// Размеров нет — масштаб подобран по площадям (≈ 5.7 × 6.7 м вместе с
+// кухонной нишей). Спальная зона — в общей комнате, как на плане.
+const PLAN = { name: 'Oasis III Apt 2.2', W: 5.71, HD: 6.7, BACK: 0.4, FRONT: 0.6, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12, GU = 0.77, KV = 1.88, AU = 2.86, AV = 0.98, BU = 5.23, BV = 2.77
+rect(siteG, -0.3, HD + 0.5, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, AU, 0, KV, 0, 0.12, M.slab)
+  rect(g, GU, HD, KV, W, 0, 0.12, M.slab)
+  rect(g, AU, HD, AV, KV, 0, 0.12, M.slab)
+  floorPatch(g, 0, AU, 0, KV, y, T.terrazzo, 1.4)              // кухня
+  floorPatch(g, GU, BU, KV, W, y, T.terrazzo, 1.4)             // комната
+  floorPatch(g, AU, HD, AV, KV, y, T.terrazzo, 1.4)
+  floorPatch(g, BU, HD, KV, BV, y, T.terrazzo, 1.4)            // прихожая
+  floorPatch(g, BU, HD, BV, W, y + 0.004, T.tiles, 0.8)        // ванная
+
+  // наружные стены
+  wall(0, 0, 0, KV, H1); wall(0, KV, GU, KV, H1)
+  glassWall(g, GU, KV, GU, W, 0, H1)                           // выход на балкон
+  wall(0, 0, AU, 0, H1); wall(AU, 0, AU, AV, H1); wall(AU, AV, HD, AV, H1)
+  wall(GU, W, 1.1, W, H1); glassWall(g, 1.1, W, 4.4, W, 0, H1); wall(4.4, W, HD, W, H1)
+  wall(HD, AV, HD, 1.79, H1); wall(HD, 2.68, HD, W, H1)
+  door(g, HD, 1.79, 2.68, y)
+  // ванная
+  wall(BU, BV, BU, 2.86, H1); wall(BU, 3.66, BU, W, H1); wall(BU, BV, HD, BV, H1)
+  door(g, BU, 2.86, 3.66, y)
+
+  // кухня: столешница буквой Г
+  rr(g, 0.05, 0.7, 0.05, KV, y, 0.82, M.sage, 0.03)
+  rect(g, 0.03, 0.72, 0.05, KV, 0.94, 0.05, M.white)
+  rr(g, 0.7, 2.2, 0.05, 0.68, y, 0.82, M.sage, 0.03)
+  rect(g, 0.7, 2.2, 0.03, 0.7, 0.94, 0.05, M.white)
+  rr(g, 2.2, 2.8, 0.05, 0.68, y, 1.9, M.steel, 0.06)
+  // столик на 3 у балкона
+  roundTable(g, 1.0 + 0.2, 4.1, y, 0.42)
+  chair(g, 1.15, 3.45, y, M.white); chair(g, 1.15, 4.75, y, M.white); chair(g, 1.8, 4.15, y, M.white)
+  // кровать изголовьем к правой стене
+  bed(g, 2.73, 4.64, 3.48, W - 0.12, W - 0.12, y, M.mustard)
+  cyl(g, 4.9, W - 0.35, 0.2, 0.2, 0.45, y, M.woodL, 16)
+  // шкаф и зеркало вдоль левой стены
+  rr(g, 4.55, HD - 0.1, AV + 0.05, 1.75, y, 2.1, M.wood, 0.04)
+  rr(g, 2.95, 4.45, AV + 0.05, 1.2, y, 0.8, M.woodL, 0.04)
+  plant(g, 1.0, W - 0.35, y, 0.7)
+  // ванная
+  vanity(g, 6.25, HD - 0.05, 2.95, 3.57, y)
+  toilet(g, 6.35, 4.15, y)
+  shower(g, 5.5, HD - 0.08, 4.9, W - 0.08, y)
+}
+// ============ балкон ============
+{
+  const g = floor1G
+  rect(g, 0, GU, KV, W, 0, 0.1, texMat(T.deck, 1.6, 0.4), true, false)
+  railing(g, 0, KV, 0, W, 0.1); railing(g, 0, W, GU, W, 0.1)
+  plant(g, 0.35, W - 0.35, 0.1, 0.7); plant(g, 0.35, 2.3, 0.1, 0.55)
+}
+P(floor1G, 1.65, 3.6, 2.4, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '33.9 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 27.6], ['bathroom', 4.3], ['balcony', 2]] }],
+  L1: [
+    Lb('livingKitchen', 27.6, 2.8, 2.3, 2.6),
+    Lb('bathroom', 4.3, 5.9, 2.6, 4.2),
+    Lb('balcony', 2, 0.35, 1.4, 3.6),
+  ],
+})
+</script>
+</body>
+</html>

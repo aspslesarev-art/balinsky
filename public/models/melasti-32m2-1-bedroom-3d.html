@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melasti 1BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// С плана застройщика: комната 22 м², балкон 4 м², ванная без подписи
+// площади. Размеров на плане нет — масштаб снят по кровати ≈ 1.8 × 2.0 м
+// (комната с ванной ≈ 3.5 × 6.8 м). Кухни на плане нет.
+const PLAN = { name: 'Melasti 1BR', W: 3.49, HD: 6.8, BACK: 1.87, FRONT: 0.5, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12, BU = 3.8, BV = 1.85
+rect(siteG, -BACK - 0.3, HD + 0.5, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.planks, 1.6)
+  floorPatch(g, BU, HD, BV, W, y + 0.004, T.tiles, 0.8)        // ванная
+
+  glassWall(g, 0, 0, 0, W, 0, H1)                              // раздвижное стекло к балкону
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 0.73, H1); wall(HD, 1.66, HD, W, H1)
+  door(g, HD, 0.73, 1.66, y)
+  // ванная
+  wall(BU, BV, BU, W, H1)
+  wall(BU, BV, 5.0, BV, H1); wall(5.68, BV, HD, BV, H1)
+  door(g, BV, 5.0, 5.68, y, false)
+
+  // ТВ-консоль и шкафы вдоль левой стены
+  rr(g, 0.05, BU, 0.07, 0.61, y, 0.5, M.white, 0.04)
+  rect(g, 1.1, 2.4, 0.12, 0.18, 0.95, 0.65, M.dark)
+  rr(g, BU, HD - 0.05, 0.07, 0.61, y, 2.1, M.wood, 0.04)
+  cyl(g, 0.6, 0.95, 0.32, 0.32, 0.4, y, M.grey, 20)
+  // кровать изголовьем к правой стене, тумбы
+  bed(g, 0.9, 2.68, 1.32, W - 0.1, W - 0.1, y, M.coral)
+  rr(g, 0.55, 0.92, W - 0.5, W - 0.1, y, 0.45, M.dark, 0.04); rr(g, 2.68, 3.05, W - 0.5, W - 0.1, y, 0.45, M.dark, 0.04)
+  // ванная: ванна, раковина, унитаз
+  tub(g, 3.97, 4.66, 2.02, W - 0.12, y)
+  vanity(g, 5.1, 5.6, W - 0.45, W - 0.05, y)
+  toilet(g, 6.35, 2.5, y)
+}
+// ============ балкон ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, 0, W, 0, 0.1, M.stone, true, false)
+  floorPatch(g, -BACK, 0, 0, W, 0.1, T.terrazzo, 1.4)
+  railing(g, -BACK, 0, -BACK, W, 0.1)
+  rr(g, -1.73, -1.07, 2.83, 3.37, 0.1, 0.42, M.coral, 0.12)
+  rr(g, -0.9, -0.27, 2.83, 3.37, 0.1, 0.42, M.coral, 0.12)
+  rr(g, -1.25, -0.63, 2.0, 2.66, 0.1, 0.45, M.dark, 0.03)
+  rr(g, -0.9, -0.15, 0.1, 0.8, 0.1, 0.42, M.coral, 0.12)
+  plant(g, -1.55, 0.35, 0.1, 0.7); plant(g, -1.5, 1.0, 0.1, 0.8); plant(g, -1.6, 2.3, 0.1, 0.6)
+}
+P(floor1G, 1.65, 3.4, 1.0, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['bedroom', 22], ['bathroom'], ['balcony', 4]] }],
+  L1: [
+    Lb('bedroom', 22, 3.0, 2.3, 1.2),
+    Lb('bathroom', undefined, 5.2, 2.6, 2.7),
+    Lb('balcony', 4, -0.9, 1.4, 1.6),
+  ],
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanur Apartments A1 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Размеры и площади — с плана «A1, 1 floor, 30,65 м²» (VIBE): квартира
+// 4.000 × 8.175 м. Гостиная-столовая 13.20 м², спальня 5.95, кухня 5.30,
+// ванная 4.35, прихожая 1.85. Внутренние стены сняты по масштабу плана.
+const PLAN = { name: 'Sanur Apartments A1', W: 4.0, HD: 8.175, BACK: 0.4, FRONT: 0.6, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12, LU = 3.5, BU = 5.9, KV = 2.43, HU = 6.83
+rect(siteG, -0.4, HD + 0.6, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, LU, 0, W, y, T.planks, 1.6)                 // гостиная
+  floorPatch(g, LU, BU, 0, KV, y, T.planksDark, 1.6)           // спальня
+  floorPatch(g, LU, HU, KV, W, y, T.terrazzo, 1.4)             // кухня
+  floorPatch(g, HU, HD, KV, W, y, T.terrazzo, 1.4)             // прихожая
+  floorPatch(g, BU, HD, 0, KV, y + 0.004, T.tiles, 0.8)        // ванная
+
+  glassWall(g, 0, 0, 0, W, 0, H1)                              // раздвижное стекло
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 2.5, H1); wall(HD, 3.4, HD, W, H1)
+  door(g, HD, 2.5, 3.4, y)
+  // спальня: раздвижная перегородка к гостиной
+  glassWall(g, LU, 0, LU, KV, 0, H1)
+  wall(LU, KV, BU, KV, H1)
+  // ванная
+  wall(BU, 0, BU, KV, H1)
+  wall(BU, KV, 7.2, KV, H1); wall(7.85, KV, HD, KV, H1)
+
+  // гостиная: диван у стены, столик, круглый стол на 4
+  rr(g, 0.57, 3.2, 0.05, 0.97, y, 0.42, M.sofa, 0.12)
+  rr(g, 0.57, 3.2, 0.05, 0.35, y, 0.85, M.sofa, 0.12)
+  rr(g, 1.0, 1.4, 0.4, 0.6, y + 0.42, 0.3, M.cush, 0.1)
+  rr(g, 2.3, 2.7, 0.4, 0.6, y + 0.42, 0.3, M.mustard, 0.1)
+  cyl(g, 1.94, 1.31, 0.3, 0.26, 0.38, y, M.woodL, 24)
+  roundTable(g, 1.72, 3.03, y, 0.45)
+  for (const [du, dv] of [[-0.6, -0.4], [-0.6, 0.4], [0.6, -0.4], [0.6, 0.4]]) chair(g, 1.72 + du, 3.03 + dv, y, M.white)
+  plant(g, 0.35, W - 0.35, y, 0.8)
+  // спальня
+  bed(g, 3.9, 5.75, 0.1, 2.1, 0.1, y, M.navy)
+  // кухня вдоль правой стены
+  rr(g, LU + 0.05, 5.85, W - 0.6, W - 0.05, y, 0.82, M.sage, 0.03)
+  rect(g, LU + 0.03, 5.85, W - 0.62, W - 0.05, 0.94, 0.05, M.white)
+  rr(g, LU + 0.05, 5.85, W - 0.38, W - 0.05, H1 - 1.1, 0.7, M.sage, 0.03)
+  rr(g, 5.85, 6.7, W - 0.6, W - 0.05, y, 1.9, M.steel, 0.06)
+  // ванная
+  vanity(g, 6.2, 6.8, 1.83, 2.3, y)
+  shower(g, 6.0, 7.0, 0.05, 1.15, y)
+  toilet(g, 7.6, 0.4, y)
+  // прихожая: шкаф
+  rr(g, HU + 0.05, 8.0, 3.48, W - 0.05, y, 2.1, M.wood, 0.04)
+}
+P(floor1G, 1.65, 2.6, 1.9, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '30.65 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['living', 13.2], ['bedroom', 5.95], ['kitchen', 5.3], ['bathroom', 4.35], ['hall', 1.85]] }],
+  L1: [
+    Lb('living', 13.2, 1.6, 2.3, 2.0),
+    Lb('bedroom', 5.95, 4.7, 2.2, 1.2),
+    Lb('kitchen', 5.3, 4.6, 2.4, 3.2),
+    Lb('bathroom', 4.35, 7.0, 2.6, 1.2),
+    Lb('hall', 1.85, 7.5, 2.2, 3.2),
+  ],
+})
+</script>
+</body>
+</html>

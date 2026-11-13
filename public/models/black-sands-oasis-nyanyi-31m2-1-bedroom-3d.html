@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Sands Studio — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Со слайда застройщика «Studio, 31,2 м²» (схема + вид сверху):
+// площадь помещения по схеме 30,11 м². Размеров нет — масштаб подобран
+// по этой площади (≈ 3.7 × 8.0 м). Ванная без подписи площади.
+const PLAN = { name: 'Black Sands Studio', W: 3.73, HD: 8.0, BACK: 0.4, FRONT: 0.6, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12, BV = 1.6, BU = 5.6
+rect(siteG, -0.4, HD + 0.6, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.terrazzo, 1.4)
+  floorPatch(g, BU, HD, BV, W, y + 0.004, T.tiles, 0.8)        // ванная
+
+  glassWall(g, 0, 0, 0, W, 0, H1)                              // окно
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 0.75, H1); wall(HD, 1.45, HD, W, H1)
+  door(g, HD, 0.75, 1.45, y)
+  // ванная
+  wall(BU, BV, BU, W, H1)
+  wall(BU, BV, 6.5, BV, H1); wall(7.2, BV, HD, BV, H1)
+  vanity(g, 7.45, 7.9, 2.0, 2.6, y)
+  toilet(g, 6.15, 2.3, y)
+  shower(g, 5.75, 7.9, 2.75, W - 0.08, y)
+
+  // гардероб и столешница вдоль левой стены, кухня под ванной
+  rr(g, 6.0, 7.4, 0.05, 0.65, y, 2.1, M.wood, 0.04)
+  rr(g, 4.2, 6.0, 0.05, 0.65, y, 0.82, M.sage, 0.03)
+  rect(g, 4.2, 6.0, 0.03, 0.67, 0.94, 0.05, M.white)
+  rr(g, 4.97, BU - 0.08, BV, W - 0.05, y, 0.82, M.sage, 0.03)
+  rect(g, 4.95, BU - 0.08, BV, W - 0.05, 0.94, 0.05, M.white)
+  // барная стойка
+  rr(g, 3.65, 4.15, BV, W - 0.15, y, 0.95, M.woodL, 0.04)
+  for (const v of [2.0, 2.8]) stool(g, 3.35, v, y)
+  // кровать изголовьем к правой стене, картина, лежанка у окна
+  bed(g, 1.0, 2.66, 1.55, W - 0.1, W - 0.1, y, M.mustard)
+  rr(g, 0.7, 2.9, 1.3, W - 0.1, y, 0.012, M.white, 0.005, false)
+  rr(g, 1.2, 2.5, 0.06, 0.45, y, 0.45, M.wood, 0.04)
+  rect(g, 1.35, 2.35, 0.1, 0.16, 0.9, 0.6, M.dark)
+  rr(g, 0.1, 0.6, 0.6, W - 0.3, y, 0.4, M.woodL, 0.06)
+  plant(g, 0.4, 0.35, y, 0.8)
+}
+P(floor1G, 1.65, 3.0, 1.0, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '31.2 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 30.11], ['bathroom']] }],
+  L1: [
+    Lb('livingKitchen', 30.11, 3.0, 2.3, 1.2),
+    Lb('bathroom', undefined, 6.8, 2.6, 2.6),
+  ],
+})
+</script>
+</body>
+</html>

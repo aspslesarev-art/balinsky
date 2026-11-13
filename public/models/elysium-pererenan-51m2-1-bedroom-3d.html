@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elysium 1BR лофт — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Со слайда застройщика: общая площадь юнита 51,55 м², этаж 1 — 26,10,
+// этаж 2 — 16,10, бассейн и терраса — 9,35, 1 спальня. Размеров нет:
+// масштаб подобран по площади 1 этажа (≈ 3.4 × 7.6 м). 2 этаж —
+// антресоль со спальней, над гостиной второй свет.
+const PLAN = { name: 'Elysium 1BR loft', W: 3.43, HD: 7.6, BACK: 3.0, FRONT: 1.2, H1: 2.8, H2: 2.6, floors: 2 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+lot()
+const y = 0.12
+function stairs (g, steps, base, h) {
+  const rise = h / steps.length
+  steps.forEach(([u1, u2, v1, v2], i) => rr(g, u1, u2, v1, v2, base, rise * (i + 1), M.woodL, 0.02))
+}
+path(1.2, 2.1)
+// ============ 1 этаж ============
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.terrazzo, 1.4)
+  floorPatch(g, 4.8, 6.5, 0, 2.3, y + 0.004, T.tiles, 0.8)    // ванная
+
+  glassWall(g, 0, 0, 0, W, 0, H1)                              // к бассейну
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 1.2, H1); wall(HD, 2.1, HD, W, H1)
+  door(g, HD, 1.2, 2.1, y)
+  // ванная
+  wall(4.8, 0, 4.8, 2.3, H1); wall(6.5, 0, 6.5, 2.3, H1)
+  wall(4.8, 2.3, 5.0, 2.3, H1); wall(5.8, 2.3, 6.5, 2.3, H1)
+  toilet(g, 5.9, 0.4, y); vanity(g, 4.9, 5.5, 1.5, 2.2, y)
+  shower(g, 5.6, 6.4, 1.0, 2.2, y)
+  // лестница вдоль фасада
+  const st = []; for (let i = 0; i < 12; i++) st.push([6.6, 7.5, 3.3 - (i + 1) * 0.26, 3.3 - i * 0.26])
+  stairs(g, st, y, H1 + 0.06)
+
+  // кухня и барная стойка
+  rr(g, 3.98, 4.63, 0.1, 2.4, y, 0.82, M.sage, 0.03)
+  rect(g, 3.96, 4.65, 0.1, 2.4, 0.94, 0.05, M.white)
+  rr(g, 4.05, 4.63, 0.1, 0.65, y, 1.9, M.dark, 0.05)
+  rr(g, 2.95, 3.25, 0.2, 1.9, y, 1.0, M.woodL, 0.03)
+  for (const v of [0.6, 1.1, 1.6]) stool(g, 2.7, v, y)
+  // гостиная: полукруглый диван, столик, ТВ
+  cyl(g, 1.4, 1.5, 1.1, 1.1, 0.015, y, M.mustard, 40, false)
+  rr(g, 0.3, 2.4, 0.2, 0.8, y, 0.42, M.coral, 0.15)
+  rr(g, 0.3, 2.4, 0.2, 0.45, y, 0.8, M.coral, 0.15)
+  rr(g, 0.3, 0.85, 0.8, 1.9, y, 0.42, M.coral, 0.15)
+  cyl(g, 1.5, 1.55, 0.35, 0.3, 0.36, y, M.dark, 24)
+  rr(g, 0.9, 2.4, W - 0.35, W - 0.08, y, 0.45, M.wood, 0.04)
+  rect(g, 1.1, 2.2, W - 0.16, W - 0.1, 0.9, 0.65, M.dark)
+  plant(g, 3.0, W - 0.35, y, 0.8)
+}
+// ============ бассейн и терраса ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, 0, W, 0, 0.1, texMat(T.deck, 1.4, 1.2), true, false)
+  pool(g, -2.3, -0.28, 0.2, 2.0, 0.1)
+  for (const u of [-2.6, -1.6, -0.6]) plant(g, u, 0.1, 0.1, 0.6)
+  plant(g, -2.6, W - 0.35, 0.1, 0.7)
+}
+
+// ============ 2 этаж: антресоль со спальней ============
+const Y = H1 + 0.18, YF = Y + 0.04, VU = 1.28
+{
+  const g = floor2G, wall = makeWall(g, Y)
+  for (const [u1, u2, v1, v2] of [[VU, 6.55, 0, W], [6.55, HD, 0, 0.6]]) {
+    rect(g, u1, u2, v1, v2, H1, 0.18, M.wood); rect(g, u1, u2, v1, v2, Y, 0.04, M.slab, true, false)
+  }
+  floorPatch(g, VU, 6.55, 0, W, YF, T.planks, 1.6)
+  wall(VU, 0, HD, 0, H2); wall(VU, W, HD, W, H2); wall(HD, 0, HD, W, H2)
+  glassWall(g, 0, 0, VU, 0, Y, H2); glassWall(g, 0, W, VU, W, Y, H2); glassWall(g, 0, 0, 0, W, Y, H2)
+  railing(g, VU, 0, VU, W, YF); railing(g, 6.55, 0.6, 6.55, W, YF)
+  // спальня: кровать изголовьем к полке, столик, кресла
+  rr(g, 4.6, 5.1, 0.85, 2.1, YF, 0.9, M.dark, 0.03)
+  bedU(g, 2.1, 4.35, 1.15, 3.05, 4.35, YF, M.coral)
+  rr(g, VU + 0.1, 2.55, 0.1, 0.67, YF, 0.75, M.sage, 0.04)
+  rr(g, VU + 0.2, VU + 0.65, 0.75, 1.2, YF, 0.42, M.coral, 0.15)
+  rr(g, VU + 0.2, VU + 0.65, 2.6, 3.05, YF, 0.42, M.coral, 0.15)
+  plant(g, 5.6, W - 0.35, YF, 0.7); plant(g, 3.0, 0.35, YF, 0.6)
+}
+P(floor1G, 1.65, 3.4, 1.4, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor2G, 1.7, 5.6, 1.6, Math.PI, YF, 0x7fae95, 0x4a3a2e)
+
+const Y2 = H1 + 0.2
+ToonKit.start({
+  sub: '51.55 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [
+    { group: 'floor1', rooms: [['livingKitchen'], ['bathroom'], ['poolPatio', 9.35]] },
+    { group: 'floor2', rooms: [['bedroom']] },
+  ],
+  L1: [
+    Lb('livingKitchen', undefined, 2.0, 2.2, 1.7),
+    Lb('bathroom', undefined, 5.6, 2.4, 1.1),
+    Lb('stairs', undefined, 7.0, 2.6, 2.4),
+    Lb('poolPatio', 9.35, -1.5, 1.3, 1.7, true),
+  ],
+  L2: [
+    Lb('bedroom', undefined, 3.4, Y2 + 1.8, 1.7),
+  ],
+})
+</script>
+</body>
+</html>

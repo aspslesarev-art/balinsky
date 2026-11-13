@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manta Livin 30 m² — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Размеры и площади — с чертежа «Plan of furniture and equipment
+// arrangement 30 м², 1:40» (BODES studio): квартира 5.0 м по ширине,
+// ≈ 5.7 м в глубину. Спальная зона 8.69 м², гостиная с кухней 15.65,
+// ванная 4.05, балкон 3.40. Спальная зона отделена раздвижной
+// перегородкой; мебель — по чертежу и виду сверху.
+const PLAN = { name: 'Manta Livin 30 m²', W: 5.73, HD: 5.13, BACK: 1.6, FRONT: 0.6, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12, PU = 3.17, BV = 2.27, SV = 2.81
+rect(siteG, -1.7, HD + 0.6, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.terrazzo, 1.4)
+  floorPatch(g, 3.31, HD, 0, BV, y + 0.004, T.tiles, 0.8)      // ванная
+
+  glassWall(g, 0, 0, 0, W, 0, H1)                              // окно и выход на балкон
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 2.95, H1); wall(HD, 3.9, HD, W, H1)
+  door(g, HD, 2.95, 3.9, y)
+  // спальная зона: раздвижная перегородка
+  glassWall(g, 0.15, SV, PU, SV, 0, H1)
+  // ванная и шкаф
+  wall(3.24, 0, 3.24, 1.0, H1); wall(3.24, 1.75, 3.24, SV, H1)
+  wall(3.24, BV, HD, BV, H1)
+
+  // спальная зона: кровать изголовьем к стене, тумбы
+  bed(g, 0.76, 2.55, 0.08, 2.2, 0.08, y, M.white)
+  rr(g, 0.3, 0.7, 0.08, 0.45, y, 0.45, M.woodL, 0.04); rr(g, 2.6, 3.0, 0.08, 0.45, y, 0.45, M.woodL, 0.04)
+  cyl(g, 0.5, 0.27, 0.1, 0.14, 0.22, y + 0.45, M.mustard, 12)
+  // ванная: душ, унитаз, раковина
+  shower(g, 3.9, 5.0, 0.08, 0.93, y)
+  toilet(g, 4.65, 1.4, y)
+  vanity(g, 3.35, 4.95, 1.8, 2.2, y)
+  // шкаф под ванной
+  rr(g, 3.31, 5.0, 2.32, SV - 0.05, y, 2.1, M.wood, 0.04)
+  // гостиная: диван, столик
+  rr(g, 0.37, 2.87, 4.6, 5.6, y, 0.42, M.white, 0.12)
+  rr(g, 0.37, 2.87, 5.3, 5.6, y, 0.85, M.white, 0.12)
+  rr(g, 0.8, 1.2, 5.0, 5.2, y + 0.42, 0.3, M.cush, 0.1)
+  rr(g, 2.0, 2.4, 5.0, 5.2, y + 0.42, 0.3, M.mustard, 0.1)
+  cyl(g, 1.6, 3.9, 0.32, 0.3, 0.4, y, M.teal, 24)
+  // кухня: остров с табуретами, столешница вдоль стены
+  rr(g, 2.99, 3.53, 3.92, W - 0.05, y, 0.92, M.woodL, 0.04)
+  rect(g, 2.95, 3.57, 3.9, W - 0.05, 1.04, 0.05, M.white)
+  for (const v of [4.5, 5.05]) stool(g, 3.75, v, y)
+  rr(g, 4.5, HD - 0.05, 3.92, W - 0.05, y, 0.82, M.sage, 0.03)
+  rect(g, 4.48, HD - 0.05, 3.92, W - 0.05, 0.94, 0.05, M.white)
+}
+// ============ балкон ============
+{
+  const g = floor1G
+  rect(g, -1.45, 0, 2.85, W, 0, 0.1, texMat(T.deck, 1.2, 1), true, false)
+  railing(g, -1.45, 2.85, -1.45, W, 0.1); railing(g, -1.45, 2.85, 0, 2.85, 0.1); railing(g, -1.45, W, 0, W, 0.1)
+  rr(g, -1.0, -0.2, 4.3, 5.0, 0.1, 0.42, M.grey, 0.12)
+  roundTable(g, -0.7, 3.8, 0.1, 0.3)
+  plant(g, -1.1, W - 0.35, 0.1, 0.8)
+}
+P(floor1G, 1.65, 2.2, 3.4, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '30 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 15.65], ['bedroom', 8.69], ['bathroom', 4.05], ['balcony', 3.4]] }],
+  L1: [
+    Lb('livingKitchen', 15.65, 2.6, 2.3, 4.2),
+    Lb('bedroom', 8.69, 1.6, 2.2, 1.4),
+    Lb('bathroom', 4.05, 4.2, 2.6, 1.1),
+    Lb('balcony', 3.4, -0.8, 1.4, 4.3),
+  ],
+})
+</script>
+</body>
+</html>
