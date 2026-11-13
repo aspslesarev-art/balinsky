@@ -17,7 +17,10 @@ import {
 import { Header } from '@/components/Header'
 import { ExpandableText } from '@/components/ExpandableText'
 import { PageContainer } from '@/components/PageContainer'
-import { VillaGallery } from '@/components/VillaGallery'
+import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
+import { ZoningMap } from '@/components/ZoningMap'
+import { ZoningCard } from '@/components/ZoningCard'
+import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows } from '@/lib/rdtr-zones'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
@@ -1006,7 +1009,30 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const parentComplex = findParentComplex(title, complexes, firstString(d['Комплекс 1']))
   const parentComplexName = parentComplex?.name ?? null
   // 3D-тур комплекса — плиткой «3D-тур» в галерее.
-  const aptTourUrl = (await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))).tourUrl
+  const aptComplex = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))
+  const aptTourUrl = aptComplex.tourUrl
+  // Зоны плана застройки вокруг (scripts/rdtr_zones_all.py) - как у вилл:
+  // карточка в разделе «Участок» и вкладка «Зоны» в окне галереи.
+  const rdtrHit = await loadRdtr(a.airtable_id, aptComplex.slug)
+  const rdtr = rdtrHit?.data ?? null
+  const rdtrAround = (() => {
+    const rows = rdtr ? zoneRows(rdtr, lang) : []
+    const b = rows.find(r => r.group === 'build')
+    const n = rows.find(r => r.group === 'nobuild')
+    const parts = [b ? `${pctText(b.share)} ${b.label.toLowerCase()}` : null, n ? `${pctText(n.share)} ${n.label.toLowerCase()}` : null].filter(Boolean)
+    return parts.length ? parts.join(', ') : null
+  })()
+  const zoningCard = rdtr && rdtrHit
+    ? <ZoningCard thumb={`${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} plot={plotLabel(rdtr, lang)} around={rdtrAround} lang={lang} />
+    : null
+  const aptViewerTabs: ViewerTab[] = rdtr && rdtrHit ? [{
+    key: 'zones',
+    label: pickCopy({ ru: 'Зоны', en: 'Zoning', id: 'Zonasi', fr: 'Zonage', de: 'Zonen', zh: '规划分区', nl: 'Bestemming', ban: 'Zonasi', pl: 'Strefy', uk: 'Зони' }, lang),
+    icon: <Layers size={18} aria-hidden />,
+    hideTile: true,
+    bleed: true,
+    content: <ZoningMap slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
+  }] : []
 
   const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps] = await Promise.all([
     loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
@@ -1197,13 +1223,16 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             dev={devStats ? { total: devStats.total, ready: devStats.ready } : null}
             anchors={{ safety: 'uchastok', comfort: 'mesto', demand: 'arenda', money: 'dokhodnost' }} />,
           safety: (
+            <>
             <div className={`grid grid-cols-1 items-start gap-6 ${landOk ? 'lg:grid-cols-2' : ''}`}>
               <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
                 leaseYears={leaseYears} landYellow={rentalRestricted}
                 dev={devStats ? { name: anon ? null : devName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
                 coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
-              {landOk && <div className="flex flex-col gap-6"><LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} /><SafetyChecks verdict={verdict} lang={lang} /></div>}
+              {landOk && <div className="flex flex-col gap-6">{zoningCard}<LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} /><SafetyChecks verdict={verdict} lang={lang} /></div>}
             </div>
+            {!landOk && zoningCard && <div className="lg:w-1/2 lg:pr-3">{zoningCard}</div>}
+            </>
           ),
           living: (geoFacts || beach) ? (
             <div className="flex flex-col gap-4 [&>*]:mb-0">
@@ -1251,6 +1280,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
           {landOk && (
             <div className="flex flex-col gap-6 [&>*:last-child]:flex-1">
+              {zoningCard}
               <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
                 <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
               </LazyMount>
@@ -1258,6 +1288,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             </div>
           )}
           </div>
+          {!landOk && zoningCard && <div className="lg:w-1/2 lg:pr-3">{zoningCard}</div>}
         </DataChapter>
 
         {hasPlace && (
@@ -1335,6 +1366,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             plan3dUrl={null}
             videos={aptVideos.map(vd => ({ url: vd.url, name: vd.name }))}
             tourUrl={aptTourUrl}
+            viewerTabs={aptViewerTabs}
             title={title}
             lang={lang}
             wishlistItem={{

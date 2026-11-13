@@ -50,7 +50,7 @@ import { VillaChapterNav } from '@/components/VillaChapterNav'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
 import { Money } from '@/components/Money'
-import { RDTR_BASE, pctText, plotLabel, zoneRows, type RdtrData } from '@/lib/rdtr-zones'
+import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -1225,9 +1225,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   })()
   // Зоны плана застройки вокруг (scripts/rdtr_zones.py): карточка в колонке
   // «Участок» и вкладка «Зоны» в окне медиаблока.
-  const rdtr: RdtrData | null = complexMedia.slug
-    ? await fetch(`${RDTR_BASE}/${complexMedia.slug}.json`, { next: { revalidate: 86400 } }).then(r => (r.ok ? r.json() : null)).catch(() => null)
-    : null
+  const rdtrHit = await loadRdtr(v.airtable_id, complexMedia.slug)
+  const rdtr: RdtrData | null = rdtrHit?.data ?? null
   const rdtrRows = rdtr ? zoneRows(rdtr, lang) : []
   const rdtrAround = (() => {
     const b = rdtrRows.find(r => r.group === 'build')
@@ -1298,14 +1297,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         })
       }
     }
-    if (rdtr && complexMedia.slug) {
+    if (rdtr && rdtrHit) {
       tabs.push({
         key: 'zones',
         label: pickCopy({ ru: 'Зоны', en: 'Zoning', id: 'Zonasi', fr: 'Zonage', de: 'Zonen', zh: '规划分区', nl: 'Bestemming', ban: 'Zonasi', pl: 'Strefy', uk: 'Зони' }, lang),
         icon: <Layers size={18} aria-hidden />,
         hideTile: true,
         bleed: true,
-        content: <ZoningMap slug={complexMedia.slug} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
+        content: <ZoningMap slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
       })
     }
     if (docsForTile) {
@@ -2076,8 +2075,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                       <span className="text-right">{f.value}</span>
                     </div>
                   ))}
-                  {rdtr && complexMedia.slug && (
-                    <ZoningCard thumb={`${RDTR_BASE}/${complexMedia.slug}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} plot={plotLabel(rdtr, lang)} around={rdtrAround} lang={lang} />
+                  {rdtr && rdtrHit && (
+                    <ZoningCard thumb={`${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} plot={plotLabel(rdtr, lang)} around={rdtrAround} lang={lang} />
                   )}
                 </div>
               )}

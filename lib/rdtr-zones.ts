@@ -61,3 +61,27 @@ export function plotLabel(data: RdtrData, lang: string): { label: string; color:
 export const pctText = (s: number) => `${Math.max(1, Math.round(s * 100))}%`
 
 export const RDTR_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/feeds/_rdtr-zones`
+
+/** Зоны для страницы объекта: свой файл комплекса (CITRINE), иначе клетка
+ *  объекта из _index.json (scripts/rdtr_zones_all.py). key - имя файла. */
+export async function loadRdtr(airtableId: string | null, complexSlug: string | null): Promise<{ key: string; data: RdtrData } | null> {
+  const get = (key: string) =>
+    fetch(`${RDTR_BASE}/${key}.json`, { next: { revalidate: 86400 } }).then(r => (r.ok ? (r.json() as Promise<RdtrData>) : null)).catch(() => null)
+  if (complexSlug) {
+    const data = await get(complexSlug)
+    if (data) return { key: complexSlug, data }
+  }
+  if (!airtableId) return null
+  const index = await fetch(`${RDTR_BASE}/_index.json`, { next: { revalidate: 86400 } })
+    .then(r => (r.ok ? (r.json() as Promise<Record<string, string | { k: string; n: string | null; c: string | null }>>) : null)).catch(() => null)
+  const hit = index?.[airtableId]
+  if (!hit) return null
+  const key = typeof hit === 'string' ? hit : hit.k
+  const data = await get(key)
+  if (!data) return null
+  // Файл общий для соседей по клетке - зону участка берём свою.
+  if (typeof hit !== 'string' && hit.n && hit.n !== data.plot?.name) {
+    return { key, data: { ...data, plot: { name: hit.n, code: hit.c, kdb: null, kdh: null, klb: null } } }
+  }
+  return { key, data }
+}

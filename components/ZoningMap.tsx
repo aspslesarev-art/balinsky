@@ -38,7 +38,7 @@ function circleRing([lon, lat]: [number, number], r: number): [number, number][]
   })
 }
 
-export function ZoningMap({ slug, lang, ver }: { slug: string; lang: Lang; ver?: string }) {
+export function ZoningMap({ slug, lang, ver, plotOverride }: { slug: string; lang: Lang; ver?: string; plotOverride?: RdtrData['plot'] }) {
   const c = pickCopy(COPY, lang)
   const ru = zoneRu(lang)
   const [data, setData] = useState<RdtrData | null>(null)
@@ -106,7 +106,9 @@ export function ZoningMap({ slug, lang, ver }: { slug: string; lang: Lang; ver?:
   }, [data])
 
   const rows = data ? zoneRows(data, lang) : []
-  const plot = data ? plotLabel(data, lang) : null
+  // Файл зон общий для соседей по клетке - зону участка страница передаёт свою.
+  const plotData = data && plotOverride && plotOverride.name !== data.plot?.name ? { ...data, plot: plotOverride } : data
+  const plot = plotData ? plotLabel(plotData, lang) : null
   const pickedKind = picked ? zoneKind(picked) : null
   const pickedColor = picked ? data?.zones.find(z => z.name === picked)?.color : null
 
@@ -158,7 +160,7 @@ export function ZoningMap({ slug, lang, ver }: { slug: string; lang: Lang; ver?:
                 <span className="w-3 h-3 rounded-[3px] shrink-0 border border-black/10" style={{ background: (picked ? pickedColor : plot.color) ?? '#BBB' }} />
                 {picked ? (pickedKind ? (ru ? pickedKind.ru : pickedKind.en) : picked) : plot.label}
               </span>
-              {!picked && data.plot && (data.plot.kdb || data.plot.kdh) && <span className="text-[13px] text-[var(--color-text-muted)]">{c.rules(data.plot.kdb, data.plot.kdh)}</span>}
+              {!picked && plotData?.plot && (plotData.plot.kdb || plotData.plot.kdh) && <span className="text-[13px] text-[var(--color-text-muted)]">{c.rules(plotData.plot.kdb, plotData.plot.kdh)}</span>}
               {picked && <span className="text-[12px] text-[var(--color-text-muted)]">{picked}</span>}
             </div>
           )}

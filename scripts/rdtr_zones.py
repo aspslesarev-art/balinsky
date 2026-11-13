@@ -77,10 +77,21 @@ def main():
     ap.add_argument("--radius", type=int, default=1000)
     ap.add_argument("--dry", action="store_true")
     a = ap.parse_args()
+    body, thumb = build(a.lat, a.lon, a.radius)
+    if body is None:
+        sys.exit("RDTR для точки не найден")
+    if a.dry:
+        open(f"/tmp/rdtr-{a.slug}.jpg", "wb").write(thumb)
+        return
+    upload(a.slug, body, thumb)
 
+
+def build(lat, lon, radius, verbose=True):
+    """JSON зон вокруг точки + превью .jpg. None, если RDTR для точки нет."""
+    a = argparse.Namespace(lat=lat, lon=lon, radius=radius)
     kab, pz = point_zone(a.lat, a.lon)
     if not kab:
-        sys.exit("RDTR для точки не найден")
+        return None, None
     layers = get(f"{API}/rdtr/{kab}")["data"]
 
     kx = 111320 * math.cos(math.radians(a.lat))
@@ -99,7 +110,8 @@ def main():
         try:
             fc = get(PROXY + base + "/query?" + q)
         except Exception as e:
-            print("skip", L["rtr"], e)
+            if verbose:
+                print("skip", L["rtr"], e)
             continue
         feats = fc.get("features") or []
         if not feats:
@@ -116,7 +128,8 @@ def main():
             if g.is_empty:
                 continue
             parts.setdefault((name, p.get("KODSZN")), []).append(g)
-        print(L["rtr"], len(feats))
+        if verbose:
+            print(L["rtr"], len(feats))
 
     zones, total = [], circle.area
     for (name, code), gs in parts.items():
@@ -138,14 +151,17 @@ def main():
         "zones": zones,
     }
     body = json.dumps(out, ensure_ascii=False, separators=(",", ":"))
-    print(f"zones={len(zones)} size={len(body)//1024}KB plot={out['plot']['code']}")
-    for z in zones[:12]:
-        print(f"  {z['share']*100:5.1f}%  {z['code']}  {z['name']}")
-    thumb = render_thumb(a.lat, a.lon, a.radius, zones)
-    if a.dry:
-        open(f"/tmp/rdtr-{a.slug}.jpg", "wb").write(thumb)
-        return
-    for name, data, ctype in ((f"{a.slug}.json", body.encode(), "application/json"), (f"{a.slug}.jpg", thumb, "image/jpeg")):
+    if verbose:
+        print(f"zones={len(zones)} size={len(body)//1024}KB plot={out['plot']['code']}")
+        for z in zones[:12]:
+            print(f"  {z['share']*100:5.1f}%  {z['code']}  {z['name']}")
+    return body, render_thumb(a.lat, a.lon, a.radius, zones)
+
+
+def upload(slug, body, thumb):
+    for name, data, ctype in ((f"{slug}.json", body.encode() if isinstance(body, str) else body, "application/json"), (f"{slug}.jpg", thumb, "image/jpeg")):
+        if data is None:
+            continue
         url = os.environ["NEXT_PUBLIC_SUPABASE_URL"] + f"/storage/v1/object/feeds/_rdtr-zones/{name}"
         key = os.environ["SUPABASE_SERVICE_KEY"]
         r = requests.post(url, data=data, headers={"apikey": key, "Authorization": f"Bearer {key}",
