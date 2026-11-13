@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elysium 1BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Пиксели картинки плана → метры чертежа (u, v). o — где на картинке сторона
+// u=0 (двор/стекло): 'b' низ, 't' верх, 'r' право, 'l' лево; s — метров в пикселе;
+// x0,y0,x1,y1 — рамка дома на картинке; du/dv — сдвиг (для второго этажа).
+function mapPx (o, s, x0, y0, x1, y1, du = 0, dv = 0) {
+  const uv = (x, y) => o === 'b' ? [(y1 - y) * s + du, (x - x0) * s + dv]
+    : o === 't' ? [(y - y0) * s + du, (x1 - x) * s + dv]
+    : o === 'r' ? [(x1 - x) * s + du, (y1 - y) * s + dv]
+    : [(x - x0) * s + du, (y - y0) * s + dv]
+  const r = (xa, ya, xb, yb) => { const a = uv(xa, ya), b = uv(xb, yb); return [Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1])] }
+  return { uv, r, s }
+}
+// Elysium, Pererenan — апартаменты 1 спальня (студия). Источник — рендер
+// планировки сверху, без размеров и площадей: масштаб (≈0.64 см на
+// пиксель) оценён по кровати ≈1.8 × 2.0 м. Комната неправильной формы со
+// скошенными стенами, ванная и кухня у верхней стены, балкон с цветами
+// слева, вход со стороны скошенной стены справа внизу.
+const S = 0.0064
+const A = mapPx('l', S, 300, 25, 1390, 910)
+const PLAN = { name: 'Elysium 1BR', W: 885 * S, HD: 1090 * S, BACK: 0.75, FRONT: 0.6, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+// ---- помощники: всё в пикселях картинки плана через mapPx ----
+const wl = (A, wall, xa, ya, xb, yb, h) => { const a = A.uv(xa, ya), b = A.uv(xb, yb); wall(a[0], a[1], b[0], b[1], h) }
+const gl = (A, g, xa, ya, xb, yb, base, h) => { const a = A.uv(xa, ya), b = A.uv(xb, yb); glassWall(g, a[0], a[1], b[0], b[1], base, h) }
+const rl = (A, g, xa, ya, xb, yb, base) => { const a = A.uv(xa, ya), b = A.uv(xb, yb); railing(g, a[0], a[1], b[0], b[1], base) }
+const fp = (A, g, xa, ya, xb, yb, y, t, k) => floorPatch(g, ...A.r(xa, ya, xb, yb), y, t, k)
+const bx = (A, g, xa, ya, xb, yb, y, h, mat, r = 0.04) => rr(g, ...A.r(xa, ya, xb, yb), y, h, mat, r)
+function edgeOf (A, xa, ya, xb, yb, side) {
+  const X1 = Math.min(xa, xb), X2 = Math.max(xa, xb), Y1 = Math.min(ya, yb), Y2 = Math.max(ya, yb)
+  return side === 't' ? A.uv((X1 + X2) / 2, Y1) : side === 'b' ? A.uv((X1 + X2) / 2, Y2) : side === 'l' ? A.uv(X1, (Y1 + Y2) / 2) : A.uv(X2, (Y1 + Y2) / 2)
+}
+/** Кровать: side — сторона картинки, где изголовье. */
+function bedP (A, g, xa, ya, xb, yb, side, y, mat) {
+  const [u1, u2, v1, v2] = A.r(xa, ya, xb, yb), h = edgeOf(A, xa, ya, xb, yb, side)
+  if (Math.abs(h[0] - u1) < 0.01 || Math.abs(h[0] - u2) < 0.01) bedU(g, u1, u2, v1, v2, h[0], y, mat)
+  else bed(g, u1, u2, v1, v2, h[1], y, mat)
+}
+/** Диван: side — сторона спинки. */
+function sofaP (A, g, xa, ya, xb, yb, side, y, mat = M.sofa) {
+  const t = 0.28 / A.s, X1 = Math.min(xa, xb), X2 = Math.max(xa, xb), Y1 = Math.min(ya, yb), Y2 = Math.max(ya, yb)
+  rr(g, ...A.r(X1, Y1, X2, Y2), y, 0.42, mat, 0.12)
+  const b = side === 't' ? [X1, Y1, X2, Y1 + t] : side === 'b' ? [X1, Y2 - t, X2, Y2] : side === 'l' ? [X1, Y1, X1 + t, Y2] : [X2 - t, Y1, X2, Y2]
+  rr(g, ...A.r(...b), y, 0.85, mat, 0.12)
+}
+/** Кухонная столешница. */
+function ctr (A, g, xa, ya, xb, yb, y, h = 0.82) {
+  const r = A.r(xa, ya, xb, yb)
+  rr(g, ...r, y, h, M.sage, 0.03); rect(g, r[0] - 0.02, r[1] + 0.02, r[2] - 0.02, r[3] + 0.02, y + h, 0.05, M.white)
+}
+/** Марш лестницы: side — сторона картинки, куда ступени поднимаются. */
+function stairsP (A, g, xa, ya, xb, yb, side, y0, y1, n = 12) {
+  const X1 = Math.min(xa, xb), X2 = Math.max(xa, xb), Y1 = Math.min(ya, yb), Y2 = Math.max(ya, yb), Wd = X2 - X1, Hd = Y2 - Y1
+  for (let i = 0; i < n; i++) {
+    const f0 = i / n, f1 = (i + 1) / n
+    const q = side === 't' ? [X1, Y2 - f1 * Hd, X2, Y2 - f0 * Hd] : side === 'b' ? [X1, Y1 + f0 * Hd, X2, Y1 + f1 * Hd]
+      : side === 'l' ? [X2 - f1 * Wd, Y1, X2 - f0 * Wd, Y2] : [X1 + f0 * Wd, Y1, X1 + f1 * Wd, Y2]
+    rect(g, ...A.r(...q), y0, (y1 - y0) * f1, i % 2 ? M.woodL : toon(0xd6a777))
+  }
+}
+const at = (A, x, y) => A.uv(x, y)
+const LbP = (A, key, area, x, y, h, out) => { const p = A.uv(x, y); return Lb(key, area, p[0], h, p[1], out) }
+const PP = (A, g, hh, x, y, ry, yb, c1, c2) => { const p = A.uv(x, y); return P(g, hh, p[0], p[1], ry, yb, c1, c2) }
+/** Плита по многоугольнику (точки в пикселях картинки). */
+function polySlab (g, pts, base, h, mat) {
+  const sh = new THREE.Shape()
+  pts.forEach(([x, yy], i) => { const [u, v] = A.uv(x, yy), sx = v - cx, sy = -(HD - u - cz); i ? sh.lineTo(sx, sy) : sh.moveTo(sx, sy) })
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2)
+  const m = new THREE.Mesh(geo, mat); m.position.y = base; m.receiveShadow = true; edges(m); g.add(m); return m
+}
+const OUT = [[300, 25], [1390, 25], [1390, 460], [1010, 910], [300, 380]]
+const y = 0.12
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  polySlab(siteG, [[180, 0], [1415, 0], [1415, 470], [1010, 945], [180, 395]], -0.3, 0.3, M.stone)
+  polySlab(g, OUT, 0, 0.12, M.slab)
+  const ter = texMat(T.terrazzo, 1 / 1.6, 1 / 1.6); polySlab(g, OUT, y, 0.012, ter)
+  fp(A, g, 985, 30, 1385, 240, y + 0.004, T.tiles, 0.8)          // ванная
+
+  gl(A, g, 300, 25, 300, 380, 0, H1)
+  wl(A, wall, 300, 25, 1390, 25, H1); wl(A, wall, 1390, 25, 1390, 460, H1)
+  wl(A, wall, 1390, 460, 1290, 578, H1); wl(A, wall, 1215, 668, 1010, 910, H1)
+  wl(A, wall, 1010, 910, 300, 380, H1)
+  wl(A, wall, 985, 25, 985, 240, H1); wl(A, wall, 985, 240, 1255, 240, H1)
+
+  // спальная зона
+  bedP(A, g, 500, 52, 790, 358, 't', y, M.coral)
+  cyl(g, ...at(A, 490, 72), 0.16, 0.16, 0.45, y, M.woodL, 16); cyl(g, ...at(A, 795, 72), 0.16, 0.16, 0.45, y, M.woodL, 16)
+  rr(g, ...A.r(500, 358, 790, 485), y, 0.012, M.grey, 0.005, false)
+  rr(g, ...A.r(330, 95, 410, 180), y, 0.45, M.coral, 0.12); rr(g, ...A.r(330, 250, 410, 335), y, 0.45, M.coral, 0.12)
+  cyl(g, ...at(A, 380, 215), 0.22, 0.2, 0.5, y, M.woodL, 18)
+  bx(A, g, 875, 35, 975, 360, y, 2.1, M.dark)                    // шкаф
+  // ванная
+  shower(g, ...A.r(995, 35, 1105, 235), y); toilet(g, ...at(A, 1160, 145), y); vanity(g, ...A.r(1230, 40, 1355, 135), y)
+  // кухня вдоль стены ванной
+  ctr(A, g, 995, 248, 1250, 345, y)
+  // рабочее место и столовая
+  bx(A, g, 540, 480, 690, 560, y + 0.7, 0.05, M.sage); bx(A, g, 600, 500, 630, 540, y, 0.7, M.dark)
+  chair(g, ...at(A, 670, 520), y, M.coral)
+  roundTable(g, ...at(A, 835, 715), y, 0.42)
+  for (const [x, yy] of [[770, 665], [895, 655], [770, 770], [900, 775]]) chair(g, ...at(A, x, yy), y, M.coral)
+  plant(g, ...at(A, 960, 840), y, 0.8)
+  bx(A, g, 1210, 470, 1300, 560, y, 1.0, M.wood)                 // обувница у входа
+}
+// ============ балкон ============
+{
+  const g = floor1G
+  rect(g, ...A.r(190, 30, 300, 380), 0, 0.1, texMat(T.deck, 0.6, 2), true, false)
+  rl(A, g, 190, 30, 190, 380, 0.1)
+  for (const yy of [70, 150, 230, 310]) plant(g, ...at(A, 230, yy), 0.1, 0.8)
+}
+PP(A, floor1G, 1.65, 700, 640, -0.6, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen'], ['bathroom'], ['balcony']] }],
+  L1: [
+    LbP(A, 'livingKitchen', undefined, 800, 500, 2.3),
+    LbP(A, 'bathroom', undefined, 1180, 140, 2.4),
+    LbP(A, 'balcony', undefined, 240, 200, 1.4),
+  ],
+})
+</script>
+</body>
+</html>

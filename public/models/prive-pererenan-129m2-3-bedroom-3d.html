@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prive 3BR — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Пиксели картинки плана → метры чертежа (u, v). o — где на картинке сторона
+// u=0 (двор/стекло): 'b' низ, 't' верх, 'r' право, 'l' лево; s — метров в пикселе;
+// x0,y0,x1,y1 — рамка дома на картинке; du/dv — сдвиг (для второго этажа).
+function mapPx (o, s, x0, y0, x1, y1, du = 0, dv = 0) {
+  const uv = (x, y) => o === 'b' ? [(y1 - y) * s + du, (x - x0) * s + dv]
+    : o === 't' ? [(y - y0) * s + du, (x1 - x) * s + dv]
+    : o === 'r' ? [(x1 - x) * s + du, (y1 - y) * s + dv]
+    : [(x - x0) * s + du, (y - y0) * s + dv]
+  const r = (xa, ya, xb, yb) => { const a = uv(xa, ya), b = uv(xb, yb); return [Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1])] }
+  return { uv, r, s }
+}
+// Prive Pererenan, вилла с 3 спальнями, тип T1. Площади — с листов
+// застройщика: этаж 1 — прихожая 7.11, кухня/гостиная 35.80, спальня 1
+// 12.40, санузел 1 1.75, санузел 2 3.77, лестница 4.17; этаж 2 — лестница
+// 8.90, спальня 2 20.00, санузел 3.1 6.65, санузел 3.2 2.89, санузел 4 3.85,
+// спальня 3 20.81. Размеров нет: масштаб (≈1.9 см на пиксель) подобран по
+// площади кухни-гостиной. Бассейна на листах нет.
+const S = 0.019
+const A = mapPx('l', S, 428, 185, 1025, 553)
+const B = mapPx('l', S, 428, 185, 1025, 553)
+const PLAN = { name: 'Prive 3BR', W: 368 * S, HD: 597 * S, BACK: 2.6, FRONT: 2.0, H1: 3.0, H2: 2.9, floors: 2 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+// ---- помощники: всё в пикселях картинки плана через mapPx ----
+const wl = (A, wall, xa, ya, xb, yb, h) => { const a = A.uv(xa, ya), b = A.uv(xb, yb); wall(a[0], a[1], b[0], b[1], h) }
+const gl = (A, g, xa, ya, xb, yb, base, h) => { const a = A.uv(xa, ya), b = A.uv(xb, yb); glassWall(g, a[0], a[1], b[0], b[1], base, h) }
+const rl = (A, g, xa, ya, xb, yb, base) => { const a = A.uv(xa, ya), b = A.uv(xb, yb); railing(g, a[0], a[1], b[0], b[1], base) }
+const fp = (A, g, xa, ya, xb, yb, y, t, k) => floorPatch(g, ...A.r(xa, ya, xb, yb), y, t, k)
+const bx = (A, g, xa, ya, xb, yb, y, h, mat, r = 0.04) => rr(g, ...A.r(xa, ya, xb, yb), y, h, mat, r)
+function edgeOf (A, xa, ya, xb, yb, side) {
+  const X1 = Math.min(xa, xb), X2 = Math.max(xa, xb), Y1 = Math.min(ya, yb), Y2 = Math.max(ya, yb)
+  return side === 't' ? A.uv((X1 + X2) / 2, Y1) : side === 'b' ? A.uv((X1 + X2) / 2, Y2) : side === 'l' ? A.uv(X1, (Y1 + Y2) / 2) : A.uv(X2, (Y1 + Y2) / 2)
+}
+/** Кровать: side — сторона картинки, где изголовье. */
+function bedP (A, g, xa, ya, xb, yb, side, y, mat) {
+  const [u1, u2, v1, v2] = A.r(xa, ya, xb, yb), h = edgeOf(A, xa, ya, xb, yb, side)
+  if (Math.abs(h[0] - u1) < 0.01 || Math.abs(h[0] - u2) < 0.01) bedU(g, u1, u2, v1, v2, h[0], y, mat)
+  else bed(g, u1, u2, v1, v2, h[1], y, mat)
+}
+/** Диван: side — сторона спинки. */
+function sofaP (A, g, xa, ya, xb, yb, side, y, mat = M.sofa) {
+  const t = 0.28 / A.s, X1 = Math.min(xa, xb), X2 = Math.max(xa, xb), Y1 = Math.min(ya, yb), Y2 = Math.max(ya, yb)
+  rr(g, ...A.r(X1, Y1, X2, Y2), y, 0.42, mat, 0.12)
+  const b = side === 't' ? [X1, Y1, X2, Y1 + t] : side === 'b' ? [X1, Y2 - t, X2, Y2] : side === 'l' ? [X1, Y1, X1 + t, Y2] : [X2 - t, Y1, X2, Y2]
+  rr(g, ...A.r(...b), y, 0.85, mat, 0.12)
+}
+/** Кухонная столешница. */
+function ctr (A, g, xa, ya, xb, yb, y, h = 0.82) {
+  const r = A.r(xa, ya, xb, yb)
+  rr(g, ...r, y, h, M.sage, 0.03); rect(g, r[0] - 0.02, r[1] + 0.02, r[2] - 0.02, r[3] + 0.02, y + h, 0.05, M.white)
+}
+/** Марш лестницы: side — сторона картинки, куда ступени поднимаются. */
+function stairsP (A, g, xa, ya, xb, yb, side, y0, y1, n = 12) {
+  const X1 = Math.min(xa, xb), X2 = Math.max(xa, xb), Y1 = Math.min(ya, yb), Y2 = Math.max(ya, yb), Wd = X2 - X1, Hd = Y2 - Y1
+  for (let i = 0; i < n; i++) {
+    const f0 = i / n, f1 = (i + 1) / n
+    const q = side === 't' ? [X1, Y2 - f1 * Hd, X2, Y2 - f0 * Hd] : side === 'b' ? [X1, Y1 + f0 * Hd, X2, Y1 + f1 * Hd]
+      : side === 'l' ? [X2 - f1 * Wd, Y1, X2 - f0 * Wd, Y2] : [X1 + f0 * Wd, Y1, X1 + f1 * Wd, Y2]
+    rect(g, ...A.r(...q), y0, (y1 - y0) * f1, i % 2 ? M.woodL : toon(0xd6a777))
+  }
+}
+const at = (A, x, y) => A.uv(x, y)
+const LbP = (A, key, area, x, y, h, out) => { const p = A.uv(x, y); return Lb(key, area, p[0], h, p[1], out) }
+const PP = (A, g, hh, x, y, ry, yb, c1, c2) => { const p = A.uv(x, y); return P(g, hh, p[0], p[1], ry, yb, c1, c2) }
+lot()
+{ const a = A.uv(0, 270), b = A.uv(0, 345); path(a[1] + 0.1, b[1] - 0.1) }
+const y = 0.12
+// ============ 1 этаж ============
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  fp(A, g, 433, 198, 726, 545, y, T.planks, 1.6)           // кухня-гостиная
+  fp(A, g, 726, 262, 1018, 355, y, T.terrazzo, 1.6)        // прихожая
+  fp(A, g, 784, 198, 1018, 262, y, T.planks, 1.6)          // лестница
+  fp(A, g, 826, 355, 1018, 545, y, T.planksDark, 1.6)      // спальня 1
+  fp(A, g, 726, 402, 826, 545, y + 0.004, T.tiles, 0.8)    // санузел 2
+  fp(A, g, 680, 198, 778, 262, y + 0.004, T.tiles, 0.8)    // санузел 1
+
+  wl(A, wall, 433, 192, 1020, 192, H1); wl(A, wall, 433, 547, 1020, 547, H1)
+  gl(A, g, 433, 192, 433, 547, 0, H1)
+  wl(A, wall, 1020, 192, 1020, 270, H1); wl(A, wall, 1020, 345, 1020, 547, H1)
+  { const a = A.uv(1020, 270), b = A.uv(1020, 345); door(g, a[0], a[1] + 0.05, b[1] - 0.05, y) }
+  wl(A, wall, 680, 192, 680, 262, H1); wl(A, wall, 680, 262, 735, 262, H1); wl(A, wall, 780, 192, 780, 262, H1)
+  wl(A, wall, 726, 355, 726, 547, H1); wl(A, wall, 726, 402, 826, 402, H1)
+  wl(A, wall, 826, 402, 826, 478, H1); wl(A, wall, 826, 495, 826, 547, H1)
+  wl(A, wall, 826, 352, 836, 352, H1); wl(A, wall, 880, 352, 1020, 352, H1)
+
+  // кухня вдоль верхней стены, остров со стульями
+  ctr(A, g, 445, 200, 640, 234, y); bx(A, g, 640, 200, 676, 234, y, 1.9, M.steel)
+  ctr(A, g, 497, 306, 662, 344, y, 0.92)
+  for (const x of [560, 598, 632]) { chair(g, ...at(A, x, 292), y); chair(g, ...at(A, x, 358), y) }
+  // гостиная
+  sofaP(A, g, 460, 402, 610, 448, 't', y, M.sofa)
+  sofaP(A, g, 610, 402, 662, 470, 'r', y, M.sofa)
+  rr(g, ...A.r(500, 410, 520, 422), y + 0.42, 0.3, M.cush, 0.1)
+  rr(g, ...A.r(525, 462, 590, 495), y, 0.36, M.woodL, 0.05)
+  bx(A, g, 465, 520, 685, 540, y, 0.45, M.wood); rect(g, ...A.r(540, 543, 610, 545), 0.9, 0.6, M.dark)
+  bx(A, g, 728, 355, 780, 398, y, 2.1, M.wood)
+  plant(g, ...at(A, 450, 520), y, 0.8)
+  // санузлы
+  vanity(g, ...A.r(688, 205, 712, 252), y); toilet(g, ...at(A, 765, 225), y)
+  tub(g, ...A.r(735, 418, 762, 492), y); toilet(g, ...at(A, 798, 428), y); vanity(g, ...A.r(735, 500, 770, 538), y)
+  // лестница
+  stairsP(A, g, 790, 203, 1012, 260, 'l', y, H1 + 0.18, 14)
+  // спальня 1
+  bedP(A, g, 878, 420, 972, 530, 'b', y, M.teal)
+  bx(A, g, 840, 512, 865, 535, y, 0.45, M.woodL); bx(A, g, 985, 512, 1010, 535, y, 0.45, M.woodL)
+  bx(A, g, 900, 357, 970, 372, y, 0.6, M.wood)
+}
+// ============ 2 этаж ============
+const Y = H1 + 0.18, YF = Y + 0.04
+{
+  const g = floor2G, wall = makeWall(g, Y)
+  const sl = (r) => { rect(g, ...r, H1, 0.18, M.wood); rect(g, ...r, Y, 0.04, M.slab, true, false) }
+  sl(B.r(348, 192, 790, 547)); sl(B.r(790, 262, 1020, 547)); sl(B.r(1012, 192, 1020, 262))
+  fp(B, g, 352, 198, 426, 545, YF, T.deck, 1)               // балкон
+  fp(B, g, 433, 325, 675, 545, YF, T.planksDark, 1.6)       // спальня 2
+  fp(B, g, 740, 352, 1015, 545, YF, T.planksDark, 1.6)      // спальня 3
+  fp(B, g, 433, 198, 675, 325, YF + 0.004, T.tiles, 0.8)    // санузлы 3.1 и 3.2
+  fp(B, g, 740, 265, 880, 352, YF + 0.004, T.tiles, 0.8)    // санузел 4
+  fp(B, g, 675, 262, 740, 545, YF, T.planks, 1.6)           // холл
+
+  wl(B, wall, 433, 192, 1020, 192, H2); wl(B, wall, 433, 547, 1020, 547, H2)
+  gl(B, g, 433, 192, 433, 547, Y, H2); wl(B, wall, 1020, 192, 1020, 415, H2); gl(B, g, 1020, 415, 1020, 547, Y, H2)
+  rl(B, g, 350, 192, 350, 547, YF); rl(B, g, 350, 192, 433, 192, YF); rl(B, g, 350, 547, 433, 547, YF)
+  wl(B, wall, 433, 324, 540, 324, H2); wl(B, wall, 540, 324, 675, 324, H2)
+  wl(B, wall, 582, 192, 582, 240, H2); wl(B, wall, 675, 192, 675, 324, H2)
+  wl(B, wall, 675, 405, 675, 547, H2)
+  wl(B, wall, 738, 265, 738, 400, H2); wl(B, wall, 738, 418, 738, 547, H2)
+  wl(B, wall, 685, 263, 1012, 263, H2)
+  wl(B, wall, 738, 352, 880, 352, H2); wl(B, wall, 880, 263, 880, 352, H2)
+
+  // санузел 3.1 и 3.2
+  tub(g, ...B.r(437, 220, 476, 310), YF); vanity(g, ...B.r(495, 200, 575, 226), YF)
+  shower(g, ...B.r(590, 200, 668, 255), YF); toilet(g, ...at(B, 643, 290), YF)
+  // спальня 2
+  bedP(B, g, 515, 397, 635, 522, 'b', YF, M.coral)
+  bx(B, g, 482, 510, 505, 533, YF, 0.45, M.woodL); bx(B, g, 640, 505, 660, 525, YF, 0.45, M.woodL)
+  bx(B, g, 440, 335, 470, 435, YF, 0.75, M.woodL); chair(g, ...at(B, 488, 390), YF)
+  bx(B, g, 700, 418, 736, 540, YF, 2.1, M.wood)
+  // санузел 4
+  tub(g, ...B.r(744, 280, 766, 348), YF); toilet(g, ...at(B, 800, 292), YF); shower(g, ...B.r(828, 268, 876, 312), YF)
+  // спальня 3
+  bedP(B, g, 808, 428, 908, 530, 'b', YF, M.mustard)
+  bx(B, g, 778, 510, 800, 532, YF, 0.45, M.woodL); bx(B, g, 915, 510, 937, 532, YF, 0.45, M.woodL)
+  bx(B, g, 965, 410, 995, 500, YF, 0.75, M.woodL); chair(g, ...at(B, 945, 455), YF)
+  bx(B, g, 825, 357, 910, 380, YF, 0.45, M.wood)
+  bx(B, g, 885, 268, 1005, 300, YF, 2.1, M.wood)
+  plant(g, ...at(B, 380, 230), YF, 0.8)
+}
+PP(A, floor1G, 1.65, 690, 300, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+PP(A, floor1G, 1.75, 870, 300, Math.PI / 2, y, 0x4aa8a8, 0xf3ead8)
+PP(B, floor2G, 1.7, 707, 330, 0.4, YF, 0x7fae95, 0x4a3a2e)
+
+const Y2 = H1 + 0.2
+ToonKit.start({
+  sub: '3 ' + Model3D.roomWord('bedroomsPlural'),
+  facts: [
+    { group: 'floor1', rooms: [['livingKitchen', 35.8], ['bedroom', 12.4], ['hall', 7.11], ['bathroom', 1.75], ['bathroom', 3.77], ['stairs', 4.17]] },
+    { group: 'floor2', rooms: [['bedroom', 20.0], ['bedroom', 20.81], ['bathroom', 6.65], ['bathroom', 2.89], ['bathroom', 3.85], ['stairs', 8.9]] },
+  ],
+  L1: [
+    LbP(A, 'livingKitchen', 35.8, 580, 380, 2.3),
+    LbP(A, 'bedroom', 12.4, 920, 450, 2.0),
+    LbP(A, 'hall', 7.11, 870, 310, 1.6),
+    LbP(A, 'bathroom', 3.77, 775, 470, 2.4),
+    LbP(A, 'bathroom', 1.75, 730, 230, 2.4),
+    LbP(A, 'stairs', 4.17, 900, 232, 2.8),
+  ],
+  L2: [
+    LbP(B, 'bedroom', 20.0, 555, 450, Y2 + 1.9),
+    LbP(B, 'bedroom', 20.81, 870, 460, Y2 + 1.9),
+    LbP(B, 'bathroom', 6.65, 510, 270, Y2 + 1.7),
+    LbP(B, 'bathroom', 3.85, 800, 320, Y2 + 1.6),
+    LbP(B, 'stairs', 8.9, 850, 230, Y2 + 1.5),
+  ],
+})
+</script>
+</body>
+</html>
