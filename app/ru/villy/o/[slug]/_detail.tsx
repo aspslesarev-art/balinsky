@@ -94,7 +94,6 @@ import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPd
 import { IncomeCalculator } from '@/components/IncomeCalculator'
 import { BeachWeatherDesign } from '@/components/BeachWeatherDesign'
 import { LocationSection } from '@/components/LocationSection'
-import { googleMapsUrl } from '@/lib/google-maps'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
@@ -1981,29 +1980,15 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           <div className="text-[15px] text-[#36413B]">
             {district ? `${district}, ${c.bali}` : c.bali}
           </div>
-          <div className="flex flex-wrap gap-5 text-[14px]">
+          {((beachPick && beachPick.km <= 3) || (nearby?.byCategory?.school?.[0] && nearby.byCategory.school[0].distanceKm <= 2)) && <div className="flex flex-wrap gap-5 text-[14px]">
             {beachPick && beachPick.km <= 3 && (
               <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M2 18c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><circle cx="12" cy="9" r="4"/></svg>{pickCopy({ ru: 'Пляж', en: 'Beach', id: 'Pantai', fr: 'Plage', de: 'Strand', zh: '海滩', nl: 'Strand', ban: 'Pantai', pl: 'Plaża', uk: 'Пляж' }, lang)} {beachPick.km < 1 ? `${Math.round(beachPick.km * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${beachPick.km.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
-            )}
-            {airportS && (
-              <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 16l20-6-3-3-6 2-6-5-2 1 4 6-5 2-2-1-1 1z"/></svg>{pickCopy({ ru: 'Аэропорт', en: 'Airport', id: 'Bandara', fr: 'Aéroport', de: 'Flughafen', zh: '机场', nl: 'Vliegveld', ban: 'Bandara', pl: 'Lotnisko', uk: 'Аеропорт' }, lang)} {Math.round(airportS / 60)} {pickCopy({ ru: 'мин', en: 'min', id: 'mnt', fr: 'min', de: 'Min', zh: '分钟', nl: 'min', ban: 'mnt', pl: 'min', uk: 'хв' }, lang)}</span>
             )}
             {nearby?.byCategory?.school && nearby.byCategory.school.length > 0 && nearby.byCategory.school[0].distanceKm <= 2 && (
               <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/></svg>{pickCopy({ ru: 'Школа', en: 'School', id: 'Sekolah', fr: 'École', de: 'Schule', zh: '学校', nl: 'School', ban: 'Sekolah', pl: 'Szkoła', uk: 'Школа' }, lang)} {nearby.byCategory.school[0].distanceKm < 1 ? `${Math.round(nearby.byCategory.school[0].distanceKm * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${nearby.byCategory.school[0].distanceKm.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
             )}
-            {lat != null && lng != null && <a href={googleMapsUrl(lat, lng)} target="_blank" rel="noopener noreferrer" className="text-[14px] text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]">{pickCopy({ ru: 'На карте', en: 'On the map', id: 'Di peta', fr: 'Sur la carte', de: 'Auf der Karte', zh: '地图', nl: 'Op de kaart', ban: 'Ring peta', pl: 'Na mapie', uk: 'На карті' }, lang)}</a>}
-          </div>
+          </div>}
           {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block"><VerifiedYieldBadge lang={lang} /></a>}
-          {parentComplex && (
-            <Link
-              href={`${complexesRoot}/o/${parentComplex.slug}`}
-              className="inline-flex items-center gap-1.5 text-[13px] text-[var(--color-primary)] hover:underline"
-            >
-              {lang === 'ru'
-                ? `${parentComplex.name} — страница комплекса`
-                : `${parentComplex.name} — complex page`}
-            </Link>
-          )}
           {priceNum != null && (
             <div className="lg:hidden">
               <PriceCtaCard
@@ -2071,6 +2056,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                       <span className="text-right">{f.value}</span>
                     </div>
                   ))}
+                  {parentComplex && (
+                    <div className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
+                      <span className="text-[var(--color-text-muted)]">{pickCopy({ ru: 'Часть комплекса', en: 'Part of complex', id: 'Bagian dari kompleks', fr: 'Fait partie du complexe', de: 'Teil der Anlage', zh: '所属项目', nl: 'Onderdeel van complex', ban: 'Bagian saking kompleks', pl: 'Część kompleksu', uk: 'Частина комплексу' }, lang)}</span>
+                      <Link href={`${complexesRoot}/o/${parentComplex.slug}`} className="text-right font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] hover:underline">
+                        {parentComplex.name} →
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
               {landFacts.length > 0 && (
