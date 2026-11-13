@@ -57,6 +57,15 @@ const VILLA_3D_PLANS: Readonly<Record<string, string>> = {
   'royalin-pandawa-255m2-5-bedroom': '/models/royalin-pandawa-255m2-5-bedroom-3d.html',
   'edem-ii-nusa-dua-138m2-2-bedroom-2': '/models/edem-ii-nusa-dua-138m2-2-bedroom-v2-3d.html',
   'edem-ii-nusa-dua-138m2-2-bedroom-3': '/models/edem-ii-nusa-dua-138m2-2-bedroom-v2-3d.html',
+  'prive-pererenan-84m2-2-bedroom': '/models/prive-pererenan-84m2-2-bedroom-3d.html',
+  'edem-ii-nusa-dua-138m2-2-bedroom': '/models/edem-ii-nusa-dua-138m2-2-bedroom-3d.html',
+  'black-sands-oasis-nyanyi-83m2-1-bedroom': '/models/black-sands-oasis-nyanyi-83m2-1-bedroom-3d.html',
+  'prive-pererenan-88m2-2-bedroom': '/models/prive-pererenan-88m2-2-bedroom-3d.html',
+  'prive-pererenan-85m2-2-bedroom': '/models/prive-pererenan-88m2-2-bedroom-3d.html',
+  'sansara-pandawa-residence-234m2-3-bedroom': '/models/sansara-pandawa-residence-234m2-3-bedroom-3d.html',
+  'ramada-nusa-dua-79m2-1-bedroom': '/models/ramada-nusa-dua-79m2-1-bedroom-3d.html',
+  'royalin-pandawa-310m2-7-bedroom': '/models/royalin-pandawa-310m2-7-bedroom-3d.html',
+  'elysium-pererenan-113m2-2-bedroom': '/models/elysium-pererenan-113m2-2-bedroom-3d.html',
 }
 
 /** Публичный URL 3D-планировки виллы либо null, если модели нет. */
@@ -105,6 +114,22 @@ const APARTMENT_3D_PLANS: Readonly<Record<string, string>> = {
   'magnum-resort-berawa-berawa-82m2-1-bedroom-3': '/models/magnum-resort-berawa-berawa-82m2-1-bedroom-3d.html',
   'magnum-resort-berawa-berawa-82m2-1-bedroom-4': '/models/magnum-resort-berawa-berawa-82m2-1-bedroom-3d.html',
   'amani-melasti-melasti-65m2-1-bedroom-1': '/models/amani-melasti-melasti-65m2-1-bedroom-3d.html',
+  'elysium-pererenan-70m2-2-bedroom-1': '/models/elysium-pererenan-70m2-2-bedroom-3d.html',
+  'tamora-axis-uluwatu-138m2-2-bedroom-4': '/models/tamora-axis-uluwatu-138m2-2-bedroom-3d.html',
+  'tamora-axis-uluwatu-138m2-2-bedroom-1': '/models/tamora-axis-uluwatu-138m2-2-bedroom-3d.html',
+  'tamora-axis-uluwatu-138m2-2-bedroom-6': '/models/tamora-axis-uluwatu-138m2-2-bedroom-3d.html',
+  'tamora-axis-uluwatu-138m2-2-bedroom-2': '/models/tamora-axis-uluwatu-138m2-2-bedroom-3d.html',
+  'tamora-axis-uluwatu-138m2-2-bedroom-3': '/models/tamora-axis-uluwatu-138m2-2-bedroom-3d.html',
+  'tamora-axis-uluwatu-138m2-2-bedroom-5': '/models/tamora-axis-uluwatu-138m2-2-bedroom-3d.html',
+  'baza-kedungu-kedungu-87m2-2-bedroom-1': '/models/baza-kedungu-kedungu-87m2-2-bedroom-3d.html',
+  'elysium-pererenan-83m2-2-bedroom-1': '/models/elysium-pererenan-83m2-2-bedroom-3d.html',
+  'swoi-berawa-berawa-35m2-1-bedroom-1': '/models/swoi-berawa-berawa-35m2-1-bedroom-3d.html',
+  'elysium-pererenan-76m2-1-bedroom-1': '/models/elysium-pererenan-76m2-1-bedroom-3d.html',
+  'elysium-pererenan-75m2-1-bedroom-1': '/models/elysium-pererenan-76m2-1-bedroom-3d.html',
+  'white-palm-villas-batu-bolong-80m2-2-bedroom-1': '/models/white-palm-villas-batu-bolong-80m2-2-bedroom-3d.html',
+  'ubud-dream-ubud-35m2-1-bedroom-1': '/models/ubud-dream-ubud-35m2-1-bedroom-3d.html',
+  'elysium-pererenan-43m2-1-bedroom-1': '/models/elysium-pererenan-43m2-1-bedroom-3d.html',
+  'edem-ii-nusa-dua-29m2-1-bedroom-1': '/models/edem-ii-nusa-dua-29m2-1-bedroom-3d.html',
 }
 
 /** Публичный URL 3D-планировки апартаментов либо null, если модели нет. */

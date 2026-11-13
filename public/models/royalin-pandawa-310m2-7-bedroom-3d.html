@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royalin Villa 8 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// С чертежей DM Projects «Royalin, Villa 8. 7 bedrooms, 2 floors with
+// rooftop» (листы 02, 11, 20): 1 этаж — гостиная с кухней и столовой,
+// 3 спальни в доме и 2 во флигеле справа со спа (массажная, сауна),
+// бассейн в саду; 2 этаж — 2 спальни с ваннами и L-образная терраса,
+// с неё лестница на крышу. Площадей и размеров на чертежах нет: метры
+// сняты по масштабу (кровать ≈ 1.7 м, 1 px ≈ 3.2 см). Терраса на крыше
+// не построена — показана только лестница к ней.
+const k = 0.032, X0 = 140, X1 = 740, YT = 165, YB = 905
+const PLAN = { name: 'Royalin Villa 8', W: (X1 - X0) * k, HD: (YB - YT) * k, BACK: 0.6, FRONT: 0.6, H1: 3.1, H2: 2.9, floors: 2 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const V = p => (p - X0) * k, U = p => (YB - p) * k
+const pr = (x1, x2, y1, y2) => [U(y2), U(y1), V(x1), V(x2)]
+const wl = wall => (x1, y1, x2, y2, h) => wall(U(y1), V(x1), U(y2), V(x2), h)
+const D2X = 80, D2Y = 47       // 2 этаж нарисован со сдвигом
+const pr2 = (x1, x2, y1, y2) => pr(x1 - D2X, x2 - D2X, y1 - D2Y, y2 - D2Y)
+const wl2 = wall => (x1, y1, x2, y2, h) => wall(U(y1 - D2Y), V(x1 - D2X), U(y2 - D2Y), V(x2 - D2X), h)
+const U2 = p => U(p - D2Y), V2 = p => V(p - D2X)
+function stairs (g, u1, u2, v1, v2, y0, y1, n = 16) {
+  const d = (u2 - u1) / n, r = (y1 - y0) / n
+  for (let i = 0; i < n; i++) rect(g, u1 + d * i, u1 + d * (i + 1), v1, v2, y0, r * (i + 1), M.woodL)
+}
+const bedN = (g, x1, x2, y1, y2, yy, c) => { bedU(g, ...pr(x1, x2, y1, y2), U(y1), yy, c); rr(g, ...pr(x1 - 14, x1 - 2, y1, y1 + 12), yy, 0.45, M.woodL, 0.04); rr(g, ...pr(x2 + 2, x2 + 14, y1, y1 + 12), yy, 0.45, M.woodL, 0.04) }
+lot()
+const y = 0.12
+// ============ 1 этаж: дом ============
+{
+  const g = floor1G, w = wl(makeWall(g, 0))
+  rect(g, ...pr(168, 525, 188, 460), 0, 0.12, M.slab)
+  rect(g, ...pr(168, 315, 460, 740), 0, 0.12, M.slab)
+  floorPatch(g, ...pr(168, 525, 330, 458), y, T.terrazzo, 1.4)          // гостиная
+  floorPatch(g, ...pr(168, 315, 458, 600), y, T.terrazzo, 1.4)          // кухня, столовая
+  floorPatch(g, ...pr(245, 350, 188, 275), y, T.planksDark, 1.6)        // спальня 1
+  floorPatch(g, ...pr(410, 525, 188, 330), y, T.planksDark, 1.6)        // спальня 2
+  floorPatch(g, ...pr(168, 315, 648, 740), y, T.planksDark, 1.6)        // спальня 3
+  floorPatch(g, ...pr(168, 245, 188, 330), y, T.planks, 1.6)            // лестница
+  floorPatch(g, ...pr(280, 410, 275, 330), y + 0.004, T.tiles, 0.8)
+  floorPatch(g, ...pr(350, 410, 188, 275), y + 0.004, T.tiles, 0.8)
+  floorPatch(g, ...pr(168, 315, 600, 648), y + 0.004, T.tiles, 0.8)
+
+  w(168, 188, 525, 188, H1); w(525, 188, 525, 460, H1); w(168, 188, 168, 740, H1); w(168, 740, 315, 740, H1)
+  w(315, 458, 345, 458, H1); glassWall(g, U(458), V(345), U(458), V(440), 0, H1); w(440, 458, 525, 458, H1)
+  w(315, 458, 315, 480, H1); glassWall(g, U(480), V(315), U(530), V(315), 0, H1); w(315, 530, 315, 650, H1)
+  glassWall(g, U(650), V(315), U(700), V(315), 0, H1); w(315, 700, 315, 740, H1)
+  // спальни и ванные верхнего крыла, коридор
+  w(245, 188, 245, 335, H1); w(350, 188, 350, 330, H1); w(410, 188, 410, 330, H1)
+  w(280, 275, 410, 275, H1); w(280, 275, 280, 330, H1)
+  w(168, 330, 175, 330, H1); w(195, 330, 255, 330, H1); w(285, 330, 430, 330, H1); w(460, 330, 525, 330, H1)
+  // санузел и спальня нижнего крыла
+  w(168, 600, 300, 600, H1); w(168, 648, 315, 648, H1); w(260, 600, 260, 648, H1)
+
+  stairs(g, U(333), U(230), V(172), V(242), y, H1 + 0.18)
+  bedN(g, 290, 345, 205, 260, y, M.teal)
+  tub(g, ...pr(365, 405, 196, 218), y); toilet(g, U(262), V(395), y); vanity(g, ...pr(355, 375, 235, 262), y)
+  toilet(g, U(290), V(310), y); vanity(g, ...pr(285, 300, 300, 325), y)
+  rr(g, ...pr(355, 408, 292, 328), y, 2.0, M.wood, 0.03)
+  bedN(g, 440, 495, 200, 255, y, M.coral)
+  bedN(g, 195, 245, 660, 712, y, M.mustard)
+  rr(g, ...pr(270, 312, 715, 738), y, 2.0, M.wood, 0.03)
+  toilet(g, U(632), V(210), y); vanity(g, ...pr(175, 200, 605, 640), y); toilet(g, U(632), V(285), y)
+  // гостиная: угловой диван, камин, чайный столик
+  cyl(g, U(410), V(420), 1.6, 1.6, 0.015, y, M.mustard, 40, false)
+  rr(g, ...pr(375, 460, 375, 400), y, 0.42, M.sofa, 0.12); rr(g, ...pr(375, 460, 375, 385), y, 0.85, M.sofa, 0.12)
+  rr(g, ...pr(375, 392, 375, 425), y, 0.42, M.sofa, 0.12)
+  rr(g, ...pr(418, 442, 405, 428), y, 0.4, M.woodL, 0.04)
+  rr(g, ...pr(505, 520, 350, 440), y, 1.1, M.stone, 0.03)
+  roundTable(g, U(405), V(320), y, 0.55); chair(g, U(395), V(300), y); chair(g, U(420), V(340), y)
+  // кухня у левой стены, бар, столовая
+  rr(g, ...pr(170, 190, 385, 495), y, 0.82, M.sage, 0.03); rect(g, ...pr(170, 192, 385, 495), 0.94, 0.05, M.white)
+  rr(g, ...pr(220, 236, 385, 450), y, 1.05, M.woodL, 0.04)
+  for (const yy of [400, 425, 445]) stool(g, U(yy), V(250), y)
+  rr(g, ...pr(195, 270, 530, 565), y + 0.7, 0.06, M.woodL, 0.03); rr(g, ...pr(220, 245, 540, 555), y, 0.7, M.wood, 0.03)
+  for (const x of [205, 232, 260]) { chair(g, U(522), V(x), y); chair(g, U(575), V(x), y) }
+}
+// ============ 1 этаж: флигель со спа и двумя спальнями ============
+{
+  const g = floor1G, w = wl(makeWall(g, 0))
+  rect(g, ...pr(572, 700, 520, 905), 0, 0.12, M.slab)
+  floorPatch(g, ...pr(572, 650, 520, 690), y, T.tiles, 0.8)
+  floorPatch(g, ...pr(572, 685, 690, 905), y, T.planksDark, 1.6)
+  w(572, 520, 640, 520, H1); w(572, 520, 572, 905, H1); w(572, 905, 740, 905, H1); w(640, 520, 740, 905, H1)
+  w(572, 572, 655, 572, H1); w(572, 605, 665, 605, H1); w(572, 690, 685, 690, H1); w(572, 800, 710, 800, H1)
+  w(655, 710, 655, 775, H1); w(680, 805, 680, 880, H1)
+  rr(g, ...pr(578, 635, 528, 545), y, 0.45, M.woodL, 0.03)                    // скамья сауны
+  rr(g, ...pr(585, 615, 625, 680), y, 0.75, M.white, 0.06); rr(g, ...pr(625, 655, 625, 680), y, 0.75, M.white, 0.06)
+  bedN(g, 598, 650, 712, 765, y, M.teal)
+  toilet(g, U(745), V(680), y)
+  bedN(g, 610, 665, 820, 870, y, M.coral)
+  toilet(g, U(860), V(705), y)
+  rr(g, ...pr(578, 610, 780, 796), y, 2.0, M.wood, 0.03); rr(g, ...pr(578, 610, 885, 902), y, 2.0, M.wood, 0.03)
+}
+// ============ сад: бассейн, диваны, BBQ, детская площадка ============
+{
+  const g = floor1G, w = wl(makeWall(g, 0))
+  rect(g, ...pr(315, 560, 458, 520), 0, 0.06, M.stone, true, false)
+  rect(g, ...pr(362, 492, 488, 780), 0, 0.1, M.stone, true, false)
+  pool(g, ...pr(372, 482, 500, 770), 0.1)
+  rr(g, ...pr(492, 525, 555, 610), 0.05, 0.42, M.sofa, 0.12); rr(g, ...pr(492, 525, 660, 712), 0.05, 0.42, M.sofa, 0.12)
+  rr(g, ...pr(362, 382, 828, 866), 0, 0.9, M.dark, 0.03)                       // BBQ
+  rr(g, ...pr(410, 465, 830, 855), 0.7, 0.06, M.woodL, 0.03); rr(g, ...pr(430, 445, 835, 850), 0, 0.7, M.wood, 0.03)
+  for (const x of [420, 450]) { chair(g, U(820), V(x), 0); chair(g, U(866), V(x), 0) }
+  rr(g, ...pr(205, 250, 805, 840), 0, 1.1, M.coral, 0.06)                      // горка
+  cyl(g, U(825), V(290), 0.08, 0.08, 2.0, 0, M.dark, 8); cyl(g, U(825), V(325), 0.08, 0.08, 2.0, 0, M.dark, 8)
+  for (const [x, yy] of [[340, 500], [340, 600], [340, 720], [545, 590], [545, 690], [545, 790]]) plant(g, U(yy), V(x), 0.05, 0.8)
+  // забор участка
+  w(140, 165, 560, 165, 1.8); w(140, 165, 140, 890, 1.8); w(140, 890, 505, 890, 1.8); w(540, 890, 572, 890, 1.8)
+  w(560, 165, 640, 520, 1.8)
+}
+// ============ 2 этаж ============
+const Y = H1 + 0.18, YF = Y + 0.04
+{
+  const g = floor2G, w = wl2(makeWall(g, Y))
+  const slab = (...a) => { rect(g, ...pr2(...a), H1, 0.18, M.wood); rect(g, ...pr2(...a), Y, 0.04, M.slab, true, false) }
+  slab(245, 605, 235, 280); slab(320, 605, 280, 510); slab(245, 320, 380, 510); slab(245, 400, 510, 795)
+  floorPatch(g, ...pr2(325, 475, 290, 440), YF, T.planksDark, 1.6)
+  floorPatch(g, ...pr2(475, 605, 290, 440), YF, T.planksDark, 1.6)
+  floorPatch(g, ...pr2(325, 605, 235, 290), YF + 0.004, T.tiles, 0.8)
+  floorPatch(g, ...pr2(245, 325, 235, 440), YF, T.planks, 1.6)
+  floorPatch(g, ...pr2(245, 605, 440, 510), YF, T.deck, 1.2)
+  floorPatch(g, ...pr2(245, 400, 510, 795), YF, T.deck, 1.2)
+
+  w(245, 235, 605, 235, H2); w(245, 235, 245, 440, H2); w(605, 235, 605, 440, H2)
+  w(245, 440, 285, 440, H2); w(330, 440, 400, 440, H2); w(440, 440, 525, 440, H2); w(570, 440, 605, 440, H2)
+  w(325, 235, 325, 375, H2); w(475, 235, 475, 440, H2)
+  w(325, 290, 385, 290, H2); w(410, 290, 475, 290, H2); w(475, 290, 535, 290, H2); w(560, 290, 605, 290, H2)
+  railing(g, U2(510), V2(400), U2(510), V2(612), YF); railing(g, U2(440), V2(612), U2(510), V2(612), YF)
+  railing(g, U2(510), V2(400), U2(795), V2(400), YF); railing(g, U2(795), V2(237), U2(795), V2(400), YF)
+  railing(g, U2(440), V2(237), U2(795), V2(237), YF)
+
+  railing(g, U2(380), V2(250), U2(380), V2(320), YF)   // проём над лестницей 1 этажа
+  tub(g, ...pr2(332, 352, 240, 282), YF); toilet(g, U2(250), V2(460), YF); vanity(g, ...pr2(380, 430, 238, 255), YF)
+  bedU(g, ...pr2(400, 455, 292, 345), U2(292), YF, M.teal)
+  rr(g, ...pr2(448, 470, 380, 425), YF, 0.45, M.mustard, 0.15)
+  tub(g, ...pr2(480, 500, 240, 282), YF); toilet(g, U2(250), V2(590), YF); vanity(g, ...pr2(530, 580, 238, 255), YF)
+  bedU(g, ...pr2(515, 575, 330, 385), U2(330), YF, M.coral)
+  rr(g, ...pr2(478, 495, 365, 430), YF, 0.42, M.sofa, 0.1)
+  // терраса: лестница на крышу, зонт с лежаками, лежанка у края
+  stairs(g, U2(615), U2(445), V2(247), V2(275), YF, YF + H2 + 0.1, 14)
+  cyl(g, U2(533), V2(310), 0.04, 0.04, 2.2, YF, M.dark, 8); cyl(g, U2(533), V2(310), 1.0, 0.05, 0.3, YF + 2.1, M.coral, 6)
+  lounger(g, ...pr2(285, 340, 505, 525), YF); lounger(g, ...pr2(285, 340, 545, 565), YF)
+  rr(g, ...pr2(272, 365, 698, 765), YF, 0.2, M.woodL, 0.04)
+  for (const [x, yy] of [[373, 460], [485, 460], [597, 460], [255, 640], [385, 640]]) plant(g, U2(yy), V2(x), YF, 0.7)
+}
+P(floor1G, 1.65, U(420), V(300), Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, U(560), V(520), 0.4, 0.1, 0x4aa8a8, 0xf3ead8)
+P(floor1G, 1.2, U(845), V(270), 0, 0, 0xf0bd4f, 0x41558f)
+P(floor2G, 1.7, U2(600), V2(330), -0.4, YF, 0x7fae95, 0x4a3a2e)
+
+ToonKit.start({
+  sub: '7 ' + Model3D.roomWord('bedroomsPlural'),
+  facts: [
+    { group: 'floor1', rooms: [['livingKitchen'], ['bedroom', undefined, 5], ['bathroom'], ['pool'], ['stairs']] },
+    { group: 'floor2', rooms: [['bedroom', undefined, 2], ['bathroom', undefined, 2], ['terrace']] },
+  ],
+  L1: [
+    Lb('livingKitchen', undefined, U(400), 2.3, V(380)),
+    Lb('bedroom', undefined, U(240), 2.2, V(300)),
+    Lb('bedroom', undefined, U(240), 2.2, V(470)),
+    Lb('bedroom', undefined, U(700), 2.2, V(240)),
+    Lb('bedroom', undefined, U(740), 2.2, V(620)),
+    Lb('bedroom', undefined, U(850), 2.2, V(630)),
+    Lb('stairs', undefined, U(280), 2.6, V(205)),
+    Lb('pool', undefined, U(640), 1.3, V(427), true),
+  ],
+  L2: [
+    Lb('bedroom', undefined, U2(380), Y + 2.0, V2(400)),
+    Lb('bedroom', undefined, U2(400), Y + 2.0, V2(540)),
+    Lb('terrace', undefined, U2(640), Y + 1.3, V2(320)),
+    Lb('roof', undefined, U2(470), Y + 3.4, V2(262)),
+  ],
+})
+</script>
+</body>
+</html>

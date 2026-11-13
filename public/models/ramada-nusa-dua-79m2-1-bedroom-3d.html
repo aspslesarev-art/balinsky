@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramada Nusa Dua — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Площади — с плана застройщика: гостиная с кухней 19, спальни 11 и 11,
+// ванные 6 и 4, терраса 17, бассейн 8 м². На плане две спальни (в объявлении
+// указана одна) — модель повторяет план. Размеров нет: метры сняты по
+// масштабу картинки, подогнанному под бассейн 8 м² и гостиную 19 м²
+// (1 px ≈ 1.02 см).
+const k = 0.0102, X0 = 15, X1 = 900, YT = 15, YB = 1000
+const PLAN = { name: 'Ramada Nusa Dua', W: (X1 - X0) * k, HD: (YB - YT) * k, BACK: 0.8, FRONT: 1.0, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const V = p => (p - X0) * k, U = p => (YB - p) * k
+const pr = (x1, x2, y1, y2) => [U(y2), U(y1), V(x1), V(x2)]
+const wl = wall => (x1, y1, x2, y2, h) => wall(U(y1), V(x1), U(y2), V(x2), h)
+lot()
+const y = 0.12
+{
+  const g = floor1G, w = wl(makeWall(g, 0))
+  rect(g, ...pr(15, 900, 15, 440), 0, 0.12, M.slab)
+  rect(g, ...pr(490, 900, 440, 1000), 0, 0.12, M.slab)
+  floorPatch(g, ...pr(15, 185, 15, 440), y + 0.004, T.tiles, 0.8)        // ванная 6
+  floorPatch(g, ...pr(185, 490, 15, 440), y, T.planksDark, 1.6)          // спальня
+  floorPatch(g, ...pr(490, 900, 15, 520), y, T.terrazzo, 1.4)            // гостиная-кухня
+  floorPatch(g, ...pr(600, 900, 520, 690), y + 0.004, T.tiles, 0.8)      // ванная 4
+  floorPatch(g, ...pr(490, 600, 520, 690), y, T.terrazzo, 1.4)
+  floorPatch(g, ...pr(490, 900, 690, 1000), y, T.planksDark, 1.6)        // спальня 2
+
+  w(15, 15, 900, 15, H1); w(900, 15, 900, 1000, H1); w(490, 1000, 900, 1000, H1); w(15, 15, 15, 440, H1)
+  w(15, 440, 190, 440, H1)
+  glassWall(g, U(440), V(190), U(440), V(490), 0, H1)          // спальня → терраса
+  w(185, 15, 185, 25, H1); w(185, 105, 185, 440, H1)            // ванная | спальня
+  w(490, 15, 490, 320, H1); w(490, 395, 490, 440, H1)           // спальня | гостиная
+  glassWall(g, U(445), V(490), U(690), V(490), 0, H1)          // гостиная → терраса
+  w(490, 690, 490, 1000, H1)
+  w(600, 520, 900, 520, H1); w(600, 520, 600, 600, H1); w(600, 690, 900, 690, H1)
+  w(490, 690, 505, 690, H1)
+
+  // ванная 6: раковина, унитаз, душ
+  vanity(g, ...pr(22, 60, 108, 145), y); toilet(g, U(220), V(55), y); shower(g, ...pr(25, 180, 325, 432), y)
+  // спальня: кровать изголовьем к стене ванной, тумба с ТВ
+  bed(g, ...pr(205, 400, 185, 355), V(198), y, M.coral)
+  rr(g, ...pr(200, 250, 155, 182), y, 0.45, M.dark, 0.04); rr(g, ...pr(200, 250, 358, 385), y, 0.45, M.dark, 0.04)
+  rr(g, ...pr(370, 480, 28, 72), y, 0.6, M.woodL, 0.04)
+  // гостиная: угловой диван, столик, ТВ, круглый стол, кухня
+  rr(g, ...pr(730, 890, 25, 105), y, 0.42, M.coral, 0.12)
+  rr(g, ...pr(815, 890, 25, 255), y, 0.42, M.coral, 0.12)
+  rr(g, ...pr(860, 890, 25, 255), y, 0.85, M.coral, 0.12)
+  rr(g, ...pr(705, 790, 130, 300), y, 0.4, M.dark, 0.04)
+  rr(g, ...pr(505, 525, 85, 250), y + 0.9, 0.6, M.dark, 0.02)
+  roundTable(g, U(440), V(718), y, 0.5)
+  chair(g, U(380), V(745), y, M.coral); chair(g, U(410), V(645), y, M.coral)
+  rr(g, ...pr(832, 890, 320, 505), y, 0.82, M.sage, 0.03)
+  rect(g, ...pr(830, 892, 320, 505), 0.94, 0.05, M.white)
+  // ванная 4
+  vanity(g, ...pr(640, 695, 525, 560), y); toilet(g, U(560), V(740), y); shower(g, ...pr(800, 890, 530, 685), y)
+  // спальня 2: кровать изголовьем к нижней стене, шкаф
+  bedU(g, ...pr(605, 775, 785, 985), U(985), y, M.teal)
+  rr(g, ...pr(572, 600, 935, 985), y, 0.45, M.dark, 0.04); rr(g, ...pr(780, 808, 935, 985), y, 0.45, M.dark, 0.04)
+  rr(g, ...pr(840, 890, 700, 812), y, 2.0, M.wood, 0.03)
+}
+// ============ терраса и бассейн ============
+{
+  const g = floor1G
+  rect(g, ...pr(15, 490, 440, 1000), 0, 0.1, M.stone, true, false)
+  floorPatch(g, ...pr(15, 490, 440, 1000), 0.1, T.terrazzo, 2)
+  pool(g, ...pr(60, 308, 660, 958), 0.1)
+  lounger(g, ...pr(45, 240, 470, 528), 0.1, true)
+  lounger(g, ...pr(45, 240, 550, 610), 0.1, true)
+  plant(g, U(960), V(420), 0.1, 0.9); plant(g, U(650), V(440), 0.1, 0.8)
+  railing(g, U(440), V(15), U(1000), V(15), 0.1, 1.2)
+  railing(g, U(1000), V(15), U(1000), V(490), 0.1, 1.2)
+}
+P(floor1G, 1.65, U(300), V(640), Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+P(floor1G, 1.78, U(630), V(400), 0.4, 0.1, 0x4aa8a8, 0xf3ead8)
+
+ToonKit.start({
+  sub: '2 ' + Model3D.roomWord('bedroomsPlural'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 19], ['bedroom', 11, 2], ['bathroom', 6], ['bathroom', 4], ['terrace', 17], ['pool', 8]] }],
+  L1: [
+    Lb('livingKitchen', 19, U(250), 2.2, V(650)),
+    Lb('bedroom', 11, U(110), 2.2, V(330)),
+    Lb('bedroom', 11, U(760), 2.2, V(690)),
+    Lb('bathroom', 6, U(200), 2.6, V(100)),
+    Lb('bathroom', 4, U(610), 2.6, V(740)),
+    Lb('terrace', 17, U(560), 1.4, V(360), true),
+    Lb('pool', 8, U(810), 1.2, V(185), true),
+  ],
+})
+</script>
+</body>
+</html>

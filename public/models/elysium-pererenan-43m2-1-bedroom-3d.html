@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elysium Studio — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// С рендера застройщика (вид сверху): студия со спальной зоной, кухней с
+// барной стойкой и ванной. Площадей и размеров на картинке нет: метры
+// сняты по масштабу (кровать ≈ 1.75 м, 1 px ≈ 1.16 см).
+const k = 0.0116, X0 = 12, X1 = 692, YT = 20, YB = 492
+const PLAN = { name: 'Elysium Studio', W: (X1 - X0) * k, HD: (YB - YT) * k, BACK: 0.4, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const V = p => (p - X0) * k, U = p => (YB - p) * k
+const pr = (x1, x2, y1, y2) => [U(y2), U(y1), V(x1), V(x2)]
+const wl = wall => (x1, y1, x2, y2, h) => wall(U(y1), V(x1), U(y2), V(x2), h)
+rect(siteG, ...pr(0, 704, 8, 504), -0.3, 0.3, M.stone)
+const y = 0.12
+{
+  const g = floor1G, w = wl(makeWall(g, 0))
+  rect(g, ...pr(12, 692, 20, 492), 0, 0.12, M.slab)
+  floorPatch(g, ...pr(100, 692, 20, 492), y, T.planks, 1.6)
+  floorPatch(g, ...pr(12, 100, 20, 188), y, T.planks, 1.6)
+  floorPatch(g, ...pr(12, 180, 188, 492), y + 0.004, T.tiles, 0.8)
+
+  w(12, 20, 692, 20, H1); w(12, 20, 12, 492, H1); w(12, 492, 375, 492, H1)
+  glassWall(g, U(492), V(375), U(492), V(692), 0, H1)
+  glassWall(g, U(24), V(692), U(488), V(692), 0, H1)
+  w(12, 188, 180, 188, H1); w(180, 188, 180, 300, H1); w(180, 350, 180, 492, H1)
+  // ванная: две раковины, унитаз, душ
+  vanity(g, ...pr(30, 145, 235, 290), y); toilet(g, U(325), V(130), y); shower(g, ...pr(16, 168, 365, 488), y)
+  // шкаф вдоль верхней стены
+  rr(g, ...pr(110, 312, 24, 130), y, 2.1, M.wood, 0.03)
+  // кровать изголовьем к верхней стене
+  bedU(g, ...pr(420, 570, 85, 260), U(85), y, M.grey)
+  rr(g, ...pr(430, 600, 24, 60), y, 1.2, M.wood, 0.03)
+  cyl(g, U(100), V(580), 0.2, 0.2, 0.5, y, M.woodL, 16)
+  // кухня вдоль стены ванной, барная стойка, ТВ-тумба
+  rr(g, ...pr(185, 270, 192, 300), y, 0.82, M.white, 0.03)
+  rr(g, ...pr(230, 270, 300, 470), y, 0.9, M.dark, 0.03); rect(g, ...pr(228, 272, 300, 470), 0.94, 0.05, M.white)
+  rr(g, ...pr(330, 375, 310, 445), y, 1.0, M.dark, 0.03)
+  stool(g, U(345), V(392), y, M.white); stool(g, U(400), V(395), y, M.white)
+  rr(g, ...pr(448, 555, 395, 430), y, 0.45, M.dark, 0.03)
+  plant(g, U(460), V(660), y, 0.8)
+}
+P(floor1G, 1.65, U(330), V(480), Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['bedroom'], ['kitchen'], ['bathroom']] }],
+  L1: [
+    Lb('bedroom', undefined, U(170), 2.2, V(495)),
+    Lb('kitchen', undefined, U(380), 2.2, V(300)),
+    Lb('bathroom', undefined, U(330), 2.6, V(95)),
+  ],
+})
+</script>
+</body>
+</html>

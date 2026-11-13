@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ubud Dreams 2.11 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// С чертежа мебели SNAAR Group «Ubud dreams, 2.11» (AP-1191, М 1:25):
+// комната 31 м², ванная 4 м², всего 35 м². Размеров на листе нет:
+// метры сняты по масштабу, подогнанному под кровать 2.0 × 1.8 м
+// и площадь 35 м² (1 px ≈ 1.18 см).
+const k = 0.0118, X0 = 160, X1 = 870, YT = 100, YB = 470
+const PLAN = { name: 'Ubud Dreams 2.11', W: (X1 - X0) * k, HD: (YB - YT) * k, BACK: 0.4, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const V = p => (p - X0) * k, U = p => (YB - p) * k
+const pr = (x1, x2, y1, y2) => [U(y2), U(y1), V(x1), V(x2)]
+const wl = wall => (x1, y1, x2, y2, h) => wall(U(y1), V(x1), U(y2), V(x2), h)
+rect(siteG, ...pr(148, 882, 88, 482), -0.3, 0.3, M.stone)
+const y = 0.12
+{
+  const g = floor1G, w = wl(makeWall(g, 0))
+  rect(g, ...pr(160, 870, 100, 290), 0, 0.12, M.slab); rect(g, ...pr(265, 870, 290, 470), 0, 0.12, M.slab)
+  floorPatch(g, ...pr(310, 870, 100, 470), y, T.terrazzo, 1.4)
+  floorPatch(g, ...pr(265, 310, 290, 470), y, T.terrazzo, 1.4)
+  floorPatch(g, ...pr(160, 310, 100, 290), y + 0.004, T.tiles, 0.8)
+
+  w(160, 100, 870, 100, H1); w(160, 100, 160, 290, H1); w(160, 290, 310, 290, H1); w(265, 290, 265, 470, H1)
+  w(265, 470, 870, 470, H1)          // стена со входом (дверь 432–500)
+  glassWall(g, U(112), V(870), U(458), V(870), 0, H1)
+  w(310, 100, 310, 125, H1); w(310, 182, 310, 290, H1)
+  // ванная
+  vanity(g, ...pr(165, 208, 112, 168), y); shower(g, ...pr(165, 245, 215, 282), y); toilet(g, U(232), V(275), y)
+  // шкаф и кондиционер у входа
+  rr(g, ...pr(268, 320, 297, 465), y, 2.1, M.wood, 0.03)
+  // рабочий стол за изголовьем, стул
+  rr(g, ...pr(405, 428, 205, 370), y, 0.75, M.woodL, 0.03); chair(g, U(278), V(380), y, M.white)
+  // кровать изголовьем влево, тумбы
+  rr(g, ...pr(430, 452, 210, 365), y, 1.1, M.wood, 0.04)
+  bed(g, ...pr(455, 615, 210, 365), V(452), y, M.sage)
+  rr(g, ...pr(452, 485, 175, 202), y, 0.45, M.woodL, 0.04); rr(g, ...pr(452, 485, 368, 395), y, 0.45, M.woodL, 0.04)
+  // диван и ТВ у окна
+  rr(g, ...pr(680, 745, 200, 372), y, 0.42, M.sofa, 0.12); rr(g, ...pr(680, 700, 200, 372), y, 0.85, M.sofa, 0.12)
+  rr(g, ...pr(828, 858, 215, 355), y, 0.55, M.wood, 0.03); rect(g, ...pr(845, 852, 230, 340), 0.8, 0.65, M.dark)
+  plant(g, U(420), V(820), y, 1.0)
+}
+P(floor1G, 1.65, U(420), V(600), Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '35 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['bedroom', 31], ['bathroom', 4]] }],
+  L1: [
+    Lb('bedroom', 31, U(410), 2.2, V(560)),
+    Lb('bathroom', 4, U(190), 2.6, V(235)),
+  ],
+})
+</script>
+</body>
+</html>
