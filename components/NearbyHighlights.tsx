@@ -5,6 +5,7 @@
 // place on Google Maps.
 import { Star } from 'lucide-react'
 import type { NearbyPlace } from '@/lib/nearby-places'
+import type { Landmark } from '@/lib/landmarks'
 import { pickCopy, type Lang } from '@/lib/i18n'
 
 // Galleries and museums get their own slots: otherwise island-wide landmarks
@@ -41,10 +42,12 @@ const CAT_LABEL: Record<string, { ru: string; en: string }> = {
   wellness: { ru: 'Спа и йога', en: 'Spa and yoga' },
 }
 
-export function pickHighlights(byCategory: Record<string, NearbyPlace[]>): (NearbyPlace & { cat: string })[] {
-  const seen = new Set<string>()
+export function pickHighlights(byCategory: Record<string, NearbyPlace[]>, skipArt = false, skipNames: string[] = []): (NearbyPlace & { cat: string })[] {
+  const seen = new Set<string>(skipNames)
   const out: (NearbyPlace & { cat: string })[] = []
-  for (const { cat, n, maxKm, minReviews = MIN_REVIEWS, only } of PLAN) {
+  // Есть «Что посмотреть» — здесь из достопримечательностей оставляем только соседа (первое правило).
+  const plan = skipArt ? PLAN.filter((r, i) => r.cat !== 'attraction' || i === 0) : PLAN
+  for (const { cat, n, maxKm, minReviews = MIN_REVIEWS, only } of plan) {
     const list = (byCategory[cat] ?? [])
       .filter(p => p.name && (p.reviews ?? 0) >= minReviews && p.distanceKm <= maxKm && (!only || only(p)))
       .sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0))
@@ -52,7 +55,7 @@ export function pickHighlights(byCategory: Record<string, NearbyPlace[]>): (Near
     for (const p of list) {
       if (k >= n) break
       const key = p.id || p.name!
-      if (seen.has(key)) continue
+      if (seen.has(key) || seen.has(p.name!)) continue
       seen.add(key)
       out.push({ ...p, cat })
       k++
@@ -61,11 +64,13 @@ export function pickHighlights(byCategory: Record<string, NearbyPlace[]>): (Near
   return out
 }
 
-export function NearbyHighlights({ byCategory, lang }: { byCategory: Record<string, NearbyPlace[]>; lang: Lang }) {
-  const items = pickHighlights(byCategory)
+export function NearbyHighlights({ byCategory, lang, skipArt = false, skipIds = [] }: { byCategory: Record<string, NearbyPlace[]>; lang: Lang; skipArt?: boolean; skipIds?: string[] }) {
+  const items = pickHighlights(byCategory, skipArt, skipIds)
   if (items.length === 0) return null
   const ru = lang === 'ru' || lang === 'uk'
-  const title = pickCopy({ ru: 'Популярные места рядом', en: 'Popular places nearby' }, lang)
+  const title = skipArt
+    ? pickCopy({ ru: 'Где поесть и отдохнуть рядом', en: 'Food and wellness nearby' }, lang)
+    : pickCopy({ ru: 'Популярные места рядом', en: 'Popular places nearby' }, lang)
   const km = (d: number) => d < 0.1 ? pickCopy({ ru: 'по соседству', en: 'next door' }, lang) : d < 1 ? `${Math.round(d * 1000 / 50) * 50} ${ru ? 'м' : 'm'}` : `${d.toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'км' : 'km'}`
   const label = (p: NearbyPlace & { cat: string }) => {
     const t = (p.primaryType && TYPE_LABEL[p.primaryType]) || CAT_LABEL[p.cat]
@@ -93,6 +98,49 @@ export function NearbyHighlights({ byCategory, lang }: { byCategory: Record<stri
                   <Star size={13} className="text-[#E8A317] fill-[#E8A317]" aria-hidden />
                   {p.rating.toFixed(1).replace('.', ru ? ',' : '.')}
                   <span className="opacity-70">({(p.reviews ?? 0).toLocaleString(ru ? 'ru-RU' : 'en-US')})</span>
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+const BUCKET_LABEL: Record<string, { ru: string; en: string }> = {
+  attraction: { ru: 'Достопримечательность', en: 'Attraction' },
+  temple: { ru: 'Храм', en: 'Temple' },
+  kids_fun: { ru: 'Парк и зоопарк', en: 'Park or zoo' },
+}
+
+// «Что посмотреть рядом» — главные места для отдыха (лес обезьян, водопады,
+// зоопарки, храмы) из bali_places, см. lib/landmarks.ts.
+export function LandmarksList({ items, lang }: { items: Landmark[]; lang: Lang }) {
+  const ru = lang === 'ru' || lang === 'uk'
+  const km = (d: number) => d < 1 ? `${Math.round(d * 1000 / 50) * 50} ${ru ? 'м' : 'm'}` : `${d.toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'км' : 'km'}`
+  const label = (p: Landmark) => (lang === 'ru' && p.typeRu) ? p.typeRu : pickCopy(BUCKET_LABEL[p.bucket] ?? BUCKET_LABEL.attraction, lang)
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-[17px] font-semibold text-[#18201C] m-0">{pickCopy({ ru: 'Что посмотреть рядом', en: 'Things to see nearby', id: 'Tempat wisata terdekat', fr: 'À voir à proximité', de: 'Sehenswertes in der Nähe', zh: '附近景点', nl: 'Bezienswaardigheden in de buurt', ban: 'Genah wisata ring sampingé', pl: 'Atrakcje w pobliżu', uk: 'Що подивитися поруч' }, lang)}</h3>
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 m-0 p-0 list-none">
+        {items.map(p => (
+          <li key={p.id} className="border-b border-[#EEF2EF]">
+            <a
+              href={p.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between gap-3 py-3 no-underline text-[#18201C] hover:text-[var(--color-primary-pressed)] focus-visible:text-[var(--color-primary-pressed)]"
+            >
+              <span className="flex flex-col min-w-0">
+                <span className="text-[15px] font-medium truncate">{p.name}</span>
+                <span className="text-[13px] text-[#4C5751]">{label(p)} · {km(p.distanceKm)}</span>
+              </span>
+              {p.rating != null && (
+                <span className="shrink-0 inline-flex items-center gap-1 text-[13px] text-[#4C5751] tabular-nums">
+                  <Star size={13} className="text-[#E8A317] fill-[#E8A317]" aria-hidden />
+                  {p.rating.toFixed(1).replace('.', ru ? ',' : '.')}
+                  <span className="opacity-70">({p.reviews.toLocaleString(ru ? 'ru-RU' : 'en-US')})</span>
                 </span>
               )}
             </a>

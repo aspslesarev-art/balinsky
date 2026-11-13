@@ -7,10 +7,11 @@ import type { Routes, RouteLeg } from '@/lib/complex-access'
 import type { RouteLines } from '@/lib/listing-map'
 import { ROUTE_COLOR, nearPoints as computeNearPoints, NEAR_GROUPS } from '@/lib/listing-map'
 import type { NearbyPlace } from '@/lib/nearby-places'
+import type { Landmark } from '@/lib/landmarks'
 import { ListingMap, type MapRoute, type MapPoint } from './ListingMap'
 import { LazyMount } from './LazyMount'
 import { googleMapsUrl, OPEN_GMAPS } from '@/lib/google-maps'
-import { NearbyHighlights } from './NearbyHighlights'
+import { NearbyHighlights, LandmarksList } from './NearbyHighlights'
 
 type TabKey = 'nearby' | 'routes' | 'tourists'
 
@@ -73,6 +74,7 @@ type Props = {
   name: string
   livingFacts: LivingFacts | null
   nearby: { byCategory: Record<string, NearbyPlace[]> } | null
+  landmarks?: Landmark[]
   routes: Routes | null
   routeLines: RouteLines | null
   beach: { name: string; rating: number | null; reviews: number | null; km: number } | null
@@ -81,7 +83,7 @@ type Props = {
 
 const MINUTES = (s: number) => Math.round(s / 60)
 
-export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, routeLines, beach, lang }: Props) {
+export function LocationSection({ lat, lng, name, livingFacts, nearby, landmarks = [], routes, routeLines, beach, lang }: Props) {
   const [tab, setTab] = useState<TabKey>('nearby')
   const c = pickCopy(COPY, lang)
   // Круги расстояний на карте «Что рядом»: 100 м, 500 м, 1 км, 2 км.
@@ -238,7 +240,9 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
         </div>
       )}
 
-      {tab === 'nearby' && nearby && <NearbyHighlights byCategory={nearby.byCategory} lang={lang} />}
+      {tab === 'nearby' && landmarks.length > 0 && <LandmarksList items={landmarks} lang={lang} />}
+
+      {tab === 'nearby' && nearby && <NearbyHighlights byCategory={nearby.byCategory} lang={lang} skipArt={landmarks.length > 0} skipIds={landmarks.map(l => l.name)} />}
 
       {tab === 'routes' && hasRoutes && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

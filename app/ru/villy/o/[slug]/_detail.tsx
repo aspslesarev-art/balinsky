@@ -80,6 +80,7 @@ import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
+import { loadLandmarks } from '@/lib/landmarks'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingList } from '@/components/LivingVerdict'
 import { BeachBlock } from '@/components/BeachBlock'
@@ -1411,7 +1412,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const sellerUrl = isResale ? firstString(d['Контакт продавца']) : null
 
   const leaseYears = lease && /^\d+(\.\d+)?$/.test(lease.trim()) ? Number(lease.trim()) : null
-  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, demand, saleComps, verdictSnap, complexFacts, airbnbComps, landPrices] = await Promise.all([
+  const [otherVillas, complexes, developers, stylesMap, scoresMap, activeReservation, landProfile, marketStats, nearby, geoFacts, demand, saleComps, verdictSnap, complexFacts, airbnbComps, landPrices, landmarks] = await Promise.all([
     loadOtherVillasInDistrict(district, v.airtable_id, lang),
     _loadComplexesIndex(),
     _loadDevelopersIndex(lang),
@@ -1432,6 +1433,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
     loadAirbnbNearby(lat, lng, bedrooms),
     lat != null && lng != null ? landPricesNear(lat, lng).catch(() => null) : null,
+    lat != null && lng != null ? loadLandmarks(lat, lng).catch(e => { console.error(e); return [] }) : [],
   ])
   // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
   // зонирования. Переводы пока генерятся только для ЖК, поэтому на
@@ -1764,6 +1766,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             name={parentComplex?.name ?? title}
             livingFacts={livingFacts}
             nearby={nearby}
+            landmarks={landmarks}
             routes={geoFacts?.routes ?? null}
             routeLines={geoFacts?.route_lines ?? null}
             beach={beach && beachPick ? { name: (lang === 'ru' ? beach.name_ru : beach.name_en) ?? beach.name_ru ?? '', rating: beachPick.google?.rating ?? null, reviews: beachPick.google?.reviews ?? null, km: beachPick.km } : null}
