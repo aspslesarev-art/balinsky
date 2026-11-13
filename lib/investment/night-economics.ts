@@ -60,7 +60,7 @@ function setupDaily(snap: Snap) {
     phrOwnerShare: r.phrOwnerShareByScenario.median,
     area: snap.villa.area, bedrooms: snap.villa.bedrooms,
     askingPrice: b.price, leaseholdYearsLeft: b.lease,
-    taxStatus: 'nonResident', furnished: snap.villa.furnished, landRentYear: snap.villa.landRentYear, region: r,
+    taxStatus: 'beforeTax', furnished: snap.villa.furnished, landRentYear: snap.villa.landRentYear, region: r,
   })
   return { ...b, econ, occupancy, sold: 365 * occupancy }
 }
@@ -73,7 +73,7 @@ function setupMonthly(snap: Snap) {
     rentMonth: rent, monthsRented: months, agentFeePct: AGENT_FEE_PCT,
     area: snap.villa.area, bedrooms: snap.villa.bedrooms,
     askingPrice: b.price, leaseholdYearsLeft: b.lease,
-    taxStatus: 'nonResident', furnished: snap.villa.furnished, landRentYear: snap.villa.landRentYear, region: snap.region,
+    taxStatus: 'beforeTax', furnished: snap.villa.furnished, landRentYear: snap.villa.landRentYear, region: snap.region,
   })
   return { ...b, econ, months }
 }
@@ -136,7 +136,7 @@ export function monthReceipt(snap: Snap): Receipt | null {
   const per = (x: number) => Math.round(x / s.months)
   const lines: ReceiptLine[] = [
     { key: 'agent', value: per(e.agentFee), pct: Math.round(AGENT_FEE_PCT * 100) },
-    { key: 'rentTax', value: per(e.tax), pct: Math.round(e.taxRate * 100) },
+    ...(e.tax > 0 ? [{ key: 'rentTax' as const, value: per(e.tax), pct: Math.round(e.taxRate * 100) }] : []),
     { key: 'ownerUpkeep', value: per(e.upkeep + e.ffeReserve + e.pbbTax) },
   ]
   const capitalPerYear = e.entryPrice / s.years

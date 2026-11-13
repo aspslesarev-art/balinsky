@@ -600,10 +600,9 @@ export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'
     const pcts = q && { ...q, p25: blend(q.p50), p50: blend((q.p50 + q.p75) / 2), p75: blend(q.p75) }
     if (pcts) scenarios = buildScenarios(
       pcts,
-      // Налоговый статус по умолчанию — нерезидент: большинство покупателей
-      // не имеют индонезийского NPWP, и это консервативная сторона.
-      // В виджете статус переключается.
-      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', furnished, landRentYear, region },
+      // Доходность на сайте — до налога (решение владельца 13.11.2026):
+      // налог зависит от статуса покупателя, в виджете он переключается.
+      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'beforeTax', furnished, landRentYear, region },
       region.occupancyByScenario,
     )
   }

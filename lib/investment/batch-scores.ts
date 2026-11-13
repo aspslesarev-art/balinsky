@@ -169,7 +169,7 @@ function buildOneScore(
     // налог меняет все capRate примерно одинаково.
     const scenarios = buildScenarios(
       pcts,
-      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'nonResident', landRentYear: num(d['Аренда земли в год, $']), region },
+      { area, bedrooms, askingPrice, leaseholdYearsLeft, taxStatus: 'beforeTax', landRentYear: num(d['Аренда земли в год, $']), region },
       region.occupancyByScenario,
     )
     const { median, bad } = scenarios
