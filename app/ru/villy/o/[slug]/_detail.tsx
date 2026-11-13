@@ -1813,8 +1813,9 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
         </VillaChapter>
 
-        {hasMoney && (
-        <VillaChapter id="dengi" no="04" plain={analyticsOnly} eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
+        {/* На странице ЖК «Цена и доход» не показываем (владелец 13.11.2026). */}
+        {hasMoney && !analyticsOnly && (
+        <VillaChapter id="dengi" no="04" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <VillaBlock><section className="flex flex-col gap-4 scroll-mt-24">
             <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
