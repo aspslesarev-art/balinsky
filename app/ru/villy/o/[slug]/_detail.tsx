@@ -1757,7 +1757,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   ].filter((x): x is { id: string; no: string; label: string } => !!x)
 
   const mestoChapter = hasMesto && (
-        <VillaChapter id="mesto" no="02" eyebrow={CH.mesto[0]} title={CH.mesto[1]} band>
+        <VillaChapter id="mesto" no="02" plain={analyticsOnly} eyebrow={CH.mesto[0]} title={CH.mesto[1]} band>
         {hasPlace && lat != null && lng != null && (
           <LocationSection
             lat={lat}
@@ -1788,7 +1788,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     <>
         <ProPendingNote lang={lang} />
 
-        <VillaChapter id="proverka" no="03" eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]}>
+        <VillaChapter id="proverka" no="03" plain={analyticsOnly} eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]}>
         <section id="uchastok" className="scroll-mt-24">
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
@@ -1814,7 +1814,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         </VillaChapter>
 
         {hasMoney && (
-        <VillaChapter id="dengi" no="04" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
+        <VillaChapter id="dengi" no="04" plain={analyticsOnly} eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <VillaBlock><section className="flex flex-col gap-4 scroll-mt-24">
             <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
