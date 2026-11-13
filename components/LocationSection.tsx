@@ -9,6 +9,7 @@ import { ROUTE_COLOR, nearPoints as computeNearPoints, NEAR_GROUPS } from '@/lib
 import type { NearbyPlace } from '@/lib/nearby-places'
 import { ListingMap, type MapRoute, type MapPoint } from './ListingMap'
 import { LazyMount } from './LazyMount'
+import { googleMapsUrl, OPEN_GMAPS } from '@/lib/google-maps'
 import { NearbyHighlights } from './NearbyHighlights'
 
 type TabKey = 'nearby' | 'routes' | 'tourists'
@@ -168,7 +169,19 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, routes, r
 
   return (
     <section id="mesto" className="scroll-mt-24 flex flex-col gap-4">
-      <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[#18201C] m-0">{c.title}</h2>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-[#18201C] m-0">{c.title}</h2>
+        <a
+          href={googleMapsUrl(lat, lng)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-[#D5DDD8] bg-white text-[15px] font-semibold text-[#1B6E4A] no-underline transition-colors duration-[120ms] hover:bg-[#F3F7F4] hover:border-[#1B6E4A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B6E4A]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          {pickCopy(OPEN_GMAPS, lang)}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      </div>
 
       <div role="tablist" className="flex gap-6 border-b border-[#E4E9E6]">
         {TABS.map(t => (

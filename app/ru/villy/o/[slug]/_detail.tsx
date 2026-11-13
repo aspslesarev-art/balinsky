@@ -93,6 +93,7 @@ import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPd
 import { IncomeCalculator } from '@/components/IncomeCalculator'
 import { BeachWeatherDesign } from '@/components/BeachWeatherDesign'
 import { LocationSection } from '@/components/LocationSection'
+import { googleMapsUrl } from '@/lib/google-maps'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
@@ -1747,18 +1748,45 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const hasMesto = !!(hasPlace && lat != null && lng != null) || !!(beach || geoFacts?.climate)
   const chapterNav = [
     (villaFacts.length > 0 || landFacts.length > 0) && { id: 'obekt', no: '01', label: CH.obekt[0] },
-    { id: 'proverka', no: '02', label: CH.proverka[0] },
-    hasMoney && { id: 'dengi', no: '03', label: CH.dengi[0] },
-    hasMesto && { id: 'mesto', no: '04', label: CH.mesto[0] },
+    hasMesto && { id: 'mesto', no: '02', label: CH.mesto[0] },
+    { id: 'proverka', no: '03', label: CH.proverka[0] },
+    hasMoney && { id: 'dengi', no: '04', label: CH.dengi[0] },
     (developer || developerName) && { id: 'zastroyshchik', no: '05', label: CH.zastroyshchik[0] },
     { id: 'voprosy', no: '06', label: CH.voprosy[0] },
   ].filter((x): x is { id: string; no: string; label: string } => !!x)
+
+  const mestoChapter = hasMesto && (
+        <VillaChapter id="mesto" no="02" eyebrow={CH.mesto[0]} title={CH.mesto[1]} band>
+        {hasPlace && lat != null && lng != null && (
+          <LocationSection
+            lat={lat}
+            lng={lng}
+            name={parentComplex?.name ?? title}
+            livingFacts={livingFacts}
+            nearby={nearby}
+            routes={geoFacts?.routes ?? null}
+            routeLines={geoFacts?.route_lines ?? null}
+            beach={beach && beachPick ? { name: (lang === 'ru' ? beach.name_ru : beach.name_en) ?? beach.name_ru ?? '', rating: beachPick.google?.rating ?? null, reviews: beachPick.google?.reviews ?? null, km: beachPick.km } : null}
+            lang={lang}
+          />
+        )}
+        {(beach || geoFacts?.climate) && (
+          <BeachWeatherDesign
+            beach={beach && beachPick ? beach : null}
+            beachKm={beachPick?.km ?? 0}
+            beachPhoto={beach?.photos?.[0]?.src ?? null}
+            climate={geoFacts?.climate ?? null}
+            lang={lang}
+          />
+        )}
+        </VillaChapter>
+        )
 
   const analytics = (
     <>
         <ProPendingNote lang={lang} />
 
-        <VillaChapter id="proverka" no="02" eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]} band>
+        <VillaChapter id="proverka" no="03" eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]}>
         <section id="uchastok" className="scroll-mt-24">
           <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
             leaseYears={leaseYears} landYellow={rentalRestricted}
@@ -1784,7 +1812,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         </VillaChapter>
 
         {hasMoney && (
-        <VillaChapter id="dengi" no="03" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]}>
+        <VillaChapter id="dengi" no="04" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <VillaBlock><section className="flex flex-col gap-4 scroll-mt-24">
             <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
@@ -1888,32 +1916,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         </VillaChapter>
         )}
 
-        {hasMesto && (
-        <VillaChapter id="mesto" no="04" eyebrow={CH.mesto[0]} title={CH.mesto[1]} band>
-        {hasPlace && lat != null && lng != null && (
-          <LocationSection
-            lat={lat}
-            lng={lng}
-            name={parentComplex?.name ?? title}
-            livingFacts={livingFacts}
-            nearby={nearby}
-            routes={geoFacts?.routes ?? null}
-            routeLines={geoFacts?.route_lines ?? null}
-            beach={beach && beachPick ? { name: (lang === 'ru' ? beach.name_ru : beach.name_en) ?? beach.name_ru ?? '', rating: beachPick.google?.rating ?? null, reviews: beachPick.google?.reviews ?? null, km: beachPick.km } : null}
-            lang={lang}
-          />
-        )}
-        {(beach || geoFacts?.climate) && (
-          <BeachWeatherDesign
-            beach={beach && beachPick ? beach : null}
-            beachKm={beachPick?.km ?? 0}
-            beachPhoto={beach?.photos?.[0]?.src ?? null}
-            climate={geoFacts?.climate ?? null}
-            lang={lang}
-          />
-        )}
-        </VillaChapter>
-        )}
+        {analyticsOnly && mestoChapter}
     </>
   )
   if (analyticsOnly) return analytics
@@ -1985,7 +1988,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             {nearby?.byCategory?.school && nearby.byCategory.school.length > 0 && nearby.byCategory.school[0].distanceKm <= 2 && (
               <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/></svg>{pickCopy({ ru: 'Школа', en: 'School', id: 'Sekolah', fr: 'École', de: 'Schule', zh: '学校', nl: 'School', ban: 'Sekolah', pl: 'Szkoła', uk: 'Школа' }, lang)} {nearby.byCategory.school[0].distanceKm < 1 ? `${Math.round(nearby.byCategory.school[0].distanceKm * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${nearby.byCategory.school[0].distanceKm.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
             )}
-            <a href="#mesto" className="text-[14px] text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]">{pickCopy({ ru: 'На карте', en: 'On the map', id: 'Di peta', fr: 'Sur la carte', de: 'Auf der Karte', zh: '地图', nl: 'Op de kaart', ban: 'Ring peta', pl: 'Na mapie', uk: 'На карті' }, lang)}</a>
+            {lat != null && lng != null && <a href={googleMapsUrl(lat, lng)} target="_blank" rel="noopener noreferrer" className="text-[14px] text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)]">{pickCopy({ ru: 'На карте', en: 'On the map', id: 'Di peta', fr: 'Sur la carte', de: 'Auf der Karte', zh: '地图', nl: 'Op de kaart', ban: 'Ring peta', pl: 'Na mapie', uk: 'На карті' }, lang)}</a>}
           </div>
           {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           {parentComplex && (
@@ -2085,6 +2088,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </VillaChapter>
         )}
 
+        {mestoChapter}
 
         {analytics}
 
