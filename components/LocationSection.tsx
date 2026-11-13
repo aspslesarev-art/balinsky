@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { placeName } from '@/lib/translit'
 import type { LivingFacts } from '@/lib/living'
 import type { Routes, RouteLeg } from '@/lib/complex-access'
 import { showUbudSouth, UBUD_CENTER_LABEL, UBUD_SOUTH_LABEL } from '@/lib/ubud-routes'
@@ -162,7 +163,7 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, landmarks
           sub = r.count ? c.cafesCount(r.count) : (r.km != null ? c.km(r.km) : '')
         } else {
           const kmTxt = r.km != null ? (r.straight ? `${c.km(r.km)} ${c.straight}` : c.km(r.km)) : c.far(r.searchKm ?? 0)
-          sub = [kmTxt, r.name, r.driveMin ? c.drive(r.driveMin) : null].filter(Boolean).join(' · ')
+          sub = [kmTxt, placeName(r.name, lang), r.driveMin ? c.drive(r.driveMin) : null].filter(Boolean).join(' · ')
         }
         return { emoji, label, sub }
       })
@@ -274,7 +275,7 @@ export function LocationSection({ lat, lng, name, livingFacts, nearby, landmarks
             {beach && (
               <div className="p-4 border border-[#EEF2EF] rounded-[10px] flex flex-col gap-1">
                 <span className="text-[22px] font-semibold">{beach.rating ? `${beach.rating}★` : '🏖️'}</span>
-                <span className="text-[13px] text-[#4C5751]">{beach.name}</span>
+                <span className="text-[13px] text-[#4C5751]">{placeName(beach.name, lang)}</span>
               </div>
             )}
             {touristStats.restaurants > 0 && (

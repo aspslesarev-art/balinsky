@@ -3,6 +3,7 @@
 // from the same data — they only differ in copy and the locale segment
 // in the breadcrumbs / internal links / external schema URL.
 
+import { districtLatin } from '@/lib/district-ru'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -682,7 +683,7 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     loadManagersByDeveloperSlug(slug),
   ])
   const chessBoardVillas = await loadChessBoardVillas(complexes.map(c => c.id))
-  const districts = [...new Set(complexes.map(c => c.location).filter(Boolean) as string[])]
+  const districts = [...new Set(complexes.map(c => lang === 'ru' ? c.location : districtLatin(c.location)).filter(Boolean) as string[])]
   const complexSlugs = complexes.map(c => c.slug).filter((s): s is string => !!s)
 
   const [allNews, allPromo, allEvents, devVideos] = await Promise.all([

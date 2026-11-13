@@ -57,3 +57,16 @@ export function districtRu(latin: string | null | undefined): string | null {
   if (!latin) return null
   return MAP[latin] ?? latin
 }
+
+// Обратное: район в базе иногда записан кириллицей («Тегаллаланг»), а
+// не-RU страницам нужна латиница.
+const REVERSE = Object.fromEntries(Object.entries(MAP).map(([lat, ru]) => [ru.toLowerCase(), lat]))
+export function districtLatin(raw: string | string[] | null | undefined): string | null {
+  // Поле района иногда приходит списком (multi-select) — берём первое.
+  const name = Array.isArray(raw) ? raw.find(x => typeof x === 'string' && x.trim()) : raw
+  if (!name || typeof name !== 'string') return null
+  return name.split(',').map(part => {
+    const t = part.trim()
+    return REVERSE[t.toLowerCase()] ?? t
+  }).join(', ')
+}

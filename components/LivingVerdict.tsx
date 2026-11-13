@@ -5,6 +5,7 @@
 // высота — в этом же разделе своими блоками, аренда земли — в разделе
 // «Безопасно ли это?», здесь их нет. Остальные языки берут английский текст.
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { placeName } from '@/lib/translit'
 import type { LivingFacts, LivingRow, NoiseReason } from '@/lib/living'
 import type { Tone } from '@/lib/listing-verdict'
 import { pluralRu } from '@/lib/plural-ru'
@@ -74,7 +75,7 @@ export function LivingList({ facts: f, lang, hideBeach = false, map }: {
   const c = pickCopy(COPY, lang)
   const row = (k: LivingRow['key']) => f.rows.find(r => r.key === k)
   const dist = (r: LivingRow, extra?: string | null) =>
-    [r.km != null ? c.km(r.km) : c.far(r.searchKm ?? 0), r.name, extra].filter(Boolean).join(' · ')
+    [r.km != null ? c.km(r.km) : c.far(r.searchKm ?? 0), placeName(r.name, lang), extra].filter(Boolean).join(' · ')
 
   const near = map ? nearPoints(map.byCategory) : null
   const lines: Line[] = []

@@ -91,6 +91,7 @@ import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
 import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
+import { localizeSnapshot } from '@/lib/competitor-names-en'
 import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPdf, YieldScenariosTable, questionHeaders, TONE_PILL_CLASS } from '@/components/ListingVerdict'
 import { IncomeCalculator } from '@/components/IncomeCalculator'
 import { BeachWeatherDesign } from '@/components/BeachWeatherDesign'
@@ -100,6 +101,7 @@ import type { PdfRequest } from '@/lib/pdf-request'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { managerLanguagesEn } from '@/lib/manager-lang'
 import { cleanDeveloperBullets } from '@/lib/developer-highlights'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -118,7 +120,7 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { resolveListingTitle, anonListingTitle } from '@/lib/listing-title'
 import { loadAllTranslations, mergeAllTranslations, loadTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
-import { districtRu } from '@/lib/district-ru'
+import { districtRu, districtLatin } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
@@ -1119,7 +1121,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   // Display surface for RU uses the Cyrillic district form to match
   // the AI-generated H1 / SEO text. Raw Latin name is still used for
   // canonical-path matching and Schema.org address fields.
-  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
   const price = fmtUsd(numberOrNull(d['price'] ?? d['Цена']), lang)
   const description = gen?.meta
     ? metaSnippet(gen.meta)
@@ -1372,7 +1374,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   // Show Cyrillic district on /ru, raw Latin on /en. Raw form is
   // kept around for the JSON-LD address + canonical-path matching.
-  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
   // District orientation card: only when the listing's district maps to a
   // real hub slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
   const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
@@ -1430,7 +1432,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           .then(catalog => saleCompsNear({ lat, lng, bedrooms, areaM2: area, priceUsd: priceNum, leaseYears, catalog }))
           .catch(() => null)
       : null,
-    loadVerdictSnapshot(v.airtable_id),
+    loadVerdictSnapshot(v.airtable_id).then(snap => localizeSnapshot(snap, lang)),
     loadComplexFacts(firstString(d['Комплекс'])).catch(() => null),
     loadAirbnbNearby(lat, lng, bedrooms),
     lat != null && lng != null ? landPricesNear(lat, lng).catch(() => null) : null,
@@ -1486,11 +1488,10 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   type KV = { label: string; value: React.ReactNode }
   // Карточка менеджера в боковой колонке: на не-RU страницах — EN-имя и языки
   // (как в ManagerCard), а если редактор их не заполнил — транслит и словарь.
-  const LANG_EN: Record<string, string> = { 'русский': 'Russian', 'английский': 'English', 'украинский': 'Ukrainian', 'индонезийский': 'Indonesian', 'немецкий': 'German', 'французский': 'French', 'китайский': 'Chinese', 'испанский': 'Spanish', 'итальянский': 'Italian', 'польский': 'Polish', 'нидерландский': 'Dutch', 'казахский': 'Kazakh' }
   const m0 = managers[0]
   const managerName = !m0 ? '' : lang === 'ru' ? m0.name : (m0.nameEn || (hasCyrillic(m0.name) ? translitPreserveCase(m0.name) : m0.name))
   const managerLangs = !m0 ? [] : lang === 'ru' ? m0.languages
-    : (m0.languagesEn?.length ? m0.languagesEn : m0.languages.map(l => LANG_EN[l.trim().toLowerCase()] ?? l))
+    : managerLanguagesEn(m0.languages, m0.languagesEn)
   const villaFacts: KV[] = ([
     parentComplex ? { label: c.factType, value: c.factTypeVillaComplex } : { label: c.factType, value: c.factTypeVilla },
     area != null ? { label: c.factHouse, value: `${area} ${c.sqm}` } : null,
@@ -2045,7 +2046,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </section>
         )}
 
-        {chapterNav.length > 1 && <VillaChapterNav items={chapterNav} />}
+        {chapterNav.length > 1 && <VillaChapterNav items={chapterNav} label={lang === 'ru' ? 'Разделы страницы' : 'Page sections'} />}
 
         {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
           <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} title={CH.obekt[1]}>
@@ -2148,7 +2149,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                     <span className="text-[24px] font-semibold tracking-[-0.01em]">{parentComplex.name}</span>
                     {(() => {
                       const bits = [
-                        parentComplex.district,
+                        lang === 'ru' ? parentComplex.district : districtLatin(parentComplex.district),
                         parentComplex.units ? c.units(parentComplex.units) : null,
                       ].filter(Boolean)
                       return bits.length > 0 ? <span className="text-[14px] text-[#4C5751]">{bits.join(' · ')}</span> : null
@@ -2211,11 +2212,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                 <div className="flex items-center gap-3">
                   {managers[0].photo ? (
                     <div className="shrink-0 w-[48px] h-[48px] rounded-full overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">
-                      <Image src={managers[0].photo} alt={managers[0].name} fill sizes="48px" className="object-cover" />
+                      <Image src={managers[0].photo} alt={managerName} fill sizes="48px" className="object-cover" />
                     </div>
                   ) : (
                     <div className="shrink-0 w-[48px] h-[48px] rounded-full bg-[var(--color-search-bg)] border border-[var(--color-border)] flex items-center justify-center text-[18px] text-[var(--color-text-muted)]">
-                      {managers[0].name.slice(0, 1).toUpperCase()}
+                      {managerName.slice(0, 1).toUpperCase()}
                     </div>
                   )}
                   <div className="min-w-0">

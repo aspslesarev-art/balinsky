@@ -31,6 +31,12 @@ const SUGGESTIONS = [
   'дом для семьи с двумя детьми, тихое место, школа рядом',
   'инвестиция до 250k с хорошей доходностью',
 ]
+const SUGGESTIONS_EN = [
+  'villa with an infinity pool near the ocean in Canggu up to 600k',
+  '2-bedroom apartment in Ubud in the jungle for rental',
+  'family house for two kids, quiet area, school nearby',
+  'investment up to 250k with good yield',
+]
 
 export function SemanticSearchClient({ lang }: { lang: Lang }) {
   const [query, setQuery] = useState('')
@@ -213,7 +219,7 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
           <div className="mt-6 text-center">
             <div className="text-[12px] uppercase tracking-wide text-[#9CA3AF] mb-2.5">{c.examples}</div>
             <div className="flex flex-wrap justify-center gap-2 max-w-[860px] mx-auto">
-              {SUGGESTIONS.map(s => (
+              {(lang === 'ru' ? SUGGESTIONS : SUGGESTIONS_EN).map(s => (
                 <button
                   key={s}
                   type="button"
@@ -256,13 +262,13 @@ export function SemanticSearchClient({ lang }: { lang: Lang }) {
                     )}
                     <div className="p-3">
                       <div className="text-[11px] uppercase tracking-wide text-[#9CA3AF] mb-1">
-                        {r.kind === 'villa' ? 'Вилла' : r.kind === 'apartment' ? 'Апартамент' : 'Жилой комплекс'}
+                        {lang === 'ru' ? (r.kind === 'villa' ? 'Вилла' : r.kind === 'apartment' ? 'Апартамент' : 'Жилой комплекс') : (r.kind === 'villa' ? 'Villa' : r.kind === 'apartment' ? 'Apartment' : 'Residential complex')}
                         {r.district && <> · {r.district}</>}
                       </div>
                       <div className="text-[13px] font-medium leading-snug mb-1 line-clamp-2">{r.title}</div>
                       <div className="text-[12px] text-[#6B7280] mb-1 flex items-center gap-1 flex-wrap">
                         {r.bedrooms != null && <span>{r.bedrooms} BR</span>}
-                        {r.area != null && <span>· {r.area} м²</span>}
+                        {r.area != null && <span>· {r.area} {lang === 'ru' ? 'м²' : 'm²'}</span>}
                       </div>
                       {r.priceUsd != null && (
                         <div className="text-[14px] font-semibold text-[#16A34A]">

@@ -1,13 +1,14 @@
 // Страница объекта для новичка: «Стоит ли брать» и четыре раздела-вопроса
 // (безопасно → удобно → спрос → деньги). Выводы — lib/listing-verdict.ts.
 // Тексты пока RU + EN; остальные языки берут английский до перевода.
+import { completionLabel } from '@/lib/translit'
 import type { ReactNode } from 'react'
 import { PriceScale } from './PriceScale'
 import { DemandTabs } from './DemandTabs'
 import { BookingCompCard } from './BookingCompCard'
 import { InfoTip } from './InfoTip'
 import { pickCopy, type Lang } from '@/lib/i18n'
-import { districtRu } from '@/lib/district-ru'
+import { districtRu, districtLatin } from '@/lib/district-ru'
 import { permitOk, type Verdict, type Tone, type YieldFacts, type ComplexFacts, type YieldScenarios, type ScenarioRow } from '@/lib/listing-verdict'
 import type { MonthlyBundle } from '@/lib/investment/monthly'
 import type { InvestmentSnapshot, NearbyMatchCard } from '@/lib/investment/snapshot'
@@ -468,7 +469,7 @@ export function SafetyCards({ verdict: v, status, yearRaw, complex, leaseYears, 
   type Row = { k: string; v: ReactNode; tone: Tone | null; note?: string }
   const rows: Row[] = []
   rows.push({ k: p === 'slf' || p === 'slfApplied' ? c.slfRow : c.permitRow, v: permitOk(p) ? c.permitYes : p === 'unknown' ? c.permitUnknown : c.permitApplied, tone: permitOk(p) ? 'plus' : 'warn', note: docsNote })
-  if (buildVal) rows.push({ k: c.build, v: [buildVal, yearRaw && !built ? `${c.handover.toLowerCase()} ${yearRaw}` : null].filter(Boolean).join(', '), tone: v.safety.notStarted ? 'minus' : built ? 'plus' : null })
+  if (buildVal) rows.push({ k: c.build, v: [buildVal, yearRaw && !built ? `${c.handover.toLowerCase()} ${completionLabel(yearRaw, lang)}` : null].filter(Boolean).join(', '), tone: v.safety.notStarted ? 'minus' : built ? 'plus' : null })
   if (complex?.paymentPlan) rows.push({ k: c.payment, v: complex.paymentPlan, tone: null })
   rows.push(leaseYears != null
     ? { k: c.leaseRow, v: [c.leaseVal(leaseYears), complex?.leaseExtension ? `${c.extRow.toLowerCase()} ${c.extVal(complex.leaseExtension)}` : null].filter(Boolean).join(', '), tone: leaseYears >= 25 ? 'plus' : 'warn' }
@@ -814,7 +815,7 @@ export function DemandSummary({ verdict: v, monthly: m, bedrooms, daily, dailyCo
                   <span className="text-[20px] font-semibold text-[var(--color-text)]"><InlinePrice usd={comp.rentMonthUsd} lang={lang} /> <span className="text-[14px] font-medium text-[var(--color-text-muted)]">{c.perMonth}</span></span>
                   <span className="text-[15px] font-medium leading-snug text-[var(--color-text)] line-clamp-2">{comp.title}</span>
                   <span className="text-[14px] text-[var(--color-text-muted)]">
-                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.buildingM2 ? `${comp.buildingM2} м²` : null, lang === 'ru' ? districtRu(comp.district) : comp.district, comp.distanceKm != null ? `${dec(comp.distanceKm)} ${c.km}` : null].filter(Boolean).join(' · ')}
+                    {[comp.bedrooms != null ? (comp.bedrooms === 0 ? c.studio : `${comp.bedrooms} ${c.br}`) : null, comp.buildingM2 ? `${comp.buildingM2} ${lang === 'ru' ? 'м²' : 'm²'}` : null, lang === 'ru' ? districtRu(comp.district) : districtLatin(comp.district), comp.distanceKm != null ? `${dec(comp.distanceKm)} ${c.km}` : null].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </a>

@@ -4,7 +4,7 @@
 // которая сейчас на экране, по нажатию прокручивает к ней.
 import { useEffect, useRef, useState } from 'react'
 
-export function VillaChapterNav({ items }: { items: { id: string; no: string; label: string }[] }) {
+export function VillaChapterNav({ items, label = 'Разделы страницы' }: { items: { id: string; no: string; label: string }[]; label?: string }) {
   const [active, setActive] = useState(items[0]?.id ?? '')
   const navRef = useRef<HTMLElement>(null)
 
@@ -24,7 +24,7 @@ export function VillaChapterNav({ items }: { items: { id: string; no: string; la
   }, [active])
 
   return (
-    <nav ref={navRef} aria-label="Разделы страницы"
+    <nav ref={navRef} aria-label={label}
       className="sticky top-[72px] [html[data-header-hidden='1']_&]:top-0 md:[html[data-header-hidden='1']_&]:top-[72px] transition-[top] duration-300 z-10 -mx-6 px-6 w-[calc(100%+48px)] max-w-none md:w-auto md:max-w-full md:mx-0 md:px-0 py-3 bg-white/95 backdrop-blur border-b border-[#E4E9E6] flex gap-2 overflow-x-auto [scrollbar-width:none]">
       {items.map(i => {
         const on = i.id === active

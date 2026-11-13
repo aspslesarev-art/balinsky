@@ -14,6 +14,7 @@
 // Zoom + pan have been intentionally removed for the public viewer
 // per owner request — admin still gets them in the editor.
 
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
@@ -76,6 +77,23 @@ const STATUS_WORDS: Record<Lang, { free: string; reserved: string; sold: string 
   pl: { free: 'dostępne', reserved: 'zarezerwowane', sold: 'sprzedane' },
   uk: { free: 'вільно', reserved: 'заброньовано', sold: 'продано' },
 }
+// Названия слоёв плана вводят в админке по-русски («Апарты 2», «Виллы»,
+// «Этаж 3»). Вне RU — частые слова по словарю, прочее транслитом.
+const LAYER_WORDS: Record<string, string> = {
+  'апарты': 'Apartments', 'апартаменты': 'Apartments', 'виллы': 'Villas', 'вилла': 'Villa', 'этаж': 'Floor',
+  'корпус': 'Building', 'блок': 'Block', 'генплан': 'Master plan', 'план': 'Plan', 'таунхаусы': 'Townhouses',
+  'дома': 'Houses', 'дом': 'House', 'участки': 'Plots', 'фаза': 'Phase', 'очередь': 'Phase', 'башня': 'Tower',
+}
+const LAYER_TITLES: Record<string, string> = {
+  'общий план': 'Master plan', 'общий': 'Overview', 'шахматка': 'Unit grid', 'вид на рисовые поля': 'Rice field view',
+}
+function layerTitle(t: string | null | undefined, lang: Lang): string | null {
+  if (!t || lang === 'ru' || lang === 'uk' || !hasCyrillic(t)) return t ?? null
+  const whole = LAYER_TITLES[t.trim().toLowerCase()]
+  if (whole) return whole
+  return t.replace(/\p{L}+/gu, w => LAYER_WORDS[w.toLowerCase()] ?? (hasCyrillic(w) ? translitPreserveCase(w) : w))
+}
+
 function statusWord(a: string, lang: Lang): string {
   const w = STATUS_WORDS[lang] ?? STATUS_WORDS.en
   return a === 'free' ? w.free : a === 'reserved' ? w.reserved : w.sold
@@ -217,14 +235,14 @@ export function ComplexVisualizationViewer({
                       : 'bg-white/90 text-[var(--color-text)] hover:bg-white'
                   }`}
                 >
-                  {l.title ?? `#${l.id}`}
+                  {layerTitle(l.title, lang) ?? `#${l.id}`}
                 </button>
               )
             })}
           </div>
         ) : currentLayer.title ? (
           <div className="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[12px] text-[var(--color-text)] shadow-md max-w-[60vw] truncate">
-            {currentLayer.title}
+            {layerTitle(currentLayer.title, lang)}
           </div>
         ) : null}
 
@@ -235,7 +253,7 @@ export function ComplexVisualizationViewer({
               from the source. */}
           <Image
             src={currentLayer.photoUrl}
-            alt={currentLayer.title ?? ''}
+            alt={layerTitle(currentLayer.title, lang) ?? ''}
             width={1920}
             height={1280}
             sizes="(max-width: 1200px) 100vw, 1180px"

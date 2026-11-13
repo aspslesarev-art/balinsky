@@ -13,7 +13,7 @@ import { UnitDemandBadge } from './UnitDemandBadge'
 import { CardYieldPro } from './CardYieldPro'
 import type { YieldRange } from '@/lib/investment/chance'
 import { CardLiving, type CardLivingData } from './CardLiving'
-import { districtRu } from '@/lib/district-ru'
+import { districtRu, districtLatin } from '@/lib/district-ru'
 import type { UnitDemandView } from '@/lib/unit-demand-view'
 
 export type VillaCardData = {
@@ -160,7 +160,7 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
             {a.bedrooms != null && <span>{lang === 'ru' ? `${a.bedrooms} ${pluralRu(a.bedrooms, ['спальня', 'спальни', 'спален'])}` : `${a.bedrooms} BR`}</span>}
             {a.area != null && <span>{copy.house}: {a.area} {copy.sqm}</span>}
             {a.land != null && <span>{copy.land}: {a.land} {copy.sqm}</span>}
-            {a.district && <span>{lang === 'ru' ? districtRu(a.district) : a.district}</span>}
+            {a.district && <span>{lang === 'ru' ? districtRu(a.district) : districtLatin(a.district)}</span>}
           </div>
           {a.demand && <UnitDemandBadge demand={a.demand} lang={lang} />}
         </div>

@@ -3,6 +3,8 @@
 import { useCallback, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { detectLang, pickCopy } from '@/lib/i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { managerLanguagesEn } from '@/lib/manager-lang'
 import Image from 'next/image'
 import { Languages, Video, Clock, Send, MessageCircle, MessagesSquare } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
@@ -206,10 +208,8 @@ function ManagerRow({
   // Silent fallback to the RU value when an EN counterpart isn't
   // filled in Airtable yet — manager cards already render fine in
   // mixed locales and a literal "Name En" placeholder would look odd.
-  const displayName = lang !== 'ru' && m.nameEn ? m.nameEn : m.name
-  const displayLanguages = lang !== 'ru' && m.languagesEn && m.languagesEn.length > 0
-    ? m.languagesEn
-    : m.languages
+  const displayName = lang === 'ru' ? m.name : m.nameEn || (hasCyrillic(m.name) ? translitPreserveCase(m.name) : m.name)
+  const displayLanguages = lang === 'ru' ? m.languages : managerLanguagesEn(m.languages, m.languagesEn)
 
 
   return (
@@ -229,7 +229,7 @@ function ManagerRow({
           <div className="text-[12px] md:text-[13px] text-[var(--color-text-muted)] truncate">
             {c.role(developerName)}
           </div>
-          {m.regalia && (
+          {m.regalia && (lang === 'ru' || !hasCyrillic(m.regalia)) && (
             <div className="mt-1 text-[12px] md:text-[13px] text-[var(--color-text-muted)] line-clamp-2">
               {m.regalia}
             </div>

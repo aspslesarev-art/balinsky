@@ -1,4 +1,6 @@
-import { fixBedroomPlural } from '@/lib/listing-title'
+import { fixBedroomPlural, fallbackListingTitle } from '@/lib/listing-title'
+import { hasCyrillic } from '@/lib/translit'
+import { districtLatin } from '@/lib/district-ru'
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
@@ -153,8 +155,7 @@ const loadUnitsCached = unstable_cache(
       if (!r.title || !r.slug || r.slug.startsWith('-')) continue
       if (seenApt.has(r.slug)) continue
       seenApt.add(r.slug)
-      const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
-      const title = fixBedroomPlural(titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim())
+      const title = unitTitle(r.title, r.title_en, lang, complexName, 'apartment', null, r.area, r.bedrooms)
       units.push({
         kind: 'apartment',
         id: r.airtable_id,
@@ -174,8 +175,7 @@ const loadUnitsCached = unstable_cache(
       if (!r.title || !r.slug || r.slug.startsWith('-')) continue
       if (seenVilla.has(r.airtable_id)) continue
       seenVilla.add(r.airtable_id)
-      const titleSource = (lang !== 'ru' ? firstString(r.title_en) : null) ?? r.title
-      const title = fixBedroomPlural(titleSource.replace(/\s*\|\s*Balinsky\s*$/i, '').trim())
+      const title = unitTitle(r.title, r.title_en, lang, complexName, 'villa', firstString(r.district) ?? firstString(r.district_alt), r.area, numberOrNull(r.bedrooms))
       units.push({
         kind: 'villa',
         id: r.airtable_id,
@@ -224,4 +224,16 @@ function floorLabel(v: unknown): string | null {
   const nums = list.map(Number)
   if (nums.every(Number.isFinite)) return `${Math.min(...nums)}–${Math.max(...nums)}`
   return list.join(', ')
+}
+
+// EN-заголовка у юнита нет, а русский на не-RU странице не нужен: собираем
+// «<Комплекс>: Villa in <район> — 48 m², 1 bedroom» из полей.
+function unitTitle(ru: string, enRaw: unknown, lang: Lang, complexName: string, kind: 'villa' | 'apartment', district: string | null, area: number | null, bedrooms: number | null): string {
+  const clean = (s: string) => fixBedroomPlural(s.replace(/\s*\|\s*Balinsky\s*$/i, '').trim())
+  if (lang === 'ru') return clean(ru)
+  const en = firstString(enRaw)
+  if (en) return clean(en)
+  if (!hasCyrillic(ru)) return clean(ru)
+  const base = fallbackListingTitle({ kind, district: districtLatin(district), area, bedrooms: bedrooms != null ? String(bedrooms) : null, lang })
+  return `${complexName}: ${base}`
 }

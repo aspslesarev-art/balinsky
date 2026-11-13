@@ -322,7 +322,7 @@ export function HomeFinder({ items, lang = 'ru' }: { items: FinderItem[]; lang?:
                   <div className="text-[13.5px] font-medium leading-snug line-clamp-2 min-h-[2.6em]">{it.title}</div>
                   <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
                     {it.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble size={13} /> {it.bedrooms}</span>}
-                    {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} м²</span>}
+                    {it.area != null && <span className="inline-flex items-center gap-1"><Square size={12} /> {it.area} {lang === 'ru' || lang === 'uk' ? 'м²' : 'm²'}</span>}
                   </div>
                   {goal === 'live' ? (
                     <CardLiving data={{ school_km: it.schoolKm, beach_km: it.beachKm }} lang={lang} className="mt-1.5 !text-[12px] leading-snug" />

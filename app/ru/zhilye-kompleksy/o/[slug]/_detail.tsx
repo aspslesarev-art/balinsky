@@ -76,10 +76,10 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { PageEditButton } from '@/components/page-edit/PageEditButton'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { facetLabel } from '@/lib/filter-i18n'
-import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
+import { hasCyrillic, translitPreserveCase, completionLabel } from '@/lib/translit'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
-import { districtRu } from '@/lib/district-ru'
+import { districtRu, districtLatin } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, loadVisionManifest, altFor } from '@/lib/listing-features'
@@ -1423,12 +1423,12 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   const gen = lang === 'ru' ? await loadListingCopy('complex', c.airtable_id) : null
   const name = firstString(c.data['Project']) ?? slug
   const districtRaw = firstString(c.data['Location 2']) ?? firstString(c.data['Location'])
-  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
   // Localize unit-type labels for the fallback description too — raw Airtable
   // values are Russian, so non-RU langs would otherwise show Cyrillic types.
   const typesArr = strList(c.data['Типы юнитов'])
   const types = (lang === 'ru' ? typesArr : typesArr.map(t => facetLabel('type', t, lang))).join(', ')
-  const yearRaw = firstString(c.data['Year of completion ']) ?? firstString(c.data['Year of completion'])
+  const yearRaw = completionLabel(firstString(c.data['Year of completion ']) ?? firstString(c.data['Year of completion']), lang)
   const seoText = tField(c.data, 'SEO Text', lang)
     ?? tField(c.data, 'Описание', lang)
     ?? firstString(c.data['ИИ Описание 2'])
@@ -1517,7 +1517,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const photos = (photoManifest[c.airtable_id] ?? []).slice(0, 12)
   const slidesPhotos = photos.length > 0 ? photos : c.cover_url ? [c.cover_url] : []
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
-  const district = lang === 'ru' ? districtRu(districtRaw) : districtRaw
+  const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
   // District orientation card: only when the district maps to a real hub
   // slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
   const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
@@ -1642,7 +1642,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const airportFact = fmtAirportRoute(geoFacts?.routes?.airport, lang) ?? fmtAirportDistance(lat, lng, lang)
   const facts: { Icon: typeof Building2; label: string; value: string }[] = [
     types.length > 0 && { Icon: Home, label: copy.factType, value: types.join(', ') },
-    yearRaw && { Icon: Calendar, label: copy.factCompletion, value: status?.toLowerCase().includes('построен') ? copy.factCompletionDone : yearRaw },
+    yearRaw && { Icon: Calendar, label: copy.factCompletion, value: status?.toLowerCase().includes('построен') ? copy.factCompletionDone : completionLabel(yearRaw, lang) },
     permitRaw && permitRaw.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: copy.factPermits, value: permit },
     lease && { Icon: Lock, label: copy.factLeasehold, value: copy.factLeaseValue(lease) },
     totalUnits != null && { Icon: BedDouble, label: copy.factUnits, value: String(totalUnits) },
@@ -1967,7 +1967,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
             {types.length > 0 && <span>{types.join(', ')}</span>}
             {totalUnits != null && <span>{copy.units(totalUnits)}</span>}
-            {yearRaw && <span>{status?.toLowerCase().includes('построен') ? copy.completed : copy.completion(yearRaw)}</span>}
+            {yearRaw && <span>{status?.toLowerCase().includes('построен') ? copy.completed : copy.completion(completionLabel(yearRaw, lang)!)}</span>}
             {district && <span>{district}, {copy.bali}</span>}
           </div>
           {developerLink && (
