@@ -1752,7 +1752,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     hasMesto && { id: 'mesto', no: '02', label: CH.mesto[0] },
     { id: 'proverka', no: '03', label: CH.proverka[0] },
     hasMoney && { id: 'dengi', no: '04', label: CH.dengi[0] },
-    (developer || developerName) && { id: 'zastroyshchik', no: '05', label: CH.zastroyshchik[0] },
+    (developer || developerName || parentComplex) && { id: 'zastroyshchik', no: '05', label: CH.zastroyshchik[0] },
     { id: 'voprosy', no: '06', label: CH.voprosy[0] },
   ].filter((x): x is { id: string; no: string; label: string } => !!x)
 
@@ -2088,45 +2088,72 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
         {analytics}
 
-        {(developer || developerName) && (
+        {(developer || developerName || parentComplex) && (
           <VillaChapter id="zastroyshchik" no="05" eyebrow={CH.zastroyshchik[0]}>
-            <div className="rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4">
-              <div className="text-[13px] text-[#4C5751]">{c.developerLabel}</div>
-              <div className="flex justify-between items-center">
-                <span className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)]">{developer?.name ?? developerName}</span>
-                {developer?.logoUrl ? (
-                  <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-1">
-                    <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-w-full max-h-full object-contain" />
-                  </div>
-                ) : (
-                  <div className="shrink-0 w-12 h-12 rounded-lg bg-[#2C3B2F] flex items-center justify-center text-[10px] font-semibold text-white tracking-wide">
-                    {(developer?.name ?? developerName ?? '').slice(0, 6).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              {devStats && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[28px] font-semibold leading-[1.15]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
-                    <span className="text-[14px] text-[#4C5751]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</span>
-                  </div>
-                  {devStats.inProgress > 0 && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[28px] font-semibold leading-[1.15]">{devStats.inProgress}</span>
-                      <span className="text-[14px] text-[#4C5751]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+              {(developer || developerName) && (
+              <div className="rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4 h-full">
+                <div className="text-[13px] text-[#4C5751]">{c.developerLabel}</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)]">{developer?.name ?? developerName}</span>
+                  {developer?.logoUrl ? (
+                    <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-1">
+                      <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-w-full max-h-full object-contain" />
                     </div>
-                  )}
-                  {videos.length > 0 && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[28px] font-semibold leading-[1.15]">{videos.length} {pickCopy({ ru: 'видео', en: 'videos', id: 'video', fr: 'vidéos', de: 'Videos', zh: '视频', nl: 'video\'s', ban: 'vidéo', pl: 'wideo', uk: 'відео' }, lang)}</span>
-                      <span className="text-[14px] text-[#4C5751]">{pickCopy({ ru: 'об объекте', en: 'about the property', id: 'tentang properti', fr: 'sur le bien', de: 'über das Objekt', zh: '关于此物业', nl: 'over het object', ban: 'indik properti', pl: 'o obiekcie', uk: 'про об\'єкт' }, lang)}</span>
+                  ) : (
+                    <div className="shrink-0 w-12 h-12 rounded-lg bg-[#2C3B2F] flex items-center justify-center text-[10px] font-semibold text-white tracking-wide">
+                      {(developer?.name ?? developerName ?? '').slice(0, 6).toUpperCase()}
                     </div>
                   )}
                 </div>
+                {devStats && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[28px] font-semibold leading-[1.15]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
+                      <span className="text-[14px] text-[#4C5751]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</span>
+                    </div>
+                    {devStats.inProgress > 0 && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[28px] font-semibold leading-[1.15]">{devStats.inProgress}</span>
+                        <span className="text-[14px] text-[#4C5751]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</span>
+                      </div>
+                    )}
+                    {videos.length > 0 && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[28px] font-semibold leading-[1.15]">{videos.length} {pickCopy({ ru: 'видео', en: 'videos', id: 'video', fr: 'vidéos', de: 'Videos', zh: '视频', nl: 'video\'s', ban: 'vidéo', pl: 'wideo', uk: 'відео' }, lang)}</span>
+                        <span className="text-[14px] text-[#4C5751]">{pickCopy({ ru: 'об объекте', en: 'about the property', id: 'tentang properti', fr: 'sur le bien', de: 'über das Objekt', zh: '关于此物业', nl: 'over het object', ban: 'indik properti', pl: 'o obiekcie', uk: 'про об\'єкт' }, lang)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {developer && (
+                  <Link href={`${developersRoot}/${developer.slug}`} className="mt-auto text-[15px] text-[var(--color-primary-pressed)] hover:underline">
+                    {c.openDeveloper}
+                  </Link>
+                )}
+              </div>
               )}
-              {developer && (
-                <Link href={`${developersRoot}/${developer.slug}`} className="text-[15px] text-[var(--color-primary-pressed)] hover:underline">
-                  {c.openDeveloper}
+              {parentComplex && (
+                <Link href={`${complexesRoot}/o/${parentComplex.slug}`} className="group rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4 h-full no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] focus-visible:border-[var(--color-primary)] transition-colors duration-[120ms]">
+                  <div className="text-[13px] text-[#4C5751]">{pickCopy({ ru: 'Жилой комплекс', en: 'Residential complex', id: 'Kompleks hunian', fr: 'Résidence', de: 'Wohnanlage', zh: '住宅项目', nl: 'Wooncomplex', ban: 'Kompleks hunian', pl: 'Kompleks mieszkaniowy', uk: 'Житловий комплекс' }, lang)}</div>
+                  {parentComplex.coverUrl && (
+                    <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#EEF2EF]">
+                      <Image src={parentComplex.coverUrl} alt={parentComplex.name} fill sizes="(min-width: 768px) 420px, 100vw" className="object-cover" />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[24px] font-semibold tracking-[-0.01em]">{parentComplex.name}</span>
+                    {(() => {
+                      const bits = [
+                        parentComplex.district,
+                        parentComplex.units ? c.units(parentComplex.units) : null,
+                      ].filter(Boolean)
+                      return bits.length > 0 ? <span className="text-[14px] text-[#4C5751]">{bits.join(' · ')}</span> : null
+                    })()}
+                  </div>
+                  <span className="mt-auto text-[15px] text-[var(--color-primary-pressed)] group-hover:underline">
+                    {pickCopy({ ru: 'Открыть страницу комплекса →', en: 'Open complex page →', id: 'Buka halaman kompleks →', fr: 'Voir la résidence →', de: 'Zur Anlage →', zh: '查看项目页面 →', nl: 'Naar het complex →', ban: 'Buka halaman kompleks →', pl: 'Otwórz stronę kompleksu →', uk: 'Відкрити сторінку комплексу →' }, lang)}
+                  </span>
                 </Link>
               )}
             </div>
