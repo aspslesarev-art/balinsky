@@ -20,6 +20,7 @@ import { PageContainer } from '@/components/PageContainer'
 import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
+import { KeyFactsInline } from '@/components/KeyFactsInline'
 import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows } from '@/lib/rdtr-zones'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -1409,6 +1410,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             {area != null && <span>{area} {c.sqm}</span>}
             {floor && <span>{c.floor}: {floor}</span>}
             {district && <span>{districtRaw ? geoChainString(districtRaw) : `${district}, ${c.bali}`}</span>}
+            <KeyFactsInline facts={livingFacts} lang={lang} />
           </div>
           {priceNum != null && (
             <PriceCtaCard

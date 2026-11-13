@@ -49,6 +49,7 @@ import { VillaChapter, VillaBlock } from '@/components/VillaChapter'
 import { VillaChapterNav } from '@/components/VillaChapterNav'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
+import { KeyFactsInline } from '@/components/KeyFactsInline'
 import { Money } from '@/components/Money'
 import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
@@ -1977,17 +1978,10 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           <h1 className="text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] [word-break:break-word] [overflow-wrap:anywhere]">
             {title}
           </h1>
-          <div className="text-[15px] text-[#36413B]">
-            {district ? `${district}, ${c.bali}` : c.bali}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[15px] text-[#36413B]">
+            <span>{district ? `${district}, ${c.bali}` : c.bali}</span>
+            <KeyFactsInline facts={livingFacts} beachKm={beachPick?.km ?? null} lang={lang} />
           </div>
-          {((beachPick && beachPick.km <= 3) || (nearby?.byCategory?.school?.[0] && nearby.byCategory.school[0].distanceKm <= 2)) && <div className="flex flex-wrap gap-5 text-[14px]">
-            {beachPick && beachPick.km <= 3 && (
-              <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M2 18c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><circle cx="12" cy="9" r="4"/></svg>{pickCopy({ ru: 'Пляж', en: 'Beach', id: 'Pantai', fr: 'Plage', de: 'Strand', zh: '海滩', nl: 'Strand', ban: 'Pantai', pl: 'Plaża', uk: 'Пляж' }, lang)} {beachPick.km < 1 ? `${Math.round(beachPick.km * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${beachPick.km.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
-            )}
-            {nearby?.byCategory?.school && nearby.byCategory.school.length > 0 && nearby.byCategory.school[0].distanceKm <= 2 && (
-              <span className="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/></svg>{pickCopy({ ru: 'Школа', en: 'School', id: 'Sekolah', fr: 'École', de: 'Schule', zh: '学校', nl: 'School', ban: 'Sekolah', pl: 'Szkoła', uk: 'Школа' }, lang)} {nearby.byCategory.school[0].distanceKm < 1 ? `${Math.round(nearby.byCategory.school[0].distanceKm * 1000)} ${pickCopy({ ru: 'м', en: 'm', id: 'm', fr: 'm', de: 'm', zh: '米', nl: 'm', ban: 'm', pl: 'm', uk: 'м' }, lang)}` : `${nearby.byCategory.school[0].distanceKm.toFixed(1)} ${pickCopy({ ru: 'км', en: 'km', id: 'km', fr: 'km', de: 'km', zh: 'km', nl: 'km', ban: 'km', pl: 'km', uk: 'км' }, lang)}`}</span>
-            )}
-          </div>}
           {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           {priceNum != null && (
             <div className="lg:hidden">
