@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWOI Suite 02 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Berawa Apartments (FORMS Architects), «Suite 02». Площади — из таблицы на
+// листе: сьют 34.0, санузел 4.0, всего 38.0 м². Размеры — с цепочек на
+// чертеже (диван 1.95 × 2.7 м, кровать 1.85 × 2.1 м, глубина спальной зоны
+// 4.075 м); общий контур ≈ 7.7 × 6.0 м снят по ним же.
+const PLAN = { name: 'SWOI Suite 02', W: 7.67, HD: 5.96, BACK: 0.4, FRONT: 0.4, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -BACK - 0.3, HD + 0.3, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+const y = 0.12
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.planks, 1.6)
+  floorPatch(g, 4.2, HD, 0.1, 3.46, y + 0.004, T.tiles, 0.8)
+
+  glassWall(g, 0, 0, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 4.33, H1); wall(HD, 5.18, HD, W, H1); door(g, HD, 4.33, 5.18, y)
+  for (const v of [0.3, 3.6, 7.25]) rect(g, 0.65, 1.05, v - 0.2, v + 0.2, 0, H1, M.stone)    // колонны
+  // перегородка спальной зоны
+  wall(0, 3.56, 3.16, 3.56, H1)
+  // санузел и шкаф у входа
+  wall(4.2, 0, 4.2, 1.44, H1); wall(4.2, 2.23, 4.2, 3.56, H1); wall(4.2, 3.46, HD, 3.46, H1)
+  vanity(g, 5.2, 5.82, 2.0, 3.35, y); toilet(g, 5.4, 1.65, y); shower(g, 4.3, 5.85, 0.1, 1.17, y)
+  rr(g, 4.12, 5.82, 3.55, 4.19, y, 2.0, M.woodL, 0.04)
+  // кровать изголовьем к перегородке
+  bed(g, 0.61, 2.54, 1.09, 3.25, 3.3, y, M.teal)
+  rr(g, 2.6, 3.1, 2.9, 3.4, y, 0.45, M.woodL, 0.04)
+  rr(g, 3.3, 4.0, 0.15, 1.3, y, 0.012, M.cush, 0.005, false)
+  // гостиная: угловой диван, ТВ на стене
+  rr(g, 0.95, 2.8, 4.6, 6.6, y, 0.012, M.mustard, 0.005, false)
+  rr(g, 0.58, 1.67, 4.33, 5.65, y, 0.42, M.sofa, 0.12)
+  rr(g, 0.58, 0.88, 3.67, 5.65, y, 0.85, M.sofa, 0.12)
+  rr(g, 0.58, 3.12, 3.67, 4.3, y, 0.42, M.sofa, 0.12)
+  rr(g, 0.58, 3.12, 3.67, 3.97, y, 0.85, M.sofa, 0.12)
+  rr(g, 1.2, 1.6, 4.0, 4.2, y + 0.42, 0.3, M.cush, 0.1); rr(g, 2.2, 2.6, 4.0, 4.2, y + 0.42, 0.3, M.teal, 0.1)
+  rr(g, 1.15, 2.6, W - 0.35, W - 0.08, y, 0.5, M.wood, 0.04); rect(g, 1.35, 2.4, W - 0.12, W - 0.08, 1.0, 0.6, M.dark)
+  // рабочий стол и кухня буквой Г
+  rr(g, 3.25, 4.0, 5.85, 7.44, y, 0.75, M.woodL, 0.04)
+  chair(g, 2.95, 6.2, y, M.coral); chair(g, 2.95, 6.9, y, M.coral)
+  rr(g, 4.04, 5.82, 6.85, W - 0.08, y, 0.82, M.sage, 0.03)
+  rr(g, 5.2, 5.82, 5.5, 6.85, y, 0.82, M.sage, 0.03)
+  rect(g, 4.02, 5.84, 6.83, W - 0.06, 0.94, 0.05, M.white); rect(g, 5.18, 5.84, 5.48, 6.85, 0.94, 0.05, M.white)
+  plant(g, 0.35, 6.4, y, 0.8)
+}
+P(floor1G, 1.65, 3.4, 5.0, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '38 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 34.0], ['bath', 4.0]] }],
+  L1: [
+    Lb('livingKitchen', 34.0, 2.4, 2.2, 5.6),
+    Lb('bedroom', undefined, 1.8, 2.0, 2.0),
+    Lb('bath', 4.0, 5.0, 2.5, 1.7),
+  ],
+})
+</script>
+</body>
+</html>

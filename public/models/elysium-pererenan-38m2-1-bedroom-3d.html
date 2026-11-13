@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elysium A7.1 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Elysium, Block 2, «Apartment 2.3.10 / 2.4.10 / 2.5.10 – A7.1» —
+// квартира-трапеция со скошенной правой стеной. Площади — из таблицы на
+// листе: комната 30.50, ванная 4.60, балконы 2.00 и 0.70, всего 37.80 м².
+// Размеров на плане нет: квартира ≈ 8.1 м в глубину, 3.5 м по узкому и
+// 6.3 м по широкому торцу — подогнано под общую площадь, остальное по масштабу.
+const PLAN = { name: 'Elysium A7.1', W: 6.31, HD: 7.22, BACK: 0.94, FRONT: 0.4, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12
+const VR = u => 3.45 + 0.3505 * (u + 0.94)          // скошенная стена: v по u
+/** Плоская плита-многоугольник по точкам [u, v]. */
+function poly (g, pts, y0, h, mat) {
+  const s = new THREE.Shape(pts.map(([u, v]) => new THREE.Vector2(v - cx, -(zOf(u) - cz))))
+  const geo = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2)
+  const m = new THREE.Mesh(geo, mat); m.position.y = y0; m.receiveShadow = true; m.castShadow = true; edges(m); g.add(m); return m
+}
+poly(siteG, [[-BACK - 0.3, -0.3], [-BACK - 0.3, VR(-BACK) + 0.35], [HD + 0.3, VR(HD + 0.3) + 0.35], [HD + 0.3, -0.3]], -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  poly(g, [[0, 0], [0, 2.05], [-0.45, 2.05], [-0.45, VR(-0.45)], [HD, VR(HD)], [HD, 0]], 0, 0.12, M.slab)
+  poly(g, [[0, 0], [0, 2.05], [-0.45, 2.05], [-0.45, VR(-0.45)], [HD, VR(HD)], [HD, 0]], y, 0.012, texMat(T.planks, 0.62, 0.62))
+  poly(g, [[5.0, 3.65], [5.0, VR(5.0)], [HD, VR(HD)], [HD, 3.65]], y + 0.004, 0.012, texMat(T.tiles, 1.25, 1.25))
+
+  wall(HD, 0, HD, 0.7, H1); wall(HD, 1.5, HD, VR(HD), H1); door(g, HD, 0.7, 1.5, y)
+  wall(-BACK, 0, HD, 0, H1)
+  wall(-BACK, VR(-BACK), HD, VR(HD), H1)
+  glassWall(g, 0, 0.08, 0, 2.0, 0, H1)
+  wall(-BACK, 2.05, 0, 2.05, H1)
+  glassWall(g, -0.45, 2.1, -0.45, VR(-0.45), 0, H1)
+  // ванная в широком углу у входа, шкаф над ней
+  wall(5.0, 3.65, 5.0, VR(5.0), H1); wall(6.2, 3.65, HD, 3.65, H1)
+  door(g, 3.65, 5.1, 5.95, y, false, 0.4)
+  vanity(g, 6.55, 7.1, 3.8, 4.7, y); toilet(g, 6.75, 5.45, y); shower(g, 5.15, 6.0, 4.8, 5.75, y)
+  glassWall(g, 6.0, 4.8, 6.0, 5.75, y, 2.0)
+  rr(g, 4.3, 4.92, 3.6, 5.2, y, 2.0, M.woodL, 0.04)
+  // кухня: у левой стены и вдоль входной стены
+  rr(g, 4.65, 5.2, 0.05, 0.66, y, 0.82, M.sage, 0.03)
+  rr(g, 5.2, 7.12, 0.05, 0.66, y, 1.9, M.steel, 0.06)
+  rr(g, 6.4, 7.12, 1.6, 3.55, y, 0.82, M.sage, 0.03)
+  rect(g, 6.38, 7.14, 1.58, 3.57, 0.94, 0.05, M.white)
+  // письменный стол, ТВ на левой стене
+  rr(g, 3.4, 4.6, 0.05, 0.66, y, 0.75, M.woodL, 0.04)
+  cyl(g, 4.15, 0.9, 0.18, 0.18, 0.45, y, M.white, 14)
+  rr(g, 1.3, 2.7, 0.05, 0.4, y, 0.5, M.wood, 0.04); rect(g, 1.5, 2.5, 0.05, 0.1, 1.0, 0.6, M.dark)
+  // кровать изголовьем к скошенной стене
+  rr(g, 1.3, 3.7, 2.0, 4.3, y, 0.012, M.cush, 0.005, false)
+  bed(g, 1.6, 3.4, 2.2, 4.3, 4.3, y, M.teal)
+  rr(g, 1.05, 1.5, 3.6, 4.05, y, 0.45, M.woodL, 0.04); rr(g, 3.5, 3.95, 4.15, 4.6, y, 0.45, M.woodL, 0.04)
+  // кресло у окна
+  rr(g, -0.3, 0.4, 2.5, 3.3, y, 0.45, M.mustard, 0.18)
+  cyl(g, 0.5, 2.25, 0.25, 0.25, 0.5, y, M.white, 16)
+}
+// ============ балкон и цветочный ящик ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, 0.08, 2.0, 0, 0.1, texMat(T.deck, 1, 0.5), true, false)
+  railing(g, -BACK, 0.08, -BACK, 2.0, 0.1)
+  chair(g, -0.5, 1.4, 0.1, M.white)
+  poly(g, [[-BACK, 2.1], [-BACK, VR(-BACK)], [-0.5, VR(-0.5)], [-0.5, 2.1]], 0, 0.45, M.stone)
+  for (const v of [2.4, 3.0]) ball(g, -0.72, v, 0.22, 0.62, M.leaf, 0.8)
+}
+P(floor1G, 1.65, 4.8, 2.2, Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+const OPTS = {
+  sub: '37.8 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['living', 30.5], ['bathroom', 4.6], ['balcony', 2.0], ['balcony', 0.7]] }],
+  L1: [
+    Lb('living', 30.5, 3.6, 2.2, 1.6),
+    Lb('bathroom', 4.6, 6.2, 2.5, 4.9),
+    Lb('balcony', 2.0, -0.5, 1.3, 1.0, true),
+  ],
+}
+// Координаты сняты с чертежа сверху вниз — отражаем по ширине, чтобы
+// план не вышел зеркальным (получается тот же план, повёрнутый на 180°).
+for (const G of [floor1G, floor2G, siteG, labelsG]) for (const c of G.children) { c.position.x *= -1; c.rotation.y *= -1; c.scale.x *= -1 }
+ToonKit.start(OPTS)
+</script>
+</body>
+</html>

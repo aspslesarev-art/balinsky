@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melasti Studio 30 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Melasti, студия. Площади — с плана: комната 21, ванная 5, балкон 4 м².
+// Размеров на плане нет: квартира ≈ 3.6 × 7.2 м подогнана под 21 + 5 м²,
+// глубина балкона 1.1 м — под его 4 м²; расстановка снята с плана.
+const PLAN = { name: 'Melasti Studio', W: 3.63, HD: 7.17, BACK: 1.1, FRONT: 0.4, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -BACK - 0.3, HD + 0.3, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+const y = 0.12
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.planks, 1.6)
+  floorPatch(g, 4.02, HD, 0, 1.62, y + 0.004, T.tiles, 0.8)
+
+  glassWall(g, 0, 0, 0, W, 0, H1)
+  wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(HD, 0, HD, 1.93, H1); wall(HD, 2.9, HD, W, H1); door(g, HD, 1.93, 2.9, y)
+  // ванная у входа: ванна, раковина, унитаз
+  wall(4.02, 0, 4.02, 1.72, H1); wall(4.02, 1.72, 5.3, 1.72, H1); wall(6.0, 1.72, HD, 1.72, H1)
+  door(g, 1.72, 5.3, 6.0, y, false, 0.4)
+  tub(g, 4.15, 4.9, 0.1, 1.55, y)
+  vanity(g, 5.4, 5.95, 0.05, 0.45, y)
+  toilet(g, 6.75, 1.0, y)
+  rr(g, 6.65, HD - 0.05, 0.05, 0.45, y, 2.2, M.grey, 0.03)
+  // шкафы во всю длину у левой стены, ТВ на них
+  rr(g, 0.05, HD - 0.05, W - 0.58, W - 0.05, y, 2.2, M.woodL, 0.04)
+  rect(g, 1.15, 2.55, W - 0.62, W - 0.58, 1.0, 0.75, M.dark)
+  // кровать изголовьем к правой стене, тумбочки, пуф
+  bed(g, 0.91, 2.82, 0.1, 2.3, 0.1, y, M.coral)
+  rr(g, 0.5, 0.88, 0.08, 0.55, y, 0.45, M.wood, 0.04); rr(g, 2.85, 3.23, 0.08, 0.55, y, 0.45, M.wood, 0.04)
+  cyl(g, 0.6, 2.85, 0.32, 0.32, 0.42, y, M.grey, 20)
+  plant(g, 3.6, 0.35, y, 0.7)
+}
+// ============ балкон ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, 0, W, 0, 0.1, texMat(T.deck, 1.6, 0.5), true, false)
+  railing(g, -BACK, 0, -BACK, W, 0.1)
+  rr(g, -1.0, -0.4, 0.15, 0.75, 0.1, 0.45, M.coral, 0.12); rr(g, -1.0, -0.4, 0.95, 1.55, 0.1, 0.45, M.coral, 0.12)
+  rr(g, -0.95, -0.45, 1.85, 2.4, 0.1, 0.42, M.dark, 0.04)
+  rr(g, -1.0, -0.4, 2.85, 3.45, 0.1, 0.45, M.coral, 0.12)
+  plant(g, -0.75, 2.15, 0.52, 0.4)
+}
+P(floor1G, 1.65, 3.8, 2.4, Math.PI, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '30 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['bedroom', 21], ['bathroom', 5], ['balcony', 4]] }],
+  L1: [
+    Lb('bedroom', 21, 3.2, 2.2, 1.8),
+    Lb('bathroom', 5, 5.6, 2.5, 0.9),
+    Lb('balcony', 4, -0.55, 1.3, 1.8, true),
+  ],
+})
+</script>
+</body>
+</html>

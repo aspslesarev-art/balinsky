@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>White Palm Studio 40 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Размеры — с чертежа Archestet «Floor plan – 1st floor – 1BR» (М 1:50):
+// студия 5.60 × 6.00 м, терраса 1.50 м. Площади — из таблицы на листе:
+// студия 26.6, ванная 5.4, терраса 8.3, всего 40.3 м². Мебель — по чертежу
+// (рендер на соседнем листе расставлен иначе).
+const PLAN = { name: 'White Palm Studio 40', W: 5.55, HD: 5.95, BACK: 1.5, FRONT: 0.4, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+rect(siteG, -BACK - 0.3, HD + 0.3, -0.3, W + 0.3, -0.3, 0.3, M.stone)
+const y = 0.12
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  rect(g, 0, HD, 0, W, 0, 0.12, M.slab)
+  floorPatch(g, 0, HD, 0, W, y, T.terrazzo, 2)
+  floorPatch(g, 2.98, HD - 0.05, 0.1, 2.3, y + 0.004, T.tiles, 0.8)
+
+  wall(HD, 0, HD, W, H1); wall(0, 0, HD, 0, H1); wall(0, W, HD, W, H1)
+  wall(0, 0, 0, 1.15, H1); door(g, 0, 1.15, 2.05, y, true, -0.5)
+  glassWall(g, 0, 2.05, 0, W, 0, H1)
+  // ванная и шкаф у задней стены
+  wall(2.98, 0, 2.98, 2.3, H1); wall(2.98, 1.6, 4.55, 1.6, H1)
+  wall(2.98, 2.3, 5.05, 2.3, H1); wall(4.55, 1.6, 4.55, 2.3, H1)
+  door(g, 2.3, 5.05, 5.85, y, false, 0.4)
+  shower(g, 3.1, 4.0, 0.1, 1.0, y); toilet(g, 4.55, 0.4, y); vanity(g, 5.2, 5.85, 0.1, 0.6, y)
+  rr(g, 3.05, 4.5, 1.68, 2.25, y, 2.0, M.woodL, 0.04)
+  // кухня вдоль левой стены
+  rr(g, 0.07, 2.95, 0.08, 0.7, y, 0.82, M.sage, 0.03)
+  rect(g, 0.05, 2.95, 0.06, 0.72, 0.94, 0.05, M.white)
+  rr(g, 2.3, 2.95, 0.08, 0.7, y, 1.9, M.steel, 0.06)
+  // столовая, диван, ТВ на правой стене
+  roundTable(g, 1.45, 2.45, y, 0.4)
+  chair(g, 0.75, 2.45, y, M.white); chair(g, 2.15, 2.45, y, M.white)
+  rr(g, 0.52, 2.26, 2.9, 3.7, y, 0.42, M.sofa, 0.12)
+  rr(g, 0.52, 2.26, 2.9, 3.2, y, 0.85, M.sofa, 0.12)
+  rr(g, 1.0, 1.4, 3.25, 3.45, y + 0.42, 0.3, M.cush, 0.1)
+  rr(g, 0.3, 1.8, 3.8, 5.0, y, 0.012, M.cush, 0.005, false)
+  cyl(g, 1.3, 4.35, 0.3, 0.28, 0.4, y, M.woodL, 24)
+  rr(g, 0.5, 2.9, W - 0.4, W - 0.08, y, 0.5, M.wood, 0.04); rect(g, 1.2, 2.3, W - 0.12, W - 0.08, 1.0, 0.6, M.dark)
+  // кровать изголовьем к правой стене
+  rr(g, 2.9, 5.2, 3.0, 4.9, y, 0.012, M.mustard, 0.005, false)
+  bed(g, 3.25, 4.98, 3.3, 5.4, 5.45, y, M.teal)
+  cyl(g, 5.35, 5.15, 0.2, 0.2, 0.5, y, M.woodL, 16)
+}
+// ============ терраса ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, 0, W, 0, 0.1, texMat(T.deck, 2, 0.6), true, false)
+  rr(g, -1.3, -0.6, 2.2, 2.9, 0.1, 0.45, M.white, 0.1); rr(g, -1.3, -0.6, 4.0, 4.7, 0.1, 0.45, M.white, 0.1)
+  roundTable(g, -1.15, 3.45, 0.1, 0.32)
+  for (const v of [0.3, W - 0.3]) plant(g, -1.2, v, 0.1, 0.8)
+}
+P(floor1G, 1.65, 1.8, 1.6, Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+const OPTS = {
+  sub: '40.3 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['livingKitchen', 26.6], ['bathroom', 5.4], ['terrace', 8.3]] }],
+  L1: [
+    Lb('livingKitchen', 26.6, 2.6, 2.2, 3.4),
+    Lb('bathroom', 5.4, 4.4, 2.5, 0.8),
+    Lb('terrace', 8.3, -0.8, 1.3, 1.2, true),
+  ],
+}
+// Координаты сняты с чертежа сверху вниз — отражаем по ширине, чтобы
+// план не вышел зеркальным (получается тот же план, повёрнутый на 180°).
+for (const G of [floor1G, floor2G, siteG, labelsG]) for (const c of G.children) { c.position.x *= -1; c.rotation.y *= -1; c.scale.x *= -1 }
+ToonKit.start(OPTS)
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elysium A9.2 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Elysium, Block 2, «Apartment 2.3.20 / 2.4.20 / 2.5.20 – A9.2». Площади —
+// из таблицы на листе: комната 32.40, ванная 6.10, балконы 3.00 и 1.15,
+// всего 42.65 м². Размеров на плане нет: квартира ≈ 5.5 × 7.8 м подогнана
+// под площадь, скос стены у ванной снят с чертежа.
+const PLAN = { name: 'Elysium A9.2', W: 5.53, HD: 7.77, BACK: 0.96, FRONT: 0.4, H1: 3.0, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12
+function poly (g, pts, y0, h, mat) {
+  const s = new THREE.Shape(pts.map(([u, v]) => new THREE.Vector2(v - cx, -(zOf(u) - cz))))
+  const geo = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2)
+  const m = new THREE.Mesh(geo, mat); m.position.y = y0; m.receiveShadow = true; m.castShadow = true; edges(m); g.add(m); return m
+}
+const OUT = [[0, 0], [0, 3.2], [-0.43, 3.2], [-0.43, W], [3.72, W], [5.64, 4.2], [6.6, 5.45], [HD, 5.45], [HD, 0]]
+poly(siteG, [[-BACK - 0.3, -0.3], [-BACK - 0.3, W + 0.3], [3.8, W + 0.3], [5.7, 4.55], [6.5, 5.75], [HD + 0.3, 5.75], [HD + 0.3, -0.3]], -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  poly(g, OUT, 0, 0.12, M.slab)
+  poly(g, OUT, y, 0.012, texMat(T.planks, 0.62, 0.62))
+  poly(g, [[5.64, 2.07], [5.64, 4.2], [6.6, 5.45], [HD, 5.45], [HD, 2.07]], y + 0.004, 0.012, texMat(T.tiles, 1.25, 1.25))
+
+  glassWall(g, 0, 0.1, 0, 3.2, 0, H1)
+  wall(-BACK, 3.25, 0, 3.25, H1)
+  glassWall(g, -0.43, 3.3, -0.43, W, 0, H1)
+  wall(-BACK, 0, HD, 0, H1)
+  wall(-BACK, W, 3.72, W, H1); wall(3.72, W, 5.64, 4.2, H1)
+  wall(5.64, 4.2, 6.6, 5.45, H1); wall(6.6, 5.45, HD, 5.45, H1)
+  wall(HD, 5.45, HD, 1.49, H1); wall(HD, 0.64, HD, 0, H1); door(g, HD, 0.64, 1.49, y)
+  // ванная в углу у входа
+  wall(5.64, 4.2, 5.64, 2.07, H1); wall(5.64, 2.07, 6.9, 2.07, H1)
+  door(g, 2.07, 6.9, 7.6, y, false, 0.4)
+  vanity(g, 5.75, 6.2, 2.18, 2.98, y); toilet(g, 6.4, 3.85, y); shower(g, 6.9, HD - 0.1, 4.3, 5.35, y)
+  // кухня вдоль стенки ванной, шкафы и холодильник у правой стены
+  rr(g, 4.95, 5.59, 2.1, 4.6, y, 0.82, M.sage, 0.03)
+  rect(g, 4.93, 5.61, 2.08, 4.62, 0.94, 0.05, M.white)
+  rr(g, 4.04, 7.7, 0.08, 0.53, y, 2.0, M.woodL, 0.04)
+  rr(g, 4.04, 4.7, 0.08, 0.53, y, 2.0, M.steel, 0.05)
+  // кровать изголовьем к правой стене, ТВ на левой
+  rr(g, 0.8, 3.2, 0.5, 2.6, y, 0.012, M.cush, 0.005, false)
+  bed(g, 1.04, 2.93, 0.12, 2.23, 0.12, y, M.teal)
+  rr(g, 0.6, 0.95, 0.12, 0.5, y, 0.45, M.woodL, 0.04); rr(g, 3.02, 3.37, 0.12, 0.5, y, 0.45, M.woodL, 0.04)
+  rr(g, 1.06, 2.4, W - 0.35, W - 0.08, y, 0.5, M.wood, 0.04); rect(g, 1.3, 2.2, W - 0.12, W - 0.08, 1.0, 0.6, M.dark)
+  // стол у окна, столовая у скоса
+  rr(g, -0.32, 0.27, 3.4, 5.37, y, 0.75, M.white, 0.04)
+  cyl(g, 0.5, 4.52, 0.18, 0.18, 0.45, y, M.white, 14)
+  roundTable(g, 3.65, 4.4, y, 0.35)
+  chair(g, 3.0, 4.05, y, M.white); chair(g, 3.0, 4.85, y, M.white); chair(g, 4.3, 4.3, y, M.white)
+}
+// ============ балкон и цветочный ящик ============
+{
+  const g = floor1G
+  rect(g, -BACK, 0, 0.1, 3.2, 0, 0.1, texMat(T.deck, 1.4, 0.5), true, false)
+  railing(g, -BACK, 0.1, -BACK, 3.2, 0.1)
+  chair(g, -0.5, 1.0, 0.1, M.white); chair(g, -0.5, 1.6, 0.1, M.white)
+  rect(g, -BACK, -0.48, 3.35, W, 0, 0.45, M.stone)
+  for (const v of [3.8, 4.4, 5.0]) ball(g, -0.72, v, 0.22, 0.62, M.leaf, 0.8)
+}
+P(floor1G, 1.65, 3.6, 2.6, -Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '42.65 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['living', 32.4], ['bathroom', 6.1], ['balcony', 3.0], ['balcony', 1.15]] }],
+  L1: [
+    Lb('living', 32.4, 3.4, 2.2, 2.6),
+    Lb('bathroom', 6.1, 6.6, 2.5, 3.5),
+    Lb('balcony', 3.0, -0.5, 1.3, 1.6, true),
+  ],
+})
+</script>
+</body>
+</html>

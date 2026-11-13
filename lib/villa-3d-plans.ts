@@ -91,6 +91,20 @@ const VILLA_3D_PLANS: Readonly<Record<string, string>> = {
   'swoi-loft-umalas-105m2-2-bedroom-2': '/models/swoi-loft-umalas-105m2-2-bedroom-3d.html',
   'edem-ii-nusa-dua-114m2-1-bedroom': '/models/edem-ii-nusa-dua-114m2-1-bedroom-3d.html',
   'base-uluwatu-uluwatu-60m2-2-bedroom': '/models/base-uluwatu-uluwatu-60m2-2-bedroom-3d.html',
+  'white-palm-villas-batu-bolong-123m2-2-bedroom-2': '/models/white-palm-villas-batu-bolong-123m2-2-bedroom-3d.html',
+  'white-palm-villas-batu-bolong-123m2-2-bedroom': '/models/white-palm-villas-batu-bolong-123m2-2-bedroom-3d.html',
+  'rise-nyanyi-154m2-2-bedroom-3': '/models/rise-nyanyi-154m2-2-bedroom-3d.html',
+  'rise-nyanyi-154m2-2-bedroom-2': '/models/rise-nyanyi-154m2-2-bedroom-3d.html',
+  'rise-nyanyi-154m2-2-bedroom': '/models/rise-nyanyi-154m2-2-bedroom-3d.html',
+  'origins-nyanyi-258m2-4-bedroom-2': '/models/origins-nyanyi-258m2-4-bedroom-3d.html',
+  'origins-nyanyi-258m2-4-bedroom': '/models/origins-nyanyi-258m2-4-bedroom-3d.html',
+  'manta-livin-uluwatu-129m2-2-bedroom-2': '/models/manta-livin-uluwatu-129m2-2-bedroom-3d.html',
+  'manta-livin-uluwatu-129m2-2-bedroom': '/models/manta-livin-uluwatu-129m2-2-bedroom-3d.html',
+  'bamboolina-ubud-200m2-4-bedroom': '/models/bamboolina-ubud-200m2-4-bedroom-3d.html',
+  'edem-ii-nusa-dua-40m2-1-bedroom': '/models/edem-ii-nusa-dua-40m2-1-bedroom-3d.html',
+  'prive-pererenan-60m2-1-bedroom': '/models/prive-pererenan-60m2-1-bedroom-3d.html',
+  'elysium-pererenan-257m2-3-bedroom-2': '/models/elysium-pererenan-257m2-3-bedroom-3d.html',
+  'base-uluwatu-uluwatu-80m2-3-bedroom': '/models/base-uluwatu-uluwatu-80m2-3-bedroom-3d.html',
 }
 
 /** Публичный URL 3D-планировки виллы либо null, если модели нет. */
@@ -186,6 +200,22 @@ const APARTMENT_3D_PLANS: Readonly<Record<string, string>> = {
   'elysium-pererenan-79m2-2-bedroom-1': '/models/elysium-pererenan-79m2-2-bedroom-3d.html',
   'laguna-kompleks-7-batu-bolong-43m2-1-bedroom-2': '/models/laguna-kompleks-7-batu-bolong-43m2-1-bedroom-3d.html',
   'ubud-dream-ubud-19m2-1-bedroom-1': '/models/ubud-dream-ubud-19m2-1-bedroom-3d.html',
+  'white-palm-villas-batu-bolong-40m2-1-bedroom-1': '/models/white-palm-villas-batu-bolong-40m2-1-bedroom-3d.html',
+  'white-palm-villas-batu-bolong-32m2-1-bedroom-1': '/models/white-palm-villas-batu-bolong-32m2-1-bedroom-3d.html',
+  'white-palm-villas-batu-bolong-32m2-1-bedroom-2': '/models/white-palm-villas-batu-bolong-32m2-1-bedroom-3d.html',
+  'elysium-pererenan-27m2-1-bedroom-1': '/models/elysium-pererenan-27m2-1-bedroom-3d.html',
+  'elysium-pererenan-27m2-1-bedroom-3': '/models/elysium-pererenan-27m2-1-bedroom-3d.html',
+  'elysium-pererenan-38m2-1-bedroom-3': '/models/elysium-pererenan-38m2-1-bedroom-3d.html',
+  'elysium-pererenan-38m2-1-bedroom-1': '/models/elysium-pererenan-38m2-1-bedroom-3d.html',
+  'elysium-pererenan-38m2-1-bedroom-2': '/models/elysium-pererenan-38m2-1-bedroom-3d.html',
+  'elysium-pererenan-37m2-1-bedroom-1': '/models/elysium-pererenan-37m2-1-bedroom-3d.html',
+  'elysium-pererenan-37m2-1-bedroom-2': '/models/elysium-pererenan-37m2-1-bedroom-3d.html',
+  'ubud-dream-ubud-24m2-1-bedroom-1': '/models/ubud-dream-ubud-24m2-1-bedroom-3d.html',
+  'elysium-pererenan-45m2-1-bedroom-1': '/models/elysium-pererenan-45m2-1-bedroom-3d.html',
+  'elysium-pererenan-43m2-1-bedroom-2': '/models/pererenan-43m2-1-bedroom-3d.html',
+  'pererenan-43m2-1-bedroom': '/models/pererenan-43m2-1-bedroom-3d.html',
+  'swoi-berawa-berawa-38m2-1-bedroom-1': '/models/swoi-berawa-berawa-38m2-1-bedroom-3d.html',
+  'melasti-30m2-1-bedroom-2': '/models/melasti-30m2-1-bedroom-3d.html',
 }
 
 /** Публичный URL 3D-планировки апартаментов либо null, если модели нет. */

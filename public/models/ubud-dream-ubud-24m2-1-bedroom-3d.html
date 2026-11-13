@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ubud Dreams Apt 4 — 3D планировка</title>
+</head>
+<body>
+<script src="_model-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Ubud Dreams, корпус 2.13, «Apartment 4» (SNAAR Group, лист I115, М 1:20).
+// Площади — из таблицы на листе: комната 15, ванная 5, балкон 4, всего 24 м².
+// Размеров на листе нет: комната ≈ 3.75 × 3.8 м и ванная ≈ 1.45 × 3.1 м
+// сняты по масштабу (кровать 2.1 м) и сверены с площадями. Стекло к балкону
+// на плане идёт под углом — так и в модели.
+const PLAN = { name: 'Ubud Dreams Apt 4', W: 5.36, HD: 3.82, BACK: 0.85, FRONT: 0.4, H1: 2.9, floors: 1 }
+</script>
+<script src="_toon-kit.js"></script>
+<script>
+const y = 0.12
+const UG = v => -0.08 + 0.168 * v                  // линия стекла к балкону
+function poly (g, pts, y0, h, mat) {
+  const s = new THREE.Shape(pts.map(([u, v]) => new THREE.Vector2(v - cx, -(zOf(u) - cz))))
+  const geo = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2)
+  const m = new THREE.Mesh(geo, mat); m.position.y = y0; m.receiveShadow = true; m.castShadow = true; edges(m); g.add(m); return m
+}
+poly(siteG, [[-1.15, -0.3], [HD + 0.3, -0.3], [HD + 0.3, W + 0.3], [UG(W) - 0.75, W + 0.3]], -0.3, 0.3, M.stone)
+{
+  const g = floor1G, wall = makeWall(g, 0)
+  const OUT = [[UG(0), 0], [HD, 0], [HD, W], [UG(W), W]]
+  poly(g, OUT, 0, 0.12, M.slab)
+  poly(g, [[UG(0), 0], [HD, 0], [HD, 3.75], [UG(3.75), 3.75]], y, 0.012, texMat(T.planks, 0.62, 0.62))
+  rect(g, 0.75, HD, 3.9, W, y + 0.004, 0.012, texMat(T.tiles, 1.8, 3.8), false, false)
+
+  wall(HD, 0, HD, 2.53, H1); wall(HD, 3.28, HD, W, H1); door(g, HD, 2.53, 3.28, y)
+  wall(UG(0) - 0.85, 0, HD, 0, H1); wall(UG(W) - 0.85, W, HD, W, H1)
+  glassWall(g, UG(0), 0, UG(3.75), 3.75, 0, H1)
+  // ванная: раковина, унитаз, душ за стеклом
+  wall(UG(3.75), 3.82, 2.9, 3.82, H1); wall(3.7, 3.82, HD, 3.82, H1)
+  wall(0.72, 3.82, 0.78, W, H1)
+  vanity(g, 3.1, 3.75, 4.9, W - 0.05, y); toilet(g, 2.55, 4.75, y)
+  shower(g, 0.85, 2.1, 4.0, W - 0.1, y); glassWall(g, 2.15, 4.0, 2.15, 4.9, y, 2.0)
+  // кровать изголовьем к левой стене, тумбочки, шкаф у ванной
+  bed(g, 1.37, 3.16, 0.06, 2.15, 0.06, y, M.teal)
+  rr(g, 3.35, 3.7, 0.06, 0.45, y, 0.45, M.woodL, 0.04); rr(g, 0.85, 1.2, 0.06, 0.45, y, 0.45, M.woodL, 0.04)
+  rr(g, 0.8, 2.81, 3.17, 3.71, y, 2.0, M.woodL, 0.04)
+  plant(g, 0.6, 0.6, y, 0.8)
+  rect(g, 3.55, 3.75, 2.6, 3.3, 2.3, 0.3, M.white)                 // кондиционер
+}
+// ============ балкон с деревянными ламелями ============
+{
+  const g = floor1G
+  poly(g, [[UG(0), 0], [UG(W), W], [UG(W) - 0.8, W], [UG(0) - 0.8, 0]], 0, 0.1, texMat(T.deck, 0.8, 0.8))
+  for (let i = 0; i < 18; i++) {
+    const v = 0.15 + i * 0.29, u = UG(v) - 0.85
+    rect(g, u - 0.03, u + 0.03, v - 0.05, v + 0.05, 0.1, 1.1, M.wood)
+  }
+  chair(g, UG(1.8) - 0.4, 1.8, 0.1, M.white)
+}
+P(floor1G, 1.65, 1.0, 2.7, Math.PI / 2, y, 0xf08a6b, 0x4a5a78)
+
+ToonKit.start({
+  sub: '24 m² · 1 ' + Model3D.roomWord('bedroom'),
+  facts: [{ group: 'floor1', rooms: [['bedroom', 15], ['bathroom', 5], ['balcony', 4]] }],
+  L1: [
+    Lb('bedroom', 15, 2.3, 2.0, 1.6),
+    Lb('bathroom', 5, 2.6, 2.3, 4.6),
+    Lb('balcony', 4, UG(3) - 0.4, 1.2, 3.0, true),
+  ],
+})
+</script>
+</body>
+</html>
