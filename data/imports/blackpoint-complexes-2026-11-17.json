@@ -1,0 +1,1924 @@
+{
+ "research": [
+  {
+   "n": 1,
+   "name": "Summerland Villas",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not found in any public source; only Blackpoint lists the project.",
+   "project_name": "Summerland Villas",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Seseh",
+   "lat": -8.641468365890399,
+   "lng": 115.11499020847151,
+   "completion": "3 кв. 2026",
+   "ownership": "Leasehold 30 years (+ extension)",
+   "leasehold_years": 30,
+   "total_units": 10,
+   "units": [
+    {
+     "bedrooms": 3,
+     "area_m2": 300,
+     "price_usd": 399000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/summerland-villas-—-premium-3-bedroom-villas-in-seseh"
+   ],
+   "text_ru": "Summerland Villas — комплекс из 10 трёхэтажных вилл с тремя спальнями и четырьмя санузлами в Сесехе, около 500 м от океана. Площадь каждой виллы — около 300 м², потолки 4 м, на третьем этаже — лаунж-зона с домашним кинотеатром; из вилл видны океан, рисовые поля и вулканы. Сдача запланирована на 3 квартал 2026 года, права — лизхолд на 30 лет с возможностью продления. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Summerland Villas is a complex of 10 three-storey villas with three bedrooms and four bathrooms in Seseh, about 500 m from the ocean. Each villa has roughly 300 m² of living space, 4 m ceilings and a third-floor lounge with a home cinema; the villas look out over the ocean, rice fields and volcanoes. Handover is planned for Q3 2026 on a 30-year leasehold with an extension option. Based on the Blackpoint agency.",
+   "confidence": "low"
+  },
+  {
+   "n": 5,
+   "name": "The Era",
+   "status": "duplicate",
+   "existing_name": "ERA by OXO",
+   "reason": "Same project: The ERA by OXO, boutique villas in Pecatu/Uluwatu by OXO Living, completion Q4 2027 (rumavi.com). Blackpoint calls it freehold; tenure not confirmed elsewhere.",
+   "project_name": "The ERA by OXO",
+   "developer": "OXO living",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Uluwatu",
+   "lat": null,
+   "lng": null,
+   "completion": "4 кв. 2027",
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": 26,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/the-era",
+    "https://rumavi.com/en/new-developments/indonesia/uluwatu/the-era-by-oxo"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 9,
+   "name": "Maison Bedugul",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not found. Possibly related to Maison Development (Base Canggu/Uluwatu, Maison Verde on our site) by name only — not confirmed, so left null.",
+   "project_name": "Maison Bedugul",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Bedugul",
+   "lat": null,
+   "lng": null,
+   "completion": "3 кв. 2027",
+   "ownership": "Leasehold 50 years",
+   "leasehold_years": 50,
+   "total_units": 4,
+   "units": [
+    {
+     "bedrooms": 2,
+     "area_m2": 130,
+     "price_usd": 242000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/maison-bedugul"
+   ],
+   "text_ru": "Maison Bedugul — небольшой проект из 4 вилл с двумя спальнями в горном районе Бедугул. Площадь виллы — 130 м² на участке 150 м², в каждой есть сауна, терраса и панорамные окна с видом на горы; до храма Улун Дану Братан и ботанического сада около 15 минут. Завершение ожидается в 3 квартале 2027 года, права — лизхолд на 50 лет. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Maison Bedugul is a small project of four two-bedroom villas in the Bedugul highlands. Each villa has 130 m² on a 150 m² plot, with a sauna, a terrace and panoramic windows facing the mountains; Ulun Danu Beratan temple and the botanical garden are about 15 minutes away. Completion is expected in Q3 2027 on a 50-year leasehold. Based on the Blackpoint agency.",
+   "confidence": "low"
+  },
+  {
+   "n": 13,
+   "name": "Премиум виллы и апартаменты на Нуса Пениде с панорамным видом на океан",
+   "status": "duplicate",
+   "existing_name": "Nusa Penida",
+   "reason": "Matches OceaniQ Nusa Penida: villas + apartments on the west coast, ~100 m from the beach, 10,000 m² site (OceaniQ brochure / homesoverseas, menafn). Already on site as 'Nusa Penida' (dev Oceaniq).",
+   "project_name": "OceaniQ Nusa Penida",
+   "developer": "Oceaniq",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Nusa Penida",
+   "lat": null,
+   "lng": null,
+   "completion": "4 кв. 2026 (виллы), 2 кв. 2027 (апартаменты)",
+   "ownership": "Leasehold 25 years (+25+25 extension)",
+   "leasehold_years": 25,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/nusa-penida",
+    "https://menafn.com/1111592651/Oceaniq-Forges-Ahead-With-Its-Bali-Portfolio",
+    "https://reelly-backend.s3.amazonaws.com/project_files/b417320476eb41488d91c9ec8b21c45d.pdf"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 17,
+   "name": "Residences Nusa Dua",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not found. A realting.com listing (Tranio) describes a 53-villa complex ~80 m from the ocean in Nusa Dua without naming the developer. Not matched to OCEANIQ 1/2 (59 villas) or K-Village (30 units) on our site, but overlap with an existing Nusa Dua complex cannot be fully excluded.",
+   "project_name": "Residences Nusa Dua",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Nusa Dua",
+   "lat": null,
+   "lng": null,
+   "completion": "2 кв. 2026",
+   "ownership": "Leasehold 25 years (+ up to 50 years extension)",
+   "leasehold_years": 25,
+   "total_units": 53,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": null,
+     "price_usd": 572250,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 4,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/nusa-dua-1",
+    "https://realting.com/indonesia/new-buildings/19483"
+   ],
+   "text_ru": "Residences Nusa Dua — комплекс из 53 вилл с одной, двумя и четырьмя спальнями в Нуса Дуа на Буките, в пешей доступности от океана и двух пляжей; у части вилл вид на океан. На территории предусмотрены спа около 800 м², фитнес-зона, пространство для йоги, кафе-пекарня и детские зоны. Завершение — 2 квартал 2026 года, права — лизхолд на 25 лет с опцией продления на 50 лет. Сведения — по данным агентства Blackpoint и realting.com.",
+   "text_en": "Residences Nusa Dua is a complex of 53 one-, two- and four-bedroom villas in Nusa Dua on the Bukit, within walking distance of the ocean and two beaches; some villas have ocean views. Facilities include a spa of about 800 m², a fitness area, a yoga space, a café-bakery and children's areas. Completion is set for Q2 2026 on a 25-year leasehold with a 50-year extension option. Based on the Blackpoint agency and realting.com.",
+   "confidence": "low"
+  },
+  {
+   "n": 21,
+   "name": "Four Palms",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not named on Blackpoint, holprop.com or balivillarealty.com (sold via ILOT Property Bali agency).",
+   "project_name": "Four Palms",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Kedungu",
+   "lat": -8.585354587028235,
+   "lng": 115.0961799760961,
+   "completion": "1 кв. 2027",
+   "ownership": "Leasehold until August 2058 (~31 years) + extension option",
+   "leasehold_years": 31,
+   "total_units": 4,
+   "units": [
+    {
+     "bedrooms": 2,
+     "area_m2": 127,
+     "price_usd": 235000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/four-palms",
+    "https://www.holprop.com/s/sale/ark_rwee-t3422/",
+    "https://balivillarealty.com/villa/sale/west-coast/kedungu/2br-modern-contemporary-villa-in-kedungu-for-premium-leasehold/"
+   ],
+   "text_ru": "Four Palms — четыре отдельные двухэтажные виллы с двумя спальнями в Кедунгу на западном побережье Бали. Площадь вилл — 127–138 м² на участках 105–122 м²; у каждой отдельный вход, собственный бассейн, терраса, сад и своя система фильтрации воды, архитектура построена на балийском принципе Три Ангга. Сдача — 1 квартал 2027 года, права — лизхолд до августа 2058 года с возможностью продления. Сведения — по данным агентства Blackpoint и balivillarealty.com.",
+   "text_en": "Four Palms is a set of four detached two-storey, two-bedroom villas in Kedungu on Bali's west coast. Villas measure 127–138 m² on 105–122 m² plots; each has its own entrance, private pool, terrace, garden and water filtration system, with architecture based on the Balinese Tri Angga principle. Handover is planned for Q1 2027 on a leasehold running to August 2058 with an extension option. Based on the Blackpoint agency and balivillarealty.com.",
+   "confidence": "medium"
+  },
+  {
+   "n": 25,
+   "name": "Bingin Resort",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer inferred: Blackpoint states Bingin Resort is linked by a footpath to Bingin Villas, which on our site is by Lyvin (Lyvin Bingin, teak-forest site near Bingin beach). No official Lyvin page for this resort found — verify.",
+   "project_name": "Bingin Resort",
+   "developer": "Lyvin",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Bingin",
+   "lat": -8.805455240515496,
+   "lng": 115.11787736400274,
+   "completion": "4 кв. 2029",
+   "ownership": "Leasehold 80 years (30 + 2×25 extensions)",
+   "leasehold_years": 80,
+   "total_units": 52,
+   "units": [
+    {
+     "bedrooms": null,
+     "area_m2": null,
+     "price_usd": 232000,
+     "kind": "apartment"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/bingin-resort",
+    "https://archello.com/project/lyvin-bingin-villas"
+   ],
+   "text_ru": "Bingin Resort — бутик-отель на 52 апартамента в Бингине на Буките, в нескольких минутах от пляжей Бингин и Дримленд. Комплекс занимает более 8 000 м², около 37% территории — парк со старыми тиковыми деревьями; предусмотрены ресторан, спа, бассейн, амфитеатр и парковка, а пешеходная дорожка связывает его с соседним проектом Bingin Villas. Апартаменты выходят на океан, сад, рассвет или закат; сдача — 4 квартал 2029 года, права — лизхолд на 30 лет с двумя продлениями по 25 лет. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Bingin Resort is a 52-apartment boutique hotel in Bingin on the Bukit, a few minutes from Bingin and Dreamland beaches. The site covers more than 8,000 m², about 37% of it a park with old teak trees, and includes a restaurant, spa, pool, amphitheatre and parking; a footpath connects it with the neighbouring Bingin Villas project. Apartments face the ocean, garden, sunrise or sunset; handover is planned for Q4 2029 on a 30-year leasehold with two 25-year extensions. Based on the Blackpoint agency.",
+   "confidence": "medium"
+  },
+  {
+   "n": 29,
+   "name": "Can Ulu",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not found in any public source.",
+   "project_name": "Can Ulu",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Uluwatu",
+   "lat": -8.819492894061044,
+   "lng": 115.09987609999311,
+   "completion": "сентябрь 2026",
+   "ownership": "Leasehold until 1 September 2048 + 25-year extension option",
+   "leasehold_years": 22,
+   "total_units": 4,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": 79.9,
+     "price_usd": null,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/can-ulu"
+   ],
+   "text_ru": "Can Ulu — четыре отдельные двухуровневые виллы с одной спальней в Улувату, среди джунглей, в 3 минутах от пляжа Томас и в 5 минутах от Сулубана и Паданг-Паданга. Площадь виллы — 79,9 м²: внизу гостиная, кухня, гостевой санузел и кладовая, наверху спальня и ванная; у каждой свой бассейн, сад, терраса и парковочное место. Цена — €140 000 без мебели и €150 000 с мебелью; сдача — сентябрь 2026 года, права — лизхолд до 1 сентября 2048 года с возможностью продления на 25 лет. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Can Ulu is four detached two-level one-bedroom villas in a jungle setting in Uluwatu, 3 minutes from Thomas Beach and 5 minutes from Suluban and Padang Padang. Each 79.9 m² villa has a living room, kitchen, guest WC and storeroom downstairs and a bedroom with bathroom upstairs, plus a private pool, garden, terrace and parking space. Prices are €140,000 unfurnished and €150,000 furnished; handover is set for September 2026 on a leasehold to 1 September 2048 with a 25-year extension option. Based on the Blackpoint agency.",
+   "confidence": "low"
+  },
+  {
+   "n": 33,
+   "name": "Desa Harmonis Uluwatu",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Matches Desa Harmonis 2 by Nature Investment Group (rumavi.com: 25 villas ~75 m², from $150k, Q3 2026, 25-yr leasehold, Jl. Tegal Sari, Pecatu). CHECK: our site already has 'Desa Harmonis Cliff' by the same developer in Uluwatu — could be the same project under another name; could not verify what 'Cliff' refers to.",
+   "project_name": "Desa Harmonis 2",
+   "developer": "Nature Investment Group",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Uluwatu",
+   "lat": null,
+   "lng": null,
+   "completion": "июль 2026",
+   "ownership": "Leasehold 25 years (+25 extension option)",
+   "leasehold_years": 25,
+   "total_units": 25,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": 75,
+     "price_usd": 150000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/desa-harmonis-uluwatu-—-eco-villas-with-natural-harmony-concept",
+    "https://rumavi.com/en/new-developments/indonesia/uluwatu/desa-harmonis-2",
+    "https://exhibition.aplaceinthesun.com/property/details/ap4130465/desa-harmonis-ii-boutique-villas-in-uluwatu-bali"
+   ],
+   "text_ru": "Desa Harmonis 2 — проект из 25 вилл с одной спальней площадью около 75 м² в Пекату (Улувату), на улице Тегал Сари, в 300–400 м от океана. Виллы с треугольными соломенными крышами, в общественных зонах — бамбуковая архитектура и естественная вентиляция; на территории ресторан с баром, два бассейна, детский бассейн, сад и круглосуточный персонал. Завершение — июль 2026 года, права — лизхолд на 25 лет с опцией продления ещё на 25 лет. Сведения — по данным rumavi.com и агентства Blackpoint.",
+   "text_en": "Desa Harmonis 2 is a project of 25 one-bedroom villas of about 75 m² in Pecatu (Uluwatu), on Jalan Tegal Sari, 300–400 m from the ocean. The villas have triangular thatched roofs, while shared areas use bamboo architecture and natural ventilation; facilities include a restaurant and bar, two pools, a kids' pool, a garden and 24/7 staff. Completion is set for July 2026 on a 25-year leasehold with a further 25-year extension option. Based on rumavi.com and the Blackpoint agency.",
+   "confidence": "medium"
+  },
+  {
+   "n": 37,
+   "name": "Canggu-Buduk",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Name is a Blackpoint label (area name); developer not found in any public source.",
+   "project_name": "Canggu-Buduk",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Buduk",
+   "lat": null,
+   "lng": null,
+   "completion": "август 2026",
+   "ownership": "Leasehold 30 years + extension option",
+   "leasehold_years": 30,
+   "total_units": 5,
+   "units": [
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": 158000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/canggu-buduk"
+   ],
+   "text_ru": "Canggu-Buduk — небольшой комплекс из 5 вилл с двумя спальнями в Будуке, рядом с Чангу. У каждой виллы свой бассейн, терраса на крыше с видом на вулканы и зона для барбекю. Цена — от $158 000 без мебели и от $175 000 под ключ; сдача — август 2026 года, права — лизхолд на 30 лет с опцией продления. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Canggu-Buduk is a small complex of five two-bedroom villas in Buduk, next to Canggu. Each villa has a private pool, a rooftop terrace with volcano views and a barbecue area. Prices start from $158,000 unfurnished and $175,000 fully furnished; handover is set for August 2026 on a 30-year leasehold with an extension option. Based on the Blackpoint agency.",
+   "confidence": "low"
+  },
+  {
+   "existing_name": null,
+   "reason": "Developer not named by Blackpoint or any public source found; no official site found.",
+   "project_name": "Cinta Village",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Tegallalang (Ubud)",
+   "lat": -8.46364334989516,
+   "lng": 115.27165289562852,
+   "completion": "2 кв. 2027",
+   "ownership": "Leasehold 25 years + extension option",
+   "leasehold_years": 25,
+   "total_units": 7,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/cinta-village"
+   ],
+   "text_ru": "Cinta Village — небольшой комплекс из 7 вилл среди рисовых террас Тегаллаланга, в 10–15 минутах езды от центра Убуда. В продаже двухэтажные виллы с 1 и 2 спальнями, у каждой свой бассейн и сад, участки от 100 до 123 м². Сдача запланирована на 2 квартал 2027 года, разрешение на строительство (PBG) получено в январе 2026 года. Права — аренда (leasehold) на 25 лет с возможностью продления. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Cinta Village is a small complex of 7 villas set among the Tegallalang rice terraces, a 10–15 minute drive from central Ubud. It offers two-storey 1- and 2-bedroom villas, each with its own pool and garden, on plots of 100–123 m². Handover is planned for Q2 2027; the building permit (PBG) was issued in January 2026. Tenure is a 25-year leasehold with an extension option. Based on the Blackpoint agency.",
+   "confidence": "medium",
+   "n": 1,
+   "name": "Cinta Village",
+   "status": "new"
+  },
+  {
+   "existing_name": "Taryan Dragon",
+   "reason": "Anantara Dragon Seseh Bali Resort & Residences by Taryan Group in Seseh (John Dawes architecture) — same as existing 'Taryan Dragon' (Taryan group, Seseh).",
+   "project_name": "Anantara Dragon Seseh Bali Resort & Residences",
+   "developer": "Taryan group",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Seseh",
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://realestateasia.com/co-written-partner/event-news/taryan-group-wins-top-awards-newly-announced-anantara-dragon-seseh-bali-resort-residences",
+    "https://www.nestseekers.com/5585522/anantara-dragon-seseh-bali-resort-residences"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high",
+   "n": 2,
+   "name": "Anatara Dragon",
+   "status": "duplicate"
+  },
+  {
+   "existing_name": "LUMA UBUD",
+   "reason": "Same biohacking/longevity apartment project in central Ubud, from $155,000, 31-year leasehold — matches existing 'LUMA UBUD' (Sunny Development, Ubud).",
+   "project_name": "LUMA UBUD",
+   "developer": "Sunny Development",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Ubud",
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://realting.com/indonesia/new-buildings/35386",
+    "https://rumavi.com/en/new-developments/indonesia/uluwatu/luma-biohacking-resort"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "medium",
+   "n": 3,
+   "name": "Luma Biohacking Ubud",
+   "status": "duplicate"
+  },
+  {
+   "existing_name": "Anta Residence Canggu",
+   "reason": "ANTA Hotel Bali Canggu (Radisson Individuals), 116–117 serviced apartments by ANTA Group near Batu Bolong — same as existing 'Anta Residence Canggu' (Anta group).",
+   "project_name": "ANTA Hotel Bali Canggu",
+   "developer": "Anta group",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Batu Bolong (Canggu)",
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.ttgasia.com/2025/12/18/radisson-signs-anta-hotel-bali-canggu-for-2027-opening/",
+    "https://rumavi.com/en/new-developments/indonesia/canggu/anta-residence-canggu"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high",
+   "n": 4,
+   "name": "Anta Hotel Canggu",
+   "status": "duplicate"
+  },
+  {
+   "existing_name": null,
+   "reason": "Developer not named in any source found. Note: may coincide with an existing Melasti 1BR project of another name — could not verify. Price 105000 = Blackpoint 'from' price.",
+   "project_name": "Melasti Project",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Melasti (Ungasan, Uluwatu)",
+   "lat": -8.835247683969271,
+   "lng": 115.1670244576718,
+   "completion": "январь 2027",
+   "ownership": "Leasehold until April 2049 (23 years) + 10-year extension",
+   "leasehold_years": 23,
+   "total_units": null,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": 44,
+     "price_usd": 105000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/melasti-project"
+   ],
+   "text_ru": "Melasti Project — виллы с одной спальней в районе Улувату, примерно в 5 минутах от пляжа Меласти. Вилла площадью 44 м² на участке 58 м², с одной ванной, кухней открытого типа, бассейном около 6 м², садом и парковкой; доступны варианты с частичной или полной меблировкой. Сдача запланирована на январь 2027 года. Права — аренда (leasehold) до апреля 2049 года (23 года) с возможностью продления на 10 лет. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Melasti Project offers one-bedroom villas in the Uluwatu area, about 5 minutes from Melasti Beach. Each villa has 44 m² on a 58 m² plot, one bathroom, an open kitchen, a pool of about 6 m², a garden and parking, sold semi- or fully furnished. Handover is planned for January 2027. Tenure is a leasehold until April 2049 (23 years) with a 10-year extension option. Based on the Blackpoint agency.",
+   "confidence": "low",
+   "n": 5,
+   "name": "Melasti Project",
+   "status": "new"
+  },
+  {
+   "existing_name": "OCEANIQ 2",
+   "reason": "Blackpoint slug 'oceaniq-nusa-dua-ii'; villas+apartments resort in Nusa Dua with ~800 m² SPA matches OceaniQ 2 brochure — existing 'OCEANIQ 2' (Oceaniq).",
+   "project_name": "OceaniQ Nusa Dua II",
+   "developer": "Oceaniq",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Nusa Dua",
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://reelly-backend.s3.amazonaws.com/project_files/2f4e8f2ec53e40568dd9be26bf5f5a3c.pdf"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high",
+   "n": 6,
+   "name": "Resort Nusa Dua",
+   "status": "duplicate"
+  },
+  {
+   "existing_name": null,
+   "reason": "Outside Bali (West Sumbawa, near Kertasari/Taliwang). Built around an operating resort of the same name; developer/owner company not named in any source found. Coordinates not verified.",
+   "project_name": "Whales & Waves Residential Village",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "West Sumbawa (Kertasari, Taliwang)",
+   "lat": null,
+   "lng": null,
+   "completion": "2 кв. 2026",
+   "ownership": "Leasehold 68 years",
+   "leasehold_years": 68,
+   "total_units": null,
+   "units": [
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/whales-waves",
+    "https://www.sunshineseeker.com/destinations/sumbawa-whales-waves/",
+    "https://indonesia.businessesforsale.com/indonesian/well-located-resort-in-taliwang.aspx"
+   ],
+   "text_ru": "Whales & Waves — жилой посёлок на первой линии океана на острове Сумбава, на северо-западном побережье у деревни Кертасари, рядом с одноимённым действующим курортом. В продаже виллы с 2 спальнями; на территории бассейн, спортзал, спа, теннисный корт, волейбольная площадка, ресторан, мини-маркет и конференц-зал. Завершение заявлено на 2 квартал 2026 года. Права — аренда на 68 лет. Сведения — по данным агентства Blackpoint и открытых описаний курорта.",
+   "text_en": "Whales & Waves is a beachfront residential village on Sumbawa island, on the northwest coast near Kertasari village, next to the operating resort of the same name. It offers 2-bedroom villas; on-site facilities include a pool, gym, spa, tennis court, volleyball court, restaurant, mini-market and conference room. Completion is stated for Q2 2026. Tenure is a 68-year lease. Based on the Blackpoint agency and public descriptions of the resort.",
+   "confidence": "low",
+   "n": 7,
+   "name": "Whales & Waves",
+   "status": "new"
+  },
+  {
+   "existing_name": "EIGHTH SENSE",
+   "reason": "Eight Sense / Eighth Sense, 73 units near Pandawa Beach by IJI Group, Q1 2027 — existing 'EIGHTH SENSE' (IJI Group, Pandawa).",
+   "project_name": "Eighth Sense",
+   "developer": "IJI Group",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Pandawa",
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://realting.com/indonesia/new-buildings/35396",
+    "https://rumavi.com/en/new-developments/indonesia/ungasan/eight-sense"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high",
+   "n": 8,
+   "name": "Eight Sense",
+   "status": "duplicate"
+  },
+  {
+   "existing_name": null,
+   "reason": "Developer not disclosed publicly (agency listing says track record shared on request). Not the same as existing 'Suweta Complex' (EVDEkimi, 19 units) or 'Ubud Central Oasis' (16 units, Q4 2024). Price 79000 = Blackpoint 'from' price.",
+   "project_name": "Oasis Residence Ubud",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Ubud (Jl. Suweta)",
+   "lat": -8.48774713577857,
+   "lng": 115.2648156269846,
+   "completion": "1 кв. 2027",
+   "ownership": "Leasehold 28 years (from completion to April 2055) + priority extension right",
+   "leasehold_years": 28,
+   "total_units": 44,
+   "units": [
+    {
+     "bedrooms": 0,
+     "area_m2": null,
+     "price_usd": 79000,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 1,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "apartment"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/oasis-residence-ubud",
+    "https://internationalpropertyalerts.com/?p=445153"
+   ],
+   "text_ru": "Oasis Residence Ubud — 4-этажный дом на 44 резиденции на улице Jl. Suweta в центре Убуда, недалеко от Королевского дворца и Леса обезьян. В продаже студии, апартаменты с 1 и 2 спальнями и пентхаус с 2 спальнями; в доме два бассейна, ресторан, зона wellness и фитнеса, два лифта. Сдача запланирована на 1 квартал 2027 года. Права — аренда (leasehold) на 28 лет, с момента сдачи до апреля 2055 года, с приоритетным правом продления. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Oasis Residence Ubud is a 4-storey building with 44 residences on Jl. Suweta in central Ubud, near the Royal Palace and the Monkey Forest. It offers studios, 1- and 2-bedroom apartments and a 2-bedroom penthouse; the building has two pools, a restaurant, a wellness and fitness area and two lifts. Handover is planned for Q1 2027. Tenure is a 28-year leasehold from completion to April 2055, with a priority right to extend. Based on the Blackpoint agency.",
+   "confidence": "medium",
+   "n": 9,
+   "name": "Oasis Residence Ubud",
+   "status": "new"
+  },
+  {
+   "n": 3,
+   "name": "Melasti Suites",
+   "status": "duplicate",
+   "existing_name": "Melasti Apartments",
+   "reason": "Same project as Lyvin Melasti (Lyvin Properties): hillside resort above Melasti Beach with 18 villas + 20 suites, matching Blackpoint's 18 villas / 20 apartments. Apartments = 'Melasti Apartments'; villas are already 'Melasti Villas' (dev Lyvin).",
+   "project_name": "Lyvin Melasti",
+   "developer": "Lyvin",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Melasti",
+   "lat": -8.840232954024918,
+   "lng": 115.14158670688856,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/melasti",
+    "https://realestateasia.com/exclusive/lyvin-properties-bets-low-density-luxury-in-balis-south-bukit",
+    "https://hoteldesigns.net/industry-news/lyvin-melasti-where-design-meets-stillness/"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 7,
+   "name": "Коллекция современных вилл, расположенных в творческом городе Нуану",
+   "status": "duplicate",
+   "existing_name": "The Collection Vol. 2",
+   "reason": "Blackpoint slug 'the-collections-vol.-2', villas in Nuanu (Nyanyi), Q4 2026, freehold, 3+1 BR — matches existing 'The Collection Vol. 2' by 618 Development (Nyanyi).",
+   "project_name": "The Collection Vol. 2",
+   "developer": "618 Development",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Nyanyi",
+   "lat": null,
+   "lng": null,
+   "completion": "4 кв. 2026",
+   "ownership": "Freehold",
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/the-collections-vol.-2"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "medium"
+  },
+  {
+   "n": 11,
+   "name": "Mudra Living Ungasan Villas",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not found in any public source (searched project name, aggregators); only Blackpoint lists it.",
+   "project_name": "Mudra Living Ungasan Villas",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Ungasan",
+   "lat": -8.81836047485417,
+   "lng": 115.17669304232818,
+   "completion": "4 кв. 2026",
+   "ownership": "Leasehold 28 лет + продление",
+   "leasehold_years": 28,
+   "total_units": null,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/mudra-villas"
+   ],
+   "text_ru": "Mudra Living Ungasan Villas — небольшой закрытый комплекс вилл с одной и двумя спальнями в Унгасане на Буките. Виллы деревянные, у каждой свой бассейн, сад и терраса; передаются с мебелью и техникой. Сдача запланирована на 4 квартал 2026 года, владение — leasehold на 28 лет с возможностью продления. Сведения — по данным агентства Blackpoint.",
+   "text_en": "Mudra Living Ungasan Villas is a small gated complex of one- and two-bedroom villas in Ungasan on the Bukit peninsula. The villas are timber-built, each with its own pool, garden and terrace, and are handed over furnished with appliances. Completion is planned for Q4 2026; tenure is a 28-year leasehold with an extension option. Based on the Blackpoint agency.",
+   "confidence": "low"
+  },
+  {
+   "n": 15,
+   "name": "Laut Villas",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not named in any source found; Bali Home Immo listing RF10949 matches the specs (3BR, 230 m² building, 160 m² land, 22-year lease, 5 min walk to Balangan) without naming the developer.",
+   "project_name": "Laut Villas",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Balangan",
+   "lat": -8.793217994311261,
+   "lng": 115.12718086135285,
+   "completion": "2026 (Blackpoint: август 2026; Bali Home Immo: декабрь 2026)",
+   "ownership": "Leasehold 22 года + продление",
+   "leasehold_years": 22,
+   "total_units": null,
+   "units": [
+    {
+     "bedrooms": 3,
+     "area_m2": 230,
+     "price_usd": 320000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/laut-villas",
+    "https://bali-home-immo.com/id/realestate-property/for-sale/villa/leasehold/uluwatu/villa-tropis-modern-dengan-pemandangan-laut-3-kamar-dijual-dekat-pantai-balangan-rf10949"
+   ],
+   "text_ru": "Laut Villas — трёхэтажные виллы с тремя спальнями в районе пляжа Баланган (Улувату), до пляжа около 5 минут пешком. Площадь виллы 230 м² на участке 160 м², есть мезонин, руфтоп, бассейн и подземная парковка; виллы продаются без мебели на этапе отделки. Сдача — в 2026 году, владение — leasehold на 22 года с продлением. Сведения — по данным агентства Blackpoint и листинга Bali Home Immo.",
+   "text_en": "Laut Villas are three-level, three-bedroom villas near Balangan Beach in Uluwatu, about a five-minute walk from the sand. Each villa has 230 m² of built area on a 160 m² plot, with a mezzanine, rooftop, pool and basement parking; units are sold unfurnished at the interior-finishing stage. Handover is due in 2026; tenure is a 22-year leasehold with extension. Based on the Blackpoint agency and a Bali Home Immo listing.",
+   "confidence": "medium"
+  },
+  {
+   "n": 19,
+   "name": "Solan Melasti Boutique House",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not named in accessible sources. Tenure conflict: Blackpoint says Freehold; Holprop/Bali Home Immo listings say 80-year HGB/leasehold.",
+   "project_name": "SOLAN Melasti Boutique House",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Melasti",
+   "lat": null,
+   "lng": null,
+   "completion": "4 кв. 2028",
+   "ownership": "Freehold (по Blackpoint); в листингах агрегаторов — HGB/leasehold 80 лет",
+   "leasehold_years": null,
+   "total_units": 27,
+   "units": [
+    {
+     "bedrooms": 0,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 1,
+     "area_m2": 41,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 1,
+     "area_m2": 53,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": null,
+     "kind": "apartment"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/solan",
+    "https://www.lamudi.co.id/properti/41032-73-1223893793c5-4202-19f46c8-89c5-7aec",
+    "https://www.holprop.com/s/sale/ark_rwee-t3457/",
+    "https://bali-home-immo.com/realestate-property/for-sale/villa/leasehold/uluwatu/off-plan-1-bedroom-boutique-apartment-for-sale-near-karma-beach-rf8799b"
+   ],
+   "text_ru": "SOLAN Melasti Boutique House — небольшой комплекс апартаментов на возвышенности в Меласти (Букит), примерно в 5 минутах пешком от Karma Beach; всего 27 юнитов. Форматы — студии, апартаменты с одной и двумя спальнями, у части есть свои бассейны и террасы. Сдача запланирована на 4 квартал 2028 года; Blackpoint указывает freehold, в листингах агрегаторов — право HGB/аренда на 80 лет. Сведения — по данным агентства Blackpoint и листингов Lamudi и Bali Home Immo.",
+   "text_en": "SOLAN Melasti Boutique House is a small apartment complex on elevated ground in Melasti, Bukit, about a five-minute walk from Karma Beach, with 27 units in total. Formats are studios, one- and two-bedroom apartments, some with private pools and terraces. Completion is planned for Q4 2028; Blackpoint lists freehold, while aggregator listings state an 80-year HGB/lease title. Based on the Blackpoint agency and Lamudi and Bali Home Immo listings.",
+   "confidence": "medium"
+  },
+  {
+   "n": 23,
+   "name": "LB Signature",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not confirmed by any source. The 'LB' prefix suggests LB Group (LOYO&BONDAR, Nusa Dua-based, existing on site) but no page links them — left null, verify manually.",
+   "project_name": "LB Signature — Private Estate Collection",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Nusa Dua",
+   "lat": null,
+   "lng": null,
+   "completion": "июнь 2026",
+   "ownership": "Leasehold 29 лет",
+   "leasehold_years": 29,
+   "total_units": 3,
+   "units": [
+    {
+     "bedrooms": 5,
+     "area_m2": 340,
+     "price_usd": 1350000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/lb-signature"
+   ],
+   "text_ru": "LB Signature — коллекция из трёх частных вилл в зелёной части Букита у Нуса-Дуа, в охраняемом посёлке. Вилла с пятью спальнями на 340 м², участок 640 м², три этажа и руфтоп, 25-метровый бассейн, сауна, спортзал и отдельный гостевой дом 114 м². Сдача — июнь 2026 года, владение — leasehold на 29 лет. Сведения — по данным агентства Blackpoint.",
+   "text_en": "LB Signature is a collection of three private villas in a gated estate in the green part of the Bukit near Nusa Dua. The five-bedroom villa has 340 m² over three floors plus a rooftop on a 640 m² plot, with a 25-metre pool, sauna, gym and a separate 114 m² guest house. Handover is due in June 2026; tenure is a 29-year leasehold. Based on the Blackpoint agency.",
+   "confidence": "low"
+  },
+  {
+   "n": 27,
+   "name": "The Heights",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer per Rumavi: Nedvex Group. No official site found. Rumavi unit prices (from $169,840) differ from Blackpoint 'from $138,720', so prices left null; areas from Rumavi.",
+   "project_name": "The Heights Bali",
+   "developer": "Nedvex",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Seseh",
+   "lat": -8.640708568720273,
+   "lng": 115.1131355068721,
+   "completion": "1 кв. 2027",
+   "ownership": "Leasehold 30 лет + продление 30 лет",
+   "leasehold_years": 30,
+   "total_units": 103,
+   "units": [
+    {
+     "bedrooms": 0,
+     "area_m2": 39,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 1,
+     "area_m2": 70,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 1,
+     "area_m2": 84,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": 86,
+     "price_usd": null,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": 152,
+     "price_usd": null,
+     "kind": "apartment"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/the-heights",
+    "https://rumavi.com/en/new-developments/indonesia/cemagi/the-heights-bali",
+    "https://realiste.ai/fr/cities/ind-bali/projects/1409"
+   ],
+   "text_ru": "The Heights — жилой комплекс на 103 резиденции в Сесехе (Чемаги), около 400 м до океана. Форматы — студии, резиденции с одной спальней (в том числе с патио и бассейном), двухуровневые и пентхаусы с двумя спальнями, площадью примерно от 39 до 152 м². В комплексе общий бассейн, ресторан, спа и йога-зал. Сдача — 1 квартал 2027 года, владение — leasehold на 30 лет с продлением ещё на 30. Сведения — по данным агентства Blackpoint и агрегатора rumavi.com.",
+   "text_en": "The Heights is a 103-residence complex in Seseh (Cemagi), about 400 m from the ocean. Formats include studios, one-bedroom residences (some with a patio and pool), two-level units and two-bedroom penthouses, roughly 39 to 152 m². Shared facilities include a pool, restaurant, spa and yoga shala. Handover is due in Q1 2027; tenure is a 30-year leasehold with a 30-year extension. Based on the Blackpoint agency and rumavi.com.",
+   "confidence": "medium"
+  },
+  {
+   "n": 31,
+   "name": "Virgin Beach Hotel",
+   "status": "duplicate",
+   "existing_name": "SALT of Virgin Beach",
+   "reason": "84 units on Virgin Beach, Karangasem, operated by The Lux Collective (SALT brand) — same as existing 'SALT of Virgin Beach' by Big Waves Development.",
+   "project_name": "SALT of Virgin Beach",
+   "developer": "Big Waves Development",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Karanggasem",
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": 84,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/virgin-beach-hotel",
+    "https://travellingforbusiness.co.uk/destinations/the-lux-collective-and-big-waves-development-sign-strategic-partnership-to-launch-salt-of-virgin-beach-hotel-in-bali"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 35,
+   "name": "MedSpa Villas Resort",
+   "status": "duplicate",
+   "existing_name": "Anta MediSpa Villas Resort",
+   "reason": "Blackpoint names it 'ANTA MED'SPA VILLAS RESORT', Uluwatu, Radisson Individuals — existing 'Anta MediSpa Villas Resort' by Anta group.",
+   "project_name": "ANTA Med'Spa Villas Resort",
+   "developer": "Anta group",
+   "developer_is_existing": true,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Uluwatu",
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": 70,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/medspa-villas-resort",
+    "https://rumavi.com/en/new-developments/indonesia/ungasan/ramada-encore-pandawa-hills"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 4,
+   "name": "Kerobokan Residence",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer per newhomes.id (links ecoinvest.group); ecoinvest.group mentions its 'Kerobokan Residenses' project. Total units conflict: newhomes 25, Eva Real Estate listing 13 (10 apartments + 3 villas) -> left null. Unit prices/areas from newhomes.id (developer materials).",
+   "project_name": "Kerobokan Residence",
+   "developer": "Eco Invest Group",
+   "developer_is_existing": true,
+   "developer_website": "https://ecoinvest.group/",
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Kerobokan Kelod",
+   "lat": -8.677263009968264,
+   "lng": 115.1681062533028,
+   "completion": "виллы — август 2026, апартаменты — май 2028",
+   "ownership": "Leasehold 25 лет + продление 10 лет",
+   "leasehold_years": 25,
+   "total_units": null,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": 30,
+     "price_usd": 89000,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 1,
+     "area_m2": 77,
+     "price_usd": 162000,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": 136,
+     "price_usd": 247000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": "https://ecoinvest.group/",
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/kerobokan-residence",
+    "https://newhomes.id/kerobokan-residence-bali",
+    "https://ecoinvest.group/",
+    "https://evarealestate.id/property/stylish-1-bedroom-pool-villa-in-kerobokan/"
+   ],
+   "text_ru": "Kerobokan Residence — небольшой комплекс в Керобокан-Келоде, примерно в 5 минутах от пляжа Семиньяк. В продаже апартаменты с 1 спальней (от 30 м²) и виллы с 1 и 2 спальнями (77 и 136 м²); на территории — рецепция, парковка, бассейн на крыше и ресторан для жильцов. Виллы планируют сдать в августе 2026 года, апартаменты — в мае 2028-го. Владение — leasehold на 25 лет с правом продления ещё на 10. Сведения — по данным сайта застройщика ecoinvest.group, newhomes.id и агентства Blackpoint.",
+   "text_en": "Kerobokan Residence is a small complex in Kerobokan Kelod, about five minutes from Seminyak beach. It offers one-bedroom apartments (from 30 m²) and one- and two-bedroom villas (77 and 136 m²), with a reception, parking, a rooftop pool and a residents-only restaurant. Villas are scheduled for handover in August 2026 and apartments in May 2028. Ownership is a 25-year leasehold with a 10-year extension option. Based on ecoinvest.group, newhomes.id and the Blackpoint agency.",
+   "confidence": "high"
+  },
+  {
+   "n": 8,
+   "name": "Roots Residence",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not found: newhomes.id lists 'Private developer', no website. Different project 'ROOTS Villa' on binaryx (29+10 lease) is not the same.",
+   "project_name": "ROOTS Residence",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Tegallalang (Ubud)",
+   "lat": -8.48132356770944,
+   "lng": 115.28112381349229,
+   "completion": "4 кв. 2026",
+   "ownership": "Leasehold 30 лет + продление 30 лет",
+   "leasehold_years": 30,
+   "total_units": null,
+   "units": [
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": 385000,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 3,
+     "area_m2": null,
+     "price_usd": 445000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/roots-residence",
+    "https://newhomes.id/roots-residence-bali"
+   ],
+   "text_ru": "ROOTS Residence — проект вилл с 2 и 3 спальнями в районе Убуда (по адресу на агрегаторе — Тегаллаланг). В центре каждой виллы — внутренний дворик с деревом; каркас из оцинкованной стали, отделка с использованием железного дерева, бассейн и терраса. Сдача запланирована на 4 квартал 2026 года, владение — leasehold на 30 лет с продлением ещё на 30. Сведения — по данным newhomes.id и агентства Blackpoint.",
+   "text_en": "ROOTS Residence is a project of two- and three-bedroom villas in the Ubud area (the aggregator lists the address as Tegallalang). Each villa is built around an inner courtyard with a tree, on a galvanized steel frame with ironwood elements, a pool and a terrace. Handover is planned for Q4 2026; ownership is a 30-year leasehold with a further 30-year extension. Based on newhomes.id and the Blackpoint agency.",
+   "confidence": "medium"
+  },
+  {
+   "n": 12,
+   "name": "Бутик-апарт-отель с видом на океан в Сануре",
+   "status": "duplicate",
+   "existing_name": "Sanur Apartments",
+   "reason": "Same project: Blackpoint slug 'sanur-apartments'; 10 duplex apartments, 5 ocean view, 20+20 leasehold, July 2026 = Sanur Vibe Apartments by VIBE Development (rumavi, fazwaz).",
+   "project_name": "Sanur Apartments",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": null,
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/sanur-apartments",
+    "https://rumavi.com/en/new-developments/indonesia/sanur/sanur-vibe-apartments"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 16,
+   "name": "Horizon Blue Boutique Hotel",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer conflicting -> null: newhomes.id says ArchiTerra, baancoin says PT Pesona Pulau Dewata, official site names founders Alena & Oleg Turdakov (management Gravity Bali). Official site also states '79-year leasehold' and launch Q2 2027, differing from Blackpoint/baancoin (30+20+30, Dec 2026). Areas from official site (1BR 42-92 m²), prices from newhomes.id. PBG and SLF stated as obtained.",
+   "project_name": "Horizon Blue",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Bingin, Uluwatu (Pecatu)",
+   "lat": -8.820334865801126,
+   "lng": 115.12480977116411,
+   "completion": "декабрь 2026",
+   "ownership": "апартаменты — Leasehold 30 лет + продление 20 + 30 лет; 6-спальная вилла — Freehold",
+   "leasehold_years": 30,
+   "total_units": 9,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": 42,
+     "price_usd": 181000,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": 119,
+     "price_usd": 264000,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 3,
+     "area_m2": 151,
+     "price_usd": 374000,
+     "kind": "apartment"
+    },
+    {
+     "bedrooms": 6,
+     "area_m2": 795,
+     "price_usd": 1400000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": "https://horizonbluebali.com/",
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/horizon-blue",
+    "https://horizonbluebali.com/",
+    "https://newhomes.id/horizon-blue-bali",
+    "https://www.baancoin.com/projects/indonesia/bali/badung/uluwatu/horizon-blue"
+   ],
+   "text_ru": "Horizon Blue — небольшой отельный комплекс в Бингине (Улувату, Букит) с видом на океан: 8 апартаментов с 1–3 спальнями площадью от 42 до 151 м² и одна вилла с 6 спальнями на 795 м². Завершение заявлено на декабрь 2026 года. Апартаменты продаются в leasehold на 30 лет с продлением на 20 и 30 лет, вилла — во freehold. Сведения — по данным сайта проекта horizonbluebali.com, newhomes.id и агентства Blackpoint.",
+   "text_en": "Horizon Blue is a small ocean-view hotel-style complex in Bingin (Uluwatu, Bukit): eight apartments with one to three bedrooms from 42 to 151 m² and one six-bedroom villa of 795 m². Completion is stated for December 2026. Apartments are sold on a 30-year leasehold with 20- and 30-year extensions, the villa as freehold. Based on horizonbluebali.com, newhomes.id and the Blackpoint agency.",
+   "confidence": "medium"
+  },
+  {
+   "n": 20,
+   "name": "Премиальная event-вилла на 11 спален в Убуде",
+   "status": "skip",
+   "existing_name": null,
+   "reason": "Single 11-bedroom event villa listing (no description, no price, no geo) - not a residential complex/project.",
+   "project_name": "Премиальная event-вилла на 11 спален в Убуде",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": null,
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/premium-11-bedroom-event-villa-in-ubud"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 24,
+   "name": "Ramada by Wyndham Nusa Dua",
+   "status": "duplicate",
+   "existing_name": "Ramada Nusa Dua",
+   "reason": "Same project: Ramada Nusa Dua by Wyndham, TEUS Group, Art & Wellness with MayinArt, Nusa Dua; existing entry dev Teus Group.",
+   "project_name": "Ramada Nusa Dua",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": null,
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/ramada-by-wyndham-nusa-dua",
+    "https://constructionlinks.ca/teus-group-launches-new-art-hotel-ramada-nusa-dua-by-wyndham-in-bali-a-world-class-investment-project"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  },
+  {
+   "n": 28,
+   "name": "Mirador Canyon Villas",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not found: newhomes.id lists 'Private developer', no website. newhomes address Lodtunduh (-8.5707,115.2593), Blackpoint says Mas — neighbouring villages; Blackpoint geo kept. Prices from newhomes.id.",
+   "project_name": "Mirador Canyon Villas",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Mas, Ubud",
+   "lat": -8.565385753282555,
+   "lng": 115.26069876777598,
+   "completion": "сентябрь 2027",
+   "ownership": "Leasehold 25 лет + продление 15 лет",
+   "leasehold_years": 25,
+   "total_units": 6,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": null,
+     "price_usd": 129000,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": null,
+     "price_usd": 139000,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 3,
+     "area_m2": null,
+     "price_usd": 239000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/mirador-canyon-villas",
+    "https://newhomes.id/mirador-canyon-villas-bali"
+   ],
+   "text_ru": "Mirador Canyon Villas — комплекс из 6 вилл с видом на каньон в районе Мас к югу от центра Убуда. В продаже виллы с 1, 2 и 3 спальнями. Сдача запланирована на сентябрь 2027 года, владение — leasehold на 25 лет с продлением ещё на 15. Сведения — по данным newhomes.id и агентства Blackpoint.",
+   "text_en": "Mirador Canyon Villas is a complex of six canyon-view villas in Mas, south of central Ubud. One-, two- and three-bedroom villas are offered. Handover is planned for September 2027; ownership is a 25-year leasehold with a further 15-year extension. Based on newhomes.id and the Blackpoint agency.",
+   "confidence": "medium"
+  },
+  {
+   "n": 32,
+   "name": "Tumbak Bayuh Private Suite",
+   "status": "new",
+   "existing_name": null,
+   "reason": "Developer not named anywhere (newhomes.id: 'Private developer'). tumbakbayuh.com seen only in search snippet (18 units, 43-84 m², interest-free installments); site refused connection, so 18 units and areas are medium confidence. Prices from newhomes.id.",
+   "project_name": "Tumbak Bayuh Private Suite",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": "Tumbak Bayuh",
+   "lat": -8.623039624633707,
+   "lng": 115.14178289267973,
+   "completion": "август 2027",
+   "ownership": "Leasehold 30 лет + продление 20 лет",
+   "leasehold_years": 30,
+   "total_units": 18,
+   "units": [
+    {
+     "bedrooms": 1,
+     "area_m2": 43,
+     "price_usd": 91000,
+     "kind": "villa"
+    },
+    {
+     "bedrooms": 2,
+     "area_m2": 84,
+     "price_usd": 129000,
+     "kind": "villa"
+    }
+   ],
+   "official_url": "https://tumbakbayuh.com/",
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/tumbak-bayuh-private-suite",
+    "https://newhomes.id/tumbak-bayuh-private-suite-bali",
+    "https://tumbakbayuh.com/"
+   ],
+   "text_ru": "Tumbak Bayuh Private Suite — комплекс из 18 вилл в Тумбак-Баю, рядом с Чангу и Переренаном. В продаже виллы с 1 и 2 спальнями площадью примерно от 43 до 84 м², с частными бассейнами и парковкой. Сдача запланирована на август 2027 года, владение — leasehold на 30 лет с продлением ещё на 20. Сведения — по данным сайта проекта tumbakbayuh.com, newhomes.id и агентства Blackpoint.",
+   "text_en": "Tumbak Bayuh Private Suite is a complex of 18 villas in Tumbak Bayuh, near Canggu and Pererenan. It offers one- and two-bedroom villas of roughly 43 to 84 m² with private pools and parking. Handover is planned for August 2027; ownership is a 30-year leasehold with a further 20-year extension. Based on tumbakbayuh.com, newhomes.id and the Blackpoint agency.",
+   "confidence": "medium"
+  },
+  {
+   "n": 36,
+   "name": "3-спальные виллы в стиле Japandi рядом с океаном в Nuanu",
+   "status": "duplicate",
+   "existing_name": "The Collection Vol. 1",
+   "reason": "Blackpoint slug 'the-collection-vol.-1'; The Collection villas in Nuanu by 618 Development already on site (Nyanyi).",
+   "project_name": "The Collection Vol. 1",
+   "developer": null,
+   "developer_is_existing": false,
+   "developer_website": null,
+   "developer_text_ru": null,
+   "developer_text_en": null,
+   "district": null,
+   "lat": null,
+   "lng": null,
+   "completion": null,
+   "ownership": null,
+   "leasehold_years": null,
+   "total_units": null,
+   "units": [],
+   "official_url": null,
+   "sources": [
+    "https://www.blackpoint.group/ru/marketplace/the-collection-vol.-1",
+    "https://indonesiasentinel.com/?p=5684"
+   ],
+   "text_ru": null,
+   "text_en": null,
+   "confidence": "high"
+  }
+ ],
+ "import_report": {
+  "developers": [],
+  "complexes": [
+   {
+    "n": 1,
+    "id": "adm_44772f7d82",
+    "slug": "summerland-villas",
+    "name": "Summerland Villas",
+    "dev": null,
+    "geo": true,
+    "units": 1,
+    "price_from": 399000,
+    "conf": "low"
+   },
+   {
+    "n": 9,
+    "id": "adm_53cb2bd9e2",
+    "slug": "maison-bedugul",
+    "name": "Maison Bedugul",
+    "dev": null,
+    "geo": false,
+    "units": 1,
+    "price_from": 242000,
+    "conf": "low"
+   },
+   {
+    "n": 17,
+    "id": "adm_ff9ac86fd5",
+    "slug": "residences-nusa-dua",
+    "name": "Residences Nusa Dua",
+    "dev": null,
+    "geo": false,
+    "units": 1,
+    "price_from": 572250,
+    "conf": "low"
+   },
+   {
+    "n": 21,
+    "id": "adm_443d7ea330",
+    "slug": "four-palms",
+    "name": "Four Palms",
+    "dev": null,
+    "geo": true,
+    "units": 1,
+    "price_from": 235000,
+    "conf": "medium"
+   },
+   {
+    "n": 25,
+    "id": "adm_06b282f049",
+    "slug": "bingin-resort",
+    "name": "Bingin Resort",
+    "dev": null,
+    "geo": true,
+    "units": 1,
+    "price_from": 232000,
+    "conf": "medium"
+   },
+   {
+    "n": 29,
+    "id": "adm_ffaac8f083",
+    "slug": "can-ulu",
+    "name": "Can Ulu",
+    "dev": null,
+    "geo": true,
+    "units": 0,
+    "price_from": 162000,
+    "conf": "low"
+   },
+   {
+    "n": 33,
+    "id": "adm_ad4d00282e",
+    "slug": "desa-harmonis-2",
+    "name": "Desa Harmonis 2",
+    "dev": "Nature Investment Group",
+    "geo": false,
+    "units": 1,
+    "price_from": 150000,
+    "conf": "medium"
+   },
+   {
+    "n": 37,
+    "id": "adm_4bc3b009e3",
+    "slug": "canggu-buduk",
+    "name": "Canggu-Buduk",
+    "dev": null,
+    "geo": false,
+    "units": 1,
+    "price_from": 158000,
+    "conf": "low"
+   },
+   {
+    "n": 1,
+    "id": "adm_453f399da6",
+    "slug": "cinta-village",
+    "name": "Cinta Village",
+    "dev": null,
+    "geo": true,
+    "units": 0,
+    "price_from": 185000,
+    "conf": "medium"
+   },
+   {
+    "n": 5,
+    "id": "adm_d06322a674",
+    "slug": "melasti-project",
+    "name": "Melasti Project",
+    "dev": null,
+    "geo": true,
+    "units": 1,
+    "price_from": 105000,
+    "conf": "low"
+   },
+   {
+    "n": 9,
+    "id": "adm_b72747f49a",
+    "slug": "oasis-residence-ubud",
+    "name": "Oasis Residence Ubud",
+    "dev": null,
+    "geo": true,
+    "units": 1,
+    "price_from": 79000,
+    "conf": "medium"
+   },
+   {
+    "n": 11,
+    "id": "adm_3d7818c4d2",
+    "slug": "mudra-living-ungasan-villas",
+    "name": "Mudra Living Ungasan Villas",
+    "dev": null,
+    "geo": true,
+    "units": 0,
+    "price_from": 100000,
+    "conf": "low"
+   },
+   {
+    "n": 15,
+    "id": "adm_eadeabf6fb",
+    "slug": "laut-villas",
+    "name": "Laut Villas",
+    "dev": null,
+    "geo": true,
+    "units": 1,
+    "price_from": 320000,
+    "conf": "medium"
+   },
+   {
+    "n": 19,
+    "id": "adm_36d24ad4c4",
+    "slug": "solan-melasti-boutique-house",
+    "name": "SOLAN Melasti Boutique House",
+    "dev": null,
+    "geo": false,
+    "units": 0,
+    "price_from": null,
+    "conf": "medium"
+   },
+   {
+    "n": 23,
+    "id": "adm_a7d1bd86bc",
+    "slug": "lb-signature",
+    "name": "LB Signature",
+    "dev": null,
+    "geo": false,
+    "units": 1,
+    "price_from": 1350000,
+    "conf": "low"
+   },
+   {
+    "n": 27,
+    "id": "adm_9528ec34c9",
+    "slug": "the-heights-bali",
+    "name": "The Heights Bali",
+    "dev": "Nedvex",
+    "geo": true,
+    "units": 0,
+    "price_from": 138720,
+    "conf": "medium"
+   },
+   {
+    "n": 4,
+    "id": "adm_ff7c9e8424",
+    "slug": "kerobokan-residence",
+    "name": "Kerobokan Residence",
+    "dev": "Eco Invest Group",
+    "geo": true,
+    "units": 3,
+    "price_from": 89000,
+    "conf": "high"
+   },
+   {
+    "n": 8,
+    "id": "adm_3439c39ad4",
+    "slug": "roots-residence",
+    "name": "ROOTS Residence",
+    "dev": null,
+    "geo": true,
+    "units": 2,
+    "price_from": 385000,
+    "conf": "medium"
+   },
+   {
+    "n": 16,
+    "id": "adm_78ccd43f7d",
+    "slug": "horizon-blue",
+    "name": "Horizon Blue",
+    "dev": "Horizon Blue",
+    "geo": true,
+    "units": 4,
+    "price_from": 181000,
+    "conf": "medium"
+   },
+   {
+    "n": 28,
+    "id": "adm_441a9c876e",
+    "slug": "mirador-canyon-villas",
+    "name": "Mirador Canyon Villas",
+    "dev": null,
+    "geo": true,
+    "units": 3,
+    "price_from": 129000,
+    "conf": "medium"
+   },
+   {
+    "n": 32,
+    "id": "adm_e383e11a77",
+    "slug": "tumbak-bayuh-private-suite",
+    "name": "Tumbak Bayuh Private Suite",
+    "dev": null,
+    "geo": true,
+    "units": 2,
+    "price_from": 91000,
+    "conf": "medium"
+   }
+  ],
+  "units": [
+   {
+    "id": "adm_44d6957b8c",
+    "slug": "summerland-villas-300m2-3-bedroom",
+    "kind": "villa",
+    "price": 399000,
+    "bed": 3,
+    "area": 300
+   },
+   {
+    "id": "adm_b696896469",
+    "slug": "maison-bedugul-130m2-2-bedroom",
+    "kind": "villa",
+    "price": 242000,
+    "bed": 2,
+    "area": 130
+   },
+   {
+    "id": "adm_54a3255a0c",
+    "slug": "residences-nusa-dua-0m2-1-bedroom",
+    "kind": "villa",
+    "price": 572250,
+    "bed": 1,
+    "area": null
+   },
+   {
+    "id": "adm_d3076a8ec9",
+    "slug": "four-palms-127m2-2-bedroom",
+    "kind": "villa",
+    "price": 235000,
+    "bed": 2,
+    "area": 127
+   },
+   {
+    "id": "adm_4b71507dea",
+    "slug": "bingin-resort-0m2-0-bedroom",
+    "kind": "apartment",
+    "price": 232000,
+    "bed": 0,
+    "area": null
+   },
+   {
+    "id": "adm_fce0eb07eb",
+    "slug": "desa-harmonis-2-75m2-1-bedroom",
+    "kind": "villa",
+    "price": 150000,
+    "bed": 1,
+    "area": 75
+   },
+   {
+    "id": "adm_5bf4d1b30a",
+    "slug": "canggu-buduk-0m2-2-bedroom",
+    "kind": "villa",
+    "price": 158000,
+    "bed": 2,
+    "area": null
+   },
+   {
+    "id": "adm_70cb461f87",
+    "slug": "melasti-project-44m2-1-bedroom",
+    "kind": "villa",
+    "price": 105000,
+    "bed": 1,
+    "area": 44
+   },
+   {
+    "id": "adm_92c15d36f8",
+    "slug": "oasis-residence-ubud-0m2-0-bedroom",
+    "kind": "apartment",
+    "price": 79000,
+    "bed": 0,
+    "area": null
+   },
+   {
+    "id": "adm_b25007e0ca",
+    "slug": "laut-villas-230m2-3-bedroom",
+    "kind": "villa",
+    "price": 320000,
+    "bed": 3,
+    "area": 230
+   },
+   {
+    "id": "adm_2136d67d86",
+    "slug": "lb-signature-340m2-5-bedroom",
+    "kind": "villa",
+    "price": 1350000,
+    "bed": 5,
+    "area": 340
+   },
+   {
+    "id": "adm_a37c22ae1a",
+    "slug": "kerobokan-residence-30m2-1-bedroom",
+    "kind": "apartment",
+    "price": 89000,
+    "bed": 1,
+    "area": 30
+   },
+   {
+    "id": "adm_857f87e7c8",
+    "slug": "kerobokan-residence-77m2-1-bedroom",
+    "kind": "villa",
+    "price": 162000,
+    "bed": 1,
+    "area": 77
+   },
+   {
+    "id": "adm_d87589edfd",
+    "slug": "kerobokan-residence-136m2-2-bedroom",
+    "kind": "villa",
+    "price": 247000,
+    "bed": 2,
+    "area": 136
+   },
+   {
+    "id": "adm_cf7e6a1c86",
+    "slug": "roots-residence-0m2-2-bedroom",
+    "kind": "villa",
+    "price": 385000,
+    "bed": 2,
+    "area": null
+   },
+   {
+    "id": "adm_4b4e6ed956",
+    "slug": "roots-residence-0m2-3-bedroom",
+    "kind": "villa",
+    "price": 445000,
+    "bed": 3,
+    "area": null
+   },
+   {
+    "id": "adm_134acf0cb1",
+    "slug": "horizon-blue-42m2-1-bedroom",
+    "kind": "apartment",
+    "price": 181000,
+    "bed": 1,
+    "area": 42
+   },
+   {
+    "id": "adm_5b6b74ec5a",
+    "slug": "horizon-blue-119m2-2-bedroom",
+    "kind": "apartment",
+    "price": 264000,
+    "bed": 2,
+    "area": 119
+   },
+   {
+    "id": "adm_47b464590f",
+    "slug": "horizon-blue-151m2-3-bedroom",
+    "kind": "apartment",
+    "price": 374000,
+    "bed": 3,
+    "area": 151
+   },
+   {
+    "id": "adm_d44f9517dc",
+    "slug": "horizon-blue-795m2-6-bedroom",
+    "kind": "villa",
+    "price": 1400000,
+    "bed": 6,
+    "area": 795
+   },
+   {
+    "id": "adm_9c779af8a7",
+    "slug": "mirador-canyon-villas-0m2-1-bedroom",
+    "kind": "villa",
+    "price": 129000,
+    "bed": 1,
+    "area": null
+   },
+   {
+    "id": "adm_1c7d0e9e6b",
+    "slug": "mirador-canyon-villas-0m2-2-bedroom",
+    "kind": "villa",
+    "price": 139000,
+    "bed": 2,
+    "area": null
+   },
+   {
+    "id": "adm_9cf2f72c37",
+    "slug": "mirador-canyon-villas-0m2-3-bedroom",
+    "kind": "villa",
+    "price": 239000,
+    "bed": 3,
+    "area": null
+   },
+   {
+    "id": "adm_35fbdb8a3d",
+    "slug": "tumbak-bayuh-private-suite-43m2-1-bedroom",
+    "kind": "villa",
+    "price": 91000,
+    "bed": 1,
+    "area": 43
+   },
+   {
+    "id": "adm_5bcd21af33",
+    "slug": "tumbak-bayuh-private-suite-84m2-2-bedroom",
+    "kind": "villa",
+    "price": 129000,
+    "bed": 2,
+    "area": 84
+   }
+  ],
+  "skipped": [
+   {
+    "n": 5,
+    "name": "The Era",
+    "status": "duplicate",
+    "existing": "ERA by OXO",
+    "reason": "Same project: The ERA by OXO, boutique villas in Pecatu/Uluwatu by OXO Living, completion Q4 2027 (rumavi.com). Blackpoint calls it freehold; tenure not confirmed elsewhere."
+   },
+   {
+    "n": 13,
+    "name": "Премиум виллы и апартаменты на Нуса Пениде с панорамным видом на океан",
+    "status": "duplicate",
+    "existing": "Nusa Penida",
+    "reason": "Matches OceaniQ Nusa Penida: villas + apartments on the west coast, ~100 m from the beach, 10,000 m² site (OceaniQ brochure / homesoverseas, menafn). Already on site as 'Nusa Penida' (dev Oceaniq)."
+   },
+   {
+    "n": 2,
+    "name": "Anatara Dragon",
+    "status": "duplicate",
+    "existing": "Taryan Dragon",
+    "reason": "Anantara Dragon Seseh Bali Resort & Residences by Taryan Group in Seseh (John Dawes architecture) — same as existing 'Taryan Dragon' (Taryan group, Seseh)."
+   },
+   {
+    "n": 3,
+    "name": "Luma Biohacking Ubud",
+    "status": "duplicate",
+    "existing": "LUMA UBUD",
+    "reason": "Same biohacking/longevity apartment project in central Ubud, from $155,000, 31-year leasehold — matches existing 'LUMA UBUD' (Sunny Development, Ubud)."
+   },
+   {
+    "n": 4,
+    "name": "Anta Hotel Canggu",
+    "status": "duplicate",
+    "existing": "Anta Residence Canggu",
+    "reason": "ANTA Hotel Bali Canggu (Radisson Individuals), 116–117 serviced apartments by ANTA Group near Batu Bolong — same as existing 'Anta Residence Canggu' (Anta group)."
+   },
+   {
+    "n": 6,
+    "name": "Resort Nusa Dua",
+    "status": "duplicate",
+    "existing": "OCEANIQ 2",
+    "reason": "Blackpoint slug 'oceaniq-nusa-dua-ii'; villas+apartments resort in Nusa Dua with ~800 m² SPA matches OceaniQ 2 brochure — existing 'OCEANIQ 2' (Oceaniq)."
+   },
+   {
+    "n": 7,
+    "name": "Whales & Waves",
+    "status": "skip",
+    "existing": null,
+    "reason": "West Sumbawa — не Бали"
+   },
+   {
+    "n": 8,
+    "name": "Eight Sense",
+    "status": "duplicate",
+    "existing": "EIGHTH SENSE",
+    "reason": "Eight Sense / Eighth Sense, 73 units near Pandawa Beach by IJI Group, Q1 2027 — existing 'EIGHTH SENSE' (IJI Group, Pandawa)."
+   },
+   {
+    "n": 3,
+    "name": "Melasti Suites",
+    "status": "duplicate",
+    "existing": "Melasti Apartments",
+    "reason": "Same project as Lyvin Melasti (Lyvin Properties): hillside resort above Melasti Beach with 18 villas + 20 suites, matching Blackpoint's 18 villas / 20 apartments. Apartments = 'Melasti Apartments'; villas are already 'Melasti Villas' (dev Lyvin)."
+   },
+   {
+    "n": 7,
+    "name": "Коллекция современных вилл, расположенных в творческом городе Нуану",
+    "status": "duplicate",
+    "existing": "The Collection Vol. 2",
+    "reason": "Blackpoint slug 'the-collections-vol.-2', villas in Nuanu (Nyanyi), Q4 2026, freehold, 3+1 BR — matches existing 'The Collection Vol. 2' by 618 Development (Nyanyi)."
+   },
+   {
+    "n": 31,
+    "name": "Virgin Beach Hotel",
+    "status": "duplicate",
+    "existing": "SALT of Virgin Beach",
+    "reason": "84 units on Virgin Beach, Karangasem, operated by The Lux Collective (SALT brand) — same as existing 'SALT of Virgin Beach' by Big Waves Development."
+   },
+   {
+    "n": 35,
+    "name": "MedSpa Villas Resort",
+    "status": "duplicate",
+    "existing": "Anta MediSpa Villas Resort",
+    "reason": "Blackpoint names it 'ANTA MED'SPA VILLAS RESORT', Uluwatu, Radisson Individuals — existing 'Anta MediSpa Villas Resort' by Anta group."
+   },
+   {
+    "n": 12,
+    "name": "Бутик-апарт-отель с видом на океан в Сануре",
+    "status": "duplicate",
+    "existing": "Sanur Apartments",
+    "reason": "Same project: Blackpoint slug 'sanur-apartments'; 10 duplex apartments, 5 ocean view, 20+20 leasehold, July 2026 = Sanur Vibe Apartments by VIBE Development (rumavi, fazwaz)."
+   },
+   {
+    "n": 20,
+    "name": "Премиальная event-вилла на 11 спален в Убуде",
+    "status": "skip",
+    "existing": null,
+    "reason": "Single 11-bedroom event villa listing (no description, no price, no geo) - not a residential complex/project."
+   },
+   {
+    "n": 24,
+    "name": "Ramada by Wyndham Nusa Dua",
+    "status": "duplicate",
+    "existing": "Ramada Nusa Dua",
+    "reason": "Same project: Ramada Nusa Dua by Wyndham, TEUS Group, Art & Wellness with MayinArt, Nusa Dua; existing entry dev Teus Group."
+   },
+   {
+    "n": 36,
+    "name": "3-спальные виллы в стиле Japandi рядом с океаном в Nuanu",
+    "status": "duplicate",
+    "existing": "The Collection Vol. 1",
+    "reason": "Blackpoint slug 'the-collection-vol.-1'; The Collection villas in Nuanu by 618 Development already on site (Nyanyi)."
+   }
+  ],
+  "photo_fail": []
+ }
+}

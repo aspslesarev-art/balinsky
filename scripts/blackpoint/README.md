@@ -10,3 +10,10 @@
    `node --env-file=.env.local scripts/import-blackpoint.mjs`.
 
 Цена берётся из данных страницы (в HTML видна только заглушка «Rp 15.000.000»).
+
+## Строящиеся комплексы (17.11.2026)
+
+`import_bp_cx.py` — заливка ЖК из разбора (рядом должны лежать offplan_full.json, group*_result.json,
+raw_complexes.json, raw_developers.json, raw_*_slugs.json — см. сессию 17.11). Итог и источники:
+`data/imports/blackpoint-complexes-2026-11-17.json`. После заливки: `node scripts/sync-detail-indexes.mjs`,
+затем revalidate. Новые страницы не открывать до revalidate — 404 закэшируется на неделю (лечится повторным revalidate).
