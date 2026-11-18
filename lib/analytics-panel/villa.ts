@@ -9,6 +9,7 @@ import type { LandPriceBundle } from '@/lib/land-prices'
 import type { Tourism } from './tourism'
 import { cdnRewrite } from '@/lib/photo-cdn'
 import type { Landmark } from '@/lib/landmarks'
+import type { NearbyVenue } from '@/lib/surroundings'
 import climate2050 from '@/lib/bali-climate-2050.json'
 
 // Собирает анализы блока «Аналитика по объекту» из того, что страница виллы
@@ -41,6 +42,8 @@ export type VillaAnalyticsInput = {
   landmarks: Landmark[]
   /** Доля заведений вокруг для иностранцев, 0–100 (listing_surroundings). */
   touristShare: number | null
+  /** Лучшие места рядом с фото (listing_surroundings.top). */
+  aroundTop: NearbyVenue[]
 }
 
 const GREEN = '#1F8B5F'
@@ -407,6 +410,12 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
           total: totalNear || near.filter(p => p.distanceKm <= 1).length, unit: T('место|места|мест', 'places'),
           names: near.slice(0, 14).map(p => `${p.name} — ${dist(p.distanceKm)}${p.rating ? ` ★${p.rating}` : ''}`),
           live: NEARMAP,
+          items: [...i.aroundTop].filter(v => v.dist_m != null).sort((a, b) => (a.dist_m ?? 0) - (b.dist_m ?? 0)).slice(0, 10).map(v => ({
+            photo: v.photo_url ? cdnRewrite(v.photo_url) : null,
+            name: `${v.name ?? ''} · ${dist((v.dist_m ?? 0) / 1000)}`,
+            url: null,
+            meta: [v.type, v.rating ? `★ ${v.rating}` : null, v.reviews ? `${num(v.reviews)} ${T('отзывов', 'reviews')}` : null].filter(Boolean).join(' · '),
+          })),
           result: totalNear ? T(`${totalNear} ${plw(totalNear, 'место|места|мест')} с хорошими отзывами в 1 км: `, `${totalNear} well-reviewed places within 1 km: `) + counts.slice(0, 4).map(x => `${x.label.toLowerCase()} ${x.n}`).join(', ') : T('Ближайшие места — на карте', 'Nearest places are on the map'),
         }],
         vizs: [
@@ -538,12 +547,12 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       vizs.push({ kind: 'map', title: T('Ветер над участком: откуда дует', 'Wind over the plot: where it blows from'), center, zoom: 18, aspect: 1, base: 'sat', rose: w.all.pct, credit: 'Esri, ERA5-Land', alt: T(`Роза ветров: чаще всего ${dirs[order[0].k]}`, `Wind rose: mostly ${dirs[order[0].k]}`), pins: [{ ...center, color: '#0F1A15' }] })
     }
     const MLONG = ru ? ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    if (months.length === 12) vizs.unshift({ kind: 'months', title: yr ? T(`Погода по месяцам · ${yr.sunny} солнечных дней в году`, `Weather by month · ${yr.sunny} sunny days a year`) : T('Погода по месяцам', 'Weather by month'), sunnyLbl: T('солнечных', 'sunny'), months: months.map((x, k) => ({ label: MLONG[k], sunny: x.m.sunny, tmax: x.m.t_max, wet: x.m.wet })) })
+    if (months.length === 12) vizs.unshift({ kind: 'months', title: yr ? T(`Погода по месяцам · ${yr.sunny} ${plw(yr.sunny, 'солнечный день|солнечных дня|солнечных дней')} в году`, `Weather by month · ${yr.sunny} sunny days a year`) : T('Погода по месяцам', 'Weather by month'), sunnyLbl: T('солнечных', 'sunny'), months: months.map((x, k) => ({ label: MLONG[k], sunny: x.m.sunny, tmax: x.m.t_max, wet: x.m.wet })) })
     out.push({
       id: 'weather', group: G.life, title: T('Погода и ветер', 'Weather & wind'),
       sub: T('Солнце и дожди по месяцам, откуда дует ветер', 'Sun and rain by month, wind direction'),
       sources, vizs,
-      bigs: [...(yr ? [{ v: String(yr.sunny), l: T('солнечных дней в году', 'sunny days a year') }] : []), ...(w ? [{ v: `${dec(w.all.avg_ms)} ${T('м/с', 'm/s')}`, l: T('средний ветер', 'average wind') }] : [])],
+      bigs: [...(yr ? [{ v: String(yr.sunny), l: T(`${plw(yr.sunny, 'солнечный день|солнечных дня|солнечных дней')} в году`, 'sunny days a year') }] : []), ...(w ? [{ v: `${dec(w.all.avg_ms)} ${T('м/с', 'm/s')}`, l: T('средний ветер', 'average wind') }] : [])],
       meaning: yr && yr.sunny > yr.wet * 1.5 ? T('солнечных дней заметно больше, чем дождливых.', 'sunny days clearly outnumber rainy ones.') : T('сезон дождей здесь ощутимый — учитывайте при сдаче.', 'the rainy season is noticeable — plan rentals around it.'),
       footnote: 'NASA POWER, ERA5-Land.',
     })

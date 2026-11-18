@@ -1759,7 +1759,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
     snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
     around1km: around?.r1 ?? null,
-    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null,
+    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [],
     rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
   })
   // Крупные цифры «01 Объект» (как в макете, 18.11.2026).
