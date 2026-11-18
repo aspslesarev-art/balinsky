@@ -6,6 +6,9 @@ import type { GeoFacts } from '@/lib/complex-access'
 import type { NearbyPlace, NearbyCategory } from '@/lib/nearby-places'
 import { zoneRows, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import type { LandPriceBundle } from '@/lib/land-prices'
+import type { Tourism } from './tourism'
+import { cdnRewrite } from '@/lib/photo-cdn'
+import type { Landmark } from '@/lib/landmarks'
 import climate2050 from '@/lib/bali-climate-2050.json'
 
 // Собирает анализы блока «Аналитика по объекту» из того, что страница виллы
@@ -34,6 +37,10 @@ export type VillaAnalyticsInput = {
   /** Участки на продаже рядом (lib/land-prices) и площадь своего участка, м². */
   landPrices: LandPriceBundle | null
   landM2: number | null
+  tourism: Tourism | null
+  landmarks: Landmark[]
+  /** Доля заведений вокруг для иностранцев, 0–100 (listing_surroundings). */
+  touristShare: number | null
 }
 
 const GREEN = '#1F8B5F'
@@ -412,6 +419,59 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     }
   }
 
+  // ── Уровень туризма ────────────────────────────────────────────────
+  const tz = i.tourism
+  if (tz && center) {
+    const ta10 = tz.ta.filter(p => p.km <= 10)
+    const lm = [...i.landmarks].sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 8)
+    const sources: Source[] = [{
+      name: T('Тепловая карта туристов', 'Tourist heat map'), fresh: T('отзывы иностранцев в Google', 'foreign reviews on Google'),
+      chips: [T('1 км вокруг', '1 km around'), T('отзывы туристов', 'tourist reviews'), T('весь Бали', 'all of Bali')],
+      total: tz.cells.length, unit: T('квартал|квартала|кварталов', 'blocks'),
+      names: [T(`уровень здесь — ${tz.percentile} из 100`, `level here — ${tz.percentile} of 100`), ...(i.touristShare != null ? [T(`заведения для иностранцев — ${Math.round(i.touristShare)}%`, `foreigner-facing venues — ${Math.round(i.touristShare)}%`)] : [])],
+      result: T(`Туристов больше, чем в ${tz.percentile}% туристических мест Бали`, `More tourists than ${tz.percentile}% of tourist spots on Bali`) + (i.touristShare != null ? T(` · ${Math.round(i.touristShare)}% заведений рядом — для иностранцев`, ` · ${Math.round(i.touristShare)}% of venues nearby cater to foreigners`) : ''),
+      live: { kind: 'map', title: T('Где туристы — тепловая карта, 1 и 2 км', 'Where tourists are — heat map, 1 and 2 km'), center, zoom: 14, aspect: 1, base: 'street', credit: 'Esri, Google Maps',
+        alt: T('Тепловая карта туристов вокруг виллы', 'Tourist heat map around the villa'), heat: tz.cells.map(c => ({ lat: c.lat, lng: c.lng, w: c.weight })), heatMax: tz.heatMax,
+        rings: [1000, 2000].map(m => ({ m, label: `${m / 1000} ${T('км', 'km')}` })), pins: [{ ...center, color: '#0F1A15' }] },
+    }]
+    if (tz.ta.length) {
+      const near = tz.ta[0]
+      sources.push({
+        name: 'TripAdvisor', fresh: T(`топ‑90 Бали, снимок ${tz.taSnapshot}`, `Bali top 90, ${tz.taSnapshot}`),
+        chips: [T('топ‑90 Бали', 'Bali top 90'), T('до 10 км', 'within 10 km')],
+        total: tz.ta.length, unit: T('место|места|мест', 'places'),
+        names: tz.ta.slice(0, 14).map(p => `#${p.rank} ${p.name} — ${dist(p.km)}`),
+        result: T(`В 10 км — ${ta10.length} ${plw(ta10.length, 'место|места|мест')} из топа TripAdvisor · ближайшее: ${near.name} (#${near.rank}), ${dist(near.km)}`, `${ta10.length} TripAdvisor top places within 10 km · nearest: ${near.name} (#${near.rank}), ${dist(near.km)}`),
+        items: ta10.slice(0, 8).map(p => ({ photo: p.photo ? cdnRewrite(p.photo) : null, name: `#${p.rank} ${p.name} · ${dist(p.km)}`, url: null, meta: T(`№${p.rank} в топе TripAdvisor`, `#${p.rank} on TripAdvisor`) })),
+      })
+    }
+    if (lm.length) {
+      sources.push({
+        name: T('Что посмотреть рядом', 'What to see nearby'), fresh: T('Google Maps, от 800 отзывов', 'Google Maps, 800+ reviews'),
+        chips: [T('достопримечательности', 'sights'), T('храмы', 'temples'), T('для детей', 'kids')],
+        total: lm.length, unit: T('место|места|мест', 'places'),
+        names: lm.map(l => `${l.name} — ${dist(l.distanceKm)}`),
+        result: T(`Рядом: ${lm.slice(0, 3).map(l => `${l.name} (${dist(l.distanceKm)})`).join(', ')}`, `Nearby: ${lm.slice(0, 3).map(l => `${l.name} (${dist(l.distanceKm)})`).join(', ')}`),
+        items: lm.map(l => ({ photo: l.photo ? cdnRewrite(l.photo) : null, name: `${l.name} · ${dist(l.distanceKm)}`, url: l.mapsUrl, meta: [l.taRank ? `#${l.taRank} TripAdvisor` : null, l.rating ? `★ ${l.rating}` : null, `${num(l.reviews)} ${T('отзывов', 'reviews')}`].filter(Boolean).join(' · ') })),
+      })
+    }
+    const by = (r: number) => tz.ta.filter(p => p.km <= r).length
+    const lvl = tz.percentile >= 70 ? T('высокий', 'high') : tz.percentile >= 40 ? T('средний', 'medium') : T('низкий', 'low')
+    out.push({
+      id: 'tourism', group: G.place, title: T('Уровень туризма', 'Tourism level'),
+      sub: T('Сколько туристов вокруг и что посмотреть рядом', 'How touristy it is and what to see nearby'),
+      sources,
+      vizs: [
+        { kind: 'bars', title: T('Места из топа TripAdvisor по расстоянию', 'TripAdvisor top places by distance'), max: Math.max(1, by(10)), color: ORANGE, rows: [2, 5, 10].map(r => ({ label: T(`до ${r} км`, `within ${r} km`), value: by(r), text: String(by(r)) })) },
+      ],
+      bigs: [{ v: `${tz.percentile}`, l: T(`из 100 — уровень туризма ${lvl}`, `of 100 — ${lvl} tourism`) }, { v: String(ta10.length), l: T('мест топа TripAdvisor в 10 км', 'TripAdvisor top places within 10 km') }],
+      meaning: tz.percentile >= 70 ? T('место туристическое: гостей много, посуточная аренда востребована, но вокруг оживлённо.', 'a touristy spot: lots of guests and demand for short stays, but busy around.')
+        : tz.percentile >= 40 ? T('туристов в меру: гости есть, а вокруг не шумно.', 'moderately touristy: guests come, yet it stays calm.')
+        : T('тихое место, туристов мало: для жизни спокойно, для посуточной аренды слабее.', 'a quiet spot with few tourists: calm living, weaker for short stays.'),
+      footnote: T('Тепловая карта — по отзывам иностранцев на места Google; рейтинг TripAdvisor «Things to Do in Bali».', 'Heat map from foreign reviews of Google places; TripAdvisor “Things to Do in Bali” ranking.'),
+    })
+  }
+
   // ── Как добраться ──────────────────────────────────────────────────
   const r = i.geo?.routes
   if (r && Object.keys(r).length) {
@@ -477,7 +537,8 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       })
       vizs.push({ kind: 'map', title: T('Ветер над участком: откуда дует', 'Wind over the plot: where it blows from'), center, zoom: 18, aspect: 1, base: 'sat', rose: w.all.pct, credit: 'Esri, ERA5-Land', alt: T(`Роза ветров: чаще всего ${dirs[order[0].k]}`, `Wind rose: mostly ${dirs[order[0].k]}`), pins: [{ ...center, color: '#0F1A15' }] })
     }
-    if (months.length === 12) vizs.push({ kind: 'cols', title: T('Солнечных дней по месяцам', 'Sunny days by month'), max: 31, cols: months.map(x => ({ label: x.l, value: x.m.sunny, text: String(x.m.sunny), hot: x.m.sunny >= 20 })) })
+    const MLONG = ru ? ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    if (months.length === 12) vizs.unshift({ kind: 'months', title: yr ? T(`Погода по месяцам · ${yr.sunny} солнечных дней в году`, `Weather by month · ${yr.sunny} sunny days a year`) : T('Погода по месяцам', 'Weather by month'), sunnyLbl: T('солнечных', 'sunny'), months: months.map((x, k) => ({ label: MLONG[k], sunny: x.m.sunny, tmax: x.m.t_max, wet: x.m.wet })) })
     out.push({
       id: 'weather', group: G.life, title: T('Погода и ветер', 'Weather & wind'),
       sub: T('Солнце и дожди по месяцам, откуда дует ветер', 'Sun and rain by month, wind direction'),

@@ -1,4 +1,5 @@
 'use client'
+import { Sun, Umbrella } from 'lucide-react'
 import type { Viz } from '@/lib/analytics-panel/types'
 
 // Графики итога анализа. Всё на CSS/SVG без библиотек; карты — плитки Esri
@@ -104,6 +105,22 @@ function render(v: Viz, lang: string) {
           <div className="text-[13px] text-[#39413D]">{v.caption}</div>
         </>
       )
+    case 'months':
+      // Как блок погоды на сайте: солнечные дни, температура, дождливые дни.
+      return (
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-12">
+          {v.months.map(mo => (
+            <div key={mo.label} className="flex min-w-0 flex-col gap-1 rounded-lg px-2.5 py-2" style={{ background: mo.sunny >= 21 ? 'rgb(245 165 36 / .14)' : mo.sunny >= 14 ? '#F3F7F4' : 'rgb(80 140 255 / .10)' }}>
+              <span className="text-[12px] text-[#4C5751]">{mo.label}</span>
+              <span className="inline-flex items-center gap-1 whitespace-nowrap text-[17px] font-semibold leading-none tabular-nums" title={v.sunnyLbl}><Sun size={14} strokeWidth={2} aria-hidden className="shrink-0" />{mo.sunny}</span>
+              <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 whitespace-nowrap text-[12px] leading-none text-[#4C5751] tabular-nums">
+                {mo.tmax != null && <span>{Math.round(mo.tmax)}°</span>}
+                <span className="inline-flex items-center gap-1"><Umbrella size={12} strokeWidth={2} aria-hidden className="shrink-0" />{mo.wet}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )
     case 'image':
       return (
         <>
@@ -179,6 +196,20 @@ function MapView({ v }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
             })}
           </svg>
         )}
+        {v.heat && v.heat.length > 0 && (() => {
+          // Клетка тепловой карты ~500 м: мягкое пятно, ярче там, где туристов больше.
+          const mpp = (156543.03392 * Math.cos((v.center.lat * Math.PI) / 180)) / 2 ** v.zoom
+          const rad = 420 / mpp
+          const mx = v.heatMax ?? Math.max(...v.heat!.map(h => h.w))
+          return (
+            <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="absolute inset-0 h-full w-full">
+              <defs>
+                <radialGradient id="ap-heat"><stop offset="0%" stopColor="#E0452B" stopOpacity="1" /><stop offset="55%" stopColor="#F29B38" stopOpacity=".55" /><stop offset="100%" stopColor="#F29B38" stopOpacity="0" /></radialGradient>
+              </defs>
+              {v.heat!.map((h, k) => { const p = world(h.lat, h.lng, v.zoom); return <circle key={k} cx={p.x - x0} cy={p.y - y0} r={rad} fill="url(#ap-heat)" opacity={Math.min(0.85, 0.15 + 0.7 * (h.w / mx))} className="ap-in" style={{ animationDelay: `${Math.min(k, 40) * 40}ms` }} /> })}
+            </svg>
+          )
+        })()}
         {v.rings && v.rings.length > 0 && (() => {
           // Метров в пикселе на этом зуме и широте (Web Mercator).
           const mpp = (156543.03392 * Math.cos((v.center.lat * Math.PI) / 180)) / 2 ** v.zoom

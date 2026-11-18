@@ -19,6 +19,8 @@ export type Landmark = {
   mapsUrl: string
   /** Место в топ‑90 TripAdvisor по Бали, если есть */
   taRank: number | null
+  /** Фото из нашего Storage (migrations/050), если уже скачано. */
+  photo?: string | null
 }
 
 const NEAR_KM = 5
@@ -38,7 +40,7 @@ export async function loadLandmarks(lat: number, lng: number, limit = 8): Promis
   const dLat = FAR_KM / 111
   const dLng = FAR_KM / (111 * Math.cos(lat * Math.PI / 180))
   const { data, error } = await sb.from('bali_places')
-    .select('id, name, primary_type, bucket, user_rating_count, rating, lat, lng')
+    .select('id, name, primary_type, bucket, user_rating_count, rating, lat, lng, photo_url')
     .in('bucket', ['attraction', 'temple', 'kids_fun'])
     .gte('user_rating_count', MIN_REVIEWS)
     .gte('lat', lat - dLat).lte('lat', lat + dLat)
@@ -58,6 +60,7 @@ export async function loadLandmarks(lat: number, lng: number, limit = 8): Promis
       distanceKm: distKm(lat, lng, Number(r.lat), Number(r.lng)),
       mapsUrl: `https://www.google.com/maps/place/?q=place_id:${r.id}`,
       taRank: TA_RANK[r.id as string] ?? null,
+      photo: (r.photo_url as string | null) ?? null,
       lat: Number(r.lat), lng: Number(r.lng),
     }))
     .filter(r => r.distanceKm <= FAR_KM)

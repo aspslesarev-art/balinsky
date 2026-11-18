@@ -136,6 +136,7 @@ import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
 import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
 import { AddToCollection } from '@/components/collections/AddToCollection'
 import { loadSurroundings } from '@/lib/surroundings'
+import { loadTourism } from '@/lib/analytics-panel/tourism'
 
 const COPY = {
   ru: {
@@ -1750,12 +1751,15 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   }, lang)
   const hasMoney = !!(saleComps && saleComps.diffPct != null && priceNum != null) || !!(!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null)
   const hasMesto = !!(hasPlace && lat != null && lng != null) || !!(beach || geoFacts?.climate)
-  const around = await loadSurroundings('villa', v.airtable_id).catch(() => null)
+  const [around, tourism] = await Promise.all([
+    loadSurroundings('villa', v.airtable_id).catch(() => null),
+    lat != null && lng != null ? loadTourism(lat, lng).catch(e => { console.error(e); return null }) : null,
+  ])
   const analyses = buildVillaAnalyses({
     lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
     snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
     around1km: around?.r1 ?? null,
-    landPrices, landM2: land,
+    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null,
     rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
   })
   // Крупные цифры «01 Объект» (как в макете, 18.11.2026).

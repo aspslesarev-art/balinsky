@@ -41,6 +41,9 @@ export type Viz =
       pins?: { lat: number; lng: number; color: string }[]
       tags?: { lat: number; lng: number; label: string }[]
       lines?: { coords: number[][]; color: string; label: string }[]
+      /** Тепловая карта: клетки с весом (туристы), max — вес «самой горячей». */
+      heat?: { lat: number; lng: number; w: number }[]
+      heatMax?: number
       /** Круги расстояний вокруг центра карты (метры). */
       rings?: { m: number; label: string }[]
       /** Доли ветра по 8 румбам, с севера по часовой. */
@@ -48,6 +51,7 @@ export type Viz =
       legend?: { color: string; label: string }[]
       credit: string
       alt: string }
+  | { kind: 'months'; title: string; months: { label: string; sunny: number; tmax: number | null; wet: number }[]; sunnyLbl: string }
   | { kind: 'image'; title: string; src: string; aspect: number; alt: string; legend?: { color: string; label: string }[]; credit: string }
 
 export type Analysis = {
