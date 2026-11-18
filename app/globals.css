@@ -576,3 +576,22 @@ html[data-goal="live"] #dokhodnost { display: none; }
   border: 3px solid #fff;
   box-shadow: 0 0 0 2px #D93025;
 }
+
+/* Блок «Аналитика по объекту» (components/analytics-panel, 18.11.2026). */
+@keyframes ap-spin { to { transform: rotate(360deg) } }
+@keyframes ap-chip { 0% { opacity: 0; transform: scale(.6) } 70% { transform: scale(1.06) } 100% { opacity: 1; transform: scale(1) } }
+@keyframes ap-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes ap-blink { 50% { opacity: 0 } }
+@keyframes ap-draw { from { stroke-dashoffset: 100 } to { stroke-dashoffset: 0 } }
+@keyframes ap-grow { from { transform: scaleX(0) } to { transform: none } }
+@keyframes ap-growy { from { transform: scaleY(0) } to { transform: none } }
+.ap-spin { animation: ap-spin 700ms linear infinite }
+.ap-chip { animation: ap-chip 220ms cubic-bezier(.2,.8,.2,1) both }
+.ap-in { animation: ap-in 240ms cubic-bezier(.2,.8,.2,1) both }
+.ap-blink { animation: ap-blink 600ms steps(1) infinite }
+.ap-draw { animation: ap-draw 1400ms cubic-bezier(.2,.8,.2,1) both }
+.ap-grow { animation: ap-grow 600ms cubic-bezier(.2,.8,.2,1) both }
+.ap-growy { animation: ap-growy 600ms cubic-bezier(.2,.8,.2,1) both }
+@media (prefers-reduced-motion: reduce) {
+  .ap-spin, .ap-chip, .ap-in, .ap-blink, .ap-draw, .ap-grow, .ap-growy { animation: none }
+}

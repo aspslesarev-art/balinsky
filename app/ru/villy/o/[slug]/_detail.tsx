@@ -136,6 +136,9 @@ import { hreflangMap } from '@/lib/hreflang'
 import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
 import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { metaSnippet } from '@/lib/seo'
+import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
+import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
+import { loadSurroundings } from '@/lib/surroundings'
 
 const COPY = {
   ru: {
@@ -1752,16 +1755,25 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
   // Главы страницы (макет «Структура страницы», вариант A, владелец 2026-11-11).
   const CH = pickCopy({
-    ru: { obekt: ['Объект', 'Вилла и участок'], proverka: ['Проверка', 'Можно ли доверять', 'Документы, застройщик, участок и природные риски.'], dengi: ['Деньги', 'Цена и доход', 'Сравнение с соседями, а не обещания застройщика.'], mesto: ['Место', 'Что вокруг и какая погода'], zastroyshchik: ['Застройщик'], voprosy: ['Вопросы'] },
-    en: { obekt: ['Property', 'Villa and land'], proverka: ['Checks', 'Can you trust it', 'Documents, developer, plot and natural risks.'], dengi: ['Money', 'Price and income', 'Compared with neighbours, not the developer’s promises.'], mesto: ['Location', 'Surroundings and weather'], zastroyshchik: ['Developer'], voprosy: ['FAQ'] },
+    ru: { analitika: ['Аналитика'], obekt: ['Объект', 'Вилла и участок'], proverka: ['Проверка', 'Можно ли доверять', 'Документы, застройщик, участок и природные риски.'], dengi: ['Деньги', 'Цена и доход', 'Сравнение с соседями, а не обещания застройщика.'], mesto: ['Место', 'Что вокруг и какая погода'], zastroyshchik: ['Застройщик'], voprosy: ['Вопросы'] },
+    en: { analitika: ['Analytics'], obekt: ['Property', 'Villa and land'], proverka: ['Checks', 'Can you trust it', 'Documents, developer, plot and natural risks.'], dengi: ['Money', 'Price and income', 'Compared with neighbours, not the developer’s promises.'], mesto: ['Location', 'Surroundings and weather'], zastroyshchik: ['Developer'], voprosy: ['FAQ'] },
   }, lang)
   const hasMoney = !!(saleComps && saleComps.diffPct != null && priceNum != null) || !!(!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null)
   const hasMesto = !!(hasPlace && lat != null && lng != null) || !!(beach || geoFacts?.climate)
+  const around = await loadSurroundings('villa', v.airtable_id).catch(() => null)
+  const analyses = buildVillaAnalyses({
+    lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
+    snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
+    around1km: around?.r1 ?? null,
+    rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
+  })
   const chapterNav = [
     (villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && { id: 'obekt', no: '01', label: CH.obekt[0] },
-    hasMesto && { id: 'mesto', no: '02', label: CH.mesto[0] },
-    { id: 'proverka', no: '03', label: CH.proverka[0] },
-    hasMoney && { id: 'dengi', no: '04', label: CH.dengi[0] },
+    ...(analyses.length > 0 ? [{ id: 'analitika', no: '02', label: CH.analitika[0] }] : [
+      hasMesto && { id: 'mesto', no: '02', label: CH.mesto[0] },
+      { id: 'proverka', no: '03', label: CH.proverka[0] },
+      hasMoney && { id: 'dengi', no: '04', label: CH.dengi[0] },
+    ]),
     (developer || developerName || parentComplex) && { id: 'zastroyshchik', no: '05', label: CH.zastroyshchik[0] },
     { id: 'voprosy', no: '06', label: CH.voprosy[0] },
   ].filter((x): x is { id: string; no: string; label: string } => !!x)
@@ -1794,18 +1806,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         </VillaChapter>
         )
 
-  const analytics = (
-    <>
-        <ProPendingNote lang={lang} />
-
-        <VillaChapter id="proverka" no="03" plain={analyticsOnly} eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]}>
-        <section id="uchastok" className="scroll-mt-24">
-          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
-            leaseYears={leaseYears} landYellow={rentalRestricted}
-            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
-            coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
-        </section>
-
+  // Вынесены, чтобы те же блоки показать под итогом анализа в «Аналитике».
+  const legalBlock = (<>
         {villaLegal && complexMedia.slug && (villaLegal.ok.length > 0 || villaLegalQuestions > 0) && (
           <div className="bx-auth-block">
             <LegalAudit
@@ -1820,12 +1822,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             />
           </div>
         )}
-
-        </VillaChapter>
-
-        {/* На странице ЖК «Цена и доход» не показываем (владелец 13.11.2026). */}
-        {hasMoney && !analyticsOnly && (
-        <VillaChapter id="dengi" no="04" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
+  </>)
+  const saleBlock = (<>
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <VillaBlock><section className="flex flex-col gap-4 scroll-mt-24">
             <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
@@ -1897,7 +1895,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             </div>
           </section></VillaBlock>
         )}
-
+  </>)
+  const calcBlock = (<>
         {!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null && (
           <VillaBlock><section id="kalkulyator" className="scroll-mt-24">
             <IncomeCalculator
@@ -1926,6 +1925,29 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             />
           </section></VillaBlock>
         )}
+  </>)
+  const analytics = (
+    <>
+        <ProPendingNote lang={lang} />
+
+        <VillaChapter id="proverka" no="03" plain={analyticsOnly} eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]}>
+        <section id="uchastok" className="scroll-mt-24">
+          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
+            leaseYears={leaseYears} landYellow={rentalRestricted}
+            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
+            coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
+        </section>
+
+        {legalBlock}
+
+        </VillaChapter>
+
+        {/* На странице ЖК «Цена и доход» не показываем (владелец 13.11.2026). */}
+        {hasMoney && !analyticsOnly && (
+        <VillaChapter id="dengi" no="04" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
+        {saleBlock}
+
+        {calcBlock}
         </VillaChapter>
         )}
 
@@ -2088,9 +2110,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           </VillaChapter>
         )}
 
-        {mestoChapter}
-
-        {analytics}
+        {analyses.length > 0 ? (
+          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika[0]}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`}
+              extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
+          </VillaChapter>
+        ) : (<>{mestoChapter}{analytics}</>)}
 
         {(developer || developerName || parentComplex) && (
           <VillaChapter id="zastroyshchik" no="05" eyebrow={CH.zastroyshchik[0]}>
