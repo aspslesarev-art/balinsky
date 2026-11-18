@@ -113,7 +113,6 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { PageEditButton } from '@/components/page-edit/PageEditButton'
 import { permitLabel } from '@/components/presentation-copy'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
-import { AddToCollection } from '@/components/collections/AddToCollection'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { resolveListingTitle, anonListingTitle } from '@/lib/listing-title'
@@ -1978,17 +1977,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     seoText={seoText}
   />
   )
-  const presentationBtn = priceNum != null ? (
-    <span className="bx-pro-only">
-    <AddToCollection kind="villa" slug={slug} lang={lang} snapshot={{
-      title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-      district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
-      leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
-      id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
-    }} />
-    {presentationPdf}
-    </span>
-  ) : null
+  // Кнопки «В подборку» и PDF в карточке цены убраны — там только «Связаться» (владелец 18.11.2026); PDF остался под фото.
 
   return (
     <>
@@ -2028,7 +2017,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                 listingSlug={slug}
                 listingTitle={title}
                 reservedUntil={activeReservation?.expires_at ?? null}
-                presentationButton={presentationBtn}
+                presentationButton={null}
               />
             </div>
           )}
@@ -2226,7 +2215,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               listingSlug={slug}
               listingTitle={title}
               reservedUntil={activeReservation?.expires_at ?? null}
-              presentationButton={presentationBtn}
+              presentationButton={null}
               dealRows={[
                 ...(paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : []),
                 ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),

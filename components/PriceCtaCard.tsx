@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
-import { Send, Lock, Bookmark } from 'lucide-react'
+import { Send, Lock } from 'lucide-react'
 import { ApproxPrice } from './InlinePrice'
 import { useCurrency } from './CurrencyContext'
 import { formatPriceExact } from '@/lib/currency'
@@ -258,15 +258,7 @@ export function PriceCtaCard({
               <Send size={18} strokeWidth={1.6} />
               {buyLabel}
             </a>
-            {sidebar && (
-              <button
-                type="button"
-                className="inline-flex w-full items-center justify-center gap-2 min-h-[48px] py-2 px-6 rounded-[10px] bg-[#EEF6F1] hover:bg-[#E0EDE5] text-[#135237] text-[15px] font-semibold text-center leading-tight transition-colors"
-              >
-                <Bookmark size={18} strokeWidth={1.6} />
-                {c.saveCompare}
-              </button>
-            )}
+            {/* «Сохранить и сравнить» убрана: ничего не делала, лишняя кнопка (владелец 18.11.2026). */}
           </div>
         )}
 
