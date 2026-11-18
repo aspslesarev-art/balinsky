@@ -378,14 +378,19 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     if (all.length >= 5) {
       const near = [...all].sort((a, b) => a.distanceKm - b.distanceKm)
       const colorOf = (k: string) => (k === 'beach' || k === 'beachclub' ? BLUE : k === 'restaurant' || k === 'cafe' || k === 'nightlife' ? GREEN : k === 'school' || k === 'international_school' || k === 'preschool' ? PURPLE : k === 'hospital' || k === 'pharmacy' ? '#C9443A' : ORANGE)
-      const inMap = near.filter(p => p.distanceKm <= 0.9)
+      const inMap = near.filter(p => p.distanceKm <= 2.05)
       const best = (k: string) => i.nearby!.byCategory[k]?.slice().sort((a, b) => a.distanceKm - b.distanceKm)[0]
-      const tags = (['beach', 'cafe', 'supermarket', 'school'] as const).map(k => ({ k, p: best(k) })).filter(x => x.p && x.p.distanceKm <= 0.9)
+      const tags = (['beach'] as const).map(k => ({ k, p: best(k) })).filter(x => x.p && x.p.distanceKm <= 2)
       const catTitle = (c: NearbyCategory) => (ru ? c.title : ({ beach: 'Beaches', restaurant: 'Restaurants', cafe: 'Cafés', nightlife: 'Bars & clubs', attraction: 'Sights', school: 'Schools', preschool: 'Kindergartens', supermarket: 'Shops', pharmacy: 'Pharmacies', hospital: 'Clinics', shopping_mall: 'Malls', ferry_terminal: 'Ports', wellness: 'Yoga & fitness', beachclub: 'Beach clubs', international_school: 'Intl schools', coworking: 'Coworkings' } as Record<string, string>)[c.key] ?? c.title)
       const BUCKET: Record<string, [string, string]> = { restaurant: ['Рестораны', 'Restaurants'], cafe: ['Кафе', 'Cafés'], bar: ['Бары', 'Bars'], hotel: ['Отели', 'Hotels'], shopping: ['Магазины', 'Shops'], spa: ['Спа', 'Spas'], fitness: ['Фитнес', 'Fitness'], beach: ['Пляжи', 'Beaches'], beach_club: ['Beach clubs', 'Beach clubs'], attraction: ['Достопримечательности', 'Sights'], kids_fun: ['Для детей', 'Kids'], health: ['Клиники', 'Clinics'], school: ['Школы', 'Schools'], temple: ['Храмы', 'Temples'], coworking: ['Коворкинги', 'Coworkings'] }
       const r1 = i.around1km
       const counts = r1 ? Object.entries(r1).filter(([, n]) => n > 0).map(([k, n]) => ({ label: T(BUCKET[k]?.[0] ?? k, BUCKET[k]?.[1] ?? k), n })).sort((a, b) => b.n - a.n) : []
       const totalNear = r1 ? counts.reduce((x, y) => x + y.n, 0) : 0
+      const NEARMAP: Viz = { kind: 'map', title: T('Карта: что рядом — 100 м, 500 м, 1 км, 2 км', 'Map: what’s nearby — 100 m, 500 m, 1 km, 2 km'), center, zoom: 15, aspect: 1, base: 'street',
+            rings: [100, 500, 1000, 2000].map(m => ({ m, label: m < 1000 ? `${m} ${T('м', 'm')}` : `${m / 1000} ${T('км', 'km')}` })), credit: 'Esri, Google Maps', alt: T('Карта мест рядом с виллой', 'Map of places near the villa'),
+            pins: [...inMap.map(p => ({ lat: p.lat, lng: p.lng, color: colorOf(p.cat) })), { ...center, color: '#0F1A15' }],
+            tags: tags.map(({ p }) => ({ lat: p!.lat, lng: p!.lng, label: `${p!.name?.slice(0, 22)} · ${dist(p!.distanceKm)}` })),
+            legend: [{ color: GREEN, label: T('Еда и бары', 'Food & bars') }, { color: BLUE, label: T('Пляж', 'Beach') }, { color: PURPLE, label: T('Школы', 'Schools') }, { color: '#C9443A', label: T('Здоровье', 'Health') }, { color: ORANGE, label: T('Другое', 'Other') }, { color: '#0F1A15', label: T('Эта вилла', 'This villa') }] }
       out.push({
         id: 'nearby', group: G.place, title: T('Что рядом', 'What’s nearby'),
         sub: T('Пляжи, кафе, магазины, школы, клиники', 'Beaches, cafés, shops, schools, clinics'),
@@ -394,13 +399,10 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
           chips: cats.slice(0, 5).map(c => catTitle(c).toLowerCase()),
           total: totalNear || near.filter(p => p.distanceKm <= 1).length, unit: T('место|места|мест', 'places'),
           names: near.slice(0, 14).map(p => `${p.name} — ${dist(p.distanceKm)}${p.rating ? ` ★${p.rating}` : ''}`),
+          live: NEARMAP,
           result: totalNear ? T(`${totalNear} ${plw(totalNear, 'место|места|мест')} с хорошими отзывами в 1 км: `, `${totalNear} well-reviewed places within 1 km: `) + counts.slice(0, 4).map(x => `${x.label.toLowerCase()} ${x.n}`).join(', ') : T('Ближайшие места — на карте', 'Nearest places are on the map'),
         }],
         vizs: [
-          { kind: 'map', title: T('Карта: что в шаговой доступности', 'Map: what’s within walking distance'), center, zoom: 16, aspect: 1.5, base: 'street', credit: 'Esri, Google Maps', alt: T('Карта мест рядом с виллой', 'Map of places near the villa'),
-            pins: [...inMap.map(p => ({ lat: p.lat, lng: p.lng, color: colorOf(p.cat) })), { ...center, color: '#0F1A15' }],
-            tags: tags.map(({ p }) => ({ lat: p!.lat, lng: p!.lng, label: `${p!.name?.slice(0, 22)} · ${dist(p!.distanceKm)}` })),
-            legend: [{ color: GREEN, label: T('Еда и бары', 'Food & bars') }, { color: BLUE, label: T('Пляж', 'Beach') }, { color: PURPLE, label: T('Школы', 'Schools') }, { color: '#C9443A', label: T('Здоровье', 'Health') }, { color: ORANGE, label: T('Другое', 'Other') }, { color: '#0F1A15', label: T('Эта вилла', 'This villa') }] },
           ...(counts.length ? [{ kind: 'bars' as const, title: T('Места с хорошими отзывами в 1 км', 'Well-reviewed places within 1 km'), max: counts[0].n, rows: counts.slice(0, 8).map(x => ({ label: x.label, value: x.n, text: String(x.n) })) }] : []),
         ],
         bigs: [...(totalNear ? [{ v: num(totalNear), l: T('мест в 1 км', 'places within 1 km') }] : []), ...(best('beach') ? [{ v: dist(best('beach')!.distanceKm), l: T('до пляжа', 'to the beach') }] : [])],
@@ -419,6 +421,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const lines = Object.entries(i.geo?.route_lines ?? {}).filter(([k]) => k !== 'sanur' && k !== 'ubud_south').map(([k, coords]) => ({ coords: coords as number[][], color: lineColor[k] ?? GREEN, label: `${T(lbl[k]?.[0] ?? k, lbl[k]?.[1] ?? k)} · ${legs.find(l => l.k === k)?.min ?? '?'} ${T('мин', 'min')}` }))
     const air = legs.find(l => l.k === 'airport')
     const vizs: Viz[] = []
+    let routeMap: Viz | undefined
     if (lines.length && center) {
       const allPts = lines.flatMap(l => l.coords)
       const lngs = allPts.map(p => p[0]), lats = allPts.map(p => p[1])
@@ -428,14 +431,14 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       const wy = (lat: number, z: number) => { const r = (lat * Math.PI) / 180; return ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * 256 * 2 ** z }
       let zoom = 13
       while (zoom > 8 && (wx(Math.max(...lngs), zoom) - wx(Math.min(...lngs), zoom) > 860 || wy(Math.min(...lats), zoom) - wy(Math.max(...lats), zoom) > 560)) zoom--
-      vizs.push({ kind: 'map', title: T('Маршруты на карте', 'Routes on the map'), center: c, zoom, aspect: 1.5, base: 'street', credit: 'Esri, OpenStreetMap', alt: T('Маршруты от виллы', 'Routes from the villa'), lines, pins: [{ ...center, color: '#0F1A15' }], tags: lines.map(l => ({ lat: l.coords[l.coords.length - 1][1], lng: l.coords[l.coords.length - 1][0], label: l.label })) })
+      routeMap = { kind: 'map', title: T('Маршруты на карте', 'Routes on the map'), center: c, zoom, aspect: 1.5, base: 'street', credit: 'Esri, OpenStreetMap', alt: T('Маршруты от виллы', 'Routes from the villa'), lines, pins: [{ ...center, color: '#0F1A15' }], tags: lines.map(l => ({ lat: l.coords[l.coords.length - 1][1], lng: l.coords[l.coords.length - 1][0], label: l.label })) }
     }
     vizs.push({ kind: 'bars', title: T('Минут на машине', 'Minutes by car'), max: Math.max(...legs.map(l => l.min)), color: GREEN, rows: legs.map(l => ({ label: T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k), value: l.min, text: `${l.min} ${T('мин', 'min')}` })) })
     out.push({
       id: 'routes', group: G.place, title: T('Как добраться', 'Getting around'),
       sub: T('Сколько ехать до аэропорта и главных районов', 'Drive times to the airport and main areas'),
       sources: [{
-        name: T('Маршруты', 'Routes'), fresh: T('OpenStreetMap + сверка с Google', 'OpenStreetMap, checked against Google'),
+        name: T('Маршруты', 'Routes'), fresh: T('OpenStreetMap + сверка с Google', 'OpenStreetMap, checked against Google'), live: routeMap,
         chips: legs.slice(0, 4).map(l => T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k).toLowerCase()),
         total: legs.length, unit: T('маршрут|маршрута|маршрутов', 'routes'),
         names: legs.map(l => `${T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k)} — ${l.min} ${T('мин', 'min')}`),

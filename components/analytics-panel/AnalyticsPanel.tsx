@@ -223,6 +223,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                         </div>
                       )}
                       {lt >= 20 && lt < 24 && <div className="text-[14px] text-[#39413D]">{c.filtering}</div>}
+                      {s.live && lt >= 6 && <div className="ap-in"><VizView v={s.live} lang={lang} /></div>}
                       {s.items && s.items.length > 0 && lt >= 12 && (
                         <div className="flex gap-3 overflow-x-auto pb-2 pt-1 [scroll-snap-type:x_mandatory]">
                           {s.items.map((it, k) => lt >= 12 + k * 2 && (

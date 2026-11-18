@@ -26,6 +26,8 @@ export type Source = {
   result: string
   /** Объекты, взятые в сравнение, — лента с фото. */
   items?: SourceItem[]
+  /** Карта, которая рисуется прямо во время сбора (видна и гостю). */
+  live?: Viz
 }
 
 export type Viz =
@@ -39,6 +41,8 @@ export type Viz =
       pins?: { lat: number; lng: number; color: string }[]
       tags?: { lat: number; lng: number; label: string }[]
       lines?: { coords: number[][]; color: string; label: string }[]
+      /** Круги расстояний вокруг центра карты (метры). */
+      rings?: { m: number; label: string }[]
       /** Доли ветра по 8 румбам, с севера по часовой. */
       rose?: number[]
       legend?: { color: string; label: string }[]

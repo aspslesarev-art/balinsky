@@ -165,18 +165,41 @@ function MapView({ v }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
             className="absolute max-w-none select-none" style={{ left: `${((tx * 256 - x0) / W) * 100}%`, top: `${((ty * 256 - y0) / H) * 100}%`, width: `${(256 / W) * 100 + 0.1}%`, height: `${(256 / H) * 100 + 0.1}%` }} />
         ))}
         {v.lines && (
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" className="absolute inset-0 h-full w-full">
+          // Координаты в пикселях карты (W×H), без non-scaling-stroke: иначе
+          // pathLength не работает и линия рисуется пунктиром.
+          <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="absolute inset-0 h-full w-full">
             {v.lines.map((l, k) => {
-              const pts = l.coords.map(([lng, lat]) => { const p = P(lat, lng); return `${p.x.toFixed(2)},${p.y.toFixed(2)}` }).join(' ')
+              const pts = l.coords.map(([lng, lat]) => { const p = world(lat, lng, v.zoom); return `${(p.x - x0).toFixed(1)},${(p.y - y0).toFixed(1)}` }).join(' ')
               return (
                 <g key={k}>
-                  <polyline points={pts} fill="none" stroke="#fff" strokeWidth={7} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-                  <polyline points={pts} pathLength={100} fill="none" stroke={l.color} strokeWidth={4} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" className="ap-draw" style={{ strokeDasharray: 100, animationDelay: `${k * 400}ms` }} />
+                  <polyline points={pts} pathLength={100} fill="none" stroke="#fff" strokeWidth={9} strokeLinejoin="round" strokeLinecap="round" className="ap-draw" style={{ strokeDasharray: 100, animationDelay: `${k * 500}ms` }} />
+                  <polyline points={pts} pathLength={100} fill="none" stroke={l.color} strokeWidth={5} strokeLinejoin="round" strokeLinecap="round" className="ap-draw" style={{ strokeDasharray: 100, animationDelay: `${k * 500}ms` }} />
                 </g>
               )
             })}
           </svg>
         )}
+        {v.rings && v.rings.length > 0 && (() => {
+          // Метров в пикселе на этом зуме и широте (Web Mercator).
+          const mpp = (156543.03392 * Math.cos((v.center.lat * Math.PI) / 180)) / 2 ** v.zoom
+          const cx = W / 2, cy = H / 2
+          return (
+            <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="absolute inset-0 h-full w-full">
+              {v.rings!.map((r, k) => {
+                const rad = r.m / mpp
+                return (
+                  <g key={r.m}>
+                    <circle cx={cx} cy={cy} r={rad} fill={k === 0 ? 'rgb(15 26 21 / .06)' : 'none'} stroke="#0F1A15" strokeOpacity=".55" strokeWidth="2" strokeDasharray={k === 0 ? undefined : '8 6'} className="ap-in" style={{ animationDelay: `${k * 150}ms` }} />
+                    <g transform={`translate(${cx}, ${cy - rad})`}>
+                      <rect x={-30} y={-13} width={60} height={24} rx={6} fill="#fff" stroke="#0F1A15" strokeOpacity=".2" />
+                      <text x={0} y={4} textAnchor="middle" fontSize="15" fontWeight="600" fill="#0F1A15">{r.label}</text>
+                    </g>
+                  </g>
+                )
+              })}
+            </svg>
+          )
+        })()}
         {rosePaths && (
           <svg viewBox="0 0 180 180" aria-hidden="true" className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2">
             <circle cx="90" cy="90" r="80" fill="none" stroke="#fff" strokeOpacity=".7" />
