@@ -149,7 +149,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
             return (
               <div key={g.name} className="flex flex-col gap-1 rounded-xl p-2" style={{ background: tone.bg, boxShadow: open ? `inset 0 0 0 2px ${tone.main}` : undefined }}>
                 <div className="flex items-center gap-2.5 px-2 pb-1.5 pt-1">
-                  <span className="flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-[13px] font-bold tabular-nums text-white" style={{ background: tone.ink }}>{String(gi + 1).padStart(2, '0')}</span>
+                  <span className="flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-[13px] font-bold tabular-nums text-white" style={{ background: tone.ink }}>{gi + 1}</span>
                   <span className="text-[17px] font-semibold leading-tight" style={{ color: tone.ink }}>{g.name}</span>
                   <span className="ml-auto shrink-0 whitespace-nowrap text-[13px] tabular-nums" style={{ color: tone.ink }}>{g.items.filter(a => done[a.id]).length}/{g.items.length}</span>
                 </div>
