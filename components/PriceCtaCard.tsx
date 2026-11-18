@@ -202,7 +202,9 @@ export function PriceCtaCard({
         )}
       </div>
 
-      {/* Шкала «цена для района» — сразу под датой обновления, рассрочка ниже (владелец 18.11.2026). */}
+      {/* Шкала «цена для района» — сразу под датой обновления, рассрочка ниже (владелец 18.11.2026).
+          Границы зон (33,3% и 66,6%) — ровно там, где меняется подпись: ±15% от середины рынка.
+          Раньше точка уходила в зелёную зону уже на −11%, а подпись ещё была «обычная». */}
       {sidebar && priceCompDiffPct != null && (
         <div className="flex flex-col gap-1.5">
           <span className="text-[14px] font-semibold">{pickCopy(
@@ -213,7 +215,7 @@ export function PriceCtaCard({
                 : { ru: 'Цена выше рынка', en: 'Above market price', id: 'Harga di atas pasar', fr: 'Prix supérieur au marché', de: 'Über Marktpreis', zh: '高于市场价格', nl: 'Boven marktprijs', ban: 'Aji ring duur pasar', pl: 'Cena powyżej rynku', uk: 'Ціна вища ринку' },
             lang)}</span>
           <div className="relative h-[10px] rounded-[5px]" style={{ background: 'linear-gradient(90deg, #CFE8D9 0% 33.3%, #F6E2BF 33.3% 66.6%, #F4D3CE 66.6% 100%)' }} aria-hidden="true">
-            <div className="absolute top-[-5px] w-5 h-5 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + priceCompDiffPct * 1.5))}%`, marginLeft: '-10px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
+            <div className="absolute top-[-5px] w-5 h-5 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + priceCompDiffPct * (100 / 6 / 15)))}%`, marginLeft: '-10px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
           </div>
         </div>
       )}
