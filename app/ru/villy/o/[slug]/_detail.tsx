@@ -2032,6 +2032,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           )}
         </section>
 
+        {/* Отступ от карточки цены (на телефоне она прямо над фото) — владелец 18.11.2026. */}
+        <div className="mt-6">
         <VillaGallery
           photos={photos}
           alts={photoAlts}
@@ -2046,11 +2048,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           promo={promoKit}
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
         />
+        </div>
 
         {/* Строки разделов «01 Объект · 02 Аналитика…» в макете нет — убрана (владелец 18.11.2026). */}
 
         {/* Объект слева, цена справа — карточка не прилипает при прокрутке. */}
-        <div className="flex flex-wrap gap-12 items-start">
+        <div className="mt-12 flex flex-wrap gap-12 items-start">
         <div className="min-w-0 flex flex-col gap-12" style={{ flex: '999 1 640px' }}>
         {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
           <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]}>
