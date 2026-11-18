@@ -20,10 +20,19 @@ function plural(n: number, unit: string) {
   return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b >= 2 && b <= 4 ? f[1] : f[2]
 }
 
+// Цвет группы: плашка в списке, метка и полоса над панелью (владелец:
+// «части анализа должны быть ярко разделены», 18.11.2026).
+const TONES = [
+  { main: '#1F8B5F', bg: '#E6F2EC', ink: '#135E40' },
+  { main: '#C9772B', bg: '#FBEFE2', ink: '#8A4F17' },
+  { main: '#2E7DD1', bg: '#E6EFFA', ink: '#1C5596' },
+  { main: '#8E5BD0', bg: '#F0E9F9', ink: '#5E3A91' },
+]
+
 const STEP = 26 // тиков (по 100 мс) на один источник
 const COPY = {
   ru: {
-    heading: 'Проверьте виллу по данным рынка', lead: 'Выберите слева, что проверить, — справа соберём данные из нужных источников.',
+    heading: 'Проверьте виллу по данным рынка', lead: 'Выберите, что проверить, — соберём данные из нужных источников под эту виллу.',
     count: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'анализ' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'анализа' : 'анализов'}`,
     idleText: 'Booking, Airbnb, rumah123, госплан зон, карты рисков, Google Maps, Copernicus — под эту виллу.',
     start: (t: string) => `Начать: ${t.toLowerCase()}`, searching: 'Ищем:', filtering: 'Отбираем нужное…', meaning: 'Что это значит для вас:',
@@ -33,7 +42,7 @@ const COPY = {
     pendingTitle: 'Доступ Pro на проверке', pendingText: 'Графики, карты и фото откроются, как только проверим доступ. Обычно в течение дня.',
   },
   en: {
-    heading: 'Check the villa against market data', lead: 'Pick a check on the left — we gather data from the right sources on the right.',
+    heading: 'Check the villa against market data', lead: 'Pick what to check — we gather data from the right sources for this villa.',
     count: (n: number) => `${n} checks`,
     idleText: 'Booking, Airbnb, rumah123, zoning plan, hazard maps, Google Maps, Copernicus — for this villa.',
     start: (t: string) => `Start: ${t.toLowerCase()}`, searching: 'Searching:', filtering: 'Filtering…', meaning: 'What it means for you:',
@@ -119,6 +128,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
   const finished = !!G && t >= end
   const locked = access !== 'pro'
   const nextA = G ? flat[flat.findIndex(a => a.id === G.id) + 1] : null
+  const gTone = TONES[Math.max(0, groups.findIndex(g => g.name === G?.group)) % TONES.length]
 
   return (
     <div className="flex flex-col gap-6">
@@ -128,27 +138,36 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
         <p className="m-0 max-w-[68ch] text-[16px] leading-[1.6] text-[var(--color-text-muted)]">{c.lead}</p>
       </div>
       <div className="flex flex-wrap items-start gap-6">
-        <nav aria-label={c.heading} className="flex flex-col gap-6" style={{ flex: '1 1 240px', maxWidth: 280 }}>
-          {groups.map(g => (
-            <div key={g.name} className="flex flex-col gap-1">
-              <div className="px-3 pb-1 text-[13px] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">{g.name}</div>
-              {g.items.map(a => {
-                const sel = goal === a.id
-                return (
-                  <button key={a.id} type="button" onClick={() => pick(a.id)} aria-current={sel ? 'true' : undefined}
-                    className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-r-lg border-0 border-l-[3px] p-3 text-left transition-colors duration-[120ms] hover:bg-[#EEF1EF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${sel ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]' : 'border-transparent bg-transparent'}`}>
-                    <span className="flex min-w-0 flex-grow flex-col gap-0.5">
-                      <span className={`text-[16px] leading-[1.3] ${sel ? 'font-semibold' : 'font-medium'}`}>{a.title}</span>
-                      <span className="truncate text-[13px] text-[var(--color-text-muted)]">{a.sources.map(s => s.name).join(' · ')}</span>
-                    </span>
-                    {busy === a.id ? <span className="ap-spin h-4 w-4 shrink-0 rounded-full border-2 border-[#E78C3D] border-r-transparent" />
-                      : done[a.id] ? <Check label={c.done} />
-                      : <Arrow />}
-                  </button>
-                )
-              })}
-            </div>
-          ))}
+        <nav aria-label={c.heading} className="flex w-full flex-col gap-3 md:w-auto md:max-w-[300px]" style={{ flex: '1 1 260px' }}>
+          {groups.map((g, gi) => {
+            const tone = TONES[gi % TONES.length]
+            const open = !!G && G.group === g.name
+            return (
+              <div key={g.name} className="flex flex-col gap-1 rounded-xl p-2" style={{ background: tone.bg, boxShadow: open ? `inset 0 0 0 2px ${tone.main}` : undefined }}>
+                <div className="flex items-center gap-2.5 px-2 pb-1.5 pt-1">
+                  <span className="flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-[13px] font-bold tabular-nums text-white" style={{ background: tone.ink }}>{String(gi + 1).padStart(2, '0')}</span>
+                  <span className="text-[17px] font-semibold leading-tight" style={{ color: tone.ink }}>{g.name}</span>
+                  <span className="ml-auto shrink-0 whitespace-nowrap text-[13px] tabular-nums" style={{ color: tone.ink }}>{g.items.filter(a => done[a.id]).length}/{g.items.length}</span>
+                </div>
+                {g.items.map(a => {
+                  const sel = goal === a.id
+                  return (
+                    <button key={a.id} type="button" onClick={() => pick(a.id)} aria-current={sel ? 'true' : undefined}
+                      className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-3 text-left shadow-[0_1px_2px_rgb(0_0_0/.04)] transition-[box-shadow,transform] duration-[120ms] hover:-translate-y-px hover:shadow-[0_1px_2px_rgb(0_0_0/.05),0_6px_16px_rgb(0_0_0/.07)] focus-visible:outline-2 focus-visible:outline-offset-2"
+                      style={{ boxShadow: sel ? `inset 4px 0 0 ${tone.main}, 0 1px 2px rgb(0 0 0 / .05)` : undefined, outlineColor: tone.main }}>
+                      <span className="flex min-w-0 flex-grow flex-col gap-0.5">
+                        <span className={`text-[16px] leading-[1.3] ${sel ? 'font-semibold' : 'font-medium'}`}>{a.title}</span>
+                        <span className="truncate text-[13px] text-[var(--color-text-muted)]">{a.sources.map(s => s.name).join(' · ')}</span>
+                      </span>
+                      {busy === a.id ? <span className="ap-spin h-4 w-4 shrink-0 rounded-full border-2 border-[#E78C3D] border-r-transparent" />
+                        : done[a.id] ? <Check label={c.done} />
+                        : <Arrow color={tone.main} />}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })}
         </nav>
 
         <div ref={panelRef} className="flex min-h-[520px] min-w-0 scroll-mt-24 flex-col overflow-hidden rounded-xl border border-[var(--color-border)]" style={{ flex: '999 1 420px' }}>
@@ -160,8 +179,11 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
             </div>
           ) : (
             <>
-              <div className="h-1 bg-[#EEF1EF]"><div className="h-1 bg-[#E78C3D] transition-[width] duration-100 ease-linear" style={{ width: `${Math.round(Math.min(1, t / end) * 100)}%` }} /></div>
+              <div className="h-1 bg-[#EEF1EF]"><div className="h-1 transition-[width] duration-100 ease-linear" style={{ background: gTone.main, width: `${Math.round(Math.min(1, t / end) * 100)}%` }} /></div>
               <div className="flex flex-col gap-1 px-4 pt-6 md:px-6">
+                <span className="mb-1 inline-flex items-center gap-2 self-start rounded-md px-2 py-1 text-[13px] font-semibold" style={{ background: gTone.bg, color: gTone.ink }}>
+                  <span className="h-2 w-2 rounded-full" style={{ background: gTone.main }} />{G.group}
+                </span>
                 <div className="text-[22px] font-semibold leading-[1.25]">{G.title}</div>
                 <div className="text-[14px] text-[var(--color-text-muted)]">{G.sub}</div>
               </div>
@@ -257,6 +279,6 @@ function Check({ label }: { label: string }) {
     </svg>
   )
 }
-function Arrow() {
-  return <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0 text-[var(--color-primary)]"><path d="M4 9h10M10 5l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+function Arrow({ color }: { color: string }) {
+  return <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0" style={{ color }}><path d="M4 9h10M10 5l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
 }

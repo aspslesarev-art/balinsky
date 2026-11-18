@@ -36,7 +36,7 @@ function start(req) {
   log(`starting next dev for ${req.method} ${req.url} (${req.headers['user-agent'] || '-'})`);
   child = spawn('npx', ['next', 'dev', '-p', String(NEXT_PORT), '--disable-source-maps'], {
     cwd: ROOT,
-    env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=3072' },
+    env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=6144' },
     stdio: 'inherit',
     detached: true, // own process group, so stop() takes down next-server too
   });
