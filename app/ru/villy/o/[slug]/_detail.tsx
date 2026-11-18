@@ -2107,7 +2107,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               presentationButton={null}
               dealRows={[
                 ...(paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : []),
-                ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
+                // «Аренда земли» убрана: она уже в «01 Объект» (владелец 18.11.2026).
               ]}
               priceCompDiffPct={saleComps?.diffPct ?? null}
             />
