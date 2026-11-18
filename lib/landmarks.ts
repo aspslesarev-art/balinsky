@@ -21,6 +21,9 @@ export type Landmark = {
   taRank: number | null
   /** Фото из нашего Storage (migrations/050), если уже скачано. */
   photo?: string | null
+  /** Координаты — для времени в пути в «Аналитике». */
+  lat?: number
+  lng?: number
 }
 
 const NEAR_KM = 5
@@ -76,5 +79,5 @@ export async function loadLandmarks(lat: number, lng: number, limit = 8): Promis
   const near = uniq.filter(r => r.distanceKm <= NEAR_KM)
   const far = uniq.filter(r => r.distanceKm > NEAR_KM)
   return (near.length >= 4 ? near : [...near, ...far]).slice(0, limit)
-    .map(({ lat: _lat, lng: _lng, ...r }): Landmark => r)
+
 }

@@ -137,6 +137,7 @@ import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
 import { AddToCollection } from '@/components/collections/AddToCollection'
 import { loadSurroundings } from '@/lib/surroundings'
 import { loadTourism } from '@/lib/analytics-panel/tourism'
+import { loadExtraRoutes, loadTravelTimes, type ExtraDest } from '@/lib/analytics-panel/extra-routes'
 
 const COPY = {
   ru: {
@@ -1755,11 +1756,25 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     loadSurroundings('villa', v.airtable_id).catch(() => null),
     lat != null && lng != null ? loadTourism(lat, lng).catch(e => { console.error(e); return null }) : null,
   ])
+  // Маршруты до ближайшего пляжа и мест TripAdvisor (OSRM, кэш 30 дней).
+  // Только сам пляж: в категории «пляж» попадают и кафе на берегу.
+  const nearestBeach = nearby?.byCategory?.beach?.filter(p => (p.primaryType === 'beach' || p.types?.includes('beach')) && !/warung|уорунг|варунг|caf[eé]|кафе|bar\b|бар\b|restaurant|ресторан|club|клуб/i.test(p.name ?? '')).sort((a, b) => a.distanceKm - b.distanceKm)[0] ?? null
+  const extraDests: ExtraDest[] = [
+    ...(nearestBeach?.name ? [{ key: `b:${nearestBeach.id}`, name: nearestBeach.name, lat: nearestBeach.lat, lng: nearestBeach.lng, kind: 'beach' as const }] : []),
+    ...(tourism?.ta ?? []).filter(p => p.km <= 15).slice(0, 3).map(p => ({ key: `ta:${p.rank}`, name: `#${p.rank} ${p.name}`, lat: p.lat, lng: p.lng, kind: 'ta' as const })),
+  ]
+  const extraRoutes = lat != null && lng != null && extraDests.length ? await loadExtraRoutes(lat, lng, extraDests).catch(() => []) : []
+  // Время в пути до мест TripAdvisor и «что посмотреть» (вместо голых километров).
+  const travelPts = [
+    ...(tourism?.ta ?? []).filter(p => p.km <= 10).map(p => ({ key: `ta:${p.rank}`, lat: p.lat, lng: p.lng })),
+    ...landmarks.filter(l => l.lat != null && l.lng != null).map(l => ({ key: `lm:${l.id}`, lat: l.lat!, lng: l.lng! })),
+  ]
+  const travel = lat != null && lng != null && travelPts.length ? await loadTravelTimes(lat, lng, travelPts).catch(e => { console.error(e); return {} }) : {}
   const analyses = buildVillaAnalyses({
     lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
     snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
     around1km: around?.r1 ?? null,
-    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [],
+    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, travel,
     rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
   })
   // Крупные цифры «01 Объект» (как в макете, 18.11.2026).

@@ -8,6 +8,7 @@ import { zoneRows, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import type { LandPriceBundle } from '@/lib/land-prices'
 import type { Tourism } from './tourism'
 import { cdnRewrite } from '@/lib/photo-cdn'
+import type { ExtraRoute, Travel } from './extra-routes'
 import type { Landmark } from '@/lib/landmarks'
 import type { NearbyVenue } from '@/lib/surroundings'
 import climate2050 from '@/lib/bali-climate-2050.json'
@@ -44,6 +45,10 @@ export type VillaAnalyticsInput = {
   touristShare: number | null
   /** Лучшие места рядом с фото (listing_surroundings.top). */
   aroundTop: NearbyVenue[]
+  /** Маршруты до ближайшего пляжа и мест TripAdvisor. */
+  extraRoutes: ExtraRoute[]
+  /** Время в пути по дорогам: ключи `ta:<rank>`, `lm:<id>`. */
+  travel: Travel
 }
 
 const GREEN = '#1F8B5F'
@@ -68,6 +73,19 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
   const dist = (km: number) => (km < 1 ? `${Math.round(km * 1000)} ${T('м', 'm')}` : `${km.toFixed(1).replace('.', ru ? ',' : '.')} ${T('км', 'km')}`)
   const G = { money: T('Деньги', 'Money'), docs: T('Документы и участок', 'Documents & land'), place: T('Место', 'Location'), life: T('Жизнь в доме', 'Living') }
   const out: Analysis[] = []
+  // «пешком 6 мин» / «12 мин на машине» вместо километров; нет данных — км.
+  const trip = (key: string, kmFallback: number) => { const t = i.travel[key]; if (!t) return dist(kmFallback); return t.meters <= 2500 ? T(`пешком ${Math.max(1, Math.round(t.meters / 80))} мин`, `${Math.max(1, Math.round(t.meters / 80))} min walk`) : T(`${t.min} мин на машине`, `${t.min} min drive`) }
+  // Карта, подогнанная под набор линий (самый крупный зум, при котором всё влезает).
+  const fitMap = (title: string, lines: { coords: number[][]; color: string; label: string }[], from: { lat: number; lng: number }): Viz => {
+    const pts = [...lines.flatMap(l => l.coords), [from.lng, from.lat]]
+    const lngs = pts.map(p => p[0]), lats = pts.map(p => p[1])
+    const wx = (x: number, z: number) => ((x + 180) / 360) * 256 * 2 ** z
+    const wy = (y: number, z: number) => { const r = (y * Math.PI) / 180; return ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * 256 * 2 ** z }
+    let z = 16
+    while (z > 8 && (wx(Math.max(...lngs), z) - wx(Math.min(...lngs), z) > 820 || wy(Math.min(...lats), z) - wy(Math.max(...lats), z) > 540)) z--
+    return { kind: 'map', title, center: { lat: (Math.min(...lats) + Math.max(...lats)) / 2, lng: (Math.min(...lngs) + Math.max(...lngs)) / 2 }, zoom: z, aspect: 1.5, base: 'street', credit: 'Esri, OpenStreetMap', alt: title, lines,
+      pins: [{ ...from, color: '#0F1A15' }], tags: lines.map(l => ({ lat: l.coords[l.coords.length - 1][1], lng: l.coords[l.coords.length - 1][0], label: l.label })) }
+  }
   const dec = (x: number) => String(x).replace('.', ru ? ',' : '.')
   // «2026-11-13» → «13.11.2026».
   // «maksimal : 50%» → «до 50%» (поля KDB/KDH госплана).
@@ -449,9 +467,9 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         name: 'TripAdvisor', fresh: T(`топ‑90 Бали, снимок ${tz.taSnapshot}`, `Bali top 90, ${tz.taSnapshot}`),
         chips: [T('топ‑90 Бали', 'Bali top 90'), T('до 10 км', 'within 10 km')],
         total: tz.ta.length, unit: T('место|места|мест', 'places'),
-        names: tz.ta.slice(0, 14).map(p => `#${p.rank} ${p.name} — ${dist(p.km)}`),
-        result: T(`В 10 км — ${ta10.length} ${plw(ta10.length, 'место|места|мест')} из топа TripAdvisor · ближайшее: ${near.name} (#${near.rank}), ${dist(near.km)}`, `${ta10.length} TripAdvisor top places within 10 km · nearest: ${near.name} (#${near.rank}), ${dist(near.km)}`),
-        items: ta10.slice(0, 8).map(p => ({ photo: p.photo ? cdnRewrite(p.photo) : null, name: `#${p.rank} ${p.name} · ${dist(p.km)}`, url: null, meta: T(`№${p.rank} в топе TripAdvisor`, `#${p.rank} on TripAdvisor`) })),
+        names: tz.ta.slice(0, 14).map(p => `#${p.rank} ${p.name} — ${trip(`ta:${p.rank}`, p.km)}`),
+        result: T(`В 10 км — ${ta10.length} ${plw(ta10.length, 'место|места|мест')} из топа TripAdvisor · ближайшее: ${near.name} (#${near.rank}), ${trip(`ta:${near.rank}`, near.km)}`, `${ta10.length} TripAdvisor top places within 10 km · nearest: ${near.name} (#${near.rank}), ${trip(`ta:${near.rank}`, near.km)}`),
+        items: ta10.slice(0, 8).map(p => ({ photo: p.photo ? cdnRewrite(p.photo) : null, name: `#${p.rank} ${p.name} · ${trip(`ta:${p.rank}`, p.km)}`, url: null, meta: T(`№${p.rank} в топе TripAdvisor`, `#${p.rank} on TripAdvisor`) })),
       })
     }
     if (lm.length) {
@@ -459,9 +477,9 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         name: T('Что посмотреть рядом', 'What to see nearby'), fresh: T('Google Maps, от 800 отзывов', 'Google Maps, 800+ reviews'),
         chips: [T('достопримечательности', 'sights'), T('храмы', 'temples'), T('для детей', 'kids')],
         total: lm.length, unit: T('место|места|мест', 'places'),
-        names: lm.map(l => `${l.name} — ${dist(l.distanceKm)}`),
-        result: T(`Рядом: ${lm.slice(0, 3).map(l => `${l.name} (${dist(l.distanceKm)})`).join(', ')}`, `Nearby: ${lm.slice(0, 3).map(l => `${l.name} (${dist(l.distanceKm)})`).join(', ')}`),
-        items: lm.map(l => ({ photo: l.photo ? cdnRewrite(l.photo) : null, name: `${l.name} · ${dist(l.distanceKm)}`, url: l.mapsUrl, meta: [l.taRank ? `#${l.taRank} TripAdvisor` : null, l.rating ? `★ ${l.rating}` : null, `${num(l.reviews)} ${T('отзывов', 'reviews')}`].filter(Boolean).join(' · ') })),
+        names: lm.map(l => `${l.name} — ${trip(`lm:${l.id}`, l.distanceKm)}`),
+        result: T(`Рядом: ${lm.slice(0, 3).map(l => `${l.name} (${trip(`lm:${l.id}`, l.distanceKm)})`).join(', ')}`, `Nearby: ${lm.slice(0, 3).map(l => `${l.name} (${trip(`lm:${l.id}`, l.distanceKm)})`).join(', ')}`),
+        items: lm.map(l => ({ photo: l.photo ? cdnRewrite(l.photo) : null, name: `${l.name} · ${trip(`lm:${l.id}`, l.distanceKm)}`, url: l.mapsUrl, meta: [l.taRank ? `#${l.taRank} TripAdvisor` : null, l.rating ? `★ ${l.rating}` : null, `${num(l.reviews)} ${T('отзывов', 'reviews')}`].filter(Boolean).join(' · ') })),
       })
     }
     const by = (r: number) => tz.ta.filter(p => p.km <= r).length
@@ -487,6 +505,10 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const lbl: Record<string, [string, string]> = { sanur: ['Санур', 'Sanur'], airport: ['Аэропорт', 'Airport'], ubud_south: ['Южный Убуд', 'South Ubud'], canggu: ['Чангу', 'Canggu'], ubud: ['Убуд', 'Ubud'], uluwatu: ['Улувату', 'Uluwatu'] }
     const legs = (Object.entries(r) as [string, { s: number; static_s: number | null }][]).map(([k, v]) => ({ k, min: Math.round((v.static_s ?? v.s) / 60), peak: Math.round(v.s / 60) })).sort((a, b) => a.min - b.min)
     const lineColor: Record<string, string> = { airport: ORANGE, canggu: GREEN, ubud: BLUE, uluwatu: PURPLE, sanur: '#6A736E', ubud_south: '#5AA9E6' }
+    // Ближе 2,5 км — пешком (4,8 км/ч по длине маршрута), дальше — на машине.
+    const walkMin = (m: number) => Math.max(1, Math.round(m / 80))
+    const extra = i.extraRoutes.map(x => ({ coords: x.coords, color: x.kind === 'beach' ? '#2E7DD1' : '#C9443A',
+      label: x.meters <= 2500 ? `${x.name} · ${T(`пешком ${walkMin(x.meters)} мин`, `${walkMin(x.meters)} min walk`)}` : `${x.name} · ${x.minutes} ${T('мин', 'min')}`, x }))
     const lines = Object.entries(i.geo?.route_lines ?? {}).filter(([k]) => k !== 'sanur' && k !== 'ubud_south').map(([k, coords]) => ({ coords: coords as number[][], color: lineColor[k] ?? GREEN, label: `${T(lbl[k]?.[0] ?? k, lbl[k]?.[1] ?? k)} · ${legs.find(l => l.k === k)?.min ?? '?'} ${T('мин', 'min')}` }))
     const air = legs.find(l => l.k === 'airport')
     const vizs: Viz[] = []
@@ -502,6 +524,8 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       while (zoom > 8 && (wx(Math.max(...lngs), zoom) - wx(Math.min(...lngs), zoom) > 860 || wy(Math.min(...lats), zoom) - wy(Math.max(...lats), zoom) > 560)) zoom--
       routeMap = { kind: 'map', title: T('Маршруты на карте', 'Routes on the map'), center: c, zoom, aspect: 1.5, base: 'street', credit: 'Esri, OpenStreetMap', alt: T('Маршруты от виллы', 'Routes from the villa'), lines, pins: [{ ...center, color: '#0F1A15' }], tags: lines.map(l => ({ lat: l.coords[l.coords.length - 1][1], lng: l.coords[l.coords.length - 1][0], label: l.label })) }
     }
+    if (extra.length) vizs.push({ kind: 'bars', title: T('До пляжа и мест TripAdvisor', 'To the beach and TripAdvisor places'), max: Math.max(...extra.map(e => e.x.meters <= 2500 ? walkMin(e.x.meters) : e.x.minutes)), color: '#C9443A',
+      rows: extra.map(e => { const walk = e.x.meters <= 2500; const v = walk ? walkMin(e.x.meters) : e.x.minutes; return { label: e.x.name, value: v, text: walk ? T(`${v} мин пешком`, `${v} min walk`) : `${v} ${T('мин', 'min')}` } }) })
     vizs.push({ kind: 'bars', title: T('Минут на машине', 'Minutes by car'), max: Math.max(...legs.map(l => l.min)), color: GREEN, rows: legs.map(l => ({ label: T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k), value: l.min, text: `${l.min} ${T('мин', 'min')}` })) })
     out.push({
       id: 'routes', group: G.place, title: T('Как добраться', 'Getting around'),
@@ -512,7 +536,15 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         total: legs.length, unit: T('маршрут|маршрута|маршрутов', 'routes'),
         names: legs.map(l => `${T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k)} — ${l.min} ${T('мин', 'min')}`),
         result: legs.map(l => `${T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k)} ${l.min} ${T('мин', 'min')}`).join(' · '),
-      }],
+      }, ...(extra.length && center ? [{
+        name: T('Пляж и места TripAdvisor', 'Beach & TripAdvisor places'), fresh: T('OpenStreetMap, по дорогам', 'OpenStreetMap, by road'),
+        chips: [T('ближайший пляж', 'nearest beach'), T('топ TripAdvisor', 'TripAdvisor top')],
+        total: extra.length, unit: T('маршрут|маршрута|маршрутов', 'routes'),
+        names: extra.map(e => e.label),
+        result: extra.map(e => e.label).join(' · '),
+        live: fitMap(T('Маршруты до пляжа и мест TripAdvisor', 'Routes to the beach and TripAdvisor places'), extra.map(e => ({ coords: e.coords, color: e.color, label: e.label })), center),
+      } as Source] : []),
+      ],
       vizs,
       bigs: [...(air ? [{ v: `${air.min} ${T('мин', 'min')}`, l: T('до аэропорта', 'to the airport') }] : []), { v: `${legs[0].min} ${T('мин', 'min')}`, l: T(`до: ${lbl[legs[0].k]?.[0] ?? legs[0].k}`, `to ${lbl[legs[0].k]?.[1] ?? legs[0].k}`) }],
       meaning: air && air.min <= 30 ? T('гостям из аэропорта ехать меньше получаса.', 'guests reach the villa from the airport in under half an hour.') : air ? T(`от аэропорта около ${air.min} минут.`, `about ${air.min} minutes from the airport.`) : T('время в пути до главных районов.', 'drive times to main areas.'),
