@@ -32,20 +32,20 @@ const TONES = [
 const STEP = 26 // тиков (по 100 мс) на один источник
 const COPY = {
   ru: {
-    heading: 'Проверьте виллу по данным рынка', lead: 'Выберите, что проверить, — соберём данные из нужных источников под эту виллу.',
+    heading: 'Проверьте виллу с помощью ИИ', lead: 'Выберите, что проверить, — ИИ-аналитик соберёт данные из нужных источников и объяснит, что они значат для вас.', badge: 'ИИ-аналитик', working: (k: number, n: number) => `ИИ-аналитик работает · источник ${k} из ${n}`, finished: 'ИИ-аналитик закончил',
     count: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'анализ' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'анализа' : 'анализов'}`,
-    idleText: 'Booking, Airbnb, rumah123, госплан зон, карты рисков, Google Maps, Copernicus — под эту виллу.',
-    start: (t: string) => `Начать: ${t.toLowerCase()}`, searching: 'Ищем:', filtering: 'Отбираем нужное…', meaning: 'Что это значит для вас:',
+    idleText: 'ИИ-аналитик проверит виллу по Booking, Airbnb, rumah123, госплану зон, картам рисков, Google Maps и Copernicus.',
+    start: (t: string) => `Запустить ИИ: ${t.toLowerCase()}`, searching: 'ИИ ищет:', filtering: 'ИИ отбирает похожие…', meaning: 'Вывод ИИ:',
     next: (t: string) => `Дальше: ${t.toLowerCase()} →`, again: 'Ещё раз', done: 'готово',
     lockTitle: (n: number) => n > 0 ? `Ещё ${n} ${n === 1 ? 'график или карта' : n < 5 ? 'графика и карты' : 'графиков и карт'} — и фото объектов` : 'Фото объектов и детали',
     lockText: 'Откроются после входа — через Google или почту.', signIn: 'Войти и открыть всё',
     pendingTitle: 'Доступ Pro на проверке', pendingText: 'Графики, карты и фото откроются, как только проверим доступ. Обычно в течение дня.',
   },
   en: {
-    heading: 'Check the villa against market data', lead: 'Pick what to check — we gather data from the right sources for this villa.',
+    heading: 'Check the villa with AI', lead: 'Pick what to check — the AI analyst gathers data from the right sources and explains what it means for you.', badge: 'AI analyst', working: (k: number, n: number) => `AI analyst at work · source ${k} of ${n}`, finished: 'AI analyst finished',
     count: (n: number) => `${n} checks`,
-    idleText: 'Booking, Airbnb, rumah123, zoning plan, hazard maps, Google Maps, Copernicus — for this villa.',
-    start: (t: string) => `Start: ${t.toLowerCase()}`, searching: 'Searching:', filtering: 'Filtering…', meaning: 'What it means for you:',
+    idleText: 'The AI analyst checks the villa against Booking, Airbnb, rumah123, the zoning plan, hazard maps, Google Maps and Copernicus.',
+    start: (t: string) => `Run AI: ${t.toLowerCase()}`, searching: 'AI is searching:', filtering: 'AI is picking similar…', meaning: 'AI verdict:',
     next: (t: string) => `Next: ${t.toLowerCase()} →`, again: 'Run again', done: 'done',
     lockTitle: (n: number) => n > 0 ? `${n} more charts and maps — plus listing photos` : 'Listing photos and details',
     lockText: 'Available after signing in — with Google or email.', signIn: 'Sign in to see everything',
@@ -134,6 +134,10 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         {eyebrow && <div className="text-[13px] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">{eyebrow}</div>}
+        <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-[#0F1A15] px-3 py-1 text-[13px] font-semibold text-white">
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2l1.8 5.6L19.5 9.5l-5.7 1.9L12 17l-1.8-5.6L4.5 9.5l5.7-1.9L12 2zm7 11l.9 2.6 2.6.9-2.6.9L19 20l-.9-2.6-2.6-.9 2.6-.9L19 13z" /></svg>
+          {c.badge}
+        </span>
         <h2 className="m-0 font-display text-[28px] md:text-[32px] font-bold leading-[1.2] tracking-[-0.02em]">{c.heading}</h2>
         <p className="m-0 max-w-[68ch] text-[16px] leading-[1.6] text-[var(--color-text-muted)]">{c.lead}</p>
       </div>
@@ -181,9 +185,15 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
             <>
               <div className="h-1 bg-[#EEF1EF]"><div className="h-1 transition-[width] duration-100 ease-linear" style={{ background: gTone.main, width: `${Math.round(Math.min(1, t / end) * 100)}%` }} /></div>
               <div className="flex flex-col gap-1 px-4 pt-6 md:px-6">
-                <span className="mb-1 inline-flex items-center gap-2 self-start rounded-md px-2 py-1 text-[13px] font-semibold" style={{ background: gTone.bg, color: gTone.ink }}>
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#39413D]" aria-live="polite">
+                  {finished ? <Check label={c.done} /> : <span className="ap-spin h-3.5 w-3.5 rounded-full border-2 border-[#0F1A15] border-r-transparent" />}
+                  {finished ? c.finished : c.working(Math.min(G.sources.length, Math.floor(t / STEP) + 1), G.sources.length)}
+                </span>
+                <span className="inline-flex items-center gap-2 self-start rounded-md px-2 py-1 text-[13px] font-semibold" style={{ background: gTone.bg, color: gTone.ink }}>
                   <span className="h-2 w-2 rounded-full" style={{ background: gTone.main }} />{G.group}
                 </span>
+                </div>
                 <div className="text-[22px] font-semibold leading-[1.25]">{G.title}</div>
                 <div className="text-[14px] text-[var(--color-text-muted)]">{G.sub}</div>
               </div>
