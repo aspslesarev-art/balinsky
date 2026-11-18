@@ -48,7 +48,7 @@ import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanW
 import { VillaChapter, VillaBlock } from '@/components/VillaChapter'
 import { ZoningMap } from '@/components/ZoningMap'
 import { KeyFactsInline } from '@/components/KeyFactsInline'
-import { RDTR_BASE, loadRdtr, type RdtrData } from '@/lib/rdtr-zones'
+import { RDTR_BASE, loadRdtr, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -1794,22 +1794,24 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     ...(vf?.outdoor ?? []).map(o => OUT[o] ? K(OUT[o][0], OUT[o][1]) : null),
     ...(vf?.amenities ?? []).map(o => AMEN[o] ? K(AMEN[o][0], AMEN[o][1]) : null),
   ].filter(Boolean) as string[]
+  const yearShort = yearRaw && /^\d{4}$/.test(yearRaw.trim()) ? yearRaw.trim() : null
+  // Крупные цифры с короткой подписью (владельцу так нравилось больше, 18.11.2026).
+  const plotZone = rdtr ? plotLabel(rdtr, lang) : null
+  const objTiles = [
+    area != null && { v: `${Math.round(area)} ${K('м²', 'm²')}`, l: K('площадь виллы', 'villa area') },
+    bedrooms != null && { v: String(bedrooms), l: K(bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален', 'bedrooms') },
+    baths != null && { v: String(baths), l: K(baths === 1 ? 'ванная' : baths < 5 ? 'ванные' : 'ванных', 'bathrooms') },
+    floors != null && { v: String(floors), l: K(floors === 1 ? 'этаж' : floors < 5 ? 'этажа' : 'этажей', 'floors') },
+    land != null && land > 0 && { v: `${Math.round(land)} ${K('м²', 'm²')}`, l: K('участок', 'plot') },
+    leaseYears != null && { v: K(`${Math.round(leaseYears)} лет`, `${Math.round(leaseYears)} yrs`), l: K(`аренда земли${leaseUntil ? `, до ${leaseUntil.slice(0, 4)}` : ''}${ext ? ' + продление' : ''}`, `land lease${leaseUntil ? `, until ${leaseUntil.slice(0, 4)}` : ''}${ext ? ' + extension' : ''}`) },
+    (built || yearShort) && { v: yearShort ?? '✓', l: built ? K('готовый объект', 'completed') : K('год сдачи', 'completion') },
+    plotZone && { v: plotZone.label.split('·').pop()!.trim(), l: plotZone.label.split('·')[0].trim() },
+  ].filter(Boolean) as { v: string; l: string }[]
   const beachRoute = extraRoutes.find(r => r.kind === 'beach')
   const placeNote = firstString(d['Расположение']) ?? [
     beachRoute ? (beachRoute.meters <= 2500 ? K(`до пляжа ${beachRoute.name} — пешком ${Math.max(1, Math.round(beachRoute.meters / 80))} мин`, `${Math.max(1, Math.round(beachRoute.meters / 80))} min walk to ${beachRoute.name}`) : K(`до пляжа ${beachRoute.name} — ${beachRoute.minutes} мин на машине`, `${beachRoute.minutes} min drive to ${beachRoute.name}`)) : null,
     tourism ? (tourism.percentile >= 70 ? K('оживлённый туристический район', 'a lively tourist area') : tourism.percentile >= 40 ? K('туристов в меру, спокойно', 'moderately touristy, calm') : K('тихий район, туристов мало', 'a quiet area with few tourists')) : null,
   ].filter(Boolean).join(', ')
-  const yearShort = yearRaw && /^\d{4}$/.test(yearRaw.trim()) ? yearRaw.trim() : null
-  const objFacts = [
-    built ? K(`Готовый объект${yearShort ? `, ${yearShort}` : ''}`, `Completed${yearShort ? `, ${yearShort}` : ''}`) : status ? `${status}${yearShort ? K(`, сдача ${yearShort}`, `, completion ${yearShort}`) : ''}` : null,
-    leaseYears != null ? K(`Leasehold ${Math.round(leaseYears)} лет${leaseUntil ? ` (до ${leaseUntil.slice(0, 4)})` : ''}${ext ? ` + продление ${ext}` : ''}`, `Leasehold ${Math.round(leaseYears)} years${leaseUntil ? ` (until ${leaseUntil.slice(0, 4)})` : ''}${ext ? ` + extension ${ext}` : ''}`) : null,
-    land != null && land > 0 ? K(`Площадь участка: ${Math.round(land)} м²`, `Plot: ${Math.round(land)} m²`) : null,
-    area != null ? K(`Площадь виллы: ${Math.round(area)} м²`, `Villa: ${Math.round(area)} m²`) : null,
-    bedrooms != null ? K(`${bedrooms} ${bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален'}`, `${bedrooms} bedrooms`) : null,
-    baths != null ? K(`${baths} ${baths === 1 ? 'ванная комната' : baths < 5 ? 'ванные комнаты' : 'ванных комнат'}`, `${baths} bathrooms`) : null,
-    floors != null ? K(`${floors} ${floors === 1 ? 'этаж' : floors < 5 ? 'этажа' : 'этажей'}`, `${floors} floors`) : null,
-    comforts.length ? K(`${comforts[0][0].toUpperCase()}${comforts.join(', ').slice(1)} (по фото)`, `${comforts[0][0].toUpperCase()}${comforts.join(', ').slice(1)} (from photos)`) : null,
-  ].filter(Boolean) as string[]
 
   const mestoChapter = hasMesto && (
         <VillaChapter id="mesto" no="02" plain={analyticsOnly} eyebrow={CH.mesto[0]} title={CH.mesto[1]} band>
@@ -2099,22 +2101,21 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
           <VillaChapter id="obekt" no="1" eyebrow={CH.obekt[0]}>
             {/* Как в макете (владелец 18.11.2026): крупные цифры и описание; таблицы характеристик убраны по просьбе владельца. */}
-            <div className="flex flex-col gap-5 text-[16px] leading-[1.6]">
-              {district && <div><span className="text-[var(--color-text-muted)]">{K('Локация:', 'Location:')}</span> <b className="font-semibold">{district}</b></div>}
-              {objFacts.length > 0 && (
-                <div>
-                  <h3 className="m-0 mb-2 text-[18px] font-semibold">{K('Основные характеристики', 'Key facts')}</h3>
-                  <ul className="m-0 grid list-none gap-y-1.5 p-0">
-                    {objFacts.map(f => <li key={f} className="flex gap-2.5"><span aria-hidden="true" className="mt-[9px] h-2 w-2 shrink-0 rounded-[2px] bg-[var(--color-text)]" />{f}</li>)}
-                  </ul>
-                </div>
-              )}
-              {placeNote && (
-                <div>
-                  <h3 className="m-0 mb-1 text-[18px] font-semibold">{K('Расположение', 'Location')}</h3>
-                  <p className="m-0">{placeNote.charAt(0).toUpperCase() + placeNote.slice(1)}</p>
-                </div>
-              )}
+            {objTiles.length > 0 && (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
+                {objTiles.map(k => (
+                  <div key={k.l}>
+                    <div className="text-[28px] font-bold leading-[1.15] tracking-[-0.02em] tabular-nums">{k.v}</div>
+                    <div className="text-[13px] text-[var(--color-text-muted)]">{k.l}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Под цифрами — короткие строки: локация, удобства, расположение. */}
+            <div className="flex flex-col gap-1.5 text-[15px] leading-[1.6]">
+              {district && <div><span className="text-[var(--color-text-muted)]">{K('Локация:', 'Location:')}</span> {district}</div>}
+              {comforts.length > 0 && <div><span className="text-[var(--color-text-muted)]">{K('Удобства:', 'Amenities:')}</span> {comforts.join(', ')} <span className="text-[var(--color-text-muted)]">{K('(по фото)', '(from photos)')}</span></div>}
+              {placeNote && <div><span className="text-[var(--color-text-muted)]">{K('Расположение:', 'Setting:')}</span> {placeNote}</div>}
             </div>
             {seoText && (
               <section>
