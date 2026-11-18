@@ -202,16 +202,7 @@ export function PriceCtaCard({
         )}
       </div>
 
-      {sidebar && dealRows && dealRows.length > 0 && (
-        <div className="flex flex-col">
-          {dealRows.map((row, i) => (
-            <div key={i} className="flex justify-between gap-2 py-2 border-b border-dotted border-[#CFD8D3] text-[14px]">
-              <span className="text-[var(--color-text-muted)]">{row.label}</span>
-              <span className="font-medium text-right">{row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : row.valueText}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Шкала «цена для района» — сразу под датой обновления, рассрочка ниже (владелец 18.11.2026). */}
       {sidebar && priceCompDiffPct != null && (
         <div className="flex flex-col gap-1.5">
           <span className="text-[14px] font-semibold">{pickCopy(
@@ -224,6 +215,16 @@ export function PriceCtaCard({
           <div className="relative h-[10px] rounded-[5px]" style={{ background: 'linear-gradient(90deg, #CFE8D9 0% 33.3%, #F6E2BF 33.3% 66.6%, #F4D3CE 66.6% 100%)' }} aria-hidden="true">
             <div className="absolute top-[-5px] w-5 h-5 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + priceCompDiffPct * 1.5))}%`, marginLeft: '-10px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
           </div>
+        </div>
+      )}
+      {sidebar && dealRows && dealRows.length > 0 && (
+        <div className="flex flex-col">
+          {dealRows.map((row, i) => (
+            <div key={i} className="flex justify-between gap-2 py-2 border-b border-dotted border-[#CFD8D3] text-[14px]">
+              <span className="text-[var(--color-text-muted)]">{row.label}</span>
+              <span className="font-medium text-right">{row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : row.valueText}</span>
+            </div>
+          ))}
         </div>
       )}
       {sidebar && sidebarExtra}
