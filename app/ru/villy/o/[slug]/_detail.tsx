@@ -47,7 +47,6 @@ import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
 import { VillaChapter, VillaBlock } from '@/components/VillaChapter'
 import { ZoningMap } from '@/components/ZoningMap'
-import { KeyFactsInline } from '@/components/KeyFactsInline'
 import { RDTR_BASE, loadRdtr, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
@@ -2051,10 +2050,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             </div>
           )}
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[15px] text-[#36413B]">
-            <span>{district ? `${district}, ${c.bali}` : c.bali}</span>
-            <KeyFactsInline facts={livingFacts} beachKm={beachPick?.km ?? null} lang={lang} />
-          </div>
+          {/* Строка «Санур, Бали · Пляж · Аэропорт · Магазин · Школа» убрана (владелец 18.11.2026): это есть в «1 · Объект» и «Аналитике». */}
           {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block"><VerifiedYieldBadge lang={lang} /></a>}
           {priceNum != null && (
             <div className="lg:hidden">
