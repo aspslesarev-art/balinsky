@@ -64,15 +64,17 @@ export function VillaPresentationButton({
   variant = 'primary',
   lang = 'ru',
   ...props
-}: VillaPresentationData & { variant?: 'primary' | 'outline'; lang?: Lang }) {
+}: VillaPresentationData & { variant?: 'primary' | 'outline' | 'compact'; lang?: Lang }) {
   const [open, setOpen] = useState(false)
   const t = lang === 'ru'
-    ? { outline: 'Скачать презентацию PDF',  primary: 'Презентация',  aria: 'Открыть презентацию виллы' }
-    : { outline: 'PDF presentation', primary: 'Presentation', aria: 'Open villa presentation' }
+    ? { outline: 'Скачать презентацию PDF', compact: 'Презентация PDF', primary: 'Презентация',  aria: 'Открыть презентацию виллы' }
+    : { outline: 'PDF presentation', compact: 'PDF presentation', primary: 'Presentation', aria: 'Open villa presentation' }
   // 'outline' matches the new PriceCtaCard CTA row — same 54px height
   // as the green Buy button, white background with a hairline border so
   // the two CTAs read as siblings rather than mismatched controls.
-  const styles = variant === 'outline'
+  const styles = variant === 'compact'
+    ? 'h-10 px-4 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[14px] font-semibold leading-tight transition-colors'
+    : variant === 'outline'
     ? 'w-full md:w-auto min-h-[54px] py-2 px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors'
     : 'rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-pressed)] text-white text-[14px] font-medium px-4 py-2.5 shadow-sm transition-colors'
   return (
@@ -83,13 +85,13 @@ export function VillaPresentationButton({
         className={`inline-flex items-center justify-center gap-2 ${styles}`}
         aria-label={t.aria}
       >
-        {variant === 'outline'
-          ? <FileText size={18} strokeWidth={1.6} />
+        {variant !== 'primary'
+          ? <FileText size={variant === 'compact' ? 16 : 18} strokeWidth={1.6} />
           : <Play size={15} fill="currentColor" />}
-        {variant === 'outline' ? t.outline : t.primary}
+        {variant === 'compact' ? t.compact : variant === 'outline' ? t.outline : t.primary}
       </button>
       {/* «Скачать PDF» сразу открывает окно выбора блоков, без слайдов. */}
-      {open && (variant === 'outline'
+      {open && (variant !== 'primary'
         ? <DirectDownload data={{ ...props, lang }} onClose={() => setOpen(false)} />
         : <VillaPresentation data={{ ...props, lang }} onClose={() => setOpen(false)} />)}
     </>
