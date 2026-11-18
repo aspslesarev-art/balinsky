@@ -50,7 +50,6 @@ import { VillaChapterNav } from '@/components/VillaChapterNav'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
 import { KeyFactsInline } from '@/components/KeyFactsInline'
-import { Money } from '@/components/Money'
 import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
@@ -1510,7 +1509,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lease ? { label: c.factOwnership, value: c.factOwnershipLease } : null,
     lease ? { label: c.factLeasehold, value: c.factLeaseValue(lease) } : null,
     land != null ? { label: c.factLand, value: `${land} ${c.sqm}` } : null,
-    landPrices && land != null && land > 0 ? { label: pickCopy({ ru: 'Стоимость земли', en: 'Land value', id: 'Nilai tanah', fr: 'Valeur du terrain', de: 'Grundstückswert', zh: '土地价值', nl: 'Grondwaarde', ban: 'Aji tanah', pl: 'Wartość gruntu', uk: 'Вартість землі' }, lang), value: <>≈ <Money usd={Math.round(landPrices.medianPpm * land)} lang={lang} /></> } : null,
+    // Стоимость земли переехала в «Аналитику» → «Оценить землю» (владелец 18.11.2026).
   ] as (KV | null)[]).filter(Boolean) as KV[]
 
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
@@ -1765,6 +1764,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
     snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
     around1km: around?.r1 ?? null,
+    landPrices, landM2: land,
     rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
   })
   const chapterNav = [
@@ -2101,7 +2101,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
                       <span className="text-right">{f.value}</span>
                     </div>
                   ))}
-                  {rdtr && rdtrHit && (
+                  {/* Зоны теперь в «Аналитике» → «Проверить участок» (владелец 18.11.2026). */}
+                  {rdtr && rdtrHit && !analyses.some(a => a.id === 'land') && (
                     <ZoningCard thumb={`${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} plot={plotLabel(rdtr, lang)} around={rdtrAround} lang={lang} />
                   )}
                 </div>

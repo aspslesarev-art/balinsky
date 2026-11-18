@@ -5,6 +5,7 @@ import type { SaleCompsBundle } from '@/lib/sale-comps'
 import type { GeoFacts } from '@/lib/complex-access'
 import type { NearbyPlace, NearbyCategory } from '@/lib/nearby-places'
 import { zoneRows, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
+import type { LandPriceBundle } from '@/lib/land-prices'
 import climate2050 from '@/lib/bali-climate-2050.json'
 
 // Собирает анализы блока «Аналитика по объекту» из того, что страница виллы
@@ -30,6 +31,9 @@ export type VillaAnalyticsInput = {
   rdtr: { data: RdtrData; image: string } | null
   /** Честные счётчики хороших мест в 1 км (listing_surroundings.r1); списки nearby обрезаны по 20–30 на тип. */
   around1km: Record<string, number> | null
+  /** Участки на продаже рядом (lib/land-prices) и площадь своего участка, м². */
+  landPrices: LandPriceBundle | null
+  landM2: number | null
 }
 
 const GREEN = '#1F8B5F'
@@ -250,6 +254,39 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       bigs: [...(i.leaseYears != null ? [{ v: T(`${Math.round(i.leaseYears)} лет`, `${Math.round(i.leaseYears)} yrs`), l: T('аренда земли', 'land lease') }] : []), { v: `${checks.filter(c => c.state === 'ok').length}/${checks.length}`, l: T('пунктов в порядке', 'items in order') }],
       meaning: warn ? T(`есть пункт, который стоит уточнить до оплаты: ${warn.label.toLowerCase()} — ${warn.value}.`, `one item to clarify before paying: ${warn.label.toLowerCase()} — ${warn.value}.`) : T('по документам, которые мы видели, вопросов нет.', 'no issues in the documents we have seen.'),
       footnote: T('Проверка по документам застройщика. Вопросы к договору — после заявки.', 'Based on developer documents. Contract questions — after a request.'),
+    })
+  }
+
+  // ── Оценить землю ──────────────────────────────────────────────────
+  const lp = i.landPrices
+  if (lp && i.landM2 && i.landM2 > 0) {
+    const value = lp.medianPpm * i.landM2
+    const comps = lp.comps ?? []
+    const share = i.priceUsd ? Math.round((value / i.priceUsd) * 100) : null
+    const pts = comps.map(c => c.ppm)
+    const lo = pts.length ? Math.min(...pts, lp.p25) * 0.9 : lp.p25 * 0.8
+    const hi = pts.length ? Math.max(...pts, lp.p75) * 1.1 : lp.p75 * 1.2
+    const adj = lp.method === 'freehold_adjusted'
+    out.push({
+      id: 'landValue', group: G.docs, title: T('Оценить землю', 'Value the land'),
+      sub: T('Сколько стоит участок под виллой по ценам земли рядом', 'What the plot is worth at nearby land prices'),
+      sources: [{
+        name: T('Участки на продаже', 'Plots for sale'), fresh: T('rumah123 и ещё 4 сайта', 'rumah123 and 4 more sites'),
+        chips: [dist(lp.radiusKm), adj ? T('в собственность → аренда', 'freehold → leasehold') : T('в аренду', 'leasehold'), T('цена за м²', 'price per m²')],
+        total: lp.scanned && lp.scanned > lp.n ? lp.scanned : lp.n, unit: T('участок|участка|участков', 'plots'),
+        names: comps.slice(0, 14).map(c => `${c.district ?? T('участок', 'plot')} · ${num(c.landM2)} ${T('м²', 'm²')} — ${usd(c.ppm)}/${T('м²', 'm²')}`),
+        result: T(`${lp.n} ${plw(lp.n, 'участок|участка|участков')} в ${dist(lp.radiusKm)} → середина ${usd(lp.medianPpm)} за м² (от ${usd(lp.p25)} до ${usd(lp.p75)})`, `${lp.n} plots within ${dist(lp.radiusKm)} → median ${usd(lp.medianPpm)} per m² (${usd(lp.p25)}–${usd(lp.p75)})`),
+        items: comps.slice(0, 8).map(c => ({ photo: null, name: `${c.district ?? T('Участок', 'Plot')} · ${num(c.landM2)} ${T('м²', 'm²')}`, url: c.url || null, meta: `${usd(c.priceUsd)} · ${dist(c.distanceKm)}` })),
+      }],
+      vizs: [
+        { kind: 'strip', title: T('Цена земли рядом, за м²', 'Nearby land price per m²'), points: pts, lo, hi, mark: { value: lp.medianPpm, label: T('середина', 'median') }, loLabel: usd(lo), hiLabel: usd(hi), note: T(`Половина участков — от ${usd(lp.p25)} до ${usd(lp.p75)} за м²`, `Half of the plots are ${usd(lp.p25)}–${usd(lp.p75)} per m²`) },
+        ...(share != null && i.priceUsd ? [{ kind: 'bars' as const, title: T('Из чего складывается цена виллы', 'What the villa price is made of'), max: i.priceUsd, rows: [{ label: T('Земля', 'Land'), value: Math.min(value, i.priceUsd), text: `${share}%` }, { label: T('Дом и отделка', 'House & finish'), value: Math.max(0, i.priceUsd - value), text: `${Math.max(0, 100 - share)}%` }] }] : []),
+      ],
+      bigs: [{ v: `≈ ${usd(value)}`, l: T(`стоит участок ${num(i.landM2)} м²`, `for the ${num(i.landM2)} m² plot`) }, ...(share != null ? [{ v: `${share}%`, l: T('цены виллы — это земля', 'of the villa price is land') }] : [])],
+      meaning: share == null ? T(`земля под виллой стоит около ${usd(value)}.`, `the land under the villa is worth about ${usd(value)}.`)
+        : share >= 60 ? T(`большая часть цены — земля (${share}%). Дом стоит недорого относительно участка.`, `most of the price is land (${share}%) — the house itself is cheap relative to the plot.`)
+        : T(`земля — ${share}% цены, остальное — дом и отделка. Так видно, за что вы платите.`, `land is ${share}% of the price, the rest is the house and finish — this shows what you pay for.`),
+      footnote: adj ? T('Рядом мало участков в аренду — взяли участки в собственность и пересчитали на аренду (×0,35).', 'Few leasehold plots nearby — freehold prices converted to leasehold (×0.35).') : T('Сравниваем с участками в аренду (лизхолд), как у этой виллы.', 'Compared with leasehold plots, like this villa.'),
     })
   }
 

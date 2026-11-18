@@ -217,8 +217,12 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                         <div className="flex gap-3 overflow-x-auto pb-2 pt-1 [scroll-snap-type:x_mandatory]">
                           {s.items.map((it, k) => lt >= 12 + k * 2 && (
                             <a key={k} href={locked ? undefined : it.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="ap-chip flex w-[168px] shrink-0 snap-start flex-col gap-1.5 text-[var(--color-text)] no-underline">
-                              {/* eslint-disable-next-line @next/next/no-img-element -- внешние фото Booking/Airbnb/rumah123 */}
-                              <img src={it.photo ?? ''} alt={it.name} loading="lazy" className="h-28 w-[168px] rounded-lg bg-[#EEF1EF] object-cover" style={{ filter: locked ? 'blur(6px)' : undefined }} />
+                              {it.photo ? (
+                                // eslint-disable-next-line @next/next/no-img-element -- внешние фото Booking/Airbnb/rumah123
+                                <img src={it.photo} alt={it.name} loading="lazy" className="h-28 w-[168px] rounded-lg bg-[#EEF1EF] object-cover" style={{ filter: locked ? 'blur(6px)' : undefined }} />
+                              ) : (
+                                <span aria-hidden="true" className="flex h-28 w-[168px] items-end rounded-lg bg-[repeating-linear-gradient(135deg,#EEF1EF_0_10px,#F6F8F7_10px_20px)] p-3 text-[20px] font-bold tracking-[-0.02em] text-[#39413D]">{it.name.split('·').pop()?.trim()}</span>
+                              )}
                               <span className="line-clamp-2 text-[13px] font-semibold leading-[1.3]">{it.name}</span>
                               <span className="text-[13px] tabular-nums text-[#39413D]" style={{ filter: locked ? 'blur(4px)' : undefined }}>{it.meta}</span>
                             </a>
