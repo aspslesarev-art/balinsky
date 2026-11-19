@@ -243,7 +243,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
 
           <div className="flex min-h-0 flex-grow flex-col md:flex-row md:gap-16 md:px-12">
             {/* Проверки темы с картинками: на компьютере — столбиком слева, на телефоне — лентой. */}
-            <nav aria-label={G.group} className="flex shrink-0 gap-3 overflow-x-auto px-4 pb-3 pt-1.5 md:w-[220px] md:flex-col md:gap-5 md:overflow-y-auto md:px-0 md:pb-6 md:pt-2">
+            <nav aria-label={G.group} className="flex shrink-0 gap-3 overflow-x-auto px-4 pb-3 pt-2 md:-mx-2 md:w-[236px] md:flex-col md:gap-5 md:overflow-y-auto md:px-2 md:pb-6 md:pt-2">
               {groups[gi].items.map(a => {
                 const on = a.id === G.id
                 const cover = coverOf(a)
