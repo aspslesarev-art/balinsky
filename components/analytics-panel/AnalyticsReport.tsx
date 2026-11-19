@@ -72,7 +72,10 @@ export function AnalyticsReport({ analyses: raw, lang, title, subtitle, photo, a
         </div>
       </section>
 
-      {analyses.map((a, i) => (
+      {analyses.map((a, i) => {
+        // Карты, которые в окне рисуются во время сбора (маршруты, что рядом), — тоже в лист.
+        const vizs = [...a.sources.flatMap(s => (s.live ? [s.live] : [])), ...a.vizs].slice(0, 4)
+        return (
         <section key={a.id} className="pdf-page">
           <div className="pdf-inner px-12 pb-6 pt-10">
             <header className="mb-5 flex items-end justify-between gap-6 border-b border-[#0F1A15] pb-4">
@@ -100,9 +103,9 @@ export function AnalyticsReport({ analyses: raw, lang, title, subtitle, photo, a
                     </div>
                   ))}
                 </div>
-                {a.vizs.length > 0 && (
-                  <div className={`grid gap-4 ${a.vizs.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                    {a.vizs.map((v, k) => <div key={k} className="pdf-keep rounded-xl border border-[#ECEFED]"><VizView v={v} lang={lang} /></div>)}
+                {vizs.length > 0 && (
+                  <div className={`grid gap-4 ${vizs.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    {vizs.map((v, k) => <div key={k} className="pdf-keep rounded-xl border border-[#ECEFED]"><VizView v={v} lang={lang} /></div>)}
                   </div>
                 )}
                 <p className="m-0 max-w-[90ch] text-[15px] leading-[1.6]"><b className="font-semibold">{c.meaning}</b> {a.meaning}</p>
@@ -112,7 +115,8 @@ export function AnalyticsReport({ analyses: raw, lang, title, subtitle, photo, a
           </div>
           <footer className="pdf-foot">{title} · {c.foot}</footer>
         </section>
-      ))}
+        )
+      })}
     </PdfShell>
   )
 }
