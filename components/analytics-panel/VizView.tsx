@@ -17,6 +17,37 @@ export function VizView({ v, lang }: { v: Viz; lang: string }) {
   )
 }
 
+/** Картинка на карточке анализа: та же карта или график, но без подписи и
+ *  легенды, во всю плитку. Погода по месяцам — столбики солнечных дней. */
+export function VizCover({ v, lang }: { v: Viz; lang: string }) {
+  if (v.kind === 'map') return <div className="absolute inset-0 flex items-center [&>div]:shrink-0"><MapView v={v} lang={lang} bare /></div>
+  if (v.kind === 'image') return (
+    // eslint-disable-next-line @next/next/no-img-element -- готовый снимок зон из Storage
+    <img src={v.src} alt={v.alt} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+  )
+  if (v.kind === 'months') {
+    const mx = Math.max(1, ...v.months.map(m => m.sunny))
+    return (
+      <div className="absolute inset-0 flex flex-col gap-2 p-4" role="img" aria-label={v.title}>
+        <span className="text-[13px] font-semibold text-[#39413D]">{v.sunnyLbl}</span>
+        <div className="flex flex-grow items-end gap-1">
+          {v.months.map(m => (
+            <div key={m.label} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+              <span className="ap-growy w-full origin-bottom rounded-t" style={{ height: `${Math.max(4, (m.sunny / mx) * 88)}px`, background: m.sunny >= 21 ? '#F2A33A' : m.sunny >= 14 ? '#F6CB85' : '#9DBCEB' }} />
+              <span className="text-[10px] text-[#4C5751]">{m.label.slice(0, 1)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="absolute inset-0 overflow-hidden p-4 [mask-image:linear-gradient(to_bottom,#000_78%,transparent)]">
+      {render(v, lang)}
+    </div>
+  )
+}
+
 const pct = (x: number, lo: number, hi: number) => (hi > lo ? Math.max(0, Math.min(100, ((x - lo) / (hi - lo)) * 100)) : 50)
 
 function render(v: Viz, lang: string) {
@@ -148,6 +179,8 @@ function Legend({ items }: { items: { color: string; label: string }[] }) {
   )
 }
 
+const r4 = (x: number) => Math.round(x * 1e4) / 1e4
+
 // Меркатор: пиксели мира на зуме z.
 function world(lat: number, lng: number, z: number) {
   const s = 256 * 2 ** z
@@ -159,14 +192,15 @@ const TILE = {
   sat: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile',
 }
 
-function MapView({ v, lang }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
+function MapView({ v, lang, bare }: { v: Extract<Viz, { kind: 'map' }>; lang: string; bare?: boolean }) {
   const W = 960, H = Math.round(W / v.aspect)
   const c = world(v.center.lat, v.center.lng, v.zoom)
   const x0 = c.x - W / 2, y0 = c.y - H / 2
   const tiles: { tx: number; ty: number }[] = []
   for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W) / 256); tx++)
     for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H) / 256); ty++) tiles.push({ tx, ty })
-  const P = (lat: number, lng: number) => { const p = world(lat, lng, v.zoom); return { x: ((p.x - x0) / W) * 100, y: ((p.y - y0) / H) * 100 } }
+  // Округляем: иначе сервер и браузер печатают проценты по-разному (ошибка гидрации).
+  const P = (lat: number, lng: number) => { const p = world(lat, lng, v.zoom); return { x: Math.round(((p.x - x0) / W) * 1e6) / 1e4, y: Math.round(((p.y - y0) / H) * 1e6) / 1e4 } }
   const inside = (p: { x: number; y: number }) => p.x > 1 && p.x < 99 && p.y > 1 && p.y < 99
   // Ветер: штрихи летят по направлению ветра; чем чаще дует с румба, тем их
   // больше. rose — доли «откуда дует», с севера по часовой.
@@ -188,7 +222,7 @@ function MapView({ v, lang }: { v: Extract<Viz, { kind: 'map' }>; lang: string }
         {tiles.map(({ tx, ty }) => (
           // eslint-disable-next-line @next/next/no-img-element -- плитки Esri
           <img key={`${tx}-${ty}`} alt="" loading="lazy" draggable={false} src={`${TILE[v.base]}/${v.zoom}/${ty}/${tx}`}
-            className="absolute max-w-none select-none" style={{ left: `${((tx * 256 - x0) / W) * 100}%`, top: `${((ty * 256 - y0) / H) * 100}%`, width: `${(256 / W) * 100 + 0.1}%`, height: `${(256 / H) * 100 + 0.1}%` }} />
+            className="absolute max-w-none select-none" style={{ left: `${r4(((tx * 256 - x0) / W) * 100)}%`, top: `${r4(((ty * 256 - y0) / H) * 100)}%`, width: `${r4((256 / W) * 100 + 0.1)}%`, height: `${r4((256 / H) * 100 + 0.1)}%` }} />
         ))}
         {v.polys && v.polys.length > 0 && (
           <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="ap-in absolute inset-0 h-full w-full">
@@ -272,7 +306,7 @@ function MapView({ v, lang }: { v: Extract<Viz, { kind: 'map' }>; lang: string }
         {v.tags?.map((tg, k) => { const q = P(tg.lat, tg.lng); return inside(q) && <span key={k} className="ap-in absolute whitespace-nowrap rounded bg-white px-1.5 py-0.5 text-[12px] font-semibold text-[#0F1A15] shadow" style={{ left: `${q.x}%`, top: `${q.y}%`, transform: q.x > 60 ? 'translate(calc(-100% - 8px), -50%)' : 'translate(8px, -50%)', animationDelay: `${600 + k * 150}ms` }}>{tg.label}</span> })}
         <Credit text={v.credit} />
       </div>
-      {v.legend && <Legend items={v.legend} />}
+      {!bare && v.legend && <Legend items={v.legend} />}
     </>
   )
 }
