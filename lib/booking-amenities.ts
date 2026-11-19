@@ -36,7 +36,7 @@ export const BOOKING_PRICED: { key: string; ru: string; en: string }[] = [
 
 export const BOOKING_EXTRA: { key: string; ru: string; en: string }[] = [
   { key: 'coffee_machine', ru: 'Кофемашина', en: 'Coffee machine' },
-  { key: 'fast_wifi', ru: 'Быстрый Wi-Fi', en: 'Fast Wi-Fi' },
+  { key: 'wifi', ru: 'Wi-Fi', en: 'Wi-Fi' },
   { key: 'workspace', ru: 'Рабочее место', en: 'Workspace' },
   { key: 'kitchen', ru: 'Своя кухня', en: 'Own kitchen' },
   { key: 'washing_machine', ru: 'Стиральная машина', en: 'Washing machine' },
