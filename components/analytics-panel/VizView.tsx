@@ -1,5 +1,6 @@
 'use client'
 import { Sun, Umbrella } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { Viz } from '@/lib/analytics-panel/types'
 
 // Графики итога анализа. Всё на CSS/SVG без библиотек; карты — плитки Esri
@@ -17,35 +18,73 @@ export function VizView({ v, lang }: { v: Viz; lang: string }) {
   )
 }
 
-/** Картинка на карточке анализа: та же карта или график, но без подписи и
- *  легенды, во всю плитку. Погода по месяцам — столбики солнечных дней. */
-export function VizCover({ v, lang }: { v: Viz; lang: string }) {
-  if (v.kind === 'map') return <div className="absolute inset-0 flex items-center [&>div]:shrink-0"><MapView v={v} lang={lang} bare /></div>
-  if (v.kind === 'image') return (
-    // eslint-disable-next-line @next/next/no-img-element -- готовый снимок зон из Storage
-    <img src={v.src} alt={v.alt} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+/** Обложка карточки анализа (макет «Обложки — чистый график», владелец
+ *  19.11.2026): та же суть, что в графике, но без единой подписи — точки,
+ *  шкалы, дуги, столбики в цвете темы; карты — без надписей. */
+export function VizCover({ v, lang, accent = '#1F8B5F' }: { v: Viz; lang: string; accent?: string }) {
+  const svg = (children: ReactNode, label: string) => (
+    <svg viewBox="0 0 300 172" preserveAspectRatio="xMidYMid meet" role="img" aria-label={label} className="absolute inset-0 h-full w-full">{children}</svg>
   )
-  if (v.kind === 'months') {
-    const mx = Math.max(1, ...v.months.map(m => m.sunny))
-    return (
-      <div className="absolute inset-0 flex flex-col gap-2 p-4" role="img" aria-label={v.title}>
-        <span className="text-[13px] font-semibold text-[#39413D]">{v.sunnyLbl}</span>
-        <div className="flex flex-grow items-end gap-1">
-          {v.months.map(m => (
-            <div key={m.label} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-              <span className="ap-growy w-full origin-bottom rounded-t" style={{ height: `${Math.max(4, (m.sunny / mx) * 88)}px`, background: m.sunny >= 21 ? '#F2A33A' : m.sunny >= 14 ? '#F6CB85' : '#9DBCEB' }} />
-              <span className="text-[10px] text-[#4C5751]">{m.label.slice(0, 1)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+  const soft = `${accent}40`
+  switch (v.kind) {
+    case 'map':
+      return <div className="absolute inset-0 flex items-center [&>div]:shrink-0"><MapView v={v} lang={lang} bare /></div>
+    case 'image':
+      // eslint-disable-next-line @next/next/no-img-element -- готовый снимок зон из Storage
+      return <img src={v.src} alt={v.alt} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+    case 'scatter': {
+      const X = (x: number) => 36 + pct(x, v.xLo, v.xHi) * 2.28, Y = (y: number) => 146 - pct(y, v.yLo, v.yHi) * 1.2
+      return svg(<>{v.points.map((p, k) => <circle key={k} cx={X(p.x)} cy={Y(p.y)} r={9} fill={accent} opacity={p.good ? 0.95 : 0.45} />)}</>, v.title)
+    }
+    case 'gauge': {
+      const a = Math.PI * (1 - Math.max(0, Math.min(100, v.avg)) / 100)
+      const ex = 150 + 80 * Math.cos(a), ey = 140 - 80 * Math.sin(a)
+      return svg(<>
+        <path d="M70 140 A80 80 0 0 1 230 140" fill="none" stroke={soft} strokeWidth="18" strokeLinecap="round" />
+        <path d={`M70 140 A80 80 0 0 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`} fill="none" stroke={accent} strokeWidth="18" strokeLinecap="round" />
+        <circle cx={ex} cy={ey} r="7" fill="#fff" stroke="#0F1A15" strokeWidth="3" />
+      </>, v.title)
+    }
+    case 'strip': {
+      const X = (x: number) => 40 + pct(x, v.lo, v.hi) * 2.2
+      return svg(<>
+        <line x1="36" y1="86" x2="264" y2="86" stroke={soft} strokeWidth="6" strokeLinecap="round" />
+        {v.points.map((p, k) => <circle key={k} cx={X(p)} cy="86" r="5" fill={accent} opacity=".7" />)}
+        <line x1={X(v.mark.value)} y1="58" x2={X(v.mark.value)} y2="114" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        {v.self && <path d={`M${X(v.self.value)} 72 l-10 -18 h20 z`} fill="#0F1A15" />}
+      </>, v.title)
+    }
+    case 'checks': {
+      const n = Math.min(5, v.rows.length), w = 48, x0 = 150 - ((n - 1) * w) / 2
+      return svg(<>{v.rows.slice(0, n).map((r, k) => {
+        const cx = x0 + k * w, c = r.state === 'ok' ? accent : r.state === 'warn' ? '#C9772B' : '#9AA39E'
+        return r.state === 'ok'
+          ? <g key={k}><circle cx={cx} cy="86" r="20" fill={c} /><path d={`M${cx - 9} 86 l6 6 l12 -12`} fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" /></g>
+          : <g key={k}><circle cx={cx} cy="86" r="18" fill="none" stroke={c} strokeWidth="4" /><line x1={cx} y1="77" x2={cx} y2="88" stroke={c} strokeWidth="4" strokeLinecap="round" /><circle cx={cx} cy="95" r="2.5" fill={c} /></g>
+      })}</>, v.title)
+    }
+    case 'bars': {
+      const rows = v.rows.slice(0, 6), h = Math.min(16, 110 / rows.length - 6)
+      return svg(<>{rows.map((r, k) => {
+        const y = 86 - (rows.length * (h + 8)) / 2 + k * (h + 8)
+        return <g key={k}><rect x="44" y={y} width="212" height={h} rx={h / 2} fill={soft} /><rect x="44" y={y} width={Math.max(h, (pct(r.value, 0, v.max) / 100) * 212)} height={h} rx={h / 2} fill={accent} /></g>
+      })}</>, v.title)
+    }
+    case 'cols': {
+      const cols = v.cols.slice(0, 14), w = Math.min(18, 220 / cols.length - 4)
+      return svg(<>{cols.map((c, k) => {
+        const hh = Math.max(4, (c.value / v.max) * 104), x = 150 - (cols.length * (w + 4)) / 2 + k * (w + 4)
+        return <rect key={k} x={x} y={140 - hh} width={w} height={hh} rx={Math.min(4, w / 2)} fill={c.hot === false ? soft : accent} opacity={c.hot ? 1 : 0.8} />
+      })}</>, v.title)
+    }
+    case 'months': {
+      const mx = Math.max(1, ...v.months.map(m => m.sunny))
+      return svg(<>{v.months.map((m, k) => {
+        const hh = Math.max(4, (m.sunny / mx) * 104)
+        return <rect key={k} x={44 + k * 19} y={140 - hh} width="14" height={hh} rx="4" fill={m.sunny >= 21 ? '#F2A33A' : m.sunny >= 14 ? '#F6CB85' : '#B9C8EC'} />
+      })}</>, v.title)
+    }
   }
-  return (
-    <div className="absolute inset-0 overflow-hidden p-4 [mask-image:linear-gradient(to_bottom,#000_78%,transparent)]">
-      {render(v, lang)}
-    </div>
-  )
 }
 
 const pct = (x: number, lo: number, hi: number) => (hi > lo ? Math.max(0, Math.min(100, ((x - lo) / (hi - lo)) * 100)) : 50)
@@ -272,10 +311,10 @@ function MapView({ v, lang, bare }: { v: Extract<Viz, { kind: 'map' }>; lang: st
                 return (
                   <g key={r.m}>
                     <circle cx={cx} cy={cy} r={rad} fill={k === 0 ? 'rgb(15 26 21 / .06)' : 'none'} stroke="#0F1A15" strokeOpacity=".55" strokeWidth="2" strokeDasharray={k === 0 ? undefined : '8 6'} className="ap-in" style={{ animationDelay: `${k * 150}ms` }} />
-                    <g transform={`translate(${cx}, ${cy - rad})`}>
+                    {!bare && <g transform={`translate(${cx}, ${cy - rad})`}>
                       <rect x={-30} y={-13} width={60} height={24} rx={6} fill="#fff" stroke="#0F1A15" strokeOpacity=".2" />
                       <text x={0} y={4} textAnchor="middle" fontSize="15" fontWeight="600" fill="#0F1A15">{r.label}</text>
-                    </g>
+                    </g>}
                   </g>
                 )
               })}
@@ -295,7 +334,7 @@ function MapView({ v, lang, bare }: { v: Extract<Viz, { kind: 'map' }>; lang: st
             ))}
           </div>
         )}
-        {v.rose && (
+        {v.rose && !bare && (
           <>
             {([['С', 'N', 'left-1/2 top-2 -translate-x-1/2'], ['Ю', 'S', 'left-1/2 bottom-2 -translate-x-1/2'], ['З', 'W', 'left-2 top-1/2 -translate-y-1/2'], ['В', 'E', 'right-2 top-1/2 -translate-y-1/2']] as const).map(([ru, en, pos]) => (
               <span key={ru} className={`absolute ${pos} grid h-8 w-8 place-items-center rounded-full bg-white text-[13px] font-bold text-[#0F1A15] shadow`}>{lang === 'ru' || lang === 'uk' ? ru : en}</span>
@@ -303,7 +342,7 @@ function MapView({ v, lang, bare }: { v: Extract<Viz, { kind: 'map' }>; lang: st
           </>
         )}
         {v.pins?.map((p, k) => { const q = P(p.lat, p.lng); return inside(q) && <span key={k} className="ap-chip absolute -ml-1.5 -mt-1.5 h-3 w-3 rounded-full border-2 border-white shadow" style={{ left: `${q.x}%`, top: `${q.y}%`, background: p.color, animationDelay: `${Math.min(k, 30) * 60}ms` }} /> })}
-        {v.tags?.map((tg, k) => { const q = P(tg.lat, tg.lng); return inside(q) && <span key={k} className="ap-in absolute whitespace-nowrap rounded bg-white px-1.5 py-0.5 text-[12px] font-semibold text-[#0F1A15] shadow" style={{ left: `${q.x}%`, top: `${q.y}%`, transform: q.x > 60 ? 'translate(calc(-100% - 8px), -50%)' : 'translate(8px, -50%)', animationDelay: `${600 + k * 150}ms` }}>{tg.label}</span> })}
+        {!bare && v.tags?.map((tg, k) => { const q = P(tg.lat, tg.lng); return inside(q) && <span key={k} className="ap-in absolute whitespace-nowrap rounded bg-white px-1.5 py-0.5 text-[12px] font-semibold text-[#0F1A15] shadow" style={{ left: `${q.x}%`, top: `${q.y}%`, transform: q.x > 60 ? 'translate(calc(-100% - 8px), -50%)' : 'translate(8px, -50%)', animationDelay: `${600 + k * 150}ms` }}>{tg.label}</span> })}
         <Credit text={v.credit} />
       </div>
       {!bare && v.legend && <Legend items={v.legend} />}

@@ -23,6 +23,15 @@ function plural(n: number, unit: string) {
   return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b >= 2 && b <= 4 ? f[1] : f[2]
 }
 
+// Цвет темы для обложек: мягкая подложка и цвет графика (макет «Обложки —
+// чистый график», владелец 19.11.2026).
+const COVER = [
+  { bg: '#E8F1EC', ink: '#1F8B5F' },
+  { bg: '#F6EEE4', ink: '#C9772B' },
+  { bg: '#E8EFF8', ink: '#2E7DD1' },
+  { bg: '#EFEAF7', ink: '#8E5BD0' },
+]
+
 const STEP = 26 // тиков (по 100 мс) на один источник
 const COPY = {
   ru: {
@@ -72,6 +81,9 @@ export function withMoney<T>(x: T, f: (s: string) => string): T {
  *  сбора), иначе первая карта или снимок итога, иначе первый график. */
 function coverOf(a: Analysis): { v: Viz; open: boolean } | null {
   const live = a.sources.map(s => s.live).find((v): v is Viz => !!v)
+  // Погода: столбики солнечных дней понятнее спутника с ветром.
+  const months = a.vizs.find(v => v.kind === 'months')
+  if (live?.kind === 'map' && live.rose && months) return { v: months, open: false }
   if (live) return { v: live, open: true }
   const pic = a.vizs.find(v => v.kind === 'map' || v.kind === 'image')
   const v = pic ?? a.vizs[0]
@@ -226,18 +238,15 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
         {(groups[pageTab] ?? groups[0]).items.map(a => {
           const cover = coverOf(a)
           const blur = locked && cover && !cover.open
-          const big = a.bigs[0]
+          const tone = COVER[pageTab % COVER.length]
           return (
             <button key={a.id} type="button" onClick={() => pick(a.id)}
               className="group flex w-[280px] shrink-0 cursor-pointer snap-start flex-col gap-3 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-auto">
-              <span className="relative block aspect-[7/4] w-full overflow-hidden rounded-md bg-[#F4F6F5]" aria-hidden={!cover}>
-                {cover && <span className="pointer-events-none absolute inset-0 transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.03]" style={{ filter: blur ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} /></span>}
+              <span className="relative block aspect-[7/4] w-full overflow-hidden rounded-md" style={{ background: tone.bg }} aria-hidden={!cover}>
+                {cover && <span className="pointer-events-none absolute inset-0 transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.03]" style={{ filter: blur ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} accent={tone.ink} /></span>}
               </span>
               <span className="flex items-center gap-1.5 text-[17px] font-semibold leading-[1.3] text-[#0F1A15] group-hover:underline group-hover:underline-offset-4">
                 {done[a.id] && <span aria-label={c.done} className="text-[#1F8B5F]">✓</span>}{a.title}
-              </span>
-              <span className="text-[15px] leading-[1.5] text-[#4A5550]">
-                {big ? <><b className="font-semibold text-[#0F1A15]">{big.v}</b> {big.l}</> : a.sub}
               </span>
             </button>
           )
@@ -275,10 +284,10 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                 return (
                   <button key={a.id} type="button" data-ap-tab={a.id} onClick={() => pick(a.id)} aria-current={on ? 'true' : undefined}
                     className={`flex w-[132px] shrink-0 cursor-pointer flex-col gap-2 border-0 bg-transparent p-0 text-left transition-opacity duration-[120ms] md:w-full ${on ? '' : 'opacity-70 hover:opacity-100'}`}>
-                    <span className="relative block aspect-video w-full overflow-hidden rounded-md bg-[#F1F3F2]" style={on ? { outline: '2px solid #0F1A15', outlineOffset: 3 } : undefined}>
+                    <span className="relative block aspect-video w-full overflow-hidden rounded-md" style={{ background: COVER[gi % COVER.length].bg, ...(on ? { outline: '2px solid #0F1A15', outlineOffset: 3 } : {}) }}>
                       {/* График рисуем в размере карточки страницы (320×180) и уменьшаем целиком —
                           иначе в узкой колонке подписи налезают друг на друга. */}
-                      {cover && <span className="pointer-events-none absolute left-0 top-0 h-[180px] w-[320px] max-w-none origin-top-left scale-[0.4125] md:scale-[0.6875]" style={{ filter: locked && !cover.open ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} /></span>}
+                      {cover && <span className="pointer-events-none absolute left-0 top-0 h-[180px] w-[320px] max-w-none origin-top-left scale-[0.4125] md:scale-[0.6875]" style={{ filter: locked && !cover.open ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} accent={COVER[gi % COVER.length].ink} /></span>}
                     </span>
                     <span className={`flex items-center gap-1.5 text-[14px] leading-[1.3] ${on ? 'font-semibold text-[#0F1A15]' : 'text-[#4A5550]'}`}>
                       {busy === a.id ? <span className="ap-spin h-3 w-3 shrink-0 rounded-full border-[1.5px] border-[#0F1A15] border-r-transparent" /> : done[a.id] ? <span aria-label={c.done} className="text-[#1F8B5F]">✓</span> : null}
