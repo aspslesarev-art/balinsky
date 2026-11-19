@@ -251,7 +251,9 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                   <button key={a.id} type="button" data-ap-tab={a.id} onClick={() => pick(a.id)} aria-current={on ? 'true' : undefined}
                     className={`flex w-[132px] shrink-0 cursor-pointer flex-col gap-2 border-0 bg-transparent p-0 text-left transition-opacity duration-[120ms] md:w-full ${on ? '' : 'opacity-70 hover:opacity-100'}`}>
                     <span className="relative block aspect-video w-full overflow-hidden rounded-md bg-[#F1F3F2]" style={on ? { outline: '2px solid #0F1A15', outlineOffset: 3 } : undefined}>
-                      {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: locked && !cover.open ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} /></span>}
+                      {/* График рисуем в размере карточки страницы (320×180) и уменьшаем целиком —
+                          иначе в узкой колонке подписи налезают друг на друга. */}
+                      {cover && <span className="pointer-events-none absolute left-0 top-0 h-[180px] w-[320px] max-w-none origin-top-left scale-[0.4125] md:scale-[0.6875]" style={{ filter: locked && !cover.open ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} /></span>}
                     </span>
                     <span className={`flex items-center gap-1.5 text-[14px] leading-[1.3] ${on ? 'font-semibold text-[#0F1A15]' : 'text-[#4A5550]'}`}>
                       {busy === a.id ? <span className="ap-spin h-3 w-3 shrink-0 rounded-full border-[1.5px] border-[#0F1A15] border-r-transparent" /> : done[a.id] ? <span aria-label={c.done} className="text-[#1F8B5F]">✓</span> : null}
