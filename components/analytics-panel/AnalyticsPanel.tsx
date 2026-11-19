@@ -360,7 +360,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
             <button type="button" onClick={() => prevA && pick(prevA.id)} aria-label={c.prev} className="flex h-11 min-w-11 shrink-0 cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-[15px] text-[#6B7570] hover:text-[#0F1A15]">
               ←<span className="hidden md:inline">{prevA?.title}</span>
             </button>
-            <span className="mx-auto text-[13px] tabular-nums text-[#8A938E]">{idx + 1} / {flat.length}</span>
+            <span className="mx-auto" />
             {nextA && <button type="button" onClick={() => pick(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
           </footer>
         </div>
