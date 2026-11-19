@@ -178,21 +178,30 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
       </div>
 
       {tilesAs === 'text' ? (() => {
-        const links: { key: string; label: string; onClick: () => void }[] = [
-          ...(photos.length > 0 ? [{ key: 'photos', label: `${c.photos} ${photos.length}`, onClick: () => { stop(); setOpen({ tab: 'photos', i: 0 }) } }] : []),
-          ...(videos.length > 0 ? [{ key: 'videos', label: `${c.videos} ${videos.length}`, onClick: () => setOpen({ tab: 'videos', i: 0 }) }] : []),
-          ...(planCount > 0 ? [{ key: 'plans', label: `${c.plans}${planCount > 1 ? ` ${planCount}` : ''}`, onClick: () => setOpen({ tab: 'plans', i: 0 }) }] : []),
-          ...(masterplan ? [{ key: 'master', label: c.master, onClick: () => setOpen({ tab: 'master', i: 0 }) }] : []),
-          ...(tourUrl ? [{ key: 'tour', label: c.tour, onClick: () => setOpen({ tab: 'tour', i: 0 }) }] : []),
-          ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, onClick: () => setOpen({ tab: `x:${v.key}`, i: 0 }) })),
-          ...(promo ? [{ key: 'promo', label: c.promo, onClick: () => setOpen({ tab: 'promo', i: 0 }) }] : []),
+        // «Журнал» (владелец 19.11.2026): медиа под фото — превью-картинки с
+        // подписью под ними, чтобы мультимедиа привлекало внимание.
+        const promoCover = promo ? (promo.series[0].thumbs?.[0] ?? promo.series[0].files[0]) : null
+        const links: { key: string; label: string; count?: number; cover: string | null; unopt?: boolean; onClick: () => void }[] = [
+          ...(photos.length > 1 ? [{ key: 'photos', label: c.photos, count: photos.length, cover: photos[1], onClick: () => { stop(); setOpen({ tab: 'photos', i: 1 }) } }] : []),
+          ...(videos.length > 0 ? [{ key: 'videos', label: c.videos, count: videos.length > 1 ? videos.length : undefined, cover: ytThumb(videos[0].url), unopt: true, onClick: () => { stop(); setOpen({ tab: 'videos', i: 0 }) } }] : []),
+          ...(planCount > 0 ? [{ key: 'plans', label: c.plans, count: planCount > 1 ? planCount : undefined, cover: plans[0] ?? null, onClick: () => { stop(); setOpen({ tab: 'plans', i: 0 }) } }] : []),
+          ...(masterplan ? [{ key: 'master', label: c.master, cover: masterplanCover ?? null, onClick: () => { stop(); setOpen({ tab: 'master', i: 0 }) } }] : []),
+          ...(tourUrl ? [{ key: 'tour', label: c.tour, cover: photos[2] ?? photos[0] ?? null, onClick: () => { stop(); setOpen({ tab: 'tour', i: 0 }) } }] : []),
+          ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, cover: v.cover ?? null, onClick: () => { stop(); setOpen({ tab: `x:${v.key}`, i: 0 }) } })),
+          ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, onClick: () => { stop(); setOpen({ tab: 'promo', i: 0 }) } }] : []),
         ]
         return links.length > 0 && (
-          <nav aria-label={c.photos} className="-mx-6 mt-1 flex max-w-none gap-6 overflow-x-auto whitespace-nowrap px-6 text-[15px] md:mx-0 md:mt-2 md:flex-wrap md:gap-x-8 md:gap-y-1 md:overflow-visible md:px-0 md:whitespace-normal [scrollbar-width:none]">
-            {links.map((l, i) => (
+          <nav aria-label={c.photos} className="-mx-6 mt-2 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:mt-4 md:w-auto md:max-w-full md:gap-5 md:overflow-visible md:px-0 [scrollbar-width:none]">
+            {links.map(l => (
               <button key={l.key} type="button" onClick={l.onClick}
-                className={`shrink-0 cursor-pointer border-0 bg-transparent px-0 py-2 underline-offset-4 transition-colors duration-[120ms] hover:text-[#0F1A15] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${i === 0 ? 'font-semibold text-[#0F1A15]' : 'text-[#4A5550]'}`}>
-                {l.label}
+                className="group flex w-[148px] shrink-0 cursor-pointer snap-start flex-col gap-2 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-auto md:min-w-0 md:flex-1">
+                <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-[#F1F3F2]">
+                  {l.cover && <Image src={l.cover} alt="" fill sizes="(min-width: 768px) 200px, 148px" unoptimized={l.unopt} className="object-cover transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.04]" />}
+                  {l.key === 'videos' && <span className="absolute inset-0 flex items-center justify-center text-white [filter:drop-shadow(0_2px_6px_rgb(0_0_0/.4))]"><svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" /><path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" /></svg></span>}
+                </span>
+                <span className="text-[15px] font-semibold leading-tight text-[#0F1A15] group-hover:underline group-hover:underline-offset-4">
+                  {l.label}{l.count != null && <span className="font-normal text-[#6B7570]"> {l.count}</span>}
+                </span>
               </button>
             ))}
           </nav>
