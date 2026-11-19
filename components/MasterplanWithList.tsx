@@ -24,7 +24,7 @@ const COPY = {
 
 // Цвета зон на шахматке (STATUS_STYLE в ComplexVisualizationViewer).
 const PLAN_COLOR = { free: '#16A34A', reserved: '#F59E0B', sold: '#DC2626' } as const
-const DOT: Record<string, string> = { free: '#8FD9B3', reserved: '#F5A524', sold: '#E5484D', off: 'rgba(255,255,255,.35)' }
+const DOT: Record<string, string> = { free: '#1F8B5F', reserved: '#F59E0B', sold: '#DC2626', off: '#C9CFCC' }
 
 export function MasterplanWithList({ plan, rows, lang }: { plan: ReactNode; rows: MasterplanRow[]; lang: Lang }) {
   const c = pickCopy(COPY, lang)
@@ -34,8 +34,8 @@ export function MasterplanWithList({ plan, rows, lang }: { plan: ReactNode; rows
   const list = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <span className="text-[17px] font-semibold">{c.count(rows.length)}</span>
-        <span className="text-[13px] text-white/60">{c.hint}</span>
+        <span className="text-[17px] font-semibold text-[#0F1A15]">{c.count(rows.length)}</span>
+        <span className="text-[13px] text-[#6B7570]">{c.hint}</span>
       </div>
       {legend.length > 0 && (
         <div className="hidden lg:flex flex-wrap gap-x-4 gap-y-2 text-[14px]">
@@ -53,18 +53,18 @@ export function MasterplanWithList({ plan, rows, lang }: { plan: ReactNode; rows
           const statusText = r.status ? c[r.status] : c.off
           const body = (
             <>
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: r.current ? '#FFFFFF' : DOT[key] }} />
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: r.current ? '#0F1A15' : DOT[key] }} />
               <span className="flex-1 min-w-0 flex flex-col gap-0.5">
                 <span className="text-[15px] font-semibold">{r.label}{r.current ? ` · ${c.this}` : ''}</span>
-                <span className="text-[13px] text-white/60">{r.sub ?? statusText}{r.sub && !(r.status === 'free' && r.priceUsd) && <span className="hidden lg:inline"> · {statusText}</span>}</span>
+                <span className="text-[13px] text-[#6B7570]">{r.sub ?? statusText}{r.sub && !(r.status === 'free' && r.priceUsd) && <span className="hidden lg:inline"> · {statusText}</span>}</span>
               </span>
               {/* В узкой колонке на компьютере статус - во второй строке, справа только цена. */}
-              <span className={`shrink-0 whitespace-nowrap text-[14px] tabular-nums ${r.status === 'free' && r.priceUsd ? 'text-white' : 'text-white/60 lg:hidden'}`}>{r.status === 'free' && r.priceUsd ? <Money usd={r.priceUsd} lang={lang} /> : statusText}</span>
+              <span className={`shrink-0 whitespace-nowrap text-[14px] tabular-nums ${r.status === 'free' && r.priceUsd ? 'text-[#0F1A15]' : 'text-[#6B7570] lg:hidden'}`}>{r.status === 'free' && r.priceUsd ? <Money usd={r.priceUsd} lang={lang} /> : statusText}</span>
             </>
           )
-          const cls = `flex items-center gap-3 min-h-[52px] px-3 rounded-[10px] no-underline text-white ${r.current ? 'bg-white/[0.08]' : ''}`
+          const cls = `flex items-center gap-3 min-h-[52px] px-3 rounded-xl no-underline text-[#0F1A15] ${r.current ? 'bg-[#F1F3F2]' : ''}`
           return r.url && !r.current
-            ? <Link key={i} href={r.url} className={`${cls} hover:bg-white/5 transition-colors duration-[120ms]`}>{body}</Link>
+            ? <Link key={i} href={r.url} className={`${cls} hover:bg-[#F6F7F6] transition-colors duration-[120ms]`}>{body}</Link>
             : <div key={i} className={cls}>{body}</div>
         })}
       </div>

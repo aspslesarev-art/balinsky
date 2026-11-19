@@ -373,21 +373,27 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
     else frameCourtyards(ctx.camera, ctx.controls, rowAzimuth, reach)
   }, [plan, rowAzimuth, topView])
 
+  // Вкладка окна медиаблока - белая, как окно «Журнал» (2026-11-19); своё
+  // окно со сценой на странице ЖК остаётся тёмным.
+  const ui = side
+    ? { bar: 'border-[#ECEFED] bg-white text-[#0F1A15]', label: 'text-[#6B7570]', val: 'text-[#0F1A15]', btn: 'h-11 rounded-xl border-[#0F1A15] px-4 text-[14px] text-[#0F1A15] hover:bg-[#F1F3F2]', on: 'h-11 rounded-xl border-transparent bg-[#0F1A15] px-4 text-[14px] font-semibold text-white', play: 'h-11 rounded-xl border-transparent bg-[var(--color-primary)] px-4 text-[14px] font-semibold text-white hover:brightness-110', amber: 'h-11 rounded-xl border-transparent bg-amber-400 px-4 text-[14px] font-semibold text-[#191308]' }
+    : { bar: 'border-white/10 bg-[#12161c]', label: 'text-white/50', val: 'text-white', btn: 'rounded-lg border-white/15 px-3 py-1.5 text-xs text-white hover:bg-white/10', on: 'rounded-lg border-transparent bg-white px-3 py-1.5 text-xs font-semibold text-[#0e1116]', play: 'rounded-lg border-white/15 px-3 py-1.5 text-xs text-white hover:bg-white/10', amber: 'rounded-lg border-transparent bg-amber-400 px-3 py-1.5 text-xs font-semibold text-[#191308]' }
+
   // Карточка ветра: поверх сцены, а во вкладке окна на компьютере - в колонке.
-  const windCard = (cls: string) => windNow && showWind && (
-    <div className={`rounded-xl px-3.5 py-3 text-white ${cls}`}>
-      <div className="text-[11px] uppercase tracking-wide text-white/60">
+  const windCard = (cls: string, light = false) => windNow && showWind && (
+    <div className={`rounded-xl px-3.5 py-3 ${light ? 'text-[#0F1A15]' : 'text-white'} ${cls}`}>
+      <div className={`text-[11px] uppercase tracking-wide ${light ? 'text-[#6B7570]' : 'text-white/60'}`}>
         {en ? `Wind · ${windNow.dry ? 'dry season, Apr–Oct' : 'rainy season, Nov–Mar'}` : `Ветер · ${windNow.dry ? 'сухой сезон, апр–окт' : 'сезон дождей, ноя–мар'}`}
       </div>
       <div className="mt-1 text-[16px] font-semibold">
         {en ? `From the ${SECTOR_EN[windNow.fromSector]}, ${windNow.ms.toFixed(1)} m/s` : `${SECTOR_RU[windNow.fromSector]}, ${windNow.ms.toFixed(1).replace('.', ',')} м/с`}
       </div>
-      <div className="mt-1 text-[13px] leading-snug text-white/80">
+      <div className={`mt-1 text-[13px] leading-snug ${light ? 'text-[#4A5550]' : 'text-white/80'}`}>
         {en
           ? `${Math.round(windNow.pct)}% of the time it blows from here. ${beaufortEn(windNow.ms)}.`
           : `${Math.round(windNow.pct)}% времени дует отсюда. ${beaufortRu(windNow.ms)}.`}
       </div>
-      <div className="mt-1 text-[11px] text-white/50">{en ? 'Data: Copernicus ERA5-Land' : 'Данные: Copernicus ERA5-Land'}{wind ? `, ${wind.years} ${en ? 'yrs hourly' : 'лет почасово'}` : ''}</div>
+      <div className={`mt-1 text-[11px] ${light ? 'text-[#6B7570]' : 'text-white/50'}`}>{en ? 'Data: Copernicus ERA5-Land' : 'Данные: Copernicus ERA5-Land'}{wind ? `, ${wind.years} ${en ? 'yrs hourly' : 'лет почасово'}` : ''}</div>
     </div>
   )
 
@@ -398,17 +404,17 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
         {windCard(`pointer-events-none absolute left-3 top-3 max-w-[300px] bg-[#0e1116]/85 ${side ? 'lg:hidden' : ''}`)}
       </div>
 
-      <div className={`flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 bg-[#12161c] px-4 py-3 ${side ? `${VIEWER_ASIDE_LG} lg:flex-nowrap lg:items-stretch lg:border-t-0 lg:bg-[#0C100E] lg:!gap-6` : ''}`}>
+      <div className={`flex flex-wrap items-center gap-x-6 gap-y-3 border-t px-4 py-3 ${ui.bar} ${side ? `${VIEWER_ASIDE_LG} lg:flex-nowrap lg:items-stretch lg:border-t-0 lg:!gap-6` : ''}`}>
         {side && (
           <div className="hidden lg:flex flex-col gap-3">
             <span className={VIEWER_LABEL}>{en ? (wind ? 'Sun & wind' : 'Sun & shade') : (wind ? 'Солнце и ветер' : 'Солнце и тень')}</span>
-            {windCard('bg-white/[0.06]')}
+            {windCard('border border-[#ECEFED] bg-[#F6F7F6]', true)}
           </div>
         )}
         <label className={`flex min-w-[200px] flex-1 flex-col gap-1 ${side ? 'lg:flex-none' : ''}`}>
-          <span className="flex justify-between text-[11px] uppercase tracking-wide text-white/50">
+          <span className={`flex justify-between text-[11px] uppercase tracking-wide ${ui.label}`}>
             {en ? 'Date' : 'Дата'}
-            <b className="text-[13px] normal-case tracking-normal text-white">
+            <b className={`text-[13px] normal-case tracking-normal ${ui.val}`}>
               {formatDayOfYear(dayOfYear, year)}
             </b>
           </span>
@@ -424,9 +430,9 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
         </label>
 
         <label className={`flex min-w-[200px] flex-1 flex-col gap-1 ${side ? 'lg:flex-none' : ''}`}>
-          <span className="flex justify-between text-[11px] uppercase tracking-wide text-white/50">
+          <span className={`flex justify-between text-[11px] uppercase tracking-wide ${ui.label}`}>
             {en ? 'Time' : 'Время'}
-            <b className="text-[13px] normal-case tracking-normal text-white">
+            <b className={`text-[13px] normal-case tracking-normal ${ui.val}`}>
               {formatHours(minutes / 60)}
             </b>
           </span>
@@ -446,7 +452,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
           <button
             type="button"
             onClick={() => setPlaying((v) => !v)}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+            className={`border ${ui.play}`}
           >
             {playing ? (en ? '❚❚ Pause' : '❚❚ Пауза') : (en ? '▶ Play the day' : '▶ Прогнать день')}
           </button>
@@ -454,10 +460,10 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
             type="button"
             onClick={() => setTopView((v) => !v)}
             aria-pressed={topView}
-            className={`rounded-lg border px-3 py-1.5 text-xs ${
+            className={`border ${
               topView
-                ? 'border-transparent bg-amber-400 font-semibold text-[#191308]'
-                : 'border-white/15 text-white hover:bg-white/10'
+                ? ui.amber
+                : ui.btn
             }`}
           >
             {en ? 'Top view' : 'Вид сверху'}
@@ -467,11 +473,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
               type="button"
               onClick={() => setShowWind((v) => !v)}
               aria-pressed={showWind}
-              className={`rounded-lg border px-3 py-1.5 text-xs ${
-                showWind
-                  ? 'border-transparent bg-white font-semibold text-[#0e1116]'
-                  : 'border-white/15 text-white hover:bg-white/10'
-              }`}
+              className={`border ${showWind ? ui.on : ui.btn}`}
             >
               {en ? 'Wind' : 'Ветер'}
             </button>

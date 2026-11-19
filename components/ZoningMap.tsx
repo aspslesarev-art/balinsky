@@ -138,37 +138,38 @@ export function ZoningMap({ slug, lang, ver, plotOverride }: { slug: string; lan
     )
   }
 
-  // Карточка участка: на телефоне белая поверх карты, на компьютере - в колонке.
-  const plotCard = (dark: boolean) => plot && (
-    <div className={dark
-      ? 'relative p-4 rounded-xl bg-white/[0.06] flex flex-col gap-1'
+  // Карточка участка: на телефоне белая поверх карты, на компьютере - в белой
+  // колонке окна.
+  const plotCard = (inColumn: boolean) => plot && (
+    <div className={inColumn
+      ? 'relative p-4 rounded-xl border border-[#ECEFED] bg-[#F6F7F6] text-[#0F1A15] flex flex-col gap-1'
       : 'lg:hidden absolute left-3 top-3 right-3 p-4 rounded-xl bg-white text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.2),0_12px_32px_rgb(0_0_0/.35)] flex flex-col gap-1'}>
       {picked && (
         <button type="button" onClick={() => setPicked(null)} aria-label={c.back}
-          className={`absolute right-1.5 top-1.5 w-9 h-9 rounded-full flex items-center justify-center text-[18px] leading-none cursor-pointer ${dark ? 'text-white/60 hover:bg-white/10' : 'text-[var(--color-text-muted)] hover:bg-black/5'}`}>×</button>
+          className={`absolute right-1.5 top-1.5 w-9 h-9 rounded-full flex items-center justify-center text-[18px] leading-none cursor-pointer ${inColumn ? 'text-[#6B7570] hover:bg-black/5' : 'text-[var(--color-text-muted)] hover:bg-black/5'}`}>×</button>
       )}
-      <span className={`text-[12px] font-semibold uppercase tracking-wide pr-8 ${dark ? 'text-white/60' : 'text-[var(--color-text-muted)]'}`}>{picked ? c.picked : c.plot}</span>
+      <span className={`text-[12px] font-semibold uppercase tracking-wide pr-8 ${inColumn ? 'text-[#6B7570]' : 'text-[var(--color-text-muted)]'}`}>{picked ? c.picked : c.plot}</span>
       <span className="text-[16px] font-semibold inline-flex items-center gap-2">
         <span className="w-3 h-3 rounded-[3px] shrink-0 border border-black/10" style={{ background: (picked ? pickedColor : plot.color) ?? '#BBB' }} />
         {picked ? (pickedKind ? (ru ? pickedKind.ru : pickedKind.en) : picked) : plot.label}
       </span>
-      {!picked && (pct(plotData?.plot?.kdb) || pct(plotData?.plot?.kdh)) && <span className={`text-[13px] ${dark ? 'text-white/60' : 'text-[var(--color-text-muted)]'}`}>{c.rules(pct(plotData?.plot?.kdb), pct(plotData?.plot?.kdh))}</span>}
-      {picked && <span className={`text-[12px] ${dark ? 'text-white/60' : 'text-[var(--color-text-muted)]'}`}>{picked}</span>}
+      {!picked && (pct(plotData?.plot?.kdb) || pct(plotData?.plot?.kdh)) && <span className={`text-[13px] ${inColumn ? 'text-[#6B7570]' : 'text-[var(--color-text-muted)]'}`}>{c.rules(pct(plotData?.plot?.kdb), pct(plotData?.plot?.kdh))}</span>}
+      {picked && <span className={`text-[12px] ${inColumn ? 'text-[#6B7570]' : 'text-[var(--color-text-muted)]'}`}>{picked}</span>}
     </div>
   )
 
   return (
     <div className="relative w-full h-full bg-[#1A221E] lg:flex">
       {data && (
-        <aside className={`hidden ${VIEWER_ASIDE_LG} bg-[#0C100E] text-white`}>
+        <aside className={`hidden ${VIEWER_ASIDE_LG} bg-white text-[#0F1A15]`}>
           <div className="flex flex-col gap-1">
             <span className={VIEWER_LABEL}>{c.title(data.radius)}</span>
-            <span className="text-[12px] leading-snug text-white/60">{c.source}</span>
+            <span className="text-[12px] leading-snug text-[#6B7570]">{c.source}</span>
           </div>
           {plotCard(true)}
-          {group('build', c.build, 'text-[#8FD9B3]')}
-          {group('nobuild', c.nobuild, 'text-[#F5C451]')}
-          <span className="text-[13px] text-white/60">{c.tap}</span>
+          {group('build', c.build, 'text-[#1F8B5F]')}
+          {group('nobuild', c.nobuild, 'text-[#B7791F]')}
+          <span className="text-[13px] text-[#6B7570]">{c.tap}</span>
         </aside>
       )}
       <div className="relative w-full h-full lg:flex-1 lg:min-w-0">

@@ -196,7 +196,7 @@ export function ComplexVisualizationViewer({
         for (const h of currentHotspots) if (h.availability) counts[h.availability]++
         if (counts.free + counts.reserved + counts.sold === 0) return null
         return (
-          <div className={`bx-plan-legend flex flex-wrap gap-x-5 gap-y-2 mb-3 text-[14px] ${bare ? 'text-white' : 'text-[var(--color-text)]'}`}>
+          <div className={`bx-plan-legend flex flex-wrap gap-x-5 gap-y-2 mb-3 text-[14px] text-[var(--color-text)]`}>
             {(['free', 'reserved', 'sold'] as const).map(k => (
               <span key={k} className="inline-flex items-center gap-2">
                 <span className="w-3 h-3 rounded-[3px]" style={{ backgroundColor: STATUS_STYLE[k].stroke }} aria-hidden />
