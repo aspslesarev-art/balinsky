@@ -41,6 +41,8 @@ export type Viz =
       pins?: { lat: number; lng: number; color: string }[]
       tags?: { lat: number; lng: number; label: string }[]
       lines?: { coords: number[][]; color: string; label: string }[]
+      /** Залитые зоны (госплан): кольца [lng, lat]; outline — подчеркнуть контур. */
+      polys?: { rings: number[][][]; color: string }[]
       /** Тепловая карта: клетки с весом (туристы), max — вес «самой горячей». */
       heat?: { lat: number; lng: number; w: number }[]
       heatMax?: number

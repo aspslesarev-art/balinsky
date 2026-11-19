@@ -4,7 +4,7 @@ import type { AirbnbComp } from '@/lib/airbnb-nearby'
 import type { SaleCompsBundle } from '@/lib/sale-comps'
 import type { GeoFacts } from '@/lib/complex-access'
 import type { NearbyPlace, NearbyCategory } from '@/lib/nearby-places'
-import { zoneRows, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
+import { zoneRows, zoneKind, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import type { LandPriceBundle } from '@/lib/land-prices'
 import type { Tourism } from './tourism'
 import { cdnRewrite } from '@/lib/photo-cdn'
@@ -89,7 +89,17 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
   const dec = (x: number) => String(x).replace('.', ru ? ',' : '.')
   // «2026-11-13» → «13.11.2026».
   // «maksimal : 50%» → «до 50%» (поля KDB/KDH госплана).
-  const lim = (x: string) => x.replace(/maksimal\s*:\s*/i, T('до ', 'up to ')).replace(/minimal\s*:\s*/i, T('от ', 'at least '))
+  // Правила госплана приходят строкой («maksimum : 65%», «2,6») или объектом
+  // по типам дорог ({ «Fungsi Jalan Lokal»: ['65%'] }) — собираем все числа.
+  const ruleNums = (x: unknown): number[] => typeof x === 'string' ? (x.match(/\d+(?:[.,]\d+)?/g) ?? []).map(n => Number(n.replace(',', '.')))
+    : Array.isArray(x) ? x.flatMap(ruleNums) : x && typeof x === 'object' ? Object.values(x).flatMap(ruleNums) : []
+  const rule = (x: unknown, unit: string) => {
+    const n = ruleNums(x).filter(v => v > 0); if (!n.length) return null
+    const lo = Math.min(...n), hi = Math.max(...n)
+    return { lo, hi, text: lo === hi ? `${dec(lo)}${unit}` : `${dec(lo)}–${dec(hi)}${unit}` }
+  }
+  // «Peraturan Bupati Tabanan Nomor 45 Tahun 2025 …» → «постановление 45/2025».
+  const rd8 = (x: string | null) => { const m = x?.match(/Nomor\s+(\d+)\s+Tahun\s+(\d{4})/i); return m ? T(`постановление ${m[1]}/${m[2]}`, `regulation ${m[1]}/${m[2]}`) : 'ATR/BPN' }
   const plw = (n: number, f: string) => { const [a1, a2, a5] = f.split('|'); const a = Math.abs(Math.round(n)) % 100, b = a % 10; return a > 10 && a < 20 ? a5 : b === 1 ? a1 : b >= 2 && b <= 4 ? a2 : a5 }
   const d8 = (x: string) => { const m = x.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}.${m[2]}.${m[1]}` : x }
   const center = i.lat != null && i.lng != null ? { lat: i.lat, lng: i.lng } : null
@@ -261,12 +271,13 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     }]
     if (i.rdtr?.data.plot) {
       const p = i.rdtr.data.plot
+      const kdb = rule(p.kdb, '%'), kdh = rule(p.kdh, '%')
       sources.push({
         name: T('Госплан зон (GISTARU)', 'Zoning plan (GISTARU)'), fresh: i.rdtr.data.fetchedAt ? T(`данные на ${d8(i.rdtr.data.fetchedAt)}`, `as of ${d8(i.rdtr.data.fetchedAt)}`) : 'ATR/BPN',
         chips: [T('зона участка', 'plot zone'), T('что можно строить', 'what can be built')],
         total: 1, unit: T('участок|участка|участков', 'plot'),
-        names: [plot?.label ?? p.name ?? '', p.kdb ? T(`застройка ${lim(p.kdb)}`, `coverage ${lim(p.kdb)}`) : '', p.kdh ? T(`зелень ${lim(p.kdh)}`, `green ${lim(p.kdh)}`) : ''].filter(Boolean),
-        result: [plot?.label, p.kdb ? T(`застройка ${lim(p.kdb)}`, `coverage ${lim(p.kdb)}`) : null, p.kdh ? T(`зелень ${lim(p.kdh)}`, `green ${lim(p.kdh)}`) : null].filter(Boolean).join(' · '),
+        names: [plot?.label ?? p.name ?? '', kdb ? T(`застройка до ${kdb.text}`, `coverage up to ${kdb.text}`) : '', kdh ? T(`зелень от ${kdh.text}`, `green at least ${kdh.text}`) : ''].filter(Boolean),
+        result: [plot?.label, kdb ? T(`застройка до ${kdb.text}`, `coverage up to ${kdb.text}`) : null, kdh ? T(`зелень от ${kdh.text}`, `green at least ${kdh.text}`) : null].filter(Boolean).join(' · '),
       })
     }
     const vizs: Viz[] = [{ kind: 'checks', title: T('Что проверили', 'What we checked'), rows: checks }]
@@ -336,7 +347,43 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         names: rows.map(r => `${r.label} — ${Math.round(r.share * 100)}%`),
         result: [plot ? T(`Участок: ${plot.label}`, `Plot: ${plot.label}`) : null, T(`вокруг ${rows.slice(0, 2).map(r => `${r.label.toLowerCase()} ${Math.round(r.share * 100)}%`).join(', ')}`, `around: ${rows.slice(0, 2).map(r => `${r.label.toLowerCase()} ${Math.round(r.share * 100)}%`).join(', ')}`)].filter(Boolean).join(' · '),
       })
-      vizs.push({ kind: 'image', title: T(`Зоны госплана на снимке, ${i.rdtr.data.radius} м вокруг`, `Zoning on the satellite image, ${i.rdtr.data.radius} m around`), src: i.rdtr.image, aspect: 1, alt: T('Снимок участка с цветами зон', 'Satellite image with zone colours'), credit: 'GISTARU ATR/BPN', legend: rows.slice(0, 6).map(r => ({ color: r.color, label: `${r.label} ${Math.round(r.share * 100)}%` })) })
+      // Живая карта: спутник Esri и поверх — сами зоны госплана в их цветах.
+      const rd = i.rdtr.data
+      const [cLng, cLat] = rd.center
+      const mpp = (2.1 * rd.radius) / 960
+      const zoom = Math.max(14, Math.min(18, Math.round(Math.log2((156543.03392 * Math.cos((cLat * Math.PI) / 180)) / mpp))))
+      const r6 = (n: number) => Math.round(n * 1e6) / 1e6
+      const polys = rd.zones.flatMap(z => {
+        const g = z.geometry
+        const polysOf = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : []
+        return polysOf.map(rings => ({ color: z.color, rings: rings.map(r => r.map(([x, y]) => [r6(x), r6(y)])) }))
+      })
+      vizs.push({ kind: 'map', title: T(`Зоны госплана, ${rd.radius} м вокруг`, `Zoning plan, ${rd.radius} m around`), center: { lat: cLat, lng: cLng }, zoom, aspect: 1, base: 'sat',
+        polys, rings: [{ m: rd.radius, label: rd.radius >= 1000 ? `${rd.radius / 1000} ${T('км', 'km')}` : `${rd.radius} ${T('м', 'm')}` }],
+        pins: center ? [{ ...center, color: '#0F1A15' }] : [], tags: center ? [{ ...center, label: T('Участок', 'Plot') }] : [],
+        credit: 'GISTARU ATR/BPN · Esri', alt: T('Спутниковая карта с цветами зон госплана', 'Satellite map with zoning colours'),
+        legend: rows.slice(0, 7).map(r => ({ color: r.color, label: `${r.label} ${Math.round(r.share * 100)}%` })) })
+    }
+    // Что можно построить на участке: доля застройки, зелень, площадь всех этажей.
+    const pr = i.rdtr?.data.plot
+    const kdb = pr ? rule(pr.kdb, '%') : null, kdh = pr ? rule(pr.kdh, '%') : null, klb = pr ? rule(pr.klb, '') : null
+    const plotKind = pr?.name ? zoneKind(pr.name) : null
+    if (pr && (kdb || kdh || klb)) {
+      const m2 = i.landM2 && i.landM2 > 0 ? i.landM2 : null
+      const sq = (k: number) => `${num(Math.round(m2! * k))} ${T('м²', 'm²')}`
+      const ruleRows: Extract<Viz, { kind: 'checks' }>['rows'] = []
+      if (plot) ruleRows.push({ state: plotKind?.group === 'nobuild' ? 'warn' : 'ok', label: T('Зона участка', 'Plot zone'), value: plotKind?.group === 'nobuild' ? T(`${plot.label} — жильё обычно не строят`, `${plot.label} — housing usually not allowed`) : plot.label })
+      if (kdb) ruleRows.push({ state: 'ok', label: T(`Под зданием — до ${kdb.text} участка`, `Building footprint — up to ${kdb.text}`), value: m2 ? T(`до ${sq(kdb.hi / 100)}`, `up to ${sq(kdb.hi / 100)}`) : '' })
+      if (kdh) ruleRows.push({ state: 'ok', label: T(`Зелень — от ${kdh.text} участка`, `Green area — at least ${kdh.text}`), value: m2 ? T(`от ${sq(kdh.lo / 100)}`, `at least ${sq(kdh.lo / 100)}`) : '' })
+      if (klb) ruleRows.push({ state: 'ok', label: T(`Площадь всех этажей — до ${klb.text}× участка`, `All floors together — up to ${klb.text}× the plot`), value: m2 ? T(`до ${sq(klb.hi)}`, `up to ${sq(klb.hi)}`) : '' })
+      vizs.unshift({ kind: 'checks', title: T(m2 ? `Что можно построить на участке ${num(m2)} м²` : 'Что можно построить по госплану', m2 ? `What can be built on the ${num(m2)} m² plot` : 'What the zoning plan allows'), rows: ruleRows })
+      sources.push({
+        name: T('Правила зоны (RDTR)', 'Zone rules (RDTR)'), fresh: rd8(i.rdtr!.data.regulation),
+        chips: [T('застройка', 'coverage'), T('зелень', 'green'), T('этажность', 'floor area')],
+        total: ruleRows.length, unit: T('правило|правила|правил', 'rules'),
+        names: ruleRows.map(r => `${r.label}${r.value ? ` — ${r.value}` : ''}`),
+        result: [kdb ? T(`застройка до ${kdb.text}`, `coverage up to ${kdb.text}`) : null, kdh ? T(`зелень от ${kdh.text}`, `green at least ${kdh.text}`) : null, klb ? T(`все этажи до ${klb.text}× участка`, `floor area up to ${klb.text}×`) : null].filter(Boolean).join(' · '),
+      })
     }
     if (pl) {
       const ns: string[] = []
@@ -391,10 +438,10 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       const noHz = hz && !['flood', 'tsunami', 'landslide', 'volcano'].some(k => (hz as Record<string, number | null>)[k] != null)
       out.push({
         id: 'land', group: G.docs, title: T('Проверить участок', 'Check the plot'),
-        sub: T('Зона по госплану, уклон, дорога, море, природные риски', 'Zoning, slope, road, sea, natural hazards'),
+        sub: T('Зона по госплану, что можно построить, уклон, дорога, природные риски', 'Zoning, what can be built, slope, road, natural hazards'),
         sources, vizs,
         bigs: [...(plot ? [{ v: plot.label.split('·').pop()!.trim(), l: plot.label.split('·')[0].trim() }] : []), ...(sea ? [{ v: `${dec(sea.margin_m)} ${T('м', 'm')}`, l: T('запас над водой к 2050', 'margin above water by 2050') }] : pl ? [{ v: `${num(pl.coast_m)} ${T('м', 'm')}`, l: T('до моря', 'to the sea') }] : [])],
-        meaning: [flat ? T('участок ровный', 'the plot is flat') : null, pl ? T(`дорога в ${Math.round(pl.road.m)} м`, `road ${Math.round(pl.road.m)} m away`) : null, noHz ? T('госкарта не отмечает тут ни наводнений, ни цунами', 'the government map flags no flood or tsunami here') : null].filter(Boolean).join(', ') + '.',
+        meaning: [kdb && i.landM2 ? T(`на участке можно застроить до ${num(Math.round(i.landM2 * kdb.hi / 100))} м²`, `up to ${num(Math.round(i.landM2 * kdb.hi / 100))} m² of the plot can be built on`) : null, flat ? T('участок ровный', 'the plot is flat') : null, pl ? T(`дорога в ${Math.round(pl.road.m)} м`, `road ${Math.round(pl.road.m)} m away`) : null, noHz ? T('госкарта не отмечает тут ни наводнений, ни цунами', 'the government map flags no flood or tsunami here') : null].filter(Boolean).join(', ') + '.',
       })
     }
   }

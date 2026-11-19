@@ -38,7 +38,7 @@ function render(v: Viz, lang: string) {
         <div className="flex h-[132px] items-end gap-1.5">
           {v.cols.map((c, k) => (
             <div key={k} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-              <span className="text-[11px] tabular-nums text-[#39413D]">{c.text}</span>
+              <span className="whitespace-nowrap text-[11px] tabular-nums text-[#39413D]">{c.text}</span>
               <span className="ap-growy w-full origin-bottom rounded-t" style={{ height: Math.max(2, Math.round((c.value / v.max) * 96)), background: c.hot === false ? '#F3C9A3' : c.hot ? ORANGE : GREEN }} />
               <span className="text-[11px] text-[var(--color-text-muted)]">{c.label}</span>
             </div>
@@ -70,7 +70,7 @@ function render(v: Viz, lang: string) {
             <div key={r.label} className="flex items-center gap-3 border-b border-[#EEF1EF] py-2.5 text-[14px]">
               <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white" style={{ background: r.state === 'ok' ? GREEN : r.state === 'warn' ? '#C9772B' : '#9AA39E' }}>{r.state === 'ok' ? '✓' : r.state === 'warn' ? '!' : 'i'}</span>
               <span className="flex-grow">{r.label}</span>
-              <span className="text-right font-semibold" style={{ color: r.state === 'warn' ? '#9A5B1E' : undefined }}>{r.value}</span>
+              <span className="shrink-0 whitespace-nowrap text-right font-semibold" style={{ color: r.state === 'warn' ? '#9A5B1E' : undefined }}>{r.value}</span>
             </div>
           ))}
         </div>
@@ -181,6 +181,14 @@ function MapView({ v }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
           <img key={`${tx}-${ty}`} alt="" loading="lazy" draggable={false} src={`${TILE[v.base]}/${v.zoom}/${ty}/${tx}`}
             className="absolute max-w-none select-none" style={{ left: `${((tx * 256 - x0) / W) * 100}%`, top: `${((ty * 256 - y0) / H) * 100}%`, width: `${(256 / W) * 100 + 0.1}%`, height: `${(256 / H) * 100 + 0.1}%` }} />
         ))}
+        {v.polys && v.polys.length > 0 && (
+          <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="ap-in absolute inset-0 h-full w-full">
+            {v.polys.map((g, k) => (
+              <path key={k} fillRule="evenodd" fill={g.color} fillOpacity=".5" stroke={g.color} strokeOpacity=".95" strokeWidth="1.5"
+                d={g.rings.map(r => 'M' + r.map(([lng, lat]) => { const p = world(lat, lng, v.zoom); return `${(p.x - x0).toFixed(1)} ${(p.y - y0).toFixed(1)}` }).join('L') + 'Z').join(' ')} />
+            ))}
+          </svg>
+        )}
         {v.lines && (
           // Координаты в пикселях карты (W×H), без non-scaling-stroke: иначе
           // pathLength не работает и линия рисуется пунктиром.
