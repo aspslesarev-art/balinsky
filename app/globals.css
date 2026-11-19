@@ -585,6 +585,7 @@ html[data-goal="live"] #dokhodnost { display: none; }
 @keyframes ap-draw { from { stroke-dashoffset: 100 } to { stroke-dashoffset: 0 } }
 @keyframes ap-grow { from { transform: scaleX(0) } to { transform: none } }
 @keyframes ap-growy { from { transform: scaleY(0) } to { transform: none } }
+@keyframes ap-run { from { transform: translateX(-100%) } to { transform: translateX(250%) } }
 @keyframes ap-wind { 0% { transform: translateX(-14%); opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } 100% { transform: translateX(100%); opacity: 0 } }
 .ap-spin { animation: ap-spin 700ms linear infinite }
 .ap-chip { animation: ap-chip 220ms cubic-bezier(.2,.8,.2,1) both }
@@ -594,7 +595,8 @@ html[data-goal="live"] #dokhodnost { display: none; }
 .ap-grow { animation: ap-grow 600ms cubic-bezier(.2,.8,.2,1) both }
 .ap-growy { animation: ap-growy 600ms cubic-bezier(.2,.8,.2,1) both }
 .ap-wind { animation: ap-wind 3s linear infinite }
+.ap-run { animation: ap-run 1.4s cubic-bezier(.4,0,.2,1) infinite }
 @media (prefers-reduced-motion: reduce) {
-  .ap-spin, .ap-chip, .ap-in, .ap-blink, .ap-draw, .ap-grow, .ap-growy { animation: none }
+  .ap-spin, .ap-chip, .ap-in, .ap-blink, .ap-draw, .ap-grow, .ap-growy, .ap-run { animation: none }
   .ap-wind { animation: none; transform: translateX(43%) }
 }

@@ -162,7 +162,6 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
   const nextA = G ? flat[(idx + 1) % flat.length] : null
   const prevA = G ? flat[(idx - 1 + flat.length) % flat.length] : null
   const gi = Math.max(0, groups.findIndex(g => g.name === G?.group))
-  const gTone = TONES[gi % TONES.length]
   const progress = G ? Math.round(Math.min(1, t / end) * 100) : 0
 
   return (
@@ -221,77 +220,61 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
       })}
 
       {open && G && (
+        // Окно — вариант A «Журнал» (владелец 19.11.2026): белое, текст и
+        // воздух, без цветных плашек; тонкая полоса загрузки сверху.
         <div role="dialog" aria-modal="true" aria-label={c.badge} className="fixed inset-0 z-[9999] flex flex-col bg-white">
-          <header className="flex items-center gap-4 border-b border-[var(--color-border)] px-4 py-2 md:gap-6 md:px-6 md:py-3">
-            <span className="flex min-w-0 flex-grow flex-col md:max-w-[240px]">
-              <span className="text-[13px] text-[var(--color-text-muted)]">{c.badge} · {c.of(idx + 1, flat.length)}</span>
-              <span className="truncate text-[16px] font-semibold">{G.title}</span>
-            </span>
-            <nav aria-label={c.themes} className="hidden flex-grow justify-center gap-2 md:flex">
-              {groups.map((g, i) => <ThemeTab key={g.name} name={g.name} tone={TONES[i % TONES.length]} on={g.name === G.group} onClick={() => pick(g.items[0].id)} />)}
+          <div className="h-0.5 shrink-0 bg-[#F1F3F2]"><div className="h-0.5 bg-[#0F1A15] transition-[width] duration-100 ease-linear" style={{ width: `${progress}%` }} /></div>
+          <header className="flex shrink-0 items-center gap-4 py-3 pl-4 pr-2 md:px-12 md:py-5">
+            <nav aria-label={c.themes} className="-mb-1 flex min-w-0 flex-grow gap-6 overflow-x-auto pb-1 md:gap-8">
+              {groups.map(g => {
+                const on = g.name === G.group
+                return (
+                  <button key={g.name} type="button" onClick={() => pick(g.items[0].id)} aria-current={on ? 'true' : undefined}
+                    className={`shrink-0 cursor-pointer whitespace-nowrap border-0 border-b-2 bg-transparent px-0 pb-1 pt-2 text-[15px] transition-colors duration-[120ms] ${on ? 'border-[#0F1A15] font-semibold text-[#0F1A15]' : 'border-transparent text-[#6B7570] hover:text-[#0F1A15]'}`}>
+                    {g.name}
+                  </button>
+                )
+              })}
             </nav>
-            <button type="button" onClick={close} aria-label={c.close} className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-[var(--color-surface-alt)] text-[var(--color-text)] hover:bg-[#E9EEEB] focus-visible:outline-2 focus-visible:outline-offset-2">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12" /><path d="M18 6L6 18" /></svg>
+            <button type="button" onClick={close} aria-label={c.close} className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-[#0F1A15] hover:bg-[#F1F3F2] focus-visible:outline-2 focus-visible:outline-offset-2">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12" /><path d="M18 6L6 18" /></svg>
             </button>
           </header>
-          <div className="h-1 shrink-0 bg-[#EEF1EF]"><div className="h-1 transition-[width] duration-100 ease-linear" style={{ background: gTone.main, width: `${progress}%` }} /></div>
-          {/* Телефон: проверки темы — лентой сверху. На компьютере — столбиком слева. */}
-          <div className="flex shrink-0 gap-1 overflow-x-auto px-4 py-2 md:hidden" style={{ background: gTone.bg }}>
-            {groups[gi].items.map(a => {
-              const on = a.id === G.id
-              return (
-                <button key={a.id} type="button" data-ap-tab={a.id} onClick={() => pick(a.id)} aria-current={on ? 'true' : undefined}
-                  className={`inline-flex h-11 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border-0 px-4 text-[15px] ${on ? 'bg-white font-semibold' : 'bg-transparent'}`}
-                  style={{ color: gTone.ink, boxShadow: on ? `0 1px 2px rgb(0 0 0 / .05), inset 0 -2px 0 ${gTone.main}` : undefined }}>
-                  {busy === a.id ? <span className="ap-spin h-3.5 w-3.5 rounded-full border-2 border-[#E78C3D] border-r-transparent" /> : done[a.id] ? <Check label={c.done} /> : null}
-                  {a.title}
-                </button>
-              )
-            })}
-          </div>
 
-          <div className="flex min-h-0 flex-grow">
-          <nav aria-label={G.group} className="hidden w-[300px] shrink-0 flex-col gap-1 overflow-y-auto p-3 md:flex" style={{ background: gTone.bg }}>
-            <div className="flex items-center gap-2 px-3 pb-2 pt-1">
-              <span className="h-2 w-2 rounded-full" style={{ background: gTone.main }} />
-              <span className="text-[13px] font-semibold uppercase tracking-[0.06em]" style={{ color: gTone.ink }}>{G.group}</span>
-            </div>
-            {groups[gi].items.map(a => {
-              const on = a.id === G.id
-              return (
-                <button key={a.id} type="button" onClick={() => pick(a.id)} aria-current={on ? 'true' : undefined}
-                  className="flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-3 text-left shadow-[0_1px_2px_rgb(0_0_0/.04)] transition-[box-shadow,transform] duration-[120ms] hover:-translate-y-px hover:shadow-[0_1px_2px_rgb(0_0_0/.05),0_6px_16px_rgb(0_0_0/.07)] focus-visible:outline-2 focus-visible:outline-offset-2"
-                  style={{ boxShadow: on ? `inset 4px 0 0 ${gTone.main}, 0 1px 2px rgb(0 0 0 / .05)` : undefined, outlineColor: gTone.main }}>
-                  <span className="flex min-w-0 flex-grow flex-col gap-0.5">
-                    <span className={`text-[16px] leading-[1.3] text-[var(--color-text)] ${on ? 'font-semibold' : 'font-medium'}`}>{a.title}</span>
-                    <span className="truncate text-[13px] text-[var(--color-text-muted)]">{a.sources.map(s => s.name).join(' · ')}</span>
-                  </span>
-                  {busy === a.id ? <span className="ap-spin h-4 w-4 shrink-0 rounded-full border-2 border-[#E78C3D] border-r-transparent" />
-                    : done[a.id] ? <Check label={c.done} />
-                    : <Arrow color={gTone.main} />}
-                </button>
-              )
-            })}
-          </nav>
+          <div className="flex min-h-0 flex-grow flex-col md:flex-row md:gap-16 md:px-12">
+            {/* Проверки темы с картинками: на компьютере — столбиком слева, на телефоне — лентой. */}
+            <nav aria-label={G.group} className="flex shrink-0 gap-3 overflow-x-auto px-4 pb-3 pt-1.5 md:w-[220px] md:flex-col md:gap-5 md:overflow-y-auto md:px-0 md:pb-6 md:pt-2">
+              {groups[gi].items.map(a => {
+                const on = a.id === G.id
+                const cover = coverOf(a)
+                return (
+                  <button key={a.id} type="button" data-ap-tab={a.id} onClick={() => pick(a.id)} aria-current={on ? 'true' : undefined}
+                    className={`flex w-[132px] shrink-0 cursor-pointer flex-col gap-2 border-0 bg-transparent p-0 text-left transition-opacity duration-[120ms] md:w-full ${on ? '' : 'opacity-70 hover:opacity-100'}`}>
+                    <span className="relative block aspect-video w-full overflow-hidden rounded-md bg-[#F1F3F2]" style={on ? { outline: '2px solid #0F1A15', outlineOffset: 3 } : undefined}>
+                      {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: locked && !cover.open ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} /></span>}
+                    </span>
+                    <span className={`flex items-center gap-1.5 text-[14px] leading-[1.3] ${on ? 'font-semibold text-[#0F1A15]' : 'text-[#4A5550]'}`}>
+                      {busy === a.id ? <span className="ap-spin h-3 w-3 shrink-0 rounded-full border-[1.5px] border-[#0F1A15] border-r-transparent" /> : done[a.id] ? <span aria-label={c.done} className="text-[#1F8B5F]">✓</span> : null}
+                      {a.title}
+                    </span>
+                  </button>
+                )
+              })}
+            </nav>
+
           <div ref={bodyRef} className="min-h-0 flex-grow overflow-y-auto overscroll-contain">
-            <div className="mx-auto flex max-w-[1080px] flex-col gap-4 px-4 py-6 md:px-6">
-              <div className="flex flex-col gap-1">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#39413D]" aria-live="polite">
-                    {finished ? <Check label={c.done} /> : <span className="ap-spin h-3.5 w-3.5 rounded-full border-2 border-[#0F1A15] border-r-transparent" />}
-                    {finished ? c.finished : c.working(Math.min(G.sources.length, Math.floor(t / STEP) + 1), G.sources.length)}
-                  </span>
-                  <span className="inline-flex items-center gap-2 self-start rounded-md px-2 py-1 text-[13px] font-semibold" style={{ background: gTone.bg, color: gTone.ink }}>
-                    <span className="h-2 w-2 rounded-full" style={{ background: gTone.main }} />{G.group}
-                  </span>
-                </div>
-                <h3 className="m-0 font-display text-[24px] md:text-[28px] font-bold leading-[1.2] tracking-[-0.02em]">{G.title}</h3>
-                <div className="text-[15px] text-[var(--color-text-muted)]">{G.sub}</div>
+            <div className="flex max-w-[1000px] flex-col gap-8 px-4 pb-10 pt-2 md:px-0">
+              <div className="flex flex-col gap-3">
+                <span className="text-[13px] uppercase tracking-[0.06em] text-[#6B7570]" aria-live="polite">
+                  {finished ? c.finished : c.working(Math.min(G.sources.length, Math.floor(t / STEP) + 1), G.sources.length)}
+                </span>
+                <h3 className="m-0 font-display text-[32px] md:text-[44px] font-bold leading-[1.1] tracking-[-0.03em]">{G.title}</h3>
+                <p className="m-0 max-w-[56ch] text-[17px] leading-[1.6] text-[#4A5550]">{G.sub}</p>
               </div>
 
               {/* Готовый источник — маленькая карточка, по 2–3 в ряд (владелец 19.11.2026).
                   На всю ширину — тот, что сейчас идёт, и те, где лента фото или карта. */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 xl:grid-cols-3">
               {G.sources.map((s, i) => {
                 const lt = t - i * STEP
                 if (lt < 0) return null
@@ -299,66 +282,64 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                 const wide = !fin || !!s.live || (s.items?.length ?? 0) > 0
                 const scanT = Math.max(0, Math.min(1, (lt - 6) / 14))
                 return (
-                  <div key={s.name} className={`ap-in flex flex-col gap-2 rounded-lg transition-colors duration-300 ${wide ? 'col-span-full p-4' : 'p-3'} ${fin ? 'bg-[var(--color-surface-alt)]' : 'bg-[#FFF6EE]'}`}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {fin ? <Check label={c.done} /> : <span className="ap-spin m-0.5 h-4 w-4 rounded-full border-2 border-[#E78C3D] border-r-transparent" />}
-                      <span className={`${wide ? 'text-[16px]' : 'text-[15px] leading-tight'} font-semibold`}>{s.name}</span>
-                      {wide && <span className="text-[13px] text-[var(--color-text-muted)]">· {s.fresh}</span>}
+                  <div key={s.name} className={`ap-in grid grid-cols-[16px_minmax(0,1fr)] gap-3 border-t border-[#ECEFED] py-4 ${wide ? 'col-span-full' : ''}`}>
+                    <span className={`mt-[7px] h-2 w-2 rounded-full ${fin ? 'bg-[#1F8B5F]' : 'border-[1.5px] border-[#0F1A15]'}`} aria-label={fin ? c.done : undefined} />
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <span className="text-[15px] font-semibold leading-[1.4]">{s.name} <span className="font-normal text-[#6B7570]">· {s.fresh}</span></span>
+                      {!fin && (
+                        <span className="text-[15px] text-[#4A5550]">
+                          {c.searching} {s.chips.filter((_, k) => lt >= k * 1.5).map((ch, k) => <span key={ch} className="ap-in text-[#0F1A15]">{k > 0 && ' · '}{ch}</span>)}
+                        </span>
+                      )}
+                      {lt >= 6 && lt < 20 && (
+                        <span className="flex items-baseline gap-4 text-[16px] text-[#4A5550]">
+                          <span className="shrink-0 font-semibold tabular-nums text-[#0F1A15]">{Math.round(s.total * scanT).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US')} {plural(s.total * scanT, s.unit)}</span>
+                          <span className="truncate text-[#0F1A15]">{s.names[Math.floor(lt) % Math.max(1, s.names.length)]}<span className="ap-blink">▍</span></span>
+                        </span>
+                      )}
+                      {lt >= 20 && lt < 24 && <span className="text-[15px] text-[#4A5550]">{c.filtering}</span>}
+                      {!fin && <span className="relative block h-px w-60 overflow-hidden bg-[#ECEFED]"><span className="ap-run absolute inset-y-0 left-0 w-2/5 bg-[#0F1A15]" /></span>}
+                      {s.live && lt >= 6 && <div className="ap-in"><VizView v={s.live} lang={lang} /></div>}
+                      {s.items && s.items.length > 0 && lt >= 12 && (
+                        <div className="flex gap-3 overflow-x-auto pb-2 pt-1 [scroll-snap-type:x_mandatory]">
+                          {s.items.map((it, k) => lt >= 12 + k * 2 && (
+                            <a key={k} href={locked ? undefined : it.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="ap-chip flex w-[168px] shrink-0 snap-start flex-col gap-1.5 text-[var(--color-text)] no-underline">
+                              {it.photo ? (
+                                // eslint-disable-next-line @next/next/no-img-element -- внешние фото Booking/Airbnb/rumah123
+                                <img src={it.photo} alt={it.name} loading="lazy" className="h-28 w-[168px] rounded-md bg-[#EEF1EF] object-cover" style={{ filter: locked ? 'blur(6px)' : undefined }} />
+                              ) : (
+                                <span aria-hidden="true" className="flex h-28 w-[168px] items-end rounded-md bg-[#F1F3F2] p-3 text-[20px] font-bold tracking-[-0.02em] text-[#39413D]">{it.name.split('·').pop()?.trim()}</span>
+                              )}
+                              <span className="line-clamp-2 text-[13px] font-semibold leading-[1.3]">{it.name}</span>
+                              <span className="text-[13px] tabular-nums text-[#4A5550]" style={{ filter: locked ? 'blur(4px)' : undefined }}>{it.meta}</span>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                      {fin && <span className="ap-in text-[16px] leading-[1.6]">{s.result}</span>}
                     </div>
-                    {!fin && (
-                      <div className="flex min-h-[30px] flex-wrap items-center gap-2">
-                        <span className="text-[13px] text-[var(--color-text-muted)]">{c.searching}</span>
-                        {s.chips.map((ch, k) => lt >= k * 1.5 && <span key={ch} className="ap-chip rounded-full border border-[#CDD3D0] bg-white px-3 py-1 text-[13px] font-medium">{ch}</span>)}
-                      </div>
-                    )}
-                    {lt >= 6 && lt < 20 && (
-                      <div className="flex items-baseline gap-4 text-[14px] text-[#39413D]">
-                        <span className="min-w-24 font-semibold tabular-nums text-[var(--color-text)]">{Math.round(s.total * scanT).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US')} {plural(s.total * scanT, s.unit)}</span>
-                        <span className="truncate">{s.names[Math.floor(lt) % Math.max(1, s.names.length)]}<span className="ap-blink">▍</span></span>
-                      </div>
-                    )}
-                    {lt >= 20 && lt < 24 && <div className="text-[14px] text-[#39413D]">{c.filtering}</div>}
-                    {s.live && lt >= 6 && <div className="ap-in"><VizView v={s.live} lang={lang} /></div>}
-                    {s.items && s.items.length > 0 && lt >= 12 && (
-                      <div className="flex gap-3 overflow-x-auto pb-2 pt-1 [scroll-snap-type:x_mandatory]">
-                        {s.items.map((it, k) => lt >= 12 + k * 2 && (
-                          <a key={k} href={locked ? undefined : it.url ?? undefined} target="_blank" rel="noopener noreferrer nofollow" className="ap-chip flex w-[168px] shrink-0 snap-start flex-col gap-1.5 text-[var(--color-text)] no-underline">
-                            {it.photo ? (
-                              // eslint-disable-next-line @next/next/no-img-element -- внешние фото Booking/Airbnb/rumah123
-                              <img src={it.photo} alt={it.name} loading="lazy" className="h-28 w-[168px] rounded-lg bg-[#EEF1EF] object-cover" style={{ filter: locked ? 'blur(6px)' : undefined }} />
-                            ) : (
-                              <span aria-hidden="true" className="flex h-28 w-[168px] items-end rounded-lg bg-[repeating-linear-gradient(135deg,#EEF1EF_0_10px,#F6F8F7_10px_20px)] p-3 text-[20px] font-bold tracking-[-0.02em] text-[#39413D]">{it.name.split('·').pop()?.trim()}</span>
-                            )}
-                            <span className="line-clamp-2 text-[13px] font-semibold leading-[1.3]">{it.name}</span>
-                            <span className="text-[13px] tabular-nums text-[#39413D]" style={{ filter: locked ? 'blur(4px)' : undefined }}>{it.meta}</span>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                    {fin && <div className={`ap-in ${wide ? 'pl-7 text-[15px]' : 'text-[14px]'} leading-[1.5]`}>{s.result}</div>}
-                    {fin && !wide && <div className="text-[12px] text-[var(--color-text-muted)]">{s.fresh}</div>}
                   </div>
                 )
               })}
               </div>
 
               {finished && (
-                <div className="ap-in flex flex-col gap-4 rounded-xl p-4 md:p-6" style={{ background: gTone.bg }}>
-                  <div className="flex flex-wrap gap-x-12 gap-y-4">
+                <div className="ap-in flex flex-col gap-6 border-t border-[#0F1A15] pt-6">
+                  <div className="flex flex-wrap gap-x-16 gap-y-4">
                     {G.bigs.map(b => (
                       <div key={b.l}>
-                        <div className="text-[32px] md:text-[40px] font-bold leading-[1.1] tracking-[-0.03em] tabular-nums">{b.v}</div>
-                        <div className="text-[14px] text-[#39413D]">{b.l}</div>
+                        <div className="text-[36px] md:text-[44px] font-bold leading-[1.1] tracking-[-0.03em] tabular-nums">{b.v}</div>
+                        <div className="text-[15px] text-[#4A5550]">{b.l}</div>
                       </div>
                     ))}
                   </div>
                   {locked ? (
-                    <div className="flex flex-wrap items-center gap-6 rounded-xl bg-white p-6">
+                    <div className="flex flex-wrap items-center gap-6 border-y border-[#ECEFED] py-6">
                       <div className="flex flex-col gap-1.5" style={{ flex: '1 1 260px' }}>
                         <div className="text-[17px] font-semibold">{access === 'pending' ? c.pendingTitle : c.lockTitle(G.vizs.length)}</div>
-                        <div className="text-[14px] leading-[1.5] text-[#39413D]">{access === 'pending' ? c.pendingText : c.lockText}</div>
+                        <div className="text-[15px] leading-[1.5] text-[#4A5550]">{access === 'pending' ? c.pendingText : c.lockText}</div>
                       </div>
-                      {access === 'guest' && <a href={signInHref} className="flex h-12 items-center rounded-xl bg-[var(--color-primary)] px-6 text-[15px] font-semibold text-white no-underline hover:bg-[var(--color-primary-hover)]">{c.signIn}</a>}
+                      {access === 'guest' && <a href={signInHref} className="flex h-12 items-center rounded-lg bg-[#0F1A15] px-6 text-[15px] font-semibold text-white no-underline hover:bg-[#26312C]">{c.signIn}</a>}
                     </div>
                   ) : (
                     <>
@@ -366,52 +347,25 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                       {extras?.[G.id]}
                     </>
                   )}
-                  <div className="max-w-[64ch] text-[16px] leading-[1.6]"><b>{c.meaning}</b> {G.meaning}</div>
-                  {G.footnote && <div className="text-[13px] text-[#39413D]">{G.footnote}</div>}
-                  <div className="flex flex-wrap gap-2">
-                    {nextA && <button type="button" onClick={() => pick(nextA.id)} className="h-12 cursor-pointer rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[15px] font-semibold text-white hover:bg-[var(--color-primary-hover)]">{c.next(nextA.title)}</button>}
-                    <button type="button" onClick={() => pick(G.id, true)} className="h-12 cursor-pointer border-0 bg-transparent px-2 text-[15px] text-[var(--color-text)] underline">{c.again}</button>
-                  </div>
+                  <p className="m-0 max-w-[64ch] text-[18px] leading-[1.6]"><b className="font-semibold">{c.meaning}</b> {G.meaning}</p>
+                  {G.footnote && <div className="text-[13px] text-[#6B7570]">{G.footnote}</div>}
+                  <button type="button" onClick={() => pick(G.id, true)} className="self-start cursor-pointer border-0 bg-transparent p-0 text-[15px] text-[#4A5550] underline underline-offset-4 hover:text-[#0F1A15]">{c.again}</button>
                 </div>
               )}
             </div>
           </div>
           </div>
 
-          <footer className="flex shrink-0 items-center gap-2 border-t border-[var(--color-border)] px-4 py-2 md:justify-between md:px-6 md:py-3">
-            <button type="button" onClick={() => prevA && pick(prevA.id)} aria-label={c.prev} className="inline-flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-3.5 text-[15px] text-[var(--color-text)] md:px-4">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5" /><path d="M11 18l-6-6 6-6" /></svg>
-              <span className="hidden md:inline">{prevA?.title}</span>
+          <footer className="flex shrink-0 items-center gap-4 border-t border-[#ECEFED] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] md:border-0 md:px-12 md:pb-6 md:pt-4">
+            <button type="button" onClick={() => prevA && pick(prevA.id)} aria-label={c.prev} className="flex h-11 min-w-11 shrink-0 cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-[15px] text-[#6B7570] hover:text-[#0F1A15]">
+              ←<span className="hidden md:inline">{prevA?.title}</span>
             </button>
-            <span className="hidden text-[14px] text-[var(--color-text-muted)] md:inline">{c.of(idx + 1, flat.length)}</span>
-            {nextA && <button type="button" onClick={() => pick(nextA.id)} className="h-12 min-w-0 flex-grow cursor-pointer truncate rounded-xl border-0 bg-[#0F1A15] px-4 text-[15px] font-semibold text-white md:flex-grow-0 md:px-6">{c.next(nextA.title)}</button>}
+            <span className="mx-auto text-[13px] tabular-nums text-[#8A938E]">{idx + 1} / {flat.length}</span>
+            {nextA && <button type="button" onClick={() => pick(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
           </footer>
-          {/* Телефон: темы внизу, под большим пальцем (как вкладки медиаблока). */}
-          <nav aria-label={c.themes} className="grid shrink-0 gap-1 bg-[var(--color-surface-alt)] px-1 pb-[max(8px,env(safe-area-inset-bottom))] pt-1 md:hidden" style={{ gridTemplateColumns: `repeat(${groups.length}, minmax(0, 1fr))` }}>
-            {groups.map((g, i) => {
-              const tone = TONES[i % TONES.length], on = g.name === G.group
-              return (
-                <button key={g.name} type="button" onClick={() => pick(g.items[0].id)} aria-current={on ? 'true' : undefined}
-                  className={`flex min-h-[52px] cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-0 px-1 text-center text-[12px] leading-tight ${on ? 'bg-white font-semibold shadow-[0_1px_2px_rgb(0_0_0/.06)]' : 'bg-transparent text-[var(--color-text-muted)]'}`}
-                  style={{ color: on ? tone.ink : undefined }}>
-                  <span className="h-2 w-2 rounded-full" style={{ background: tone.main }} />{g.name}
-                </button>
-              )
-            })}
-          </nav>
         </div>
       )}
     </div>
-  )
-}
-
-function ThemeTab({ name, tone, on, onClick }: { name: string; tone: typeof TONES[number]; on: boolean; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} aria-current={on ? 'true' : undefined}
-      className="inline-flex h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[15px] font-semibold"
-      style={on ? { background: tone.ink, borderColor: tone.ink, color: '#fff' } : { background: tone.bg, borderColor: tone.bg, color: tone.ink }}>
-      <span className="h-2 w-2 rounded-full" style={{ background: on ? '#fff' : tone.main }} />{name}
-    </button>
   )
 }
 
