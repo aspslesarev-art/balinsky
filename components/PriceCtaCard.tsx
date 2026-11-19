@@ -12,6 +12,7 @@ import type { Lang } from '@/lib/i18n'
 const COPY = {
   ru: {
     buyChat: 'Связаться с застройщиком',
+    buyChatBar: 'Написать застройщику',
     buySeller: 'Связаться с продавцом',
     perSqm: '/ м²',
     priceUpdated: (d: string) => `Цена обновлена ${d}`,
@@ -22,6 +23,7 @@ const COPY = {
   },
   en: {
     buyChat: 'Developer contacts',
+    buyChatBar: 'Message the developer',
     buySeller: 'Seller contacts',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Price updated ${d}`,
@@ -141,6 +143,7 @@ export function PriceCtaCard({
   dealRows = null,
   priceCompDiffPct = null,
   journal = false,
+  bar = false,
   links = null,
 }: {
   priceUsd: number
@@ -163,6 +166,8 @@ export function PriceCtaCard({
   /** Стиль «Журнал» (страница виллы, макет владельца 19.11.2026): без рамки,
    *  крупная цена, одна зелёная кнопка, под ней ссылки `links`. */
   journal?: boolean
+  /** Журнал, вариант A: одна полоса во всю ширину под фото (цена · за м² · рассрочка · кнопка). */
+  bar?: boolean
   links?: ReactNode
 }) {
   const { currency } = useCurrency()
@@ -188,6 +193,42 @@ export function PriceCtaCard({
   void listingTitle
   void listingKind
   void listingSlug
+
+  // Вариант A (владелец 19.11.2026): полоса под главным фото — цена и «обновлена»,
+  // за м² и рассрочка столбиками «значение / подпись», справа ссылки и кнопка.
+  if (journal && bar) {
+    const barLabel = isResale ? c.buySeller : ((c as { buyChatBar?: string }).buyChatBar ?? c.buyChat)
+    const cols: { v: string; l: string }[] = [
+      ...(perSqm ? [{ v: perSqm, l: c.perSqm.replace(/^\/\s*/, lang === 'ru' || lang === 'uk' ? 'за ' : 'per ') }] : []),
+      ...(dealRows ?? []).map(row => ({ v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? ''), l: row.label.toLowerCase() })),
+    ]
+    return (
+      <div className="flex flex-wrap items-center gap-x-12 gap-y-4 border-b border-[#ECEFED] py-5">
+        <div className="flex flex-col gap-0.5">
+          <div className="text-[32px] font-semibold leading-[1.1] tracking-[-0.03em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</div>
+          {updated && <div className="text-[13px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</div>}
+        </div>
+        {cols.map(col => (
+          <div key={col.l} className="flex flex-col gap-0.5">
+            <span className="text-[15px] font-semibold text-[#0F1A15] tabular-nums">{col.v}</span>
+            <span className="text-[13px] text-[#6B7570]">{col.l}</span>
+          </div>
+        ))}
+        {note && <div className="text-[14px] text-[#6B7570]">{note}</div>}
+        <div className="ml-auto flex flex-wrap items-center gap-x-6 gap-y-3">
+          {links}
+          {reservedUntil ? (
+            <span className="flex items-center gap-2 text-[14px] text-[#92400E]"><Lock size={16} strokeWidth={1.6} /><span className="font-semibold">{c.reservedTitle}</span></span>
+          ) : (
+            <a href={isResale ? sellerUrl! : '#kontakty-operatora'} {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+              {barLabel}
+            </a>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   if (journal) {
     // Цена за м² и дата обновления — каждая своей строкой (владелец 19.11.2026).
@@ -220,7 +261,7 @@ export function PriceCtaCard({
             {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
             className="inline-flex h-12 w-full md:w-auto md:self-start items-center justify-center rounded-xl bg-[var(--color-primary)] px-7 text-[16px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
-            {buyLabel}
+            {isResale ? c.buySeller : ((c as { buyChatBar?: string }).buyChatBar ?? c.buyChat)}
           </a>
         )}
         {presentationButton}

@@ -40,7 +40,7 @@ const COPY = {
 } as const
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -74,6 +74,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   tilesAs?: 'tiles' | 'text'
   /** Звук места под слайд-шоу (/ambient/<x>.mp3): джунгли, океан, поля, сад. */
   ambient?: string | null
+  /** Сразу под главным фото, до ряда медиа (полоса цены, вариант A). */
+  belowHero?: ReactNode
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansAreMasterplan ? { ...base, plans: base.master } : base
@@ -247,6 +249,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
       </div>
+      {belowHero}
 
       {tilesAs === 'text' ? (links.length > 0 && (
           <nav aria-label={c.photos} className="-mx-6 mt-2 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:mt-4 md:w-auto md:max-w-full md:gap-5 md:overflow-visible md:px-0 [scrollbar-width:none]">

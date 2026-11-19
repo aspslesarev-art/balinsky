@@ -2067,6 +2067,37 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
         </div>
       }
     />
+  )  // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.
+  const priceBar = priceNum != null && (
+    <PriceCtaCard
+      journal
+      bar
+      priceUsd={priceNum}
+      pricePerSqmUsd={priceM2}
+      updatedAt={priceUpdatedAt}
+      managerId={managers[0]?.id ?? null}
+      sellerUrl={sellerUrl}
+      listingKind="villa"
+      listingId={v.airtable_id}
+      listingSlug={slug}
+      listingTitle={title}
+      reservedUntil={activeReservation?.expires_at ?? null}
+      presentationButton={null}
+      dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null}
+      links={
+        <div className="bx-pro-only">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:justify-start">
+            <AddToCollection asLink kind="villa" slug={slug} lang={lang} snapshot={{
+              title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+              district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+              leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+              id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
+            }} />
+            {presentationPdf}
+          </div>
+        </div>
+      }
+    />
   )
 
   return (
@@ -2085,19 +2116,18 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           { label: title },
         ]} />
 
-        {/* Стиль «Журнал» (макет владельца 19.11.2026): крупное название и строка
-            ключевых цифр слева, цена и одна зелёная кнопка справа; на телефоне
-            цена — под фото. */}
-        <section className="flex flex-wrap items-end gap-x-12 gap-y-6 pb-6 pt-2 md:pb-10">
-          <div className="flex min-w-0 flex-col gap-3 md:gap-4" style={{ flex: '999 1 560px' }}>
-            <h1 className="m-0 max-w-[20ch] font-display text-[32px] font-bold leading-[1.1] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[44px] lg:text-[56px] lg:leading-[1.05]">
+        {/* Верх — вариант A (макет владельца 19.11.2026): компактно, только
+            название и строка фактов; цена — полосой под фото (на телефоне —
+            после ряда медиа). */}
+        <section className="pb-5 md:pb-6">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
               {/* Без «— 86 м², 2 спальни…»: эти цифры стоят строкой ниже (владелец 19.11.2026). */}
               {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
             </h1>
             {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
             {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block self-start"><VerifiedYieldBadge lang={lang} /></a>}
           </div>
-          {priceCard && <div className="hidden lg:block" style={{ flex: '1 1 280px' }}>{priceCard}</div>}
         </section>
 
         <VillaGallery
@@ -2115,6 +2145,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
           bleed
           tilesAs="text"
+          belowHero={priceBar ? <div className="hidden lg:block">{priceBar}</div> : null}
           ambient={(() => {
             // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
             // или рисовые поля (если вид на рис), остальное — тропический сад.
