@@ -1,10 +1,12 @@
 // Вкладка «Генплан» окна медиаблока (макет «Окно медиаблока» 3 и телефон 5,
-// владелец 2026-11-11): шахматка слева, справа (на телефоне - ниже) список
-// вилл комплекса со статусом и ценой. Статусы - из шахматки (хотспоты).
+// владелец 2026-11-11): список вилл комплекса со статусом и ценой и легенда
+// цветов - в левой колонке (на телефоне - ниже), шахматка справа (2026-11-19).
+// Статусы - из шахматки (хотспоты).
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { Money } from './Money'
+import { VIEWER_ASIDE_LG } from './media-viewer-aside'
 
 export type MasterplanRow = {
   label: string
@@ -20,16 +22,31 @@ const COPY = {
   en: { count: (n: number) => `${n} villas in the complex`, hint: 'Statuses from the developer’s availability chart', free: 'For sale', reserved: 'Reserved', sold: 'Sold', off: 'Not for sale', this: 'this one' },
 } as const
 
+// Цвета зон на шахматке (STATUS_STYLE в ComplexVisualizationViewer).
+const PLAN_COLOR = { free: '#16A34A', reserved: '#F59E0B', sold: '#DC2626' } as const
 const DOT: Record<string, string> = { free: '#8FD9B3', reserved: '#F5A524', sold: '#E5484D', off: 'rgba(255,255,255,.35)' }
 
 export function MasterplanWithList({ plan, rows, lang }: { plan: ReactNode; rows: MasterplanRow[]; lang: Lang }) {
   const c = pickCopy(COPY, lang)
+  const counts = { free: 0, reserved: 0, sold: 0 }
+  for (const r of rows) if (r.status) counts[r.status]++
+  const legend = ([['free', c.free], ['reserved', c.reserved], ['sold', c.sold]] as const).filter(([k]) => counts[k] > 0)
   const list = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <span className="text-[17px] font-semibold">{c.count(rows.length)}</span>
         <span className="text-[13px] text-white/60">{c.hint}</span>
       </div>
+      {legend.length > 0 && (
+        <div className="hidden lg:flex flex-wrap gap-x-4 gap-y-2 text-[14px]">
+          {legend.map(([k, label]) => (
+            <span key={k} className="inline-flex items-center gap-2">
+              <span className="w-3 h-3 rounded-[3px]" style={{ background: PLAN_COLOR[k] }} aria-hidden />
+              {label}<span className="font-semibold tabular-nums">{counts[k]}</span>
+            </span>
+          ))}
+        </div>
+      )}
       <div className="flex flex-col">
         {rows.map((r, i) => {
           const key = r.status ?? 'off'
@@ -39,9 +56,10 @@ export function MasterplanWithList({ plan, rows, lang }: { plan: ReactNode; rows
               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: r.current ? '#FFFFFF' : DOT[key] }} />
               <span className="flex-1 min-w-0 flex flex-col gap-0.5">
                 <span className="text-[15px] font-semibold">{r.label}{r.current ? ` · ${c.this}` : ''}</span>
-                <span className="text-[13px] text-white/60">{r.sub ?? statusText}</span>
+                <span className="text-[13px] text-white/60">{r.sub ?? statusText}{r.sub && !(r.status === 'free' && r.priceUsd) && <span className="hidden lg:inline"> · {statusText}</span>}</span>
               </span>
-              <span className={`text-[14px] tabular-nums ${r.status === 'free' && r.priceUsd ? 'text-white' : 'text-white/60'}`}>{r.status === 'free' && r.priceUsd ? <Money usd={r.priceUsd} lang={lang} /> : statusText}</span>
+              {/* В узкой колонке на компьютере статус - во второй строке, справа только цена. */}
+              <span className={`shrink-0 whitespace-nowrap text-[14px] tabular-nums ${r.status === 'free' && r.priceUsd ? 'text-white' : 'text-white/60 lg:hidden'}`}>{r.status === 'free' && r.priceUsd ? <Money usd={r.priceUsd} lang={lang} /> : statusText}</span>
             </>
           )
           const cls = `flex items-center gap-3 min-h-[52px] px-3 rounded-[10px] no-underline text-white ${r.current ? 'bg-white/[0.08]' : ''}`
@@ -54,8 +72,8 @@ export function MasterplanWithList({ plan, rows, lang }: { plan: ReactNode; rows
   )
   return (
     <div className="lg:h-full flex flex-col lg:flex-row lg:min-h-0">
-      <div className="lg:flex-1 min-w-0 overflow-y-auto p-4 lg:p-6">{plan}</div>
-      <aside className="lg:w-[360px] shrink-0 p-4 lg:p-6 lg:border-l border-white/[0.08] lg:overflow-y-auto">{list}</aside>
+      <aside className={`order-last lg:order-first shrink-0 p-4 ${VIEWER_ASIDE_LG}`}>{list}</aside>
+      <div className="lg:flex-1 min-w-0 overflow-y-auto p-4 lg:p-6 lg:[&_.bx-plan-legend]:hidden">{plan}</div>
     </div>
   )
 }

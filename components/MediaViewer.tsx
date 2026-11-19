@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, Play, Box, Download, Minus, Plus } from 'lucide-react'
 import type { PromoKit } from '@/lib/promo-kits'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { VIEWER_ASIDE, VIEWER_LABEL } from './media-viewer-aside'
 
 export type GalleryVideo = { url: string; name: string | null }
 export type BaseTab = 'photos' | 'videos' | 'plans' | 'master' | 'tour' | 'promo'
@@ -132,8 +133,8 @@ export function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lan
           <span className="text-[15px] font-semibold truncate">{head}</span>
           <span className="text-[13px] text-white/60 truncate">{wide ? sub : mobileSub}</span>
         </div>
-        <nav className="hidden lg:flex flex-1 min-w-0 justify-center gap-1 overflow-x-auto [scrollbar-width:none]">{tabs.map(tabBtn)}</nav>
-        <div className="lg:w-[260px] flex justify-end">
+        <nav className="hidden lg:flex flex-1 min-w-0 justify-center-safe gap-1 overflow-x-auto [scrollbar-width:none]">{tabs.map(tabBtn)}</nav>
+        <div className="shrink-0 flex justify-end">
           <button type="button" onClick={onClose} aria-label={c.close} className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer focus-visible:outline-2 focus-visible:outline-white"><X size={20} /></button>
         </div>
       </header>
@@ -167,9 +168,8 @@ function PhotosPane({ items, i, go, pick, c, wide }: { items: { src: string; alt
   }, [i])
   if (!cur) return null
   const arrow = 'absolute top-1/2 -translate-y-1/2 w-[52px] h-[52px] rounded-full bg-white/[0.12] hover:bg-white/20 flex items-center justify-center cursor-pointer focus-visible:outline-2 focus-visible:outline-white'
-  return (
-    <>
-      <div className="relative flex-1 min-h-0 flex flex-col items-center justify-center gap-3 lg:px-24 lg:py-6"
+  const stage = (
+      <div className="relative flex-1 min-h-0 min-w-0 flex flex-col items-center justify-center gap-3 lg:px-24 lg:py-6"
         onPointerDown={e => { if (e.pointerType !== 'mouse') swipe.current = e.clientX }}
         onPointerUp={e => { const x0 = swipe.current; swipe.current = null; if (x0 != null && Math.abs(e.clientX - x0) > 40) go(e.clientX < x0 ? 1 : -1) }}>
         <div className="relative w-full flex-1 min-h-0 max-h-[60vh] lg:max-h-none">
@@ -191,26 +191,29 @@ function PhotosPane({ items, i, go, pick, c, wide }: { items: { src: string; alt
           <button type="button" onClick={() => go(1)} aria-label={c.next} className={`${arrow} right-6`}><ChevronRight size={24} /></button>
         </>}
       </div>
-      {wide && (
-        <div className="h-[104px] shrink-0 flex items-center gap-6 px-6 border-t border-white/[0.08]">
-          <div className="w-[240px] shrink-0 flex flex-col gap-1 min-w-0">
-            <span className="text-[15px] font-semibold tabular-nums">{i + 1} / {items.length}</span>
-            <span className="text-[13px] text-white/60 truncate">{cur.alt}</span>
-          </div>
-          <div ref={thumbs} className="flex-1 min-w-0 flex gap-2 overflow-x-auto justify-start [scrollbar-width:none]">
+  )
+  if (!wide) return stage
+  return (
+    <div className="flex-1 min-h-0 flex">
+      <aside className={VIEWER_ASIDE}>
+        <div className="flex flex-col gap-1">
+          <span className={VIEWER_LABEL}>{c.photos} <span className="tabular-nums">· {i + 1} / {items.length}</span></span>
+          <span className="text-[13px] leading-[1.5] text-white/60 line-clamp-2">{cur.alt}</span>
+        </div>
+        <a href={downloadHref(cur.src)} download className={ghostBtn}><Download size={16} aria-hidden />{c.dlPhoto}</a>
+        {items.length > 1 && (
+          <div ref={thumbs} className="grid grid-cols-2 gap-2">
             {items.map((it, k) => (
               <button key={k} data-k={k} type="button" onClick={() => pick(k)} aria-label={`${k + 1}`}
-                className={`relative shrink-0 w-[104px] h-[68px] rounded-md overflow-hidden border-2 cursor-pointer transition-opacity ${k === i ? 'border-white' : 'border-transparent opacity-55 hover:opacity-100'}`}>
-                <Image src={it.src} alt="" fill sizes="104px" className="object-cover" />
+                className={`relative aspect-[3/2] rounded-md overflow-hidden border-2 cursor-pointer transition-opacity focus-visible:outline-2 focus-visible:outline-white ${k === i ? 'border-white' : 'border-transparent opacity-55 hover:opacity-100'}`}>
+                <Image src={it.src} alt="" fill sizes="136px" className="object-cover" />
               </button>
             ))}
           </div>
-          <div className="w-[240px] shrink-0 flex justify-end">
-            <a href={downloadHref(cur.src)} download className={ghostBtn}><Download size={16} aria-hidden />{c.dlPhoto}</a>
-          </div>
-        </div>
-      )}
-    </>
+        )}
+      </aside>
+      {stage}
+    </div>
   )
 }
 
@@ -253,8 +256,8 @@ function PlansPane({ items, i, pick, c, wide }: { items: Item[]; i: number; pick
   return (
     <div className="flex-1 min-h-0 flex">
       {items.length > 1 && (
-        <aside className="w-[288px] shrink-0 p-6 border-r border-white/[0.08] flex flex-col gap-2 overflow-y-auto">
-          <span className="text-[13px] font-semibold uppercase tracking-wide text-white/60 mb-2">{c.plans}</span>
+        <aside className={`${VIEWER_ASIDE} !gap-2`}>
+          <span className={`${VIEWER_LABEL} mb-2`}>{c.plans}</span>
           {items.map((it, k) => (
             <button key={k} type="button" onClick={() => pick(k)}
               className={`flex items-center gap-3 p-2 rounded-[10px] border text-left cursor-pointer transition-colors ${k === i ? 'border-white/40 bg-white/10' : 'border-transparent hover:bg-white/5'}`}>
@@ -328,17 +331,17 @@ function VideosPane({ items, i, pick, c, wide, title }: { items: { url: string; 
     )
   }
   return (
-    <div className="flex-1 min-h-0 flex gap-6 p-6">
-      <div className="flex-1 min-w-0 flex flex-col gap-4 overflow-y-auto">
-        <div className="w-full max-w-[1100px]">{player}</div>
-        <span className="text-[17px] font-semibold">{cur.name ?? `${c.videos} ${i + 1}`}</span>
-      </div>
+    <div className="flex-1 min-h-0 flex">
       {items.length > 1 && (
-        <aside className="w-[340px] shrink-0 flex flex-col gap-3 overflow-y-auto">
-          <span className="text-[13px] font-semibold uppercase tracking-wide text-white/60">{c.videosN(items.length)}</span>
+        <aside className={`${VIEWER_ASIDE} !gap-3`}>
+          <span className={VIEWER_LABEL}>{c.videosN(items.length)}</span>
           {list.map(row)}
         </aside>
       )}
+      <div className="flex-1 min-w-0 p-6 flex flex-col gap-4 overflow-y-auto">
+        <div className="w-full max-w-[1100px]">{player}</div>
+        <span className="text-[17px] font-semibold">{cur.name ?? `${c.videos} ${i + 1}`}</span>
+      </div>
     </div>
   )
 }
@@ -369,9 +372,15 @@ function PromoPane({ promo, c, wide }: { promo: PromoKit; c: C; wide: boolean })
     }, k * 400))
   }
 
+  // Компьютер: сторис целиком влезают по высоте окна (владелец: «обрезается»).
+  // Ширина плитки - меньшая из «доли ширины ряда» и «высоты ряда × 9/16»;
+  // 100cq* - размеры ряда-контейнера, 54px - кнопка «Скачать» с отступом.
+  const perRow = Math.min(files.length, 4)
+  const rowsN = Math.ceil(files.length / perRow)
+  const tileW = `min(calc((100cqw - ${(perRow - 1) * 20 + 1}px) / ${perRow}), calc(((100cqh - ${(rowsN - 1) * 20}px) / ${rowsN} - 54px) * 9 / 16))`
   const tile = (f: string, k: number, mobile: boolean) => (
-    <div key={f} className={`flex flex-col gap-2.5 min-h-0 ${mobile ? '' : ''}`}>
-      <div className="relative rounded-xl overflow-hidden bg-white/5 aspect-[9/16]">
+    <div key={f} className="flex flex-col gap-2.5 min-h-0" style={mobile ? undefined : { width: tileW }}>
+      <div className="relative shrink-0 rounded-xl overflow-hidden bg-white/5 aspect-[9/16]">
         <a href={f} target="_blank" rel="noopener" className="block w-full h-full focus-visible:outline-2 focus-visible:outline-white">
           {/* eslint-disable-next-line @next/next/no-img-element -- готовое лёгкое превью */}
           <img src={series.thumbs?.[k] ?? f} alt={`${series.title} ${k + 1}`} loading="lazy" className="w-full h-full object-cover" />
@@ -403,7 +412,7 @@ function PromoPane({ promo, c, wide }: { promo: PromoKit; c: C; wide: boolean })
   }
   return (
     <div className="flex-1 min-h-0 flex">
-      <aside className="w-[320px] shrink-0 p-6 border-r border-white/[0.08] flex flex-col gap-4 overflow-y-auto">
+      <aside className={VIEWER_ASIDE}>
         <div className="flex flex-col gap-2">
           <span className="text-[20px] font-semibold tracking-tight">{c.promoTitle}</span>
           <span className="text-[14px] leading-[1.55] text-white/70">{c.promoText}</span>
@@ -422,14 +431,14 @@ function PromoPane({ promo, c, wide }: { promo: PromoKit; c: C; wide: boolean })
           ))}
         </div>
       </aside>
-      <div className="flex-1 min-w-0 px-8 py-6 flex flex-col gap-5 overflow-y-auto">
+      <div className="flex-1 min-w-0 p-6 flex flex-col gap-5">
         <div className="flex items-center gap-4">
           <span className="text-[17px] font-semibold">{series.title}</span>
           <span className="text-[14px] text-white/60">1080 × 1920 · PNG</span>
           <span className="flex-1" />
           <button type="button" onClick={saveAll} className="inline-flex items-center gap-2 h-11 px-[18px] rounded-[10px] bg-white text-[#101814] text-[15px] font-semibold cursor-pointer hover:bg-white/90"><Download size={16} aria-hidden />{c.dlAll(files.length)}</button>
         </div>
-        <div className="grid grid-cols-4 gap-5 max-w-[1000px]">{files.map((f, k) => tile(f, k, false))}</div>
+        <div className="flex-1 min-h-0 w-full max-w-[1000px] flex flex-wrap content-start gap-5 [container-type:size]">{files.map((f, k) => tile(f, k, false))}</div>
       </div>
     </div>
   )

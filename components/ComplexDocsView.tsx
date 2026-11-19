@@ -155,7 +155,7 @@ export function ComplexDocsView({ docs, lang }: { docs: ComplexDocs; lang: Lang;
     const on = d.file === selected
     return (
       <button key={d.file} type="button" onClick={() => pick(d)} title={t(d.what)}
-        className={`h-8 px-2.5 rounded-lg border text-[13px] inline-flex items-center gap-1.5 cursor-pointer transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-white ${on ? 'border-white/50 bg-white/[0.14] text-white' : 'border-white/[0.12] bg-white/[0.04] text-white/85 hover:bg-white/10'}`}>
+        className={`min-h-8 py-1 px-2.5 rounded-lg border text-[13px] leading-snug text-left inline-flex items-center gap-1.5 cursor-pointer transition-colors duration-[120ms] focus-visible:outline-2 focus-visible:outline-white ${on ? 'border-white/50 bg-white/[0.14] text-white' : 'border-white/[0.12] bg-white/[0.04] text-white/85 hover:bg-white/10'}`}>
         {unlocked === false ? <Lock size={12} aria-hidden /> : <FileText size={14} className="text-[#8FD9B3]" aria-hidden />}
         {t(d.name)}
       </button>
@@ -164,7 +164,7 @@ export function ComplexDocsView({ docs, lang }: { docs: ComplexDocs; lang: Lang;
 
   return (
     <div className="h-full flex">
-      <aside className="w-[420px] shrink-0 border-r border-white/[0.08] flex flex-col">
+      <aside className="w-[320px] shrink-0 border-r border-white/[0.08] flex flex-col">
         <div className="px-6 py-5 flex items-center gap-3 border-b border-white/[0.08]">
           <span className="shrink-0 w-10 h-10 rounded-full bg-[#8FD9B3] text-[#0C100E] flex items-center justify-center"><Check size={20} strokeWidth={2.6} aria-hidden /></span>
           <span className="flex flex-col gap-0.5">

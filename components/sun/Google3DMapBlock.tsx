@@ -14,6 +14,7 @@ import { Globe } from 'lucide-react'
 
 import type { Google3DView } from '@/lib/complex-sun-plan'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { VIEWER_ASIDE_LG, VIEWER_LABEL } from '@/components/media-viewer-aside'
 
 type Status = 'idle' | 'checking' | 'open' | 'limit' | 'error'
 
@@ -261,8 +262,10 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
       />
     </div>
 
-    <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
-      <p className="text-xs text-white/50">
+    {/* Во вкладке окна медиаблока на компьютере - левая колонка (2026-11-19). */}
+    <div className={`flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3 ${inline ? `${VIEWER_ASIDE_LG} lg:items-start lg:justify-start lg:border-t-0 lg:bg-[#0C100E]` : ''}`}>
+      {inline && <span className={`hidden lg:block ${VIEWER_LABEL}`}>{en ? '3D map' : '3D-карта'}</span>}
+      <p className={`text-xs text-white/50 ${inline ? 'lg:text-[14px] lg:leading-[1.55] lg:text-white/70' : ''}`}>
         <span className="hidden sm:inline">
           {en ? 'Drag to rotate · wheel to zoom · right button to pan' : 'Тяните — вращать · колесо — приблизить · правая кнопка — сдвинуть'}
         </span>
@@ -286,8 +289,8 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
 
   if (inline) {
     return (
-      <div className="flex h-full w-full flex-col overflow-hidden bg-[#0e1116]">
-        {status === 'open' ? body : (
+      <div className="flex h-full w-full flex-col lg:flex-row-reverse overflow-hidden bg-[#0e1116]">
+        {status === 'open' ? body : <>
           <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-white/70">
             {status === 'limit'
               ? (en ? 'The 3D map is unavailable for today — try again tomorrow.' : '3D-карта на сегодня недоступна — загляните завтра.')
@@ -295,7 +298,8 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
                 ? (en ? 'Could not open the 3D map. Check your connection and try again.' : 'Не получилось открыть 3D-карту. Проверьте интернет и попробуйте ещё раз.')
                 : (en ? 'Opening the 3D map…' : 'Открываю 3D-карту…')}
           </div>
-        )}
+          <div className={`hidden ${VIEWER_ASIDE_LG} lg:bg-[#0C100E]`}><span className={VIEWER_LABEL}>{en ? '3D map' : '3D-карта'}</span></div>
+        </>}
       </div>
     )
   }

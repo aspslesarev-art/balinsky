@@ -20,6 +20,7 @@ import {
 } from '@/lib/solar'
 import { buildComplexModel, type ComplexModel, type ModelHeights } from './sun-model'
 import type { Wind, WindRoseData } from '@/lib/complex-access'
+import { VIEWER_ASIDE_LG, VIEWER_LABEL } from '@/components/media-viewer-aside'
 
 const DEG = Math.PI / 180
 const SUN_DISTANCE = 160
@@ -48,6 +49,8 @@ export type SunSceneProps = {
   en?: boolean
   /** Роза ветров у объекта (ERA5-Land): струи ветра по сцене, сезон — по дате. */
   wind?: Wind | null
+  /** Вкладка окна медиаблока: на компьютере ветер и ползунки - в левой колонке. */
+  side?: boolean
 }
 
 type SceneContext = {
@@ -65,7 +68,7 @@ type SceneContext = {
   windLines: THREE.LineSegments
 }
 
-export function SunScene({ plan, latitude, longitude, placement, heights, en = false, wind = null }: SunSceneProps) {
+export function SunScene({ plan, latitude, longitude, placement, heights, en = false, wind = null, side = false }: SunSceneProps) {
   const { rowAzimuth } = placement
   const mountRef = useRef<HTMLDivElement | null>(null)
   const sceneRef = useRef<SceneContext | null>(null)
@@ -370,30 +373,39 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
     else frameCourtyards(ctx.camera, ctx.controls, rowAzimuth, reach)
   }, [plan, rowAzimuth, topView])
 
+  // Карточка ветра: поверх сцены, а во вкладке окна на компьютере - в колонке.
+  const windCard = (cls: string) => windNow && showWind && (
+    <div className={`rounded-xl px-3.5 py-3 text-white ${cls}`}>
+      <div className="text-[11px] uppercase tracking-wide text-white/60">
+        {en ? `Wind · ${windNow.dry ? 'dry season, Apr–Oct' : 'rainy season, Nov–Mar'}` : `Ветер · ${windNow.dry ? 'сухой сезон, апр–окт' : 'сезон дождей, ноя–мар'}`}
+      </div>
+      <div className="mt-1 text-[16px] font-semibold">
+        {en ? `From the ${SECTOR_EN[windNow.fromSector]}, ${windNow.ms.toFixed(1)} m/s` : `${SECTOR_RU[windNow.fromSector]}, ${windNow.ms.toFixed(1).replace('.', ',')} м/с`}
+      </div>
+      <div className="mt-1 text-[13px] leading-snug text-white/80">
+        {en
+          ? `${Math.round(windNow.pct)}% of the time it blows from here. ${beaufortEn(windNow.ms)}.`
+          : `${Math.round(windNow.pct)}% времени дует отсюда. ${beaufortRu(windNow.ms)}.`}
+      </div>
+      <div className="mt-1 text-[11px] text-white/50">{en ? 'Data: Copernicus ERA5-Land' : 'Данные: Copernicus ERA5-Land'}{wind ? `, ${wind.years} ${en ? 'yrs hourly' : 'лет почасово'}` : ''}</div>
+    </div>
+  )
+
   return (
-    <div className="flex h-full w-full flex-col bg-[#0e1116]">
+    <div className={`flex h-full w-full flex-col bg-[#0e1116] ${side ? 'lg:flex-row-reverse' : ''}`}>
       <div className="relative min-h-0 flex-1">
         <div ref={mountRef} className="absolute inset-0" />
-        {windNow && showWind && (
-          <div className="pointer-events-none absolute left-3 top-3 max-w-[300px] rounded-xl bg-[#0e1116]/85 px-3.5 py-3 text-white">
-            <div className="text-[11px] uppercase tracking-wide text-white/60">
-              {en ? `Wind · ${windNow.dry ? 'dry season, Apr–Oct' : 'rainy season, Nov–Mar'}` : `Ветер · ${windNow.dry ? 'сухой сезон, апр–окт' : 'сезон дождей, ноя–мар'}`}
-            </div>
-            <div className="mt-1 text-[16px] font-semibold">
-              {en ? `From the ${SECTOR_EN[windNow.fromSector]}, ${windNow.ms.toFixed(1)} m/s` : `${SECTOR_RU[windNow.fromSector]}, ${windNow.ms.toFixed(1).replace('.', ',')} м/с`}
-            </div>
-            <div className="mt-1 text-[13px] leading-snug text-white/80">
-              {en
-                ? `${Math.round(windNow.pct)}% of the time it blows from here. ${beaufortEn(windNow.ms)}.`
-                : `${Math.round(windNow.pct)}% времени дует отсюда. ${beaufortRu(windNow.ms)}.`}
-            </div>
-            <div className="mt-1 text-[11px] text-white/50">{en ? 'Data: Copernicus ERA5-Land' : 'Данные: Copernicus ERA5-Land'}{wind ? `, ${wind.years} ${en ? 'yrs hourly' : 'лет почасово'}` : ''}</div>
-          </div>
-        )}
+        {windCard(`pointer-events-none absolute left-3 top-3 max-w-[300px] bg-[#0e1116]/85 ${side ? 'lg:hidden' : ''}`)}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 bg-[#12161c] px-4 py-3">
-        <label className="flex min-w-[200px] flex-1 flex-col gap-1">
+      <div className={`flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 bg-[#12161c] px-4 py-3 ${side ? `${VIEWER_ASIDE_LG} lg:flex-nowrap lg:items-stretch lg:border-t-0 lg:bg-[#0C100E] lg:!gap-6` : ''}`}>
+        {side && (
+          <div className="hidden lg:flex flex-col gap-3">
+            <span className={VIEWER_LABEL}>{en ? (wind ? 'Sun & wind' : 'Sun & shade') : (wind ? 'Солнце и ветер' : 'Солнце и тень')}</span>
+            {windCard('bg-white/[0.06]')}
+          </div>
+        )}
+        <label className={`flex min-w-[200px] flex-1 flex-col gap-1 ${side ? 'lg:flex-none' : ''}`}>
           <span className="flex justify-between text-[11px] uppercase tracking-wide text-white/50">
             {en ? 'Date' : 'Дата'}
             <b className="text-[13px] normal-case tracking-normal text-white">
@@ -411,7 +423,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
           />
         </label>
 
-        <label className="flex min-w-[200px] flex-1 flex-col gap-1">
+        <label className={`flex min-w-[200px] flex-1 flex-col gap-1 ${side ? 'lg:flex-none' : ''}`}>
           <span className="flex justify-between text-[11px] uppercase tracking-wide text-white/50">
             {en ? 'Time' : 'Время'}
             <b className="text-[13px] normal-case tracking-normal text-white">
@@ -430,7 +442,7 @@ export function SunScene({ plan, latitude, longitude, placement, heights, en = f
           />
         </label>
 
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${side ? 'lg:flex-wrap' : ''}`}>
           <button
             type="button"
             onClick={() => setPlaying((v) => !v)}
