@@ -2094,6 +2094,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           tourUrl={complexMedia.tourUrl}
           promo={promoKit}
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
+          bleed
         />
         </div>
 
