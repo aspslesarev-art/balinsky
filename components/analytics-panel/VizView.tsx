@@ -159,7 +159,7 @@ const TILE = {
   sat: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile',
 }
 
-function MapView({ v }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
+function MapView({ v, lang }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
   const W = 960, H = Math.round(W / v.aspect)
   const c = world(v.center.lat, v.center.lng, v.zoom)
   const x0 = c.x - W / 2, y0 = c.y - H / 2
@@ -168,10 +168,19 @@ function MapView({ v }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
     for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H) / 256); ty++) tiles.push({ tx, ty })
   const P = (lat: number, lng: number) => { const p = world(lat, lng, v.zoom); return { x: ((p.x - x0) / W) * 100, y: ((p.y - y0) / H) * 100 } }
   const inside = (p: { x: number; y: number }) => p.x > 1 && p.x < 99 && p.y > 1 && p.y < 99
-  const rosePaths = v.rose ? (() => {
+  // Ветер: штрихи летят по направлению ветра; чем чаще дует с румба, тем их
+  // больше. rose — доли «откуда дует», с севера по часовой.
+  const windStreaks = v.rose ? (() => {
     const mx = Math.max(...v.rose!)
-    const pt = (a: number, r: number) => `${(90 + r * Math.sin(a)).toFixed(1)} ${(90 - r * Math.cos(a)).toFixed(1)}`
-    return v.rose!.map((p, i) => { const r = Math.max(4, (p / mx) * 78), a = (i * Math.PI) / 4, h = Math.PI / 8; return { d: `M90 90 L${pt(a - h, r)} A${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${pt(a + h, r)}Z`, op: 0.35 + 0.65 * (p / mx) } })
+    const out: { deg: number; off: number; delay: number; dur: number; op: number }[] = []
+    v.rose!.forEach((p, i) => {
+      const n = Math.round((p / mx) * 14)
+      for (let j = 0; j < n; j++) {
+        const h = ((i * 7 + j * 13) * 2654435761) % 1000 / 1000
+        out.push({ deg: i * 45 + 90, off: (j / Math.max(1, n - 1) - 0.5) * 90 + (h - 0.5) * 8, delay: -h * 3.2 - j * 0.37, dur: 2.6 + h * 1.2, op: 0.45 + 0.5 * (p / mx) })
+      }
+    })
+    return out
   })() : null
   return (
     <>
@@ -239,13 +248,25 @@ function MapView({ v }: { v: Extract<Viz, { kind: 'map' }>; lang: string }) {
             </svg>
           )
         })()}
-        {rosePaths && (
-          <svg viewBox="0 0 180 180" aria-hidden="true" className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2">
-            <circle cx="90" cy="90" r="80" fill="none" stroke="#fff" strokeOpacity=".7" />
-            <circle cx="90" cy="90" r="40" fill="none" stroke="#fff" strokeOpacity=".5" />
-            {rosePaths.map((p, k) => <path key={k} d={p.d} fill={ORANGE} fillOpacity={p.op} stroke="#fff" strokeWidth=".8" />)}
-            {[['С', 90, 8, 'middle'], ['В', 176, 94, 'end'], ['Ю', 90, 178, 'middle'], ['З', 4, 94, 'start']].map(([t, x, y, a]) => <text key={t as string} x={x as number} y={y as number} textAnchor={a as 'middle'} fontSize="11" fontWeight="700" fill="#fff">{t}</text>)}
-          </svg>
+        {windStreaks && (
+          <div aria-hidden="true" className="absolute inset-0 [container-type:size]">
+            {windStreaks.map((w, k) => (
+              // Обёртка повёрнута по ветру (от румба «откуда» к противоположному),
+              // внутри штрих пролетает её из конца в конец.
+              <div key={k} className="absolute left-1/2 top-1/2 h-0 w-[150%] max-w-none" style={{ transform: `translate(-50%, 0) rotate(${w.deg}deg) translateY(${w.off}cqmin)` }}>
+                <div className="ap-wind h-0 w-full" style={{ animationDuration: `${w.dur}s`, animationDelay: `${w.delay}s` }}>
+                  <span className="block h-1 w-[12%] rounded-full" style={{ background: `linear-gradient(90deg, transparent, rgb(255 255 255 / ${w.op}))`, filter: 'drop-shadow(0 0 2px rgb(0 0 0 / .35))' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {v.rose && (
+          <>
+            {([['С', 'N', 'left-1/2 top-2 -translate-x-1/2'], ['Ю', 'S', 'left-1/2 bottom-2 -translate-x-1/2'], ['З', 'W', 'left-2 top-1/2 -translate-y-1/2'], ['В', 'E', 'right-2 top-1/2 -translate-y-1/2']] as const).map(([ru, en, pos]) => (
+              <span key={ru} className={`absolute ${pos} grid h-8 w-8 place-items-center rounded-full bg-white text-[13px] font-bold text-[#0F1A15] shadow`}>{lang === 'ru' || lang === 'uk' ? ru : en}</span>
+            ))}
+          </>
         )}
         {v.pins?.map((p, k) => { const q = P(p.lat, p.lng); return inside(q) && <span key={k} className="ap-chip absolute -ml-1.5 -mt-1.5 h-3 w-3 rounded-full border-2 border-white shadow" style={{ left: `${q.x}%`, top: `${q.y}%`, background: p.color, animationDelay: `${Math.min(k, 30) * 60}ms` }} /> })}
         {v.tags?.map((tg, k) => { const q = P(tg.lat, tg.lng); return inside(q) && <span key={k} className="ap-in absolute whitespace-nowrap rounded bg-white px-1.5 py-0.5 text-[12px] font-semibold text-[#0F1A15] shadow" style={{ left: `${q.x}%`, top: `${q.y}%`, transform: q.x > 60 ? 'translate(calc(-100% - 8px), -50%)' : 'translate(8px, -50%)', animationDelay: `${600 + k * 150}ms` }}>{tg.label}</span> })}

@@ -655,7 +655,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         names: order.map(o => `${dirs[o.k]} — ${Math.round(o.p)}%`),
         result: T(`Чаще дует: ${dirs[order[0].k]} и ${dirs[order[1].k]}, в среднем ${dec(w.all.avg_ms)} м/с`, `Mostly from the ${dirs[order[0].k]} and ${dirs[order[1].k]}, ${dec(w.all.avg_ms)} m/s on average`),
       })
-      vizs.push({ kind: 'map', title: T('Ветер над участком: откуда дует', 'Wind over the plot: where it blows from'), center, zoom: 18, aspect: 1, base: 'sat', rose: w.all.pct, credit: 'Esri, ERA5-Land', alt: T(`Роза ветров: чаще всего ${dirs[order[0].k]}`, `Wind rose: mostly ${dirs[order[0].k]}`), pins: [{ ...center, color: '#0F1A15' }] })
+      vizs.push({ kind: 'map', title: T(`Ветер над участком: чаще с направления «${dirs[order[0].k]}»`, `Wind over the plot: mostly from the ${dirs[order[0].k]}`), center, zoom: 18, aspect: 1, base: 'sat', rose: w.all.pct, credit: 'Esri, ERA5-Land', alt: T(`Роза ветров: чаще всего ${dirs[order[0].k]}`, `Wind rose: mostly ${dirs[order[0].k]}`), pins: [{ ...center, color: '#0F1A15' }] })
     }
     const MLONG = ru ? ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     if (months.length === 12) vizs.unshift({ kind: 'months', title: yr ? T(`Погода по месяцам · ${yr.sunny} ${plw(yr.sunny, 'солнечный день|солнечных дня|солнечных дней')} в году`, `Weather by month · ${yr.sunny} sunny days a year`) : T('Погода по месяцам', 'Weather by month'), sunnyLbl: T('солнечных', 'sunny'), months: months.map((x, k) => ({ label: MLONG[k], sunny: x.m.sunny, tmax: x.m.t_max, wet: x.m.wet })) })
