@@ -19,6 +19,7 @@
 import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
 import { DEVELOPER_DESCRIPTION_FIELD } from '@/lib/developer-description'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD } from '@/lib/legal-audit'
+import { BOOKING_FIELD } from '@/lib/booking-amenities'
 
 export type EditKind = 'developer' | 'complex' | 'villa' | 'apartment'
 
@@ -44,6 +45,7 @@ export type InputKind =
   | 'toggle'
   | 'image'     // одна картинка (логотип)
   | 'map'       // ссылка Google Maps → Geo + Geo 2
+  | 'booking'   // удобства для Booking: { пункт: 'yes' | 'no' } (lib/booking-amenities.ts)
 
 export type EditField = {
   key: string
@@ -162,6 +164,12 @@ const unitMain = (priceKey: string): EditField[] => [
   { key: 'Площадь', label: 'Площадь', input: 'number', suffix: 'м²' },
 ]
 
+const bookingSection: EditSection = {
+  id: 'booking', title: 'Для Booking',
+  hint: 'Отметьте, что будет у юнита. ИИ уже отметил то, что нашёл на фото, - поправьте, если не так. От этого зависит оценка «Оценить для Booking».',
+  fields: [{ key: BOOKING_FIELD, label: 'Удобства', input: 'booking' }],
+}
+
 const villa: EditSection[] = [
   {
     id: 'main', title: 'Главное',
@@ -173,6 +181,7 @@ const villa: EditSection[] = [
       { key: 'Заявленная доходность', label: 'Доходность по словам застройщика', input: 'number', suffix: '% в год' },
     ],
   },
+  bookingSection,
 ]
 
 const apartment: EditSection[] = [
@@ -185,6 +194,7 @@ const apartment: EditSection[] = [
       { key: 'Заявленная доходность', label: 'Доходность по словам застройщика', input: 'number', suffix: '% в год' },
     ],
   },
+  bookingSection,
 ]
 
 /** Имя нового ЖК — только при создании (см. комментарий в шапке про названия). */

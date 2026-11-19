@@ -10,6 +10,7 @@ import type { Tourism } from './tourism'
 import { cdnRewrite } from '@/lib/photo-cdn'
 import { BALI_HUBS, type ExtraRoute, type Travel } from './extra-routes'
 import type { BookingFit } from './booking-fit'
+import { BOOKING_EXTRA } from '@/lib/booking-amenities'
 import type { UnitDemand } from '@/lib/unit-demand'
 import type { Landmark } from '@/lib/landmarks'
 import type { NearbyVenue } from '@/lib/surroundings'
@@ -204,13 +205,20 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const missing = keys.filter(k => bf.feats[k] === 0 && bf.adr[k] >= 1.08 && !(k.startsWith('pool_') && present.some(p => p.startsWith('pool_'))) && !(k === 'view_ocean_partial' && bf.feats.view_ocean_full === 0)).sort((a, b) => bf.adr[b] - bf.adr[a])
     const unknown = keys.filter(k => bf.feats[k] == null && bf.adr[k] >= 1.08)
     const top = [...keys].filter(k => bf.adr[k] > 1.03).sort((a, b) => bf.adr[b] - bf.adr[a])
+    // Пометка, если признак отметил человек в «Редактировать → Для Booking», а не ИИ по фото.
+    const human = new Set(bf.byHuman)
+    const by = (k: string) => (human.has(k) ? T(' · отмечено вручную', ' · marked by hand') : '')
+    const extras = BOOKING_EXTRA.filter(x => bf.marks[x.key] === 'yes')
+    const aiPresent = present.filter(k => !human.has(k))
     if (present.length) {
       const dm = i.demand
       const rows: Extract<Viz, { kind: 'checks' }>['rows'] = [
-        ...present.map(k => ({ state: (bf.adr[k] >= 1 ? 'ok' : 'warn') as 'ok' | 'warn', label: lab(k), value: T(`${pctTxt(bf.adr[k])} к цене ночи`, `${pctTxt(bf.adr[k])} per night`) })),
-        ...missing.slice(0, 3).map(k => ({ state: 'info' as const, label: T(`Нет: ${lab(k).toLowerCase()}`, `Missing: ${lab(k).toLowerCase()}`), value: T(`у кого есть — ${pctTxt(bf.adr[k])}`, `those who have it: ${pctTxt(bf.adr[k])}`) })),
+        ...present.map(k => ({ state: (bf.adr[k] >= 1 ? 'ok' : 'warn') as 'ok' | 'warn', label: lab(k) + by(k), value: T(`${pctTxt(bf.adr[k])} к цене ночи`, `${pctTxt(bf.adr[k])} per night`) })),
+        ...missing.slice(0, 3).map(k => ({ state: 'info' as const, label: T(`Нет: ${lab(k).toLowerCase()}`, `Missing: ${lab(k).toLowerCase()}`) + by(k), value: T(`у кого есть — ${pctTxt(bf.adr[k])}`, `those who have it: ${pctTxt(bf.adr[k])}`) })),
       ]
-      const vizs: Viz[] = [{ kind: 'checks', title: T('Что на фото важно гостям Booking', 'What on the photos matters to Booking guests'), rows }]
+      const vizs: Viz[] = [{ kind: 'checks', title: T('Что важно гостям Booking', 'What matters to Booking guests'), rows }]
+      if (extras.length) vizs.push({ kind: 'checks', title: T('Ещё есть для гостей', 'Also for guests'),
+        rows: extras.map(x => ({ state: 'ok' as const, label: T(x.ru, x.en), value: T('на цену не считаем', 'not priced') })) })
       if (dm) vizs.unshift({ kind: 'gauge', title: T(`Среди ${dm.compsN} похожих объектов рядом на Booking`, `Among ${dm.compsN} similar listings nearby on Booking`), avg: Math.min(97, Math.max(3, dm.score)), min: null, max: null,
         avgLabel: T(`${dm.score} из 100`, `${dm.score} of 100`), loLabel: T('слабее соседей', 'weaker'), hiLabel: T('сильнее соседей', 'stronger'),
         caption: T(`Вилла ожидаемо сильнее ${dm.score}% объектов того же типа и размера рядом.`, `The villa is expected to beat ${dm.score}% of similar listings nearby.`) })
@@ -219,9 +227,13 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       const sources: Source[] = [
         { name: T('ИИ разбирает фото виллы', 'AI reviews the villa photos'), fresh: T(`${bf.photos} ${plw(bf.photos, 'фото|фото|фото')}`, `${bf.photos} photos`),
           chips: [T('вид', 'view'), T('бассейн', 'pool'), T('планировка', 'layout'), T('ванная', 'bathroom')],
-          total: present.length, unit: T('признак|признака|признаков', 'features'),
-          names: [...present.map(lab), ...(bf.wow ? [T(`изюминка: ${bf.wow}`, `standout: ${bf.wow}`)] : [])],
-          result: T(`Нашёл: ${present.map(k => lab(k).toLowerCase()).join(', ')}`, `Found: ${present.map(k => lab(k).toLowerCase()).join(', ')}`) },
+          total: aiPresent.length, unit: T('признак|признака|признаков', 'features'),
+          names: [...aiPresent.map(lab), ...(bf.wow ? [T(`изюминка: ${bf.wow}`, `standout: ${bf.wow}`)] : [])],
+          result: aiPresent.length ? T(`Нашёл: ${aiPresent.map(k => lab(k).toLowerCase()).join(', ')}`, `Found: ${aiPresent.map(k => lab(k).toLowerCase()).join(', ')}`) : T('Сверх отмеченного вручную ничего не нашёл', 'Nothing beyond the hand-marked items') },
+        ...(human.size || extras.length ? [{ name: T('Отмечено вручную', 'Marked by hand'), fresh: T('застройщик или Balinsky', 'developer or Balinsky'),
+          chips: [T('есть', 'has'), T('нет', 'missing')], total: human.size + extras.length, unit: T('пункт|пункта|пунктов', 'items'),
+          names: [...[...human].map(k => `${lab(k)} — ${bf.marks[k] === 'yes' ? T('есть', 'yes') : T('нет', 'no')}`), ...extras.map(x => T(x.ru, x.en))],
+          result: T(`Есть: ${[...[...human].filter(k => bf.marks[k] === 'yes').map(lab), ...extras.map(x => x.ru)].map(x => x.toLowerCase()).join(', ') || '—'}`, `Has: ${[...[...human].filter(k => bf.marks[k] === 'yes').map(lab), ...extras.map(x => x.en)].map(x => x.toLowerCase()).join(', ') || '—'}`) }] : []),
         { name: T('Booking: за что гости платят больше', 'Booking: what guests pay more for'), fresh: T(`${num(bf.nMarket)} объектов Бали`, `${num(bf.nMarket)} Bali listings`),
           chips: [T('цена ночи', 'nightly rate'), T('признаки с фото', 'photo features'), T('сравнение с соседями', 'vs neighbours')],
           total: bf.nMarket, unit: T('объект|объекта|объектов', 'listings'),
@@ -235,7 +247,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       const best = present.filter(k => bf.adr[k] >= 1.03)
       out.push({
         id: 'booking', group: G.money, title: T('Оценить для Booking', 'Rate for Booking'),
-        sub: T('Что на фото важно гостям и сколько это даёт к цене ночи', 'What guests value on the photos and what it adds per night'),
+        sub: T('Что важно гостям и сколько это даёт к цене ночи', 'What guests value and what it adds per night'),
         sources, vizs,
         bigs: [...(dm ? [{ v: T(`${dm.score} из 100`, `${dm.score} of 100`), l: T('против соседей на Booking', 'vs Booking neighbours') }] : []),
           ...(dm?.expectedAdrUsd ? [{ v: usd(dm.expectedAdrUsd), l: T('ожидаемая цена ночи', 'expected nightly rate') }] : [{ v: String(present.length), l: T('признаков на фото', 'photo features') }])],
@@ -243,7 +255,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
           dm ? (dm.score >= 70 ? T('на Booking вилла сильнее большинства похожих объектов рядом', 'on Booking the villa beats most similar listings nearby') : dm.score <= 45 ? T('на Booking вилла слабее многих похожих объектов рядом', 'on Booking the villa is weaker than many similar listings nearby') : T('на Booking вилла на уровне похожих объектов рядом', 'on Booking the villa is on par with similar listings nearby')) : null,
           best.length ? T(`в плюс — ${best.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}`, `pluses: ${best.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}`) : null,
         ].filter(Boolean).join('; ') + '.',
-        footnote: T(`Учитываем то, что видно на фото и рендерах.${unknown.length ? ` По фото не понять: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Мелкую технику вроде кофемашины по фото надёжно не различить — её не учитываем.`, `Based on what is visible in photos and renders.${unknown.length ? ` Not visible: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Small appliances like a coffee machine can’t be reliably seen, so they aren’t counted.`),
+        footnote: T(`Учитываем то, что видно на фото и рендерах, и отметки застройщика.${unknown.length ? ` Пока не понять: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Кофемашину, Wi-Fi и другие мелочи видно гостю, но на цену ночи по нашим данным они не влияют.`, `Based on photos, renders and the developer’s marks.${unknown.length ? ` Still unclear: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Coffee machine, Wi-Fi and similar extras are shown to guests but don’t move the nightly rate in our data.`),
       })
     }
   }

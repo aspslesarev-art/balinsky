@@ -1,0 +1,39 @@
+name: Booking score (nightly)
+
+# Пересчёт балла «Оценить для Booking» (unit_demand_score): подхватывает
+# отметки «Редактировать → Для Booking» и новые разборы фото. Только чтение
+# Supabase и запись одной таблицы, без платных API.
+
+on:
+  schedule:
+    - cron: '40 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: demand-score
+  cancel-in-progress: false
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          # 24+: скрипт импортирует lib/booking-amenities.ts напрямую.
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Write .env.local from secrets
+        run: |
+          cat > .env.local <<EOT
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}
+          EOT
+
+      - name: Score
+        run: node --import=./scripts/_fetch-retry.mjs scripts/demand-score.mjs

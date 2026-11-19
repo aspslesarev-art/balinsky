@@ -172,5 +172,7 @@ export const loadOneUnitDemand = unstable_cache(
     return toDemand(data as Row, lang)
   },
   ['unit-demand-one'],
-  { revalidate: 604800, tags: ['unit-demand'] },
+  // Сутки, а не неделя: балл пересчитывается каждую ночь (.github/workflows/demand-score.yml),
+  // в том числе после отметок «Для Booking».
+  { revalidate: 86400, tags: ['unit-demand'] },
 )

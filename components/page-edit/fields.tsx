@@ -4,11 +4,15 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Check, ExternalLink, Loader2, MapPin, Plus, Upload, X } from 'lucide-react'
 import type { EditField, EditKind } from '@/lib/page-edit/schema'
 import { isShortMapsLink, mapsUrl, parseCoords, type LatLng } from '@/lib/page-edit/geo'
+import { BOOKING_EXTRA, BOOKING_PRICED, readMarks, type BookingMarks, type Mark } from '@/lib/booking-amenities'
 
 // Поля человеческой формы правки. Ввод — по смыслу поля, а не по типу в базе:
 // варианты кнопками, список пунктов строками, точка карты ссылкой.
 
-export type FieldValue = string | number | boolean | string[] | (LatLng & { link?: string }) | null
+export type FieldValue = string | number | boolean | string[] | (LatLng & { link?: string }) | BookingMarks | null
+
+/** Подсказки ИИ для «Для Booking» (тот же вид, что BookingHints в lib/page-edit/server.ts). */
+export type BookingHintsView = { ai: Record<string, 0 | 1 | null>; adr: Record<string, number>; photos: number }
 
 const inputCls =
   'w-full min-h-[44px] rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5 text-base text-[var(--color-text)] ' +
@@ -41,6 +45,7 @@ type FieldProps = {
   kind: EditKind
   value: FieldValue
   onChange: (v: FieldValue) => void
+  booking?: BookingHintsView | null
 }
 
 export function Field(props: FieldProps) {
@@ -54,6 +59,7 @@ export function Field(props: FieldProps) {
     case 'percent': return <FieldShell f={f} htmlFor={id}><PercentField {...props} id={id} /></FieldShell>
     case 'map': return <FieldShell f={f} htmlFor={id}><MapField {...props} id={id} /></FieldShell>
     case 'image': return <FieldShell f={f}><ImageField {...props} /></FieldShell>
+    case 'booking': return <BookingField {...props} />
     case 'textarea':
       return (
         <FieldShell f={f} htmlFor={id}>
@@ -71,6 +77,85 @@ export function Field(props: FieldProps) {
         </FieldShell>
       )
   }
+}
+
+// «Для Booking»: у каждого удобства «Есть / Нет / Не знаю». Пока человек не
+// отметил, видно, что нашёл ИИ на фото; отметка человека важнее.
+function BookingField({ value, onChange, booking }: FieldProps) {
+  const marks = readMarks(value)
+  const ai = booking?.ai ?? {}
+  const set = (key: string, m: Mark | null) => {
+    const next = { ...marks }
+    if (m) next[key] = m
+    else delete next[key]
+    onChange(next)
+  }
+  const pct = (k: string) => {
+    const x = booking?.adr[k]
+    if (x == null) return null
+    const p = Math.round((x - 1) * 100)
+    return p >= 1 ? `+${p}% к цене ночи` : null
+  }
+  const seg = (on: boolean, tone: 'yes' | 'no' | 'unk', guess: boolean) =>
+    'min-h-[40px] rounded-lg border px-2 text-[0.875rem] transition-colors duration-[120ms] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--color-primary)] ' +
+    (guess ? 'border-dashed border-[var(--color-primary)] bg-[var(--color-bg)] font-semibold text-[var(--color-primary-pressed)] '
+      : 'border-transparent ') +
+    (!on ? (guess ? '' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg)]')
+      : tone === 'yes' ? 'bg-[var(--color-primary)] font-semibold text-white'
+      : tone === 'no' ? 'bg-[var(--color-text)] font-semibold text-[var(--color-bg)]'
+      : 'bg-[var(--color-bg)] font-semibold text-[var(--color-text)] shadow-[var(--shadow-card)]')
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <p className="text-[0.8125rem] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Влияет на цену ночи</p>
+        <ul className="flex flex-col divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)]">
+          {BOOKING_PRICED.map(it => {
+            const m = (marks[it.key] as Mark | undefined) ?? null
+            const a = ai[it.key]
+            // Сплошная кнопка — ответ человека («Не знаю», пока не отметил);
+            // пунктир — что нашёл ИИ: он и считается, пока человек не ответил.
+            const shown: 'yes' | 'no' | 'unk' = m ?? 'unk'
+            const guess: 'yes' | 'no' | null = m ? null : a === 1 ? 'yes' : a === 0 ? 'no' : null
+            const src = m ? 'Отмечено вручную'
+              : a === 1 ? 'ИИ нашёл на фото (пунктир) - так и считаем'
+              : a === 0 ? 'ИИ не нашёл на фото (пунктир) - так и считаем'
+              : 'По фото не понять'
+            const effect = pct(it.key)
+            return (
+              <li key={it.key} className="flex flex-col gap-2 px-3 py-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-[0.9375rem] font-semibold text-[var(--color-text)]">{it.ru}</span>
+                  {effect && <span className="shrink-0 whitespace-nowrap text-[0.8125rem] text-[var(--color-primary)]">{effect}</span>}
+                </div>
+                <div role="radiogroup" aria-label={it.ru} className="grid grid-cols-3 gap-1 rounded-xl bg-[var(--color-surface-alt)] p-1">
+                  <button type="button" role="radio" aria-checked={shown === 'yes'} onClick={() => set(it.key, 'yes')} className={seg(shown === 'yes', 'yes', guess === 'yes')}>Есть</button>
+                  <button type="button" role="radio" aria-checked={shown === 'no'} onClick={() => set(it.key, 'no')} className={seg(shown === 'no', 'no', guess === 'no')}>Нет</button>
+                  <button type="button" role="radio" aria-checked={shown === 'unk'} onClick={() => set(it.key, null)} className={seg(shown === 'unk', 'unk', false)}>Не знаю</button>
+                </div>
+                <span className="text-[0.8125rem] text-[var(--color-text-muted)]">
+                  {src}
+                  {m && a != null && (a === 1) !== (m === 'yes') ? ` · ИИ по фото думал иначе` : ''}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+      <div className="flex flex-col gap-2">
+        <p className="text-[0.8125rem] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Видно гостю, на цену не считаем</p>
+        <div className="flex flex-wrap gap-2">
+          {BOOKING_EXTRA.map(it => {
+            const on = marks[it.key] === 'yes'
+            return (
+              <button key={it.key} type="button" aria-pressed={on} onClick={() => set(it.key, on ? null : 'yes')} className={chipCls(on)}>
+                {on ? <Check size={14} aria-hidden /> : <Plus size={14} aria-hidden />}{it.ru}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ToggleField({ f, value, onChange }: FieldProps) {

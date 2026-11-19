@@ -26,6 +26,7 @@ import { loadEnv } from './_kb-build.mjs'
 import {
   FEATURES, extractFeatures, toVector, calibrateFinish, unknownFeatures,
 } from './_demand-features.mjs'
+import { BOOKING_FIELD, applyMarks, readMarks } from '../lib/booking-amenities.ts'
 
 loadEnv()
 
@@ -188,6 +189,12 @@ for (const [kind, table] of [['villa', 'raw_villas'], ['apartment', 'raw_apartme
   }
 }
 const geoRows = await pageAll('listing_geo', 'kind, airtable_id, lat, lng')
+const marksBy = new Map()
+for (const [kind, table] of [['villa', 'raw_villas'], ['apartment', 'raw_apartments']]) {
+  const rows = await pageAll(table, `airtable_id, marks:data->"${BOOKING_FIELD}"`)
+  for (const r of rows) if (r.marks) marksBy.set(`${kind}|${r.airtable_id}`, readMarks(r.marks))
+}
+console.log(`Отметки «Для Booking»: ${marksBy.size} юнитов`)
 const visionRows = await pageAll('catalog_product_vision', 'kind, airtable_id, vision', q =>
   q.in('kind', ['villa', 'apartment']))
 const zoneRows = await pageAll('catalog_product_zone', 'kind, airtable_id, zone')
@@ -242,11 +249,15 @@ function scoreUnit(u) {
   if (!st) return null
 
   // Юнит проходит через тот же оценщик, что и его соседи.
-  const feats = extractFeatures(u.vision)
+  const unknown = unknownFeatures(u.vision)
+  // Отметки застройщика/команды («Редактировать → Для Booking») важнее фото:
+  // заданный человеком признак перестаёт быть неизвестным.
+  const { feats, byHuman } = applyMarks(extractFeatures(u.vision), marksBy.get(`${u.kind}|${u.ref_id}`) ?? {})
+  for (const k of byHuman) unknown.delete(k)
+  if (byHuman.some(k => k.startsWith('pool_'))) for (const k of ['pool_infinity', 'pool_private', 'pool_shared', 'pool_none']) unknown.delete(k)
   if (Number.isFinite(u.rawFinish)) {
     feats.finish_tier = (remapFinish(u.rawFinish) - 1) / 4
   }
-  const unknown = unknownFeatures(u.vision)
   const vec = st.impute(toVector(feats), unknown)
   const adrMult = Math.exp(apply(mAdr, vec))
   const occPct = Math.min(100, Math.max(5, st.occAvg + apply(mOcc, vec) * 100))

@@ -20,6 +20,8 @@ import { COLLECTION_OF, KIND_LABEL, fieldsFor, type EditField, type EditKind } f
 import { mapsUrl } from './geo'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import type { Editor } from './access'
+import { parseMarks, readMarks, type BookingMarks } from '@/lib/booking-amenities'
+import { loadBookingAdr, loadBookingFit } from '@/lib/analytics-panel/booking-fit'
 
 // Чтение и запись человеческой формы правки страницы.
 //
@@ -51,7 +53,15 @@ const str = (v: unknown): string => {
   return v == null ? '' : String(v).trim()
 }
 
-export type EditValue = string | number | boolean | string[] | { lat: number; lng: number } | null
+export type EditValue = string | number | boolean | string[] | { lat: number; lng: number } | BookingMarks | null
+
+/** Подсказки ИИ для раздела «Для Booking»: что нашёл на фото и сколько это даёт к цене ночи. */
+export type BookingHints = {
+  ai: Record<string, 0 | 1 | null>
+  /** Признак → во сколько раз меняется цена ночи (exp(coef)). */
+  adr: Record<string, number>
+  photos: number
+}
 
 export type EditChild = {
   kind: EditKind
@@ -73,6 +83,7 @@ export type EditPayload = {
   children: EditChild[]
   /** Публичная страница записи (RU) — её показываем справа от формы. */
   pagePath: string | null
+  booking: BookingHints | null
 }
 
 function cfgOf(kind: EditKind): CollectionConfig {
@@ -99,6 +110,8 @@ function readValue(f: EditField, d: Record<string, unknown>): EditValue {
     }
     case 'chips':
       return Array.isArray(raw) ? raw.map(str).filter(Boolean) : str(raw) ? str(raw).split(',').map(s => s.trim()).filter(Boolean) : []
+    case 'booking':
+      return readMarks(raw)
     case 'list':
       return str(raw).split('\n').map(s => s.replace(/^\s*[•\-–—*]\s*/, '').trim()).filter(Boolean)
     default:
@@ -202,6 +215,11 @@ export async function loadEdit(kind: EditKind, id: string, editor: Editor): Prom
     complex,
     children: await childrenOf(kind, id, d),
     pagePath: pagePathOf(kind, d),
+    booking: kind === 'villa' || kind === 'apartment'
+      ? await loadBookingFit(kind, id)
+        .then(async bf => bf ? { ai: bf.ai, adr: bf.adr, photos: bf.photos } : { ai: {}, adr: await loadBookingAdr(), photos: 0 })
+        .catch(e => { console.error('page-edit booking hints', e); return null })
+      : null,
   }
 }
 
@@ -234,6 +252,7 @@ function recordTitle(kind: EditKind, fields: Record<string, unknown>): string {
 function describeValue(f: EditField, v: unknown): string {
   if (f.input === 'map') return v ? 'новая точка на карте' : 'точка убрана'
   if (f.input === 'toggle') return v ? 'да' : 'нет'
+  if (f.input === 'booking') return `${Object.keys(readMarks(v)).length} отмет.`
   if (Array.isArray(v)) return v.length ? `${v.length} пункт.` : 'пусто'
   const s = str(v)
   return s ? (s.length > 60 ? `${s.slice(0, 60)}…` : s) : 'пусто'
@@ -286,6 +305,11 @@ function toStore(f: EditField, v: unknown): Record<string, unknown> {
       const text = v.map(str).filter(Boolean).join('\n')
       if (text.length > MAX_LONG) throw new EditError('too_long')
       return put(text)
+    }
+    case 'booking': {
+      const m = parseMarks(v)
+      if (!m) throw new EditError('bad_value')
+      return put(m)
     }
     case 'image': {
       const s = str(v)

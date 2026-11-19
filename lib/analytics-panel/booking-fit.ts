@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
+import { BOOKING_FIELD, applyMarks, readMarks, type BookingMarks } from '@/lib/booking-amenities'
 
 // «Оценить для Booking» (владелец 19.11.2026): что видно на фото виллы и
 // сколько каждый такой признак даёт к цене ночи на Booking. Признаки и
@@ -16,8 +17,14 @@ type Vision = {
 }
 
 export type BookingFit = {
-  /** Признак → есть (1) / нет (0) / по фото не понять (null). */
+  /** Признак → есть (1) / нет (0) / не понять (null) — с учётом отметок людей. */
   feats: Record<string, 0 | 1 | null>
+  /** То же только по фото (ИИ), без отметок. */
+  ai: Record<string, 0 | 1 | null>
+  /** Отметки застройщика или команды из «Редактировать → Для Booking». */
+  marks: BookingMarks
+  /** Признаки, которые задал человек, а не ИИ. */
+  byHuman: string[]
   /** Признак → во сколько раз меняется цена ночи у тех, у кого он есть (exp(coef)). */
   adr: Record<string, number>
   nMarket: number
@@ -76,16 +83,32 @@ const loadModel = unstable_cache(async () => {
   return { coef: m.coef as Record<string, number>, n: Number(m.n_train) + Number(m.n_holdout) }
 }, ['analytics-booking-model-v1'], { revalidate: 86400 })
 
-export async function loadBookingFit(kind: 'villa' | 'apartment', airtableId: string): Promise<BookingFit | null> {
-  const [model, vis] = await Promise.all([
-    loadModel(),
-    sb.from('catalog_product_vision').select('vision, photos_used').eq('kind', kind).eq('airtable_id', airtableId).maybeSingle(),
-  ])
-  if (vis.error) throw new Error(`catalog_product_vision: ${vis.error.message}`)
-  if (!vis.data?.vision) return null
-  const v = vis.data.vision as Vision
+/** Во сколько раз признак меняет цену ночи (exp(coef)), без finish_tier. */
+export async function loadBookingAdr(): Promise<Record<string, number>> {
+  const model = await loadModel()
   const adr: Record<string, number> = {}
   for (const [k, c] of Object.entries(model.coef)) if (k !== 'finish_tier') adr[k] = Math.exp(c)
-  const wow = typeof v.wow_element === 'string' && v.wow_element !== 'none' ? v.wow_element : null
-  return { feats: features(v), adr, nMarket: model.n, photos: Number(vis.data.photos_used) || 0, wow }
+  return adr
+}
+
+const TABLE = { villa: 'raw_villas', apartment: 'raw_apartments' } as const
+
+export async function loadBookingFit(kind: 'villa' | 'apartment', airtableId: string): Promise<BookingFit | null> {
+  const [model, vis, raw] = await Promise.all([
+    loadModel(),
+    sb.from('catalog_product_vision').select('vision, photos_used').eq('kind', kind).eq('airtable_id', airtableId).maybeSingle(),
+    sb.from(TABLE[kind]).select(`marks:data->"${BOOKING_FIELD}"`).eq('airtable_id', airtableId).maybeSingle(),
+  ])
+  if (vis.error) throw new Error(`catalog_product_vision: ${vis.error.message}`)
+  if (raw.error) throw new Error(`${TABLE[kind]}: ${raw.error.message}`)
+  const marks = readMarks((raw.data as { marks?: unknown } | null)?.marks)
+  const v = vis.data?.vision as Vision | undefined
+  // Нет ни разбора фото, ни отметок — оценивать нечего.
+  if (!v && Object.keys(marks).length === 0) return null
+  const ai = v ? features(v) : Object.fromEntries(Object.keys(features({})).map(k => [k, null])) as Record<string, 0 | 1 | null>
+  const { feats, byHuman } = applyMarks(ai, marks)
+  const adr: Record<string, number> = {}
+  for (const [k, c] of Object.entries(model.coef)) if (k !== 'finish_tier') adr[k] = Math.exp(c)
+  const wow = v && typeof v.wow_element === 'string' && v.wow_element !== 'none' ? v.wow_element : null
+  return { feats, ai, marks, byHuman, adr, nMarket: model.n, photos: Number(vis.data?.photos_used) || 0, wow }
 }
