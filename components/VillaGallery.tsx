@@ -147,8 +147,9 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         )}
         {n > 1 && !showing && (
           <button type="button" onClick={play} aria-label={c.play}
-            className="absolute left-1/2 top-1/2 z-10 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-white/90 text-[#0F1A15] shadow-[0_1px_2px_rgb(0_0_0/.1),0_8px_24px_rgb(0_0_0/.18)] backdrop-blur transition-transform duration-[120ms] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-            <Play size={28} fill="currentColor" className="ml-1" aria-hidden />
+            className="absolute left-1/2 top-1/2 z-10 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/55 bg-white/[.18] text-white shadow-[0_8px_32px_rgb(0_0_0/.12)] backdrop-blur-md transition-[transform,background-color] duration-[120ms] hover:scale-105 hover:bg-white/[.26] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            {/* «Стекло» из макета (владелец 19.11.2026): мягкий скруглённый треугольник. */}
+            <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" className="block"><path d="M7.8 5.6v12.8a1 1 0 0 0 1.52.85l10.4-6.4a1 1 0 0 0 0-1.7L9.32 4.75A1 1 0 0 0 7.8 5.6z" fill="currentColor" /></svg>
           </button>
         )}
         {showing && <>
