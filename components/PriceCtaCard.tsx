@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { Send, Lock } from 'lucide-react'
@@ -173,7 +173,11 @@ export function PriceCtaCard({
   const perSqm = pricePerSqmUsd != null && Number.isFinite(pricePerSqmUsd) && pricePerSqmUsd > 0
     ? formatPriceExact(pricePerSqmUsd, currency, lang)
     : null
-  const updated = updatedAt ? formatUpdated(updatedAt, c.locale) : null
+  // «Сегодня», «вчера», «5 дней назад» вместо даты (владелец 19.11.2026). Считаем после
+  // загрузки у посетителя: у сервера другой часовой пояс — иначе ошибка гидрации.
+  const [relUpdated, setRelUpdated] = useState<string | null>(null)
+  useEffect(() => { setRelUpdated(updatedAt ? relativeDay(updatedAt, c.locale) : null) }, [updatedAt, c.locale])
+  const updated = relUpdated ?? (updatedAt ? formatUpdated(updatedAt, c.locale) : null)
 
   const isResale = !!sellerUrl
   const buyLabel = isResale ? c.buySeller : c.buyChat
@@ -186,11 +190,9 @@ export function PriceCtaCard({
   void listingSlug
 
   if (journal) {
+    // Цена за м² и дата обновления — каждая своей строкой (владелец 19.11.2026).
+    const meta = perSqm ? `${perSqm} ${c.perSqm}` : null
     const updatedLine = updated ? c.priceUpdated(updated) : null
-    const meta = [
-      perSqm ? `${perSqm} ${c.perSqm}` : null,
-      updatedLine && (perSqm && lang !== 'de' ? updatedLine.replace(/^./, ch => ch.toLowerCase()) : updatedLine),
-    ].filter(Boolean).join(' · ')
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
@@ -199,6 +201,7 @@ export function PriceCtaCard({
           </div>
           <ApproxPrice usd={priceUsd} lang={lang} className="block mt-1 text-[14px] text-[#6B7570]" />
           {meta && <div className="text-[14px] text-[#6B7570]">{meta}</div>}
+          {updatedLine && <div className="text-[14px] text-[#6B7570]">{updatedLine}</div>}
           {note && <div className="text-[14px] text-[#6B7570]">{note}</div>}
           {dealRows && dealRows.map((row, i) => (
             <div key={i} className="text-[14px] text-[#6B7570]">
@@ -315,6 +318,16 @@ export function PriceCtaCard({
       </div>
     </div>
   )
+}
+
+/** «сегодня», «вчера», «5 дней назад» на языке страницы — до месяца; раньше — null (покажем дату). */
+function relativeDay(iso: string, locale: string): string | null {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const diff = Math.round((day(new Date()) - day(d)) / 86_400_000)
+  if (diff < 0 || diff > 30) return null
+  try { return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-diff, 'day') } catch { return null }
 }
 
 function formatUpdated(iso: string, locale: string = 'ru-RU'): string | null {
