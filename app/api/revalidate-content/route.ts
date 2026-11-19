@@ -40,6 +40,8 @@ export async function POST(request: Request) {
     if (visionKind) revalidateTag(`vision:${visionKind}`, 'max')
     // «Что рядом» (competitors/_nearby_places) — same week-long cache.
     if (k === 'villas') revalidateTag('nearby:places', 'max')
+    // Балл для Booking (scripts/demand-score.mjs → unit_demand_score) — недельный кэш.
+    if (k === 'villas' || k === 'apartments') revalidateTag('unit-demand', 'max')
     // Юр-проверка ЖК (feeds/_complex-legal-<lang>.json) — тот же недельный кэш.
     if (k === 'villas' || k === 'complexes') revalidateTag('complex-legal', 'max')
     for (const route of KIND_TO_PATHS[k]) {

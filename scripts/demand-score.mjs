@@ -176,6 +176,17 @@ const segmentDemandPct = (kind, occAvg) => {
 
 const kbRows = await pageAll('assistant_kb', 'kind, ref_id, slug, title, meta', q =>
   q.in('kind', ['villa', 'apartment']))
+// Объекты, добавленные через админку, в базу знаний Балины попадают не сразу —
+// берём их прямо из каталога, иначе у новых вилл не будет балла.
+for (const [kind, table] of [['villa', 'raw_villas'], ['apartment', 'raw_apartments']]) {
+  const inKb = new Set(kbRows.filter(k => k.kind === kind).map(k => k.ref_id))
+  const raw = await pageAll(table, 'airtable_id, slug:data->>"SEO:Slug", title:data->>"SEO:Title", beds:data->>Комнаты, district:data->>"Location 2"')
+  for (const r of raw) {
+    if (inKb.has(r.airtable_id)) continue
+    const beds = Number.parseInt(r.beds, 10)
+    kbRows.push({ kind, ref_id: r.airtable_id, slug: r.slug, title: r.title, meta: { bedrooms: Number.isFinite(beds) ? beds : null, district: r.district } })
+  }
+}
 const geoRows = await pageAll('listing_geo', 'kind, airtable_id, lat, lng')
 const visionRows = await pageAll('catalog_product_vision', 'kind, airtable_id, vision', q =>
   q.in('kind', ['villa', 'apartment']))
