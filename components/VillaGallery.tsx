@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Play, Pause, MapPinned, Rotate3d, Megaphone } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Play, Pause, MapPinned, Rotate3d, Megaphone, Volume2, VolumeX } from 'lucide-react'
 import type { PromoKit } from '@/lib/promo-kits'
 import { MediaViewer, ytThumb, type GalleryVideo, type Tab, type ViewerTab } from './MediaViewer'
 import { pickCopy, type Lang } from '@/lib/i18n'
@@ -27,20 +27,20 @@ const FADE_MS = 600
 const PRESETS = 6
 
 const COPY = {
-  ru: { play: 'Смотреть слайд-шоу', pause: 'Пауза', promo: 'Реклама', tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', open: 'Открыть фото', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', more: (n: number) => `+${n} фото` },
-  en: { play: 'Play slideshow', pause: 'Pause', promo: 'Marketing', tour: '3D tour', master: 'Master plan', photos: 'Photos', videos: 'Videos', plans: 'Floor plans', model3d: '3D model', open: 'Open photo', close: 'Close', prev: 'Previous', next: 'Next', more: (n: number) => `+${n} photos` },
-  id: { play: 'Putar tayangan slide', pause: 'Jeda', promo: 'Materi promosi', tour: 'Tur 3D', master: 'Masterplan', photos: 'Foto', videos: 'Video', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', more: (n: number) => `+${n} foto` },
-  fr: { play: 'Lancer le diaporama', pause: 'Pause', promo: 'Publicité', tour: 'Visite 3D', master: 'Plan masse', photos: 'Photos', videos: 'Vidéos', plans: 'Plans', model3d: 'Modèle 3D', open: 'Ouvrir la photo', close: 'Fermer', prev: 'Précédent', next: 'Suivant', more: (n: number) => `+${n} photos` },
-  de: { play: 'Diashow abspielen', pause: 'Pause', promo: 'Werbung', tour: '3D-Rundgang', master: 'Lageplan', photos: 'Fotos', videos: 'Videos', plans: 'Grundrisse', model3d: '3D-Modell', open: 'Foto öffnen', close: 'Schließen', prev: 'Zurück', next: 'Weiter', more: (n: number) => `+${n} Fotos` },
-  zh: { play: '播放幻灯片', pause: '暂停', promo: '推广素材', tour: '3D 漫游', master: '总平面图', photos: '照片', videos: '视频', plans: '平面图', model3d: '3D 模型', open: '查看照片', close: '关闭', prev: '上一张', next: '下一张', more: (n: number) => `+${n} 张` },
-  nl: { play: 'Diavoorstelling afspelen', pause: 'Pauze', promo: 'Reclame', tour: '3D-tour', master: 'Masterplan', photos: "Foto's", videos: "Video's", plans: 'Plattegronden', model3d: '3D-model', open: 'Foto openen', close: 'Sluiten', prev: 'Vorige', next: 'Volgende', more: (n: number) => `+${n} foto's` },
-  ban: { play: 'Putar slide', pause: 'Jeda', promo: 'Promosi', tour: 'Tur 3D', master: 'Masterplan', photos: 'Poto', videos: 'Vidéo', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', more: (n: number) => `+${n} poto` },
-  pl: { play: 'Odtwórz pokaz slajdów', pause: 'Pauza', promo: 'Reklama', tour: 'Spacer 3D', master: 'Plan osiedla', photos: 'Zdjęcia', videos: 'Wideo', plans: 'Rzuty', model3d: 'Model 3D', open: 'Otwórz zdjęcie', close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', more: (n: number) => `+${n} zdjęć` },
-  uk: { play: 'Дивитися слайд-шоу', pause: 'Пауза', promo: 'Реклама', tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Відео', plans: 'Планування', model3d: '3D-модель', open: 'Відкрити фото', close: 'Закрити', prev: 'Назад', next: 'Вперед', more: (n: number) => `+${n} фото` },
+  ru: { mute: 'Без звука', unmute: 'Включить звук', play: 'Смотреть слайд-шоу', pause: 'Пауза', promo: 'Реклама', tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Видео', plans: 'Планировки', model3d: '3D-модель', open: 'Открыть фото', close: 'Закрыть', prev: 'Назад', next: 'Вперёд', more: (n: number) => `+${n} фото` },
+  en: { mute: 'Mute', unmute: 'Unmute', play: 'Play slideshow', pause: 'Pause', promo: 'Marketing', tour: '3D tour', master: 'Master plan', photos: 'Photos', videos: 'Videos', plans: 'Floor plans', model3d: '3D model', open: 'Open photo', close: 'Close', prev: 'Previous', next: 'Next', more: (n: number) => `+${n} photos` },
+  id: { mute: 'Bisukan', unmute: 'Nyalakan suara', play: 'Putar tayangan slide', pause: 'Jeda', promo: 'Materi promosi', tour: 'Tur 3D', master: 'Masterplan', photos: 'Foto', videos: 'Video', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Tutup', prev: 'Sebelumnya', next: 'Berikutnya', more: (n: number) => `+${n} foto` },
+  fr: { mute: 'Couper le son', unmute: 'Activer le son', play: 'Lancer le diaporama', pause: 'Pause', promo: 'Publicité', tour: 'Visite 3D', master: 'Plan masse', photos: 'Photos', videos: 'Vidéos', plans: 'Plans', model3d: 'Modèle 3D', open: 'Ouvrir la photo', close: 'Fermer', prev: 'Précédent', next: 'Suivant', more: (n: number) => `+${n} photos` },
+  de: { mute: 'Stumm', unmute: 'Ton an', play: 'Diashow abspielen', pause: 'Pause', promo: 'Werbung', tour: '3D-Rundgang', master: 'Lageplan', photos: 'Fotos', videos: 'Videos', plans: 'Grundrisse', model3d: '3D-Modell', open: 'Foto öffnen', close: 'Schließen', prev: 'Zurück', next: 'Weiter', more: (n: number) => `+${n} Fotos` },
+  zh: { mute: '静音', unmute: '开启声音', play: '播放幻灯片', pause: '暂停', promo: '推广素材', tour: '3D 漫游', master: '总平面图', photos: '照片', videos: '视频', plans: '平面图', model3d: '3D 模型', open: '查看照片', close: '关闭', prev: '上一张', next: '下一张', more: (n: number) => `+${n} 张` },
+  nl: { mute: 'Dempen', unmute: 'Geluid aan', play: 'Diavoorstelling afspelen', pause: 'Pauze', promo: 'Reclame', tour: '3D-tour', master: 'Masterplan', photos: "Foto's", videos: "Video's", plans: 'Plattegronden', model3d: '3D-model', open: 'Foto openen', close: 'Sluiten', prev: 'Vorige', next: 'Volgende', more: (n: number) => `+${n} foto's` },
+  ban: { mute: 'Bisukan', unmute: 'Nyalakan suara', play: 'Putar slide', pause: 'Jeda', promo: 'Promosi', tour: 'Tur 3D', master: 'Masterplan', photos: 'Poto', videos: 'Vidéo', plans: 'Denah', model3d: 'Model 3D', open: 'Buka foto', close: 'Nutup', prev: 'Sadurungné', next: 'Salanturné', more: (n: number) => `+${n} poto` },
+  pl: { mute: 'Wycisz', unmute: 'Włącz dźwięk', play: 'Odtwórz pokaz slajdów', pause: 'Pauza', promo: 'Reklama', tour: 'Spacer 3D', master: 'Plan osiedla', photos: 'Zdjęcia', videos: 'Wideo', plans: 'Rzuty', model3d: 'Model 3D', open: 'Otwórz zdjęcie', close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', more: (n: number) => `+${n} zdjęć` },
+  uk: { mute: 'Без звуку', unmute: 'Увімкнути звук', play: 'Дивитися слайд-шоу', pause: 'Пауза', promo: 'Реклама', tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Відео', plans: 'Планування', model3d: '3D-модель', open: 'Відкрити фото', close: 'Закрити', prev: 'Назад', next: 'Вперед', more: (n: number) => `+${n} фото` },
 } as const
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles' }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -72,6 +72,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   /** «text» — вместо плиток строка ссылок «Фото 10 · Видео 3 · …» (стиль
    *  «Журнал», страница виллы; макет владельца 19.11.2026). */
   tilesAs?: 'tiles' | 'text'
+  /** Звук места под слайд-шоу (/ambient/<x>.mp3): джунгли, океан, поля, сад. */
+  ambient?: string | null
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansAreMasterplan ? { ...base, plans: base.master } : base
@@ -83,6 +85,49 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const [show, setShow] = useState<{ from: number; k: number } | null>(null)
   const [fading, setFading] = useState(false)
   const showing = show !== null
+  // Звук места (владелец 19.11.2026): «как будто смотрим видео». Web Audio —
+  // петля без щелчка на стыке, плавное нарастание; звук стартует только по
+  // нажатию Play (браузеры иначе не дают), «без звука» запоминаем на сеанс.
+  const audio = useRef<{ ctx: AudioContext; gain: GainNode; src: AudioBufferSourceNode | null; buf: AudioBuffer | null } | null>(null)
+  const [muted, setMuted] = useState(false)
+  useEffect(() => { try { setMuted(sessionStorage.getItem('bx-ambient-muted') === '1') } catch {} }, [])
+  const soundOn = async () => {
+    if (!ambient) return
+    try {
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!Ctx) return
+      const a = audio.current ?? (audio.current = { ctx: new Ctx(), gain: null as unknown as GainNode, src: null, buf: null })
+      if (!a.gain) { a.gain = a.ctx.createGain(); a.gain.gain.value = 0; a.gain.connect(a.ctx.destination) }
+      if (a.ctx.state === 'suspended') await a.ctx.resume()
+      if (!a.buf) a.buf = await a.ctx.decodeAudioData(await (await fetch(ambient)).arrayBuffer())
+      if (a.src) return
+      const src = a.ctx.createBufferSource()
+      src.buffer = a.buf
+      src.loop = true
+      // У mp3 по краям тишина кодировщика — обходим её, иначе на стыке щелчок.
+      src.loopStart = 0.06
+      src.loopEnd = Math.max(0.1, a.buf.duration - 0.06)
+      src.connect(a.gain)
+      src.start(0, 0.06)
+      a.src = src
+      const t = a.ctx.currentTime
+      a.gain.gain.cancelScheduledValues(t)
+      a.gain.gain.setValueAtTime(a.gain.gain.value, t)
+      a.gain.gain.linearRampToValueAtTime(0.55, t + 1.5)
+    } catch (e) { console.error('ambient', e) }
+  }
+  const soundOff = () => {
+    const a = audio.current
+    if (!a?.src) return
+    const src = a.src
+    a.src = null
+    const t = a.ctx.currentTime
+    a.gain.gain.cancelScheduledValues(t)
+    a.gain.gain.setValueAtTime(a.gain.gain.value, t)
+    a.gain.gain.linearRampToValueAtTime(0, t + 0.6)
+    setTimeout(() => { try { src.stop() } catch {} }, 700)
+  }
+  useEffect(() => () => { audio.current?.ctx.close().catch(() => {}) }, [])
   useEffect(() => {
     if (!showing) return
     const timers: ReturnType<typeof setTimeout>[] = []
@@ -108,12 +153,19 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const n = slides.length
   const topIdx = show ? (show.from + show.k) % n : Math.min(cur, n - 1)
   const shown = slides[Math.min(cur, n - 1)] ?? null
-  const stop = () => { if (show) { setCur(topIdx); setShow(null); setFading(false) } }
+  const stop = () => { soundOff(); if (show) { setCur(topIdx); setShow(null); setFading(false) } }
   const step = (d: number) => { stop(); setCur(i => ((show ? topIdx : i) + d + n) % n) }
   const play = () => {
     // Подгрузить все фото заранее, чтобы смена не мигала.
     slides.forEach(src => { const im = new window.Image(); im.src = src })
     setShow({ from: Math.min(cur, n - 1), k: 0 })
+    if (!muted) void soundOn()
+  }
+  const toggleMute = () => {
+    const m = !muted
+    setMuted(m)
+    try { sessionStorage.setItem('bx-ambient-muted', m ? '1' : '0') } catch {}
+    if (m) soundOff(); else if (showing) void soundOn()
   }
   const openAt = () => { stop(); setOpen({ tab: photos.length ? 'photos' : 'plans', i: photos.length ? topIdx : 0 }) }
   // Слои A/B меняются ролями каждый шаг; фото в слое меняется, только пока он нижний.
@@ -131,6 +183,19 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const round = bleed ? '' : 'rounded-xl'
   const arrow = 'absolute top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[rgb(16_24_20/0.55)] hover:bg-[rgb(16_24_20/0.75)] text-white flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-white'
   const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.some(v => !v.hideTile)
+
+  // «Журнал» (владелец 19.11.2026): медиа под фото — превью-картинки с
+  // подписью под ними, чтобы мультимедиа привлекало внимание.
+      const promoCover = promo ? (promo.series[0].thumbs?.[0] ?? promo.series[0].files[0]) : null
+      const links: { key: string; label: string; count?: number; cover: string | null; unopt?: boolean; tab: Tab; i: number }[] = [
+        ...(photos.length > 1 ? [{ key: 'photos', label: c.photos, count: photos.length, cover: photos[1], tab: 'photos' as Tab, i: 1 }] : []),
+        ...(videos.length > 0 ? [{ key: 'videos', label: c.videos, count: videos.length > 1 ? videos.length : undefined, cover: ytThumb(videos[0].url), unopt: true, tab: 'videos' as Tab, i: 0 }] : []),
+        ...(planCount > 0 ? [{ key: 'plans', label: c.plans, count: planCount > 1 ? planCount : undefined, cover: plans[0] ?? null, tab: 'plans' as Tab, i: 0 }] : []),
+        ...(masterplan ? [{ key: 'master', label: c.master, cover: masterplanCover ?? null, tab: 'master' as Tab, i: 0 }] : []),
+        ...(tourUrl ? [{ key: 'tour', label: c.tour, cover: photos[2] ?? photos[0] ?? null, tab: 'tour' as Tab, i: 0 }] : []),
+        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, cover: v.cover ?? null, tab: `x:${v.key}` as Tab, i: 0 })),
+        ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, tab: 'promo' as Tab, i: 0 }] : []),
+      ]
 
   return (
     <section className="flex flex-col gap-2">
@@ -166,6 +231,12 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             className="absolute bottom-3 left-3 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(16_24_20/0.6)] text-white hover:bg-[rgb(16_24_20/0.8)] focus-visible:outline-2 focus-visible:outline-white">
             <Pause size={18} fill="currentColor" aria-hidden />
           </button>
+          {ambient && (
+            <button type="button" onClick={toggleMute} aria-label={muted ? c.unmute : c.mute} aria-pressed={muted}
+              className="absolute bottom-3 left-16 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(16_24_20/0.6)] text-white hover:bg-[rgb(16_24_20/0.8)] focus-visible:outline-2 focus-visible:outline-white">
+              {muted ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />}
+            </button>
+          )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[3px] bg-white/30">
             <div key={Math.floor(show.k / n)} className="h-full bg-white" style={{ animation: `photo-progress ${n * ADVANCE_MS}ms linear forwards` }} />
           </div>
@@ -177,23 +248,10 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
       </div>
 
-      {tilesAs === 'text' ? (() => {
-        // «Журнал» (владелец 19.11.2026): медиа под фото — превью-картинки с
-        // подписью под ними, чтобы мультимедиа привлекало внимание.
-        const promoCover = promo ? (promo.series[0].thumbs?.[0] ?? promo.series[0].files[0]) : null
-        const links: { key: string; label: string; count?: number; cover: string | null; unopt?: boolean; onClick: () => void }[] = [
-          ...(photos.length > 1 ? [{ key: 'photos', label: c.photos, count: photos.length, cover: photos[1], onClick: () => { stop(); setOpen({ tab: 'photos', i: 1 }) } }] : []),
-          ...(videos.length > 0 ? [{ key: 'videos', label: c.videos, count: videos.length > 1 ? videos.length : undefined, cover: ytThumb(videos[0].url), unopt: true, onClick: () => { stop(); setOpen({ tab: 'videos', i: 0 }) } }] : []),
-          ...(planCount > 0 ? [{ key: 'plans', label: c.plans, count: planCount > 1 ? planCount : undefined, cover: plans[0] ?? null, onClick: () => { stop(); setOpen({ tab: 'plans', i: 0 }) } }] : []),
-          ...(masterplan ? [{ key: 'master', label: c.master, cover: masterplanCover ?? null, onClick: () => { stop(); setOpen({ tab: 'master', i: 0 }) } }] : []),
-          ...(tourUrl ? [{ key: 'tour', label: c.tour, cover: photos[2] ?? photos[0] ?? null, onClick: () => { stop(); setOpen({ tab: 'tour', i: 0 }) } }] : []),
-          ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, cover: v.cover ?? null, onClick: () => { stop(); setOpen({ tab: `x:${v.key}`, i: 0 }) } })),
-          ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, onClick: () => { stop(); setOpen({ tab: 'promo', i: 0 }) } }] : []),
-        ]
-        return links.length > 0 && (
+      {tilesAs === 'text' ? (links.length > 0 && (
           <nav aria-label={c.photos} className="-mx-6 mt-2 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:mt-4 md:w-auto md:max-w-full md:gap-5 md:overflow-visible md:px-0 [scrollbar-width:none]">
             {links.map(l => (
-              <button key={l.key} type="button" onClick={l.onClick}
+              <button key={l.key} type="button" onClick={() => { stop(); setOpen({ tab: l.tab, i: l.i }) }}
                 className="group flex w-[148px] shrink-0 cursor-pointer snap-start flex-col gap-2 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-auto md:min-w-0 md:flex-1">
                 <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-[#F1F3F2]">
                   {l.cover && <Image src={l.cover} alt="" fill sizes="(min-width: 768px) 200px, 148px" unoptimized={l.unopt} className="object-cover transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.04]" />}
@@ -205,11 +263,10 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
               </button>
             ))}
           </nav>
-        )
-      })() : hasTiles && (
+      )) : hasTiles && (
         <div className="grid grid-cols-3 sm:grid-flow-col sm:auto-cols-fr gap-2">
           {planCount > 0 && (
-            <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={MEDIA_TILE} aria-label={c.plans}>
+            <button type="button" onClick={() => setOpen({ tab: 'plans' as Tab, i: 0 })} className={MEDIA_TILE} aria-label={c.plans}>
               {plans[0] && <Image src={plans[0]} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
               <MediaTileLabel icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/><path d="M14 14h4v4h-4z"/></svg>}>
                 {c.plans}{planCount > 1 ? ` ${planCount}` : ''}
@@ -217,19 +274,19 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             </button>
           )}
           {masterplan && (
-            <button type="button" onClick={() => setOpen({ tab: 'master', i: 0 })} className={MEDIA_TILE} aria-label={c.master}>
+            <button type="button" onClick={() => setOpen({ tab: 'master' as Tab, i: 0 })} className={MEDIA_TILE} aria-label={c.master}>
               {masterplanCover && <Image src={masterplanCover} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
               <MediaTileLabel icon={<MapPinned size={18} aria-hidden />}>{c.master}</MediaTileLabel>
             </button>
           )}
           {videos.length > 0 && (
-            <button type="button" onClick={() => setOpen({ tab: 'videos', i: 0 })} className={MEDIA_TILE} aria-label={c.videos}>
+            <button type="button" onClick={() => setOpen({ tab: 'videos' as Tab, i: 0 })} className={MEDIA_TILE} aria-label={c.videos}>
               {ytThumb(videos[0].url) && <Image src={ytThumb(videos[0].url)!} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" unoptimized />}
               <MediaTileLabel icon={<Play size={18} fill="currentColor" aria-hidden />}>{c.videos}{videos.length > 1 ? ` ${videos.length}` : ''}</MediaTileLabel>
             </button>
           )}
           {tourUrl && (
-            <button type="button" onClick={() => setOpen({ tab: 'tour', i: 0 })} className={MEDIA_TILE} aria-label={c.tour}>
+            <button type="button" onClick={() => setOpen({ tab: 'tour' as Tab, i: 0 })} className={MEDIA_TILE} aria-label={c.tour}>
               {(photos[1] ?? photos[0]) && <Image src={photos[1] ?? photos[0]} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
               <MediaTileLabel icon={<Rotate3d size={18} aria-hidden />}>{c.tour}</MediaTileLabel>
             </button>
@@ -242,7 +299,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             </button>
           ))}
           {promo && (
-            <button type="button" onClick={() => setOpen({ tab: 'promo', i: 0 })} className={MEDIA_TILE} aria-label={c.promo}>
+            <button type="button" onClick={() => setOpen({ tab: 'promo' as Tab, i: 0 })} className={MEDIA_TILE} aria-label={c.promo}>
               {/* eslint-disable-next-line @next/next/no-img-element -- лёгкое превью сторис */}
               <img src={promo.series[0].thumbs?.[0] ?? promo.series[0].files[0]} alt="" className="w-full h-full object-cover" />
               <MediaTileLabel icon={<Megaphone size={18} aria-hidden />}>{c.promo}</MediaTileLabel>

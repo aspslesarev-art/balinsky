@@ -2114,6 +2114,16 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
           bleed
           tilesAs="text"
+          ambient={(() => {
+            // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
+            // или рисовые поля (если вид на рис), остальное — тропический сад.
+            if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
+            const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
+            if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|kedungu|nyanyi|убуд|табанан|менгви/i.test(where)) {
+              return /рис|rice/i.test(firstString(d['Вид']) ?? '') ? '/ambient/ricefield.mp3' : '/ambient/jungle.mp3'
+            }
+            return '/ambient/garden.mp3'
+          })()}
         />
 
         {priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
