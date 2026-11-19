@@ -122,7 +122,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
       className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
       style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }} />
   )
-  const heroH = bleed ? 'h-[320px] sm:h-[460px] md:h-[560px] lg:h-[640px]' : 'h-[300px] sm:h-[400px] md:h-[480px]'
+  const heroH = bleed ? 'h-[260px] sm:h-[360px] md:h-[440px] lg:h-[480px]' : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
   const arrow = 'absolute top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[rgb(16_24_20/0.55)] hover:bg-[rgb(16_24_20/0.75)] text-white flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-white'
   const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.some(v => !v.hideTile)
