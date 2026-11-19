@@ -9,6 +9,8 @@ import type { LandPriceBundle } from '@/lib/land-prices'
 import type { Tourism } from './tourism'
 import { cdnRewrite } from '@/lib/photo-cdn'
 import { BALI_HUBS, type ExtraRoute, type Travel } from './extra-routes'
+import type { BookingFit } from './booking-fit'
+import type { UnitDemand } from '@/lib/unit-demand'
 import type { Landmark } from '@/lib/landmarks'
 import type { NearbyVenue } from '@/lib/surroundings'
 import climate2050 from '@/lib/bali-climate-2050.json'
@@ -51,6 +53,10 @@ export type VillaAnalyticsInput = {
   hubRoutes: ExtraRoute[]
   /** Время в пути по дорогам: ключи `ta:<rank>`, `lm:<id>`. */
   travel: Travel
+  /** Балл востребованности на Booking среди соседей (unit_demand_score). */
+  demand: UnitDemand | null
+  /** Признаки с фото и их вклад в цену ночи на Booking (lib/analytics-panel/booking-fit). */
+  bookingFit: BookingFit | null
 }
 
 const GREEN = '#1F8B5F'
@@ -173,6 +179,71 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
           : occAvg >= 50 ? T('похожие объекты заняты больше половины ночей — спрос есть, но выбирать гостям есть из чего.', 'similar places are booked over half the nights — demand exists, but guests have choice.')
           : T('похожие объекты заняты меньше половины ночей — посуточно здесь сдаётся тяжело.', 'similar places are booked under half the nights — short-term rental is slow here.'),
         footnote: occAvg != null ? T('Загрузка — по estatemarket за месяц, считаются и даты, закрытые хозяином.', 'Occupancy from estatemarket for the last month; owner-blocked dates count as booked.') : undefined,
+      })
+    }
+  }
+
+  // ── Оценить для Booking ────────────────────────────────────────────
+  // Что видно на фото и сколько это даёт к цене ночи на Booking (модель по
+  // ~12 тыс. объектам Бали) + балл среди соседей того же типа и размера.
+  const bf = i.bookingFit
+  if (bf) {
+    const FL: Record<string, [string, string]> = {
+      pool_infinity: ['Инфинити-бассейн', 'Infinity pool'], pool_private: ['Свой бассейн', 'Private pool'], pool_shared: ['Общий бассейн', 'Shared pool'], pool_none: ['Без бассейна', 'No pool'],
+      view_ocean_full: ['Вид на океан', 'Ocean view'], view_ocean_partial: ['Океан виден частично', 'Partial ocean view'], view_nature: ['Вид на рисовые поля, джунгли или горы', 'Rice field, jungle or mountain view'],
+      open_air_living: ['Открытая гостиная', 'Open-air living room'], double_height: ['Высокий потолок в два этажа', 'Double-height ceiling'], glass_wall: ['Панорамные окна в пол', 'Floor-to-ceiling windows'],
+      rooftop_terrace: ['Терраса на крыше', 'Rooftop terrace'], private_garden: ['Свой сад', 'Private garden'], sala_gazebo: ['Беседка-сала', 'Sala gazebo'], thatch_alang: ['Крыша из травы алан-алан', 'Alang-alang thatched roof'],
+      bathtub: ['Ванна', 'Bathtub'], outdoor_shower: ['Душ под открытым небом', 'Outdoor shower'], spacious: ['Просторные комнаты', 'Spacious rooms'], cramped: ['Тесноватые комнаты', 'Cramped rooms'],
+      outdoor_living_hi: ['Много жизни на улице', 'Lots of outdoor living'], multi_level: ['Несколько уровней', 'Several levels'], balcony: ['Балкон', 'Balcony'],
+    }
+    const pctTxt = (x: number) => { const p = Math.round((x - 1) * 100); return `${p >= 0 ? '+' : '−'}${Math.abs(p)}%` }
+    const lab = (k: string) => T(FL[k]?.[0] ?? k, FL[k]?.[1] ?? k)
+    const keys = Object.keys(bf.adr).filter(k => FL[k])
+    // Слабые минусы (меньше 5%) — шум модели, а не вывод: не показываем.
+    const present = keys.filter(k => bf.feats[k] === 1 && (bf.adr[k] >= 1 || bf.adr[k] <= 0.95)).sort((a, b) => bf.adr[b] - bf.adr[a])
+    const missing = keys.filter(k => bf.feats[k] === 0 && bf.adr[k] >= 1.08 && !(k.startsWith('pool_') && present.some(p => p.startsWith('pool_'))) && !(k === 'view_ocean_partial' && bf.feats.view_ocean_full === 0)).sort((a, b) => bf.adr[b] - bf.adr[a])
+    const unknown = keys.filter(k => bf.feats[k] == null && bf.adr[k] >= 1.08)
+    const top = [...keys].filter(k => bf.adr[k] > 1.03).sort((a, b) => bf.adr[b] - bf.adr[a])
+    if (present.length) {
+      const dm = i.demand
+      const rows: Extract<Viz, { kind: 'checks' }>['rows'] = [
+        ...present.map(k => ({ state: (bf.adr[k] >= 1 ? 'ok' : 'warn') as 'ok' | 'warn', label: lab(k), value: T(`${pctTxt(bf.adr[k])} к цене ночи`, `${pctTxt(bf.adr[k])} per night`) })),
+        ...missing.slice(0, 3).map(k => ({ state: 'info' as const, label: T(`Нет: ${lab(k).toLowerCase()}`, `Missing: ${lab(k).toLowerCase()}`), value: T(`у кого есть — ${pctTxt(bf.adr[k])}`, `those who have it: ${pctTxt(bf.adr[k])}`) })),
+      ]
+      const vizs: Viz[] = [{ kind: 'checks', title: T('Что на фото важно гостям Booking', 'What on the photos matters to Booking guests'), rows }]
+      if (dm) vizs.unshift({ kind: 'gauge', title: T(`Среди ${dm.compsN} похожих объектов рядом на Booking`, `Among ${dm.compsN} similar listings nearby on Booking`), avg: Math.min(97, Math.max(3, dm.score)), min: null, max: null,
+        avgLabel: T(`${dm.score} из 100`, `${dm.score} of 100`), loLabel: T('слабее соседей', 'weaker'), hiLabel: T('сильнее соседей', 'stronger'),
+        caption: T(`Вилла ожидаемо сильнее ${dm.score}% объектов того же типа и размера рядом.`, `The villa is expected to beat ${dm.score}% of similar listings nearby.`) })
+      vizs.push({ kind: 'bars', title: T('Что сильнее всего поднимает цену ночи на Бали', 'What lifts the nightly rate most in Bali'), max: Math.max(...top.slice(0, 7).map(k => bf.adr[k] - 1)), color: GREEN,
+        rows: top.slice(0, 7).map(k => ({ label: lab(k) + (bf.feats[k] === 1 ? T(' ✓ есть', ' ✓ has') : ''), value: bf.adr[k] - 1, text: pctTxt(bf.adr[k]) })) })
+      const sources: Source[] = [
+        { name: T('ИИ разбирает фото виллы', 'AI reviews the villa photos'), fresh: T(`${bf.photos} ${plw(bf.photos, 'фото|фото|фото')}`, `${bf.photos} photos`),
+          chips: [T('вид', 'view'), T('бассейн', 'pool'), T('планировка', 'layout'), T('ванная', 'bathroom')],
+          total: present.length, unit: T('признак|признака|признаков', 'features'),
+          names: [...present.map(lab), ...(bf.wow ? [T(`изюминка: ${bf.wow}`, `standout: ${bf.wow}`)] : [])],
+          result: T(`Нашёл: ${present.map(k => lab(k).toLowerCase()).join(', ')}`, `Found: ${present.map(k => lab(k).toLowerCase()).join(', ')}`) },
+        { name: T('Booking: за что гости платят больше', 'Booking: what guests pay more for'), fresh: T(`${num(bf.nMarket)} объектов Бали`, `${num(bf.nMarket)} Bali listings`),
+          chips: [T('цена ночи', 'nightly rate'), T('признаки с фото', 'photo features'), T('сравнение с соседями', 'vs neighbours')],
+          total: bf.nMarket, unit: T('объект|объекта|объектов', 'listings'),
+          names: top.slice(0, 10).map(k => `${lab(k)} — ${pctTxt(bf.adr[k])}`),
+          result: T(`Сильнее всего цену поднимают: ${top.slice(0, 3).map(k => `${lab(k).toLowerCase()} ${pctTxt(bf.adr[k])}`).join(', ')}`, `Biggest rate lifts: ${top.slice(0, 3).map(k => `${lab(k).toLowerCase()} ${pctTxt(bf.adr[k])}`).join(', ')}`) },
+      ]
+      if (dm) sources.push({ name: T(`Соседи на Booking · ${dm.zone}`, `Booking neighbours · ${dm.zone}`), fresh: T('тот же тип и размер', 'same type and size'),
+        chips: [T('цена ночи', 'nightly rate'), T('загрузка', 'occupancy')], total: dm.compsN, unit: T('объект|объекта|объектов', 'listings'),
+        names: dm.drivers.slice(0, 5).map(d => `${lab(d.feature)} — ${T(`у ${d.share_in_stratum}% соседей`, `${d.share_in_stratum}% of neighbours`)}`),
+        result: [dm.segmentOccupancyPct != null ? T(`загрузка сегмента ${Math.round(dm.segmentOccupancyPct)}%`, `segment occupancy ${Math.round(dm.segmentOccupancyPct)}%`) : null, dm.expectedAdrUsd ? T(`ожидаемая цена ночи ${usd(dm.expectedAdrUsd)}`, `expected nightly rate ${usd(dm.expectedAdrUsd)}`) : null].filter(Boolean).join(' · ') || T('сравнили с соседями', 'compared with neighbours') })
+      const best = present.filter(k => bf.adr[k] >= 1.03)
+      out.push({
+        id: 'booking', group: G.money, title: T('Оценить для Booking', 'Rate for Booking'),
+        sub: T('Что на фото важно гостям и сколько это даёт к цене ночи', 'What guests value on the photos and what it adds per night'),
+        sources, vizs,
+        bigs: [...(dm ? [{ v: T(`${dm.score} из 100`, `${dm.score} of 100`), l: T('против соседей на Booking', 'vs Booking neighbours') }] : []),
+          ...(dm?.expectedAdrUsd ? [{ v: usd(dm.expectedAdrUsd), l: T('ожидаемая цена ночи', 'expected nightly rate') }] : [{ v: String(present.length), l: T('признаков на фото', 'photo features') }])],
+        meaning: [
+          dm ? (dm.score >= 70 ? T('на Booking вилла сильнее большинства похожих объектов рядом', 'on Booking the villa beats most similar listings nearby') : dm.score <= 45 ? T('на Booking вилла слабее многих похожих объектов рядом', 'on Booking the villa is weaker than many similar listings nearby') : T('на Booking вилла на уровне похожих объектов рядом', 'on Booking the villa is on par with similar listings nearby')) : null,
+          best.length ? T(`в плюс — ${best.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}`, `pluses: ${best.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}`) : null,
+        ].filter(Boolean).join('; ') + '.',
+        footnote: T(`Учитываем то, что видно на фото и рендерах.${unknown.length ? ` По фото не понять: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Мелкую технику вроде кофемашины по фото надёжно не различить — её не учитываем.`, `Based on what is visible in photos and renders.${unknown.length ? ` Not visible: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Small appliances like a coffee machine can’t be reliably seen, so they aren’t counted.`),
       })
     }
   }

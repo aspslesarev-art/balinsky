@@ -137,6 +137,7 @@ import { AddToCollection } from '@/components/collections/AddToCollection'
 import { loadSurroundings } from '@/lib/surroundings'
 import { loadTourism } from '@/lib/analytics-panel/tourism'
 import { BALI_HUBS, loadExtraRoutes, loadTravelTimes, type ExtraDest } from '@/lib/analytics-panel/extra-routes'
+import { loadBookingFit } from '@/lib/analytics-panel/booking-fit'
 
 const COPY = {
   ru: {
@@ -1764,6 +1765,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   ]
   // И до аэропорта и главных районов — кроме того, внутри которого вилла стоит.
   const hubDests = lat != null && lng != null ? BALI_HUBS.filter(h => Math.hypot((h.lat - lat) * 111, (h.lng - lng) * 110) > (h.rKm ?? 0) + 0.3) : []
+  const bookingFitP = loadBookingFit('villa', v.airtable_id).catch(e => { console.error('booking-fit', e); return null })
   const [extraRoutes, hubRoutes] = lat != null && lng != null ? await Promise.all([
     extraDests.length ? loadExtraRoutes(lat, lng, extraDests).catch(() => []) : [],
     hubDests.length ? loadExtraRoutes(lat, lng, hubDests).catch(e => { console.error(e); return [] }) : [],
@@ -1773,12 +1775,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     ...(tourism?.ta ?? []).filter(p => p.km <= 10).map(p => ({ key: `ta:${p.rank}`, lat: p.lat, lng: p.lng })),
     ...landmarks.filter(l => l.lat != null && l.lng != null).map(l => ({ key: `lm:${l.id}`, lat: l.lat!, lng: l.lng! })),
   ]
+  const bookingFit = await bookingFitP
   const travel = lat != null && lng != null && travelPts.length ? await loadTravelTimes(lat, lng, travelPts).catch(e => { console.error(e); return {} }) : {}
   const analyses = buildVillaAnalyses({
     lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
     snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
     around1km: around?.r1 ?? null,
-    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, hubRoutes, travel,
+    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, hubRoutes, travel, demand, bookingFit,
     rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
   })
   const K = (ru: string, en: string) => (lang === 'ru' ? ru : en)
