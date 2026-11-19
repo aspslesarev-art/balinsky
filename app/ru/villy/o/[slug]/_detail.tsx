@@ -93,6 +93,7 @@ import { IncomeCalculator } from '@/components/IncomeCalculator'
 import { BeachWeatherDesign } from '@/components/BeachWeatherDesign'
 import { LocationSection } from '@/components/LocationSection'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
+import { AnalyticsReport } from '@/components/analytics-panel/AnalyticsReport'
 import type { PdfRequest } from '@/lib/pdf-request'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
@@ -1176,7 +1177,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   }
 }
 
-export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean }) {
+export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, report }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean; report?: { ids: string[]; autoPrint: boolean } }) {
   const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). resolveVilla finds either form
@@ -1784,6 +1785,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, hubRoutes, travel, demand, bookingFit,
     rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
   })
+  // PDF-отчёт ИИ-аналитика (/ru/villy/o/<slug>/otchet?a=…): только выбранные
+  // в окне аналитики проверки, в том порядке, в каком их добавили.
+  if (report) {
+    const picked = report.ids.map(id => analyses.find(a => a.id === id)).filter((a): a is (typeof analyses)[number] => !!a)
+    const sub = [district, area != null ? `${area} ${c.sqm}` : null, bedrooms != null ? `${c.factBedrooms}: ${bedrooms}` : null].filter(Boolean).join(' · ')
+    return <AnalyticsReport analyses={picked.length ? picked : analyses} lang={lang} title={title} subtitle={sub} photo={photos[0] ?? null} autoPrint={report.autoPrint} />
+  }
   const K = (ru: string, en: string) => (lang === 'ru' ? ru : en)
   // «1 · Объект» — основные характеристики списком, как в анкете застройщика
   // (владелец 18.11.2026). Поля «Ванные», «Этажи», «Продление аренды»,
@@ -2199,7 +2207,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         <div className="mt-12 flex flex-col gap-12">
         {analyses.length > 0 ? (
           <VillaChapter id="analitika" no="2" plain eyebrow={CH.analitika[0]}>
-            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`}
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`}
               extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
           </VillaChapter>
         ) : (<>{mestoChapter}{analytics}</>)}

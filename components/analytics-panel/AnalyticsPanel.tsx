@@ -37,6 +37,7 @@ const COPY = {
   ru: {
     heading: 'Проверьте виллу с помощью ИИ', lead: 'Нажмите на любую проверку — ИИ-аналитик соберёт данные из нужных источников и объяснит, что они значат для вас.', badge: 'ИИ-аналитик', working: (k: number, n: number) => `ИИ-аналитик работает · источник ${k} из ${n}`, finished: 'ИИ-аналитик закончил',
     openAll: 'Открыть все отчёты', close: 'Закрыть', prev: 'Назад', of: (k: number, n: number) => `${k} из ${n}`, themes: 'Темы',
+    add: 'Добавить в отчёт', added: 'В отчёте', inReport: 'в отчёте', download: (n: number) => `Скачать отчёт · ${n}`, building: 'Собираю PDF…', buildFail: 'Не получилось собрать PDF, попробуйте ещё раз',
     searching: 'ИИ ищет:', filtering: 'ИИ отбирает похожие…', meaning: 'Вывод ИИ:',
     next: (t: string) => `Дальше: ${t.toLowerCase()} →`, again: 'Ещё раз', done: 'готово', open: 'Смотреть', run: 'Запустить ИИ',
     lockTitle: (n: number) => n > 0 ? `Ещё ${n} ${n === 1 ? 'график или карта' : n < 5 ? 'графика и карты' : 'графиков и карт'} — и фото объектов` : 'Фото объектов и детали',
@@ -46,6 +47,7 @@ const COPY = {
   en: {
     heading: 'Check the villa with AI', lead: 'Tap any check — the AI analyst gathers data from the right sources and explains what it means for you.', badge: 'AI analyst', working: (k: number, n: number) => `AI analyst at work · source ${k} of ${n}`, finished: 'AI analyst finished',
     openAll: 'Open all reports', close: 'Close', prev: 'Back', of: (k: number, n: number) => `${k} of ${n}`, themes: 'Topics',
+    add: 'Add to report', added: 'In report', inReport: 'in report', download: (n: number) => `Download report · ${n}`, building: 'Building PDF…', buildFail: 'Could not build the PDF, please try again',
     searching: 'AI is searching:', filtering: 'AI is picking similar…', meaning: 'AI verdict:',
     next: (t: string) => `Next: ${t.toLowerCase()} →`, again: 'Run again', done: 'done', open: 'View', run: 'Run AI',
     lockTitle: (n: number) => n > 0 ? `${n} more charts and maps — plus listing photos` : 'Listing photos and details',
@@ -68,7 +70,7 @@ function useAccess(): 'pro' | 'pending' | 'guest' {
 }
 
 // Все строки анализа: ⟦usd⟧ → сумма в валюте посетителя.
-function withMoney<T>(x: T, f: (s: string) => string): T {
+export function withMoney<T>(x: T, f: (s: string) => string): T {
   if (typeof x === 'string') return f(x) as T
   if (Array.isArray(x)) return x.map(v => withMoney(v, f)) as T
   if (x && typeof x === 'object') return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, withMoney(v, f)])) as T
@@ -85,9 +87,11 @@ function coverOf(a: Analysis): { v: Viz; open: boolean } | null {
   return v ? { v, open: false } : null
 }
 
-export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebrow }: {
+export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebrow, reportPath }: {
   analyses: Analysis[]
   lang: string
+  /** Печатная страница PDF-отчёта (/ru/villy/o/<slug>/otchet); нет — кнопок отчёта нет. */
+  reportPath?: string
   /** Готовые блоки страницы под итогом анализа (калькулятор дохода и т.п.) — только с доступом. */
   extras?: Record<string, ReactNode>
   signInHref: string
@@ -99,6 +103,9 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
   const analyses = useMemo(() => withMoney(raw, s => s.replace(MONEY_RE, (_, n) => formatMoney(Number(n), currency, lang as Lang))), [raw, currency, lang])
   const [goal, setGoal] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  // «Добавить в отчёт» (владелец 19.11.2026): что человек отобрал, в порядке добавления.
+  const [inReport, setInReport] = useState<string[]>([])
+  const [building, setBuilding] = useState<'idle' | 'busy' | 'fail'>('idle')
   const [t, setT] = useState(0)
   const [done, setDone] = useState<Record<string, true>>({})
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -135,6 +142,42 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
     if (timer.current) clearInterval(timer.current)
     // Недосмотренный сбор не считаем готовым — при следующем открытии пойдёт заново.
     setOpen(false)
+  }
+
+  // «Добавить в отчёт»: отметить и сразу перейти к следующей проверке.
+  function addToReport() {
+    if (!G) return
+    setInReport(r => (r.includes(G.id) ? r : [...r, G.id]))
+    const nx = flat[(flat.findIndex(a => a.id === G.id) + 1) % flat.length]
+    if (nx && !inReport.includes(nx.id) && nx.id !== G.id) pick(nx.id)
+  }
+
+  // PDF собирает сервер (app/api/pdf) из печатной страницы отчёта — как «Презентацию PDF».
+  async function downloadReport() {
+    if (!reportPath || !inReport.length) return
+    const target = `${reportPath}?${new URLSearchParams({ a: inReport.join(','), lang }).toString()}`
+    const url = `/api/pdf?cur=${currency}&u=${encodeURIComponent(target)}`
+    const name = `otchet-${reportPath.split('/').slice(-2, -1)[0] ?? 'villa'}.pdf`
+    // Телефон: скачивание после долгой сборки iPhone молча отбрасывает —
+    // переходим прямо на файл по нажатию (так же в VillaPresentation).
+    if (window.matchMedia?.('(hover: none)').matches) { window.location.assign(url); return }
+    setBuilding('busy')
+    try {
+      const r = await fetch(url)
+      if (!r.ok) throw new Error(`pdf ${r.status}`)
+      const href = URL.createObjectURL(await r.blob())
+      const el = document.createElement('a')
+      el.href = href
+      el.download = name
+      document.body.appendChild(el)
+      el.click()
+      el.remove()
+      setTimeout(() => URL.revokeObjectURL(href), 60_000)
+      setBuilding('idle')
+    } catch (e) {
+      console.error(e)
+      setBuilding('fail')
+    }
   }
 
   // Окно на весь экран: Esc закрывает, страница под ним не прокручивается.
@@ -258,6 +301,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                     <span className={`flex items-center gap-1.5 text-[14px] leading-[1.3] ${on ? 'font-semibold text-[#0F1A15]' : 'text-[#4A5550]'}`}>
                       {busy === a.id ? <span className="ap-spin h-3 w-3 shrink-0 rounded-full border-[1.5px] border-[#0F1A15] border-r-transparent" /> : done[a.id] ? <span aria-label={c.done} className="text-[#1F8B5F]">✓</span> : null}
                       {a.title}
+                      {inReport.includes(a.id) && <span className="ml-auto shrink-0 rounded bg-[#E6F2EC] px-1.5 py-0.5 text-[11px] font-semibold text-[#135E40]">{c.inReport}</span>}
                     </span>
                   </button>
                 )
@@ -363,7 +407,15 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
               ←<span className="hidden md:inline">{prevA?.title}</span>
             </button>
             <span className="mx-auto" />
-            {nextA && <button type="button" onClick={() => pick(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
+            {reportPath ? (<>
+              {building === 'fail' && <span className="hidden text-[13px] text-[#9A3B2E] md:inline">{c.buildFail}</span>}
+              {inReport.length > 0 && (locked
+                ? <a href={signInHref} className="flex h-12 shrink-0 items-center rounded-xl border border-[var(--color-primary)] px-5 text-[16px] font-semibold text-[var(--color-primary)] no-underline hover:bg-[#E6F2EC]">{c.download(inReport.length)}</a>
+                : <button type="button" onClick={downloadReport} disabled={building === 'busy'} className="flex h-12 shrink-0 cursor-pointer items-center rounded-xl border border-[var(--color-primary)] bg-white px-5 text-[16px] font-semibold text-[var(--color-primary)] hover:bg-[#E6F2EC] disabled:cursor-wait disabled:opacity-60">{building === 'busy' ? c.building : c.download(inReport.length)}</button>)}
+              {inReport.includes(G.id)
+                ? <button type="button" onClick={() => setInReport(r => r.filter(x => x !== G.id))} className="flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[#E6F2EC] px-6 text-[16px] font-semibold text-[#135E40]">✓ {c.added}</button>
+                : <button type="button" onClick={addToReport} className="flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">{c.add}</button>}
+            </>) : nextA && <button type="button" onClick={() => pick(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
           </footer>
         </div>
       )}

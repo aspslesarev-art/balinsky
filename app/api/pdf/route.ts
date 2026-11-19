@@ -10,7 +10,8 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-const PATH_RE = /^\/ru\/(villy|apartamenty)\/o\/([a-z0-9-]{1,160})\/pdf$/
+// …/pdf — презентация, …/otchet — отчёт ИИ-аналитика (только виллы).
+const PATH_RE = /^\/ru\/(villy|apartamenty)\/o\/([a-z0-9-]{1,160})\/(pdf|otchet)$/
 const CURRENCIES = new Set(['USD', 'EUR', 'RUB', 'UAH', 'IDR'])
 // Лист телефона — 9:16 (108 × 192 мм), компьютера — A4 альбомом.
 const VIEWPORT = { landscape: { width: 1123, height: 794 }, portrait: { width: 408, height: 726 } }
@@ -76,7 +77,7 @@ export async function GET(req: Request) {
     // PdfShell ставит метку, когда догрузились фото, карты и листы подогнаны.
     await page.waitForSelector('html[data-pdf-ready="1"]', { timeout: 40_000 })
     const pdf = portrait ? await portraitPdf(page) : await page.pdf({ printBackground: true, preferCSSPageSize: true })
-    const name = `${m[1] === 'villy' ? 'villa' : 'apartament'}-${m[2]}${portrait ? '-phone' : ''}.pdf`
+    const name = `${m[3] === 'otchet' ? 'otchet-' : ''}${m[1] === 'villy' ? 'villa' : 'apartament'}-${m[2]}${portrait ? '-phone' : ''}.pdf`
     return new NextResponse(Buffer.from(pdf), {
       headers: {
         'content-type': 'application/pdf',
