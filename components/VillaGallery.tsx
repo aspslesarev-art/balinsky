@@ -163,9 +163,6 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         {n > 1 && <>
           <button type="button" onClick={() => step(-1)} aria-label={c.prev} className={`${arrow} left-3 hidden sm:flex`}><ChevronLeft size={22} /></button>
           <button type="button" onClick={() => step(1)} aria-label={c.next} className={`${arrow} right-3 hidden sm:flex`}><ChevronRight size={22} /></button>
-          <span className="absolute right-3 bottom-3 z-10 pointer-events-none px-3 py-1.5 rounded-lg bg-[rgb(16_24_20/0.72)] text-white text-[13px] sm:text-[14px] font-semibold tabular-nums">
-            {topIdx + 1} / {n}{photos.length ? ` ${c.photos.toLowerCase()}` : ''}
-          </span>
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
       </div>
