@@ -117,8 +117,10 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const aTop = (show?.k ?? 0) % 2 === 0
   const nextIdx = (topIdx + 1) % n
   const aIdx = aTop ? topIdx : nextIdx, bIdx = aTop ? nextIdx : topIdx
-  const layer = (idx: number, top: boolean) => (
-    <Image key={`${top ? 't' : 'b'}-${idx}`} src={slides[idx]} alt="" aria-hidden fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'}
+  // Ключ — по физическому слою (как в PhotoSlider): слой, ставший верхним, не
+  // пересоздаётся, иначе на смене кадра фото грузится заново — белая вспышка.
+  const layer = (name: 'a' | 'b', idx: number, top: boolean) => (
+    <Image key={`${name}-${idx}`} src={slides[idx]} alt="" aria-hidden fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'}
       className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
       style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }} />
   )
@@ -129,7 +131,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
 
   return (
     <section className="flex flex-col gap-2">
-      <div className={`relative overflow-hidden ${heroH} ${round} ${bleed ? 'ml-[calc(50%-50vw)] w-screen max-w-none' : ''}`}
+      <div className={`relative overflow-hidden bg-[#1B211E] ${heroH} ${round} ${bleed ? 'ml-[calc(50%-50vw)] w-screen max-w-none' : ''}`}
         onPointerDown={e => { if (e.pointerType !== 'mouse') swipe.current = e.clientX }}
         onPointerUp={e => {
           const x0 = swipe.current; swipe.current = null
@@ -142,14 +144,18 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             className={`absolute inset-0 block cursor-zoom-in overflow-hidden ${round} focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white`}>
             <Image key={shown} src={shown} alt={alts?.[Math.min(cur, n - 1)] ?? title} fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'} priority={cur === 0}
               className={`object-cover transition-opacity duration-[600ms] ${showing ? 'opacity-0' : 'opacity-100'}`} draggable={false} />
-            {showing && <>{layer(aIdx, aTop)}{layer(bIdx, !aTop)}</>}
+            {showing && <>{layer('a', aIdx, aTop)}{layer('b', bIdx, !aTop)}</>}
           </button>
         )}
         {n > 1 && !showing && (
           <button type="button" onClick={play} aria-label={c.play}
-            className="absolute left-1/2 top-1/2 z-10 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/55 bg-white/[.18] text-white shadow-[0_8px_32px_rgb(0_0_0/.12)] backdrop-blur-md transition-[transform,background-color] duration-[120ms] hover:scale-105 hover:bg-white/[.26] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-            {/* «Стекло» из макета (владелец 19.11.2026): мягкий скруглённый треугольник. */}
-            <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" className="block"><path d="M7.8 5.6v12.8a1 1 0 0 0 1.52.85l10.4-6.4a1 1 0 0 0 0-1.7L9.32 4.75A1 1 0 0 0 7.8 5.6z" fill="currentColor" /></svg>
+            className="absolute left-1/2 top-1/2 z-10 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition-transform duration-[120ms] [filter:drop-shadow(0_2px_8px_rgb(0_0_0/.35))] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            {/* Классический значок (образец владельца 19.11.2026): толстое кольцо ~7% диаметра,
+                острый треугольник 40% высоты, по центру тяжести. */}
+            <svg width="80" height="80" viewBox="0 0 100 100" aria-hidden="true" className="block">
+              <circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" />
+              <path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" />
+            </svg>
           </button>
         )}
         {showing && <>
