@@ -2075,7 +2075,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
       <PageViewTracker kind="villa" slug={slug} title={title} airtableId={v.airtable_id} lang={lang} />
       <PageEditButton kind="villa" id={v.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs currentUrl={`${villasRoot}/o/${slug}`} items={[
+        <Breadcrumbs hideLast currentUrl={`${villasRoot}/o/${slug}`} items={[
           { label: c.home, href: home },
           { label: c.villasCrumb, href: villasRoot },
           // Regency level dropped: it has no page, so its crumb had no `item`
@@ -2091,7 +2091,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
         <section className="flex flex-wrap items-end gap-x-12 gap-y-6 pb-6 pt-2 md:pb-10">
           <div className="flex min-w-0 flex-col gap-3 md:gap-4" style={{ flex: '999 1 560px' }}>
             <h1 className="m-0 max-w-[20ch] font-display text-[32px] font-bold leading-[1.1] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[44px] lg:text-[56px] lg:leading-[1.05]">
-              {title}
+              {/* Без «— 86 м², 2 спальни…»: эти цифры стоят строкой ниже (владелец 19.11.2026). */}
+              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
             </h1>
             {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
             {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block self-start"><VerifiedYieldBadge lang={lang} /></a>}
