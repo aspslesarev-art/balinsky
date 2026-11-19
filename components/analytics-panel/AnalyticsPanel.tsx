@@ -228,14 +228,15 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
               <span className="truncate text-[16px] font-semibold">{G.title}</span>
             </span>
             <nav aria-label={c.themes} className="hidden flex-grow justify-center gap-2 md:flex">
-              {groups.map((g, i) => <ThemeTab key={g.name} name={g.name} n={`${g.items.filter(a => done[a.id]).length}/${g.items.length}`} tone={TONES[i % TONES.length]} on={g.name === G.group} onClick={() => pick(g.items[0].id)} />)}
+              {groups.map((g, i) => <ThemeTab key={g.name} name={g.name} tone={TONES[i % TONES.length]} on={g.name === G.group} onClick={() => pick(g.items[0].id)} />)}
             </nav>
             <button type="button" onClick={close} aria-label={c.close} className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-[var(--color-surface-alt)] text-[var(--color-text)] hover:bg-[#E9EEEB] focus-visible:outline-2 focus-visible:outline-offset-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12" /><path d="M18 6L6 18" /></svg>
             </button>
           </header>
           <div className="h-1 shrink-0 bg-[#EEF1EF]"><div className="h-1 transition-[width] duration-100 ease-linear" style={{ background: gTone.main, width: `${progress}%` }} /></div>
-          <div className="flex shrink-0 gap-1 overflow-x-auto px-4 py-2 md:px-6" style={{ background: gTone.bg }}>
+          {/* Телефон: проверки темы — лентой сверху. На компьютере — столбиком слева. */}
+          <div className="flex shrink-0 gap-1 overflow-x-auto px-4 py-2 md:hidden" style={{ background: gTone.bg }}>
             {groups[gi].items.map(a => {
               const on = a.id === G.id
               return (
@@ -249,6 +250,29 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
             })}
           </div>
 
+          <div className="flex min-h-0 flex-grow">
+          <nav aria-label={G.group} className="hidden w-[300px] shrink-0 flex-col gap-1 overflow-y-auto p-3 md:flex" style={{ background: gTone.bg }}>
+            <div className="flex items-center gap-2 px-3 pb-2 pt-1">
+              <span className="h-2 w-2 rounded-full" style={{ background: gTone.main }} />
+              <span className="text-[13px] font-semibold uppercase tracking-[0.06em]" style={{ color: gTone.ink }}>{G.group}</span>
+            </div>
+            {groups[gi].items.map(a => {
+              const on = a.id === G.id
+              return (
+                <button key={a.id} type="button" onClick={() => pick(a.id)} aria-current={on ? 'true' : undefined}
+                  className="flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-3 text-left shadow-[0_1px_2px_rgb(0_0_0/.04)] transition-[box-shadow,transform] duration-[120ms] hover:-translate-y-px hover:shadow-[0_1px_2px_rgb(0_0_0/.05),0_6px_16px_rgb(0_0_0/.07)] focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{ boxShadow: on ? `inset 4px 0 0 ${gTone.main}, 0 1px 2px rgb(0 0 0 / .05)` : undefined, outlineColor: gTone.main }}>
+                  <span className="flex min-w-0 flex-grow flex-col gap-0.5">
+                    <span className={`text-[16px] leading-[1.3] text-[var(--color-text)] ${on ? 'font-semibold' : 'font-medium'}`}>{a.title}</span>
+                    <span className="truncate text-[13px] text-[var(--color-text-muted)]">{a.sources.map(s => s.name).join(' · ')}</span>
+                  </span>
+                  {busy === a.id ? <span className="ap-spin h-4 w-4 shrink-0 rounded-full border-2 border-[#E78C3D] border-r-transparent" />
+                    : done[a.id] ? <Check label={c.done} />
+                    : <Arrow color={gTone.main} />}
+                </button>
+              )
+            })}
+          </nav>
           <div ref={bodyRef} className="min-h-0 flex-grow overflow-y-auto overscroll-contain">
             <div className="mx-auto flex max-w-[880px] flex-col gap-4 px-4 py-6 md:px-6">
               <div className="flex flex-col gap-1">
@@ -346,6 +370,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
               )}
             </div>
           </div>
+          </div>
 
           <footer className="flex shrink-0 items-center gap-2 border-t border-[var(--color-border)] px-4 py-2 md:justify-between md:px-6 md:py-3">
             <button type="button" onClick={() => prevA && pick(prevA.id)} aria-label={c.prev} className="inline-flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-3.5 text-[15px] text-[var(--color-text)] md:px-4">
@@ -374,13 +399,12 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
   )
 }
 
-function ThemeTab({ name, n, tone, on, onClick }: { name: string; n: string; tone: typeof TONES[number]; on: boolean; onClick: () => void }) {
+function ThemeTab({ name, tone, on, onClick }: { name: string; tone: typeof TONES[number]; on: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} aria-current={on ? 'true' : undefined}
       className="inline-flex h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[15px] font-semibold"
       style={on ? { background: tone.ink, borderColor: tone.ink, color: '#fff' } : { background: tone.bg, borderColor: tone.bg, color: tone.ink }}>
       <span className="h-2 w-2 rounded-full" style={{ background: on ? '#fff' : tone.main }} />{name}
-      <span className="text-[13px] font-medium tabular-nums opacity-80">{n}</span>
     </button>
   )
 }
