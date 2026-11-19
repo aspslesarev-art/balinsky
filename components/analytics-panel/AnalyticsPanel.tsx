@@ -274,7 +274,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
             })}
           </nav>
           <div ref={bodyRef} className="min-h-0 flex-grow overflow-y-auto overscroll-contain">
-            <div className="mx-auto flex max-w-[880px] flex-col gap-4 px-4 py-6 md:px-6">
+            <div className="mx-auto flex max-w-[1080px] flex-col gap-4 px-4 py-6 md:px-6">
               <div className="flex flex-col gap-1">
                 <div className="mb-1 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#39413D]" aria-live="polite">
@@ -289,17 +289,21 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                 <div className="text-[15px] text-[var(--color-text-muted)]">{G.sub}</div>
               </div>
 
+              {/* Готовый источник — маленькая карточка, по 2–3 в ряд (владелец 19.11.2026).
+                  На всю ширину — тот, что сейчас идёт, и те, где лента фото или карта. */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {G.sources.map((s, i) => {
                 const lt = t - i * STEP
                 if (lt < 0) return null
                 const fin = lt >= 24
+                const wide = !fin || !!s.live || (s.items?.length ?? 0) > 0
                 const scanT = Math.max(0, Math.min(1, (lt - 6) / 14))
                 return (
-                  <div key={s.name} className={`ap-in flex flex-col gap-2 rounded-lg p-4 transition-colors duration-300 ${fin ? 'bg-[var(--color-surface-alt)]' : 'bg-[#FFF6EE]'}`}>
+                  <div key={s.name} className={`ap-in flex flex-col gap-2 rounded-lg transition-colors duration-300 ${wide ? 'col-span-full p-4' : 'p-3'} ${fin ? 'bg-[var(--color-surface-alt)]' : 'bg-[#FFF6EE]'}`}>
                     <div className="flex flex-wrap items-center gap-2">
                       {fin ? <Check label={c.done} /> : <span className="ap-spin m-0.5 h-4 w-4 rounded-full border-2 border-[#E78C3D] border-r-transparent" />}
-                      <span className="text-[16px] font-semibold">{s.name}</span>
-                      <span className="text-[13px] text-[var(--color-text-muted)]">· {s.fresh}</span>
+                      <span className={`${wide ? 'text-[16px]' : 'text-[15px] leading-tight'} font-semibold`}>{s.name}</span>
+                      {wide && <span className="text-[13px] text-[var(--color-text-muted)]">· {s.fresh}</span>}
                     </div>
                     {!fin && (
                       <div className="flex min-h-[30px] flex-wrap items-center gap-2">
@@ -331,10 +335,12 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                         ))}
                       </div>
                     )}
-                    {fin && <div className="ap-in pl-7 text-[15px] leading-[1.5]">{s.result}</div>}
+                    {fin && <div className={`ap-in ${wide ? 'pl-7 text-[15px]' : 'text-[14px]'} leading-[1.5]`}>{s.result}</div>}
+                    {fin && !wide && <div className="text-[12px] text-[var(--color-text-muted)]">{s.fresh}</div>}
                   </div>
                 )
               })}
+              </div>
 
               {finished && (
                 <div className="ap-in flex flex-col gap-4 rounded-xl p-4 md:p-6" style={{ background: gTone.bg }}>
