@@ -136,7 +136,7 @@ import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
 import { AddToCollection } from '@/components/collections/AddToCollection'
 import { loadSurroundings } from '@/lib/surroundings'
 import { loadTourism } from '@/lib/analytics-panel/tourism'
-import { loadExtraRoutes, loadTravelTimes, type ExtraDest } from '@/lib/analytics-panel/extra-routes'
+import { BALI_HUBS, loadExtraRoutes, loadTravelTimes, type ExtraDest } from '@/lib/analytics-panel/extra-routes'
 
 const COPY = {
   ru: {
@@ -1762,7 +1762,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     ...(nearestBeach?.name ? [{ key: `b:${nearestBeach.id}`, name: nearestBeach.name, lat: nearestBeach.lat, lng: nearestBeach.lng, kind: 'beach' as const }] : []),
     ...(tourism?.ta ?? []).filter(p => p.km <= 15).slice(0, 3).map(p => ({ key: `ta:${p.rank}`, name: `#${p.rank} ${p.name}`, lat: p.lat, lng: p.lng, kind: 'ta' as const })),
   ]
-  const extraRoutes = lat != null && lng != null && extraDests.length ? await loadExtraRoutes(lat, lng, extraDests).catch(() => []) : []
+  // И до аэропорта и главных районов — кроме того, внутри которого вилла стоит.
+  const hubDests = lat != null && lng != null ? BALI_HUBS.filter(h => Math.hypot((h.lat - lat) * 111, (h.lng - lng) * 110) > (h.rKm ?? 0) + 0.3) : []
+  const [extraRoutes, hubRoutes] = lat != null && lng != null ? await Promise.all([
+    extraDests.length ? loadExtraRoutes(lat, lng, extraDests).catch(() => []) : [],
+    hubDests.length ? loadExtraRoutes(lat, lng, hubDests).catch(e => { console.error(e); return [] }) : [],
+  ]) : [[], []]
   // Время в пути до мест TripAdvisor и «что посмотреть» (вместо голых километров).
   const travelPts = [
     ...(tourism?.ta ?? []).filter(p => p.km <= 10).map(p => ({ key: `ta:${p.rank}`, lat: p.lat, lng: p.lng })),
@@ -1773,7 +1778,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
     snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
     around1km: around?.r1 ?? null,
-    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, travel,
+    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, hubRoutes, travel,
     rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
   })
   const K = (ru: string, en: string) => (lang === 'ru' ? ru : en)

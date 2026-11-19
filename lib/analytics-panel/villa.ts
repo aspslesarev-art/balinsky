@@ -8,7 +8,7 @@ import { zoneRows, zoneKind, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import type { LandPriceBundle } from '@/lib/land-prices'
 import type { Tourism } from './tourism'
 import { cdnRewrite } from '@/lib/photo-cdn'
-import type { ExtraRoute, Travel } from './extra-routes'
+import { BALI_HUBS, type ExtraRoute, type Travel } from './extra-routes'
 import type { Landmark } from '@/lib/landmarks'
 import type { NearbyVenue } from '@/lib/surroundings'
 import climate2050 from '@/lib/bali-climate-2050.json'
@@ -47,6 +47,8 @@ export type VillaAnalyticsInput = {
   aroundTop: NearbyVenue[]
   /** Маршруты до ближайшего пляжа и мест TripAdvisor. */
   extraRoutes: ExtraRoute[]
+  /** Маршруты по дорогам до аэропорта и главных районов (OSRM). */
+  hubRoutes: ExtraRoute[]
   /** Время в пути по дорогам: ключи `ta:<rank>`, `lm:<id>`. */
   travel: Travel
 }
@@ -547,16 +549,46 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
   }
 
   // ── Как добраться ──────────────────────────────────────────────────
-  const r = i.geo?.routes
-  if (r && Object.keys(r).length) {
+  const r = i.geo?.routes ?? {}
+  const hubs = i.hubRoutes
+  if (Object.keys(r).length || hubs.length) {
     const lbl: Record<string, [string, string]> = { sanur: ['Санур', 'Sanur'], airport: ['Аэропорт', 'Airport'], ubud_south: ['Южный Убуд', 'South Ubud'], canggu: ['Чангу', 'Canggu'], ubud: ['Убуд', 'Ubud'], uluwatu: ['Улувату', 'Uluwatu'] }
-    const legs = (Object.entries(r) as [string, { s: number; static_s: number | null }][]).map(([k, v]) => ({ k, min: Math.round((v.static_s ?? v.s) / 60), peak: Math.round(v.s / 60) })).sort((a, b) => a.min - b.min)
-    const lineColor: Record<string, string> = { airport: ORANGE, canggu: GREEN, ubud: BLUE, uluwatu: PURPLE, sanur: '#6A736E', ubud_south: '#5AA9E6' }
+    for (const h of hubs) { const [ru1, en1] = h.name.split('|'); lbl[h.key] = [ru1, en1 ?? ru1] }
+    // Минуты: где есть сверенные с Google — берём их, остальное — по дорогам OSRM.
+    const geoMin = (k: string) => { const v = (r as Record<string, { s: number; static_s: number | null }>)[k]; return v ? Math.round((v.static_s ?? v.s) / 60) : null }
+    // OSRM без пробок быстрее Google: поправку берём по точкам, где есть оба
+    // замера до одной и той же точки (аэропорт, Чангу, Убуд, Санур), — медиана.
+    const ratios = hubs.filter(h => h.key !== 'uluwatu').map(h => { const g = geoMin(h.key); return g && h.minutes ? g / h.minutes : null }).filter((x): x is number => x != null).sort((a, b) => a - b)
+    const kOsrm = ratios.length ? ratios[Math.floor(ratios.length / 2)] : 1
+    // Район — круг вокруг центра: время и линия — до въезда в него («Убуд
+    // начался»), а не до центра. Доля пути до въезда — по длине маршрута.
+    const kmTo = (a: number[], lat: number, lng: number) => Math.hypot((a[1] - lat) * 111.2, (a[0] - lng) * 111.2 * Math.cos((lat * Math.PI) / 180))
+    const entry = (h: ExtraRoute) => {
+      const hub = BALI_HUBS.find(x => x.key === h.key)
+      const c = h.coords
+      if (!hub?.rKm || c.length < 2) return { coords: c, frac: 1 }
+      const seg = c.slice(1).map((p, j) => kmTo(p, c[j][1], c[j][0]))
+      const total = seg.reduce((x, y) => x + y, 0) || 1
+      let run = 0
+      for (let j = 1; j < c.length; j++) {
+        run += seg[j - 1]
+        if (kmTo(c[j], hub.lat, hub.lng) <= hub.rKm) return { coords: c.slice(0, j + 1), frac: run / total }
+      }
+      return { coords: c, frac: 1 }
+    }
+    const cut = new Map(hubs.map(h => [h.key, entry(h)]))
+    const legs = (hubs.length
+      ? hubs.map(h => ({ k: h.key, min: h.key === 'airport' && geoMin('airport') != null ? geoMin('airport')! : Math.max(1, Math.round(h.minutes * cut.get(h.key)!.frac * kOsrm)) }))
+      : (Object.keys(r).filter(k => k !== 'ubud_south').map(k => ({ k, min: geoMin(k)! })))).sort((a, b) => a.min - b.min)
+    const lineColor: Record<string, string> = { airport: ORANGE, canggu: GREEN, seminyak: '#0E9C8C', kuta: '#D4A017', ubud: BLUE, sanur: '#6A736E', jimbaran: '#C9443A', nusa_dua: '#D2559B', uluwatu: PURPLE }
     // Ближе 2,5 км — пешком (4,8 км/ч по длине маршрута), дальше — на машине.
     const walkMin = (m: number) => Math.max(1, Math.round(m / 80))
     const extra = i.extraRoutes.map(x => ({ coords: x.coords, color: x.kind === 'beach' ? '#2E7DD1' : '#C9443A',
       label: x.meters <= 2500 ? `${x.name} · ${T(`пешком ${walkMin(x.meters)} мин`, `${walkMin(x.meters)} min walk`)}` : `${x.name} · ${x.minutes} ${T('мин', 'min')}`, x }))
-    const lines = Object.entries(i.geo?.route_lines ?? {}).filter(([k]) => k !== 'sanur' && k !== 'ubud_south').map(([k, coords]) => ({ coords: coords as number[][], color: lineColor[k] ?? GREEN, label: `${T(lbl[k]?.[0] ?? k, lbl[k]?.[1] ?? k)} · ${legs.find(l => l.k === k)?.min ?? '?'} ${T('мин', 'min')}` }))
+    const minOf = (k: string) => legs.find(l => l.k === k)?.min ?? '?'
+    const lines = hubs.length
+      ? hubs.map(h => ({ coords: cut.get(h.key)!.coords, color: lineColor[h.key] ?? GREEN, label: `${T(lbl[h.key][0], lbl[h.key][1])} · ${minOf(h.key)} ${T('мин', 'min')}` }))
+      : Object.entries(i.geo?.route_lines ?? {}).filter(([k]) => k !== 'sanur' && k !== 'ubud_south').map(([k, coords]) => ({ coords: coords as number[][], color: lineColor[k] ?? GREEN, label: `${T(lbl[k]?.[0] ?? k, lbl[k]?.[1] ?? k)} · ${minOf(k)} ${T('мин', 'min')}` }))
     const air = legs.find(l => l.k === 'airport')
     const vizs: Viz[] = []
     let routeMap: Viz | undefined
@@ -576,9 +608,9 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     vizs.push({ kind: 'bars', title: T('Минут на машине', 'Minutes by car'), max: Math.max(...legs.map(l => l.min)), color: GREEN, rows: legs.map(l => ({ label: T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k), value: l.min, text: `${l.min} ${T('мин', 'min')}` })) })
     out.push({
       id: 'routes', group: G.place, title: T('Как добраться', 'Getting around'),
-      sub: T('Сколько ехать до аэропорта и главных районов', 'Drive times to the airport and main areas'),
+      sub: T('Маршруты до аэропорта, Чангу, Убуда, Улувату, Нуса-Дуа и других районов', 'Routes to the airport, Canggu, Ubud, Uluwatu, Nusa Dua and other areas'),
       sources: [{
-        name: T('Маршруты', 'Routes'), fresh: T('OpenStreetMap + сверка с Google', 'OpenStreetMap, checked against Google'), live: routeMap,
+        name: T('Маршруты по дорогам', 'Road routes'), fresh: T('OpenStreetMap + сверка с Google', 'OpenStreetMap, checked against Google'), live: routeMap,
         chips: legs.slice(0, 4).map(l => T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k).toLowerCase()),
         total: legs.length, unit: T('маршрут|маршрута|маршрутов', 'routes'),
         names: legs.map(l => `${T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k)} — ${l.min} ${T('мин', 'min')}`),
@@ -595,7 +627,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       vizs,
       bigs: [...(air ? [{ v: `${air.min} ${T('мин', 'min')}`, l: T('до аэропорта', 'to the airport') }] : []), { v: `${legs[0].min} ${T('мин', 'min')}`, l: T(`до: ${lbl[legs[0].k]?.[0] ?? legs[0].k}`, `to ${lbl[legs[0].k]?.[1] ?? legs[0].k}`) }],
       meaning: air && air.min <= 30 ? T('гостям из аэропорта ехать меньше получаса.', 'guests reach the villa from the airport in under half an hour.') : air ? T(`от аэропорта около ${air.min} минут.`, `about ${air.min} minutes from the airport.`) : T('время в пути до главных районов.', 'drive times to main areas.'),
-      footnote: T('На машине, без пробок.', 'By car, without traffic.'),
+      footnote: T('На машине, без пробок, до въезда в район, а не до его центра.', 'By car, without traffic, to the edge of each area rather than its centre.'),
     })
   }
 

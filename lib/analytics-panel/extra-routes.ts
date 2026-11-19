@@ -5,7 +5,7 @@ import { unstable_cache } from 'next/cache'
 // тот же, что в scripts/routes-free.ts; ответ кэшируется на 30 дней на точку,
 // чтобы не дёргать демо-сервер при каждом показе страницы.
 
-export type ExtraDest = { key: string; name: string; lat: number; lng: number; kind: 'beach' | 'ta' }
+export type ExtraDest = { key: string; name: string; lat: number; lng: number; kind: 'beach' | 'ta' | 'hub'; /** Радиус района, км: время считаем до въезда в него, а не до центра. */ rKm?: number }
 export type ExtraRoute = ExtraDest & { coords: number[][]; minutes: number; meters: number }
 
 async function osrmRoute(from: { lat: number; lng: number }, to: ExtraDest): Promise<ExtraRoute | null> {
@@ -51,6 +51,22 @@ async function buildTable(lat: number, lng: number, ptsJson: string): Promise<Tr
   })
   return out
 }
+// Главные места Бали для «Как добраться» (владелец 19.11.2026): аэропорт и
+// туристические районы. Время — до въезда в район (круг rKm вокруг центра):
+// «Убуд начался», а не до Ubud Palace. Точки аэропорта, Чангу, Убуда, Улувату и Санура — те
+// же, что в scripts/routes-free.ts, чтобы минуты совпадали с остальным сайтом.
+export const BALI_HUBS: ExtraDest[] = [
+  { key: 'airport', name: 'Аэропорт|Airport', lat: -8.7467, lng: 115.1668, kind: 'hub', rKm: 0.3 },
+  { key: 'canggu', name: 'Чангу|Canggu', lat: -8.66, lng: 115.138, kind: 'hub', rKm: 2.5 },
+  { key: 'seminyak', name: 'Семиньяк|Seminyak', lat: -8.6913, lng: 115.1682, kind: 'hub', rKm: 1.5 },
+  { key: 'kuta', name: 'Кута|Kuta', lat: -8.718, lng: 115.1686, kind: 'hub', rKm: 1.5 },
+  { key: 'ubud', name: 'Убуд|Ubud', lat: -8.5069, lng: 115.2625, kind: 'hub', rKm: 2.5 },
+  { key: 'sanur', name: 'Санур|Sanur', lat: -8.688, lng: 115.262, kind: 'hub', rKm: 2 },
+  { key: 'jimbaran', name: 'Джимбаран|Jimbaran', lat: -8.779, lng: 115.164, kind: 'hub', rKm: 1.8 },
+  { key: 'nusa_dua', name: 'Нуса-Дуа|Nusa Dua', lat: -8.8008, lng: 115.2318, kind: 'hub', rKm: 2 },
+  { key: 'uluwatu', name: 'Улувату|Uluwatu', lat: -8.815, lng: 115.1, kind: 'hub', rKm: 3 },
+]
+
 export function loadTravelTimes(lat: number, lng: number, pts: { key: string; lat: number; lng: number }[]): Promise<Travel> {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}:${pts.map(p => p.key).join('|')}`
   return unstable_cache(() => buildTable(lat, lng, JSON.stringify(pts.slice(0, 90))), ['analytics-travel-v1', key], { revalidate: 30 * 24 * 3600 })()
