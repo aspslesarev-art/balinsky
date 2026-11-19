@@ -40,6 +40,17 @@ const COPY = {
 export function AddToCollection({ kind, slug, snapshot, lang = 'ru', compact = false, asLink = false }: { kind: 'villa' | 'apartment'; slug: string; snapshot: ItemSnapshot; lang?: string; /** Маленькая кнопка в строке заголовка (страница виллы, 18.11.2026). */ compact?: boolean; /** Подчёркнутая текстовая ссылка (стиль «Журнал», страница виллы, 19.11.2026). */ asLink?: boolean }) {
   const c = lang === 'ru' ? COPY.ru : COPY.en
   const [open, setOpen] = useState(false)
+  // Окно открываем туда, где больше места (владелец 19.11.2026): кнопка внизу
+  // экрана — окно над ней, вверху — под ней.
+  const [up, setUp] = useState(false)
+  const toggleOpen = () => {
+    if (!open && box.current) {
+      const r = box.current.getBoundingClientRect()
+      const below = window.innerHeight - r.bottom
+      setUp(below < 440 && r.top > below)
+    }
+    setOpen(o => !o)
+  }
   const [lists, setLists] = useState<List[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
@@ -146,7 +157,7 @@ export function AddToCollection({ kind, slug, snapshot, lang = 'ru', compact = f
 
   return (
     <div ref={box} className="relative md:w-auto">
-      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open}
+      <button type="button" onClick={toggleOpen} aria-expanded={open}
         className={asLink
           ? 'cursor-pointer border-0 bg-transparent p-0 py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
           : `flex ${compact ? 'h-10 px-4 text-[14px]' : 'min-h-[54px] w-full px-4 text-[15px]'} cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-pressed)] transition-colors duration-[120ms] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]`}>
@@ -157,7 +168,7 @@ export function AddToCollection({ kind, slug, snapshot, lang = 'ru', compact = f
           {/* Телефон: шторка снизу на затемнении. */}
           <div className="fixed inset-0 z-50 bg-[rgb(15_26_21/.45)] md:hidden" aria-hidden onClick={() => setOpen(false)} />
           <div role="dialog" aria-label={c.heading}
-            className="fixed inset-x-0 bottom-0 z-50 flex max-w-none flex-col rounded-t-2xl bg-white px-4 pb-8 pt-3 md:absolute md:inset-x-auto md:bottom-auto md:right-0 md:top-[calc(100%+8px)] md:w-[400px] md:rounded-xl md:border md:border-[var(--color-border)] md:p-4 md:shadow-[0_1px_2px_rgb(0_0_0/.04),0_12px_32px_rgb(0_0_0/.10)]">
+            className={`fixed inset-x-0 bottom-0 z-50 flex max-w-none flex-col rounded-t-2xl bg-white px-4 pb-8 pt-3 md:absolute md:inset-x-auto md:right-0 ${up ? 'md:bottom-[calc(100%+8px)] md:top-auto' : 'md:bottom-auto md:top-[calc(100%+8px)]'} md:max-h-[min(70vh,560px)] md:overflow-y-auto md:w-[400px] md:rounded-xl md:border md:border-[var(--color-border)] md:p-4 md:shadow-[0_1px_2px_rgb(0_0_0/.04),0_12px_32px_rgb(0_0_0/.10)]`}>
             <span className="mx-auto mb-2 h-1 w-10 rounded-full bg-[var(--color-border)] md:hidden" aria-hidden />
             {panel}
           </div>
