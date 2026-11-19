@@ -37,7 +37,7 @@ const COPY = {
   },
 }
 
-export function AddToCollection({ kind, slug, snapshot, lang = 'ru', compact = false }: { kind: 'villa' | 'apartment'; slug: string; snapshot: ItemSnapshot; lang?: string; /** Маленькая кнопка в строке заголовка (страница виллы, 18.11.2026). */ compact?: boolean }) {
+export function AddToCollection({ kind, slug, snapshot, lang = 'ru', compact = false, asLink = false }: { kind: 'villa' | 'apartment'; slug: string; snapshot: ItemSnapshot; lang?: string; /** Маленькая кнопка в строке заголовка (страница виллы, 18.11.2026). */ compact?: boolean; /** Подчёркнутая текстовая ссылка (стиль «Журнал», страница виллы, 19.11.2026). */ asLink?: boolean }) {
   const c = lang === 'ru' ? COPY.ru : COPY.en
   const [open, setOpen] = useState(false)
   const [lists, setLists] = useState<List[] | null>(null)
@@ -147,8 +147,10 @@ export function AddToCollection({ kind, slug, snapshot, lang = 'ru', compact = f
   return (
     <div ref={box} className="relative md:w-auto">
       <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open}
-        className={`flex ${compact ? 'h-10 px-4 text-[14px]' : 'min-h-[54px] w-full px-4 text-[15px]'} cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-pressed)] transition-colors duration-[120ms] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]`}>
-        <ListPlus size={18} strokeWidth={2} aria-hidden /> {c.button}
+        className={asLink
+          ? 'cursor-pointer border-0 bg-transparent p-0 py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
+          : `flex ${compact ? 'h-10 px-4 text-[14px]' : 'min-h-[54px] w-full px-4 text-[15px]'} cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-pressed)] transition-colors duration-[120ms] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]`}>
+        {!asLink && <ListPlus size={18} strokeWidth={2} aria-hidden />} {c.button}
       </button>
       {open && (
         <>

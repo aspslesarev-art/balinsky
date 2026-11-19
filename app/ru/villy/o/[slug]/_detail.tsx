@@ -2008,7 +2008,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
 
   const presentationPdf = (
   <VillaPresentationButton
-    variant="compact"
+    variant="link"
     lang={lang}
     villaId={v.airtable_id}
     slug={slug}
@@ -2028,7 +2028,46 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
     seoText={seoText}
   />
   )
-  // «В подборку» и PDF — в строке заголовка, как в макете; в карточке цены только «Связаться» (владелец 18.11.2026).
+  // Строка ключевых цифр под названием: площадь · спальни · участок · аренда земли.
+  const keyLine = [
+    area != null ? `${Math.round(area)} ${K('м²', 'm²')}` : null,
+    bedrooms != null ? K(`${bedrooms} ${bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален'}`, `${bedrooms} ${bedrooms === 1 ? 'bedroom' : 'bedrooms'}`) : null,
+    land != null && land > 0 ? K(`участок ${Math.round(land)} м²`, `plot ${Math.round(land)} m²`) : null,
+    leaseUntil ? K(`аренда земли до ${leaseUntil.slice(0, 4)}`, `land lease until ${leaseUntil.slice(0, 4)}`)
+      : leaseYears != null ? K(`аренда земли ${Math.round(leaseYears)} лет`, `${Math.round(leaseYears)}-year land lease`) : null,
+  ].filter(Boolean).join(' · ')
+  // Цена, «Связаться» и ссылки «В подборку» / «Презентация PDF» (только Pro) —
+  // справа от названия на компьютере и под фото на телефоне (макет «Журнал», 19.11.2026).
+  const priceCard = priceNum != null && (
+    <PriceCtaCard
+      journal
+      priceUsd={priceNum}
+      pricePerSqmUsd={priceM2}
+      updatedAt={priceUpdatedAt}
+      managerId={managers[0]?.id ?? null}
+      sellerUrl={sellerUrl}
+      listingKind="villa"
+      listingId={v.airtable_id}
+      listingSlug={slug}
+      listingTitle={title}
+      reservedUntil={activeReservation?.expires_at ?? null}
+      presentationButton={null}
+      dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null}
+      links={
+        <div className="bx-pro-only">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:justify-start">
+            <AddToCollection asLink kind="villa" slug={slug} lang={lang} snapshot={{
+              title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+              district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+              leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+              id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
+            }} />
+            {presentationPdf}
+          </div>
+        </div>
+      }
+    />
+  )
 
   return (
     <>
@@ -2046,49 +2085,20 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           { label: title },
         ]} />
 
-        <section className="flex flex-col gap-3">
-          {/* Как в макете: справа от названия «В подборку» и «Презентация PDF» (только Pro). */}
-          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-          <h1 className="min-w-0 flex-1 basis-[420px] text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] [word-break:break-word] [overflow-wrap:anywhere]">
-            {title}
-          </h1>
-          {priceNum != null && (
-            <div className="bx-pro-only">
-              <div className="flex gap-2">
-                <AddToCollection compact kind="villa" slug={slug} lang={lang} snapshot={{
-                  title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-                  district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
-                  leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
-                  id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
-                }} />
-                {presentationPdf}
-              </div>
-            </div>
-          )}
+        {/* Стиль «Журнал» (макет владельца 19.11.2026): крупное название и строка
+            ключевых цифр слева, цена и одна зелёная кнопка справа; на телефоне
+            цена — под фото. */}
+        <section className="flex flex-wrap items-end gap-x-12 gap-y-6 pb-6 pt-2 md:pb-10">
+          <div className="flex min-w-0 flex-col gap-3 md:gap-4" style={{ flex: '999 1 560px' }}>
+            <h1 className="m-0 max-w-[20ch] font-display text-[32px] font-bold leading-[1.1] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[44px] lg:text-[56px] lg:leading-[1.05]">
+              {title}
+            </h1>
+            {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
+            {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block self-start"><VerifiedYieldBadge lang={lang} /></a>}
           </div>
-          {/* Строка «Санур, Бали · Пляж · Аэропорт · Магазин · Школа» убрана (владелец 18.11.2026): это есть в «1 · Объект» и «Аналитике». */}
-          {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block"><VerifiedYieldBadge lang={lang} /></a>}
-          {priceNum != null && (
-            <div className="lg:hidden">
-              <PriceCtaCard
-                priceUsd={priceNum}
-                pricePerSqmUsd={priceM2}
-                updatedAt={priceUpdatedAt}
-                managerId={managers[0]?.id ?? null}
-                sellerUrl={sellerUrl}
-                listingKind="villa"
-                listingId={v.airtable_id}
-                listingSlug={slug}
-                listingTitle={title}
-                reservedUntil={activeReservation?.expires_at ?? null}
-                presentationButton={null}
-              />
-            </div>
-          )}
+          {priceCard && <div className="hidden lg:block" style={{ flex: '1 1 280px' }}>{priceCard}</div>}
         </section>
 
-        {/* Отступ от карточки цены (на телефоне она прямо над фото) — владелец 18.11.2026. */}
-        <div className="mt-6">
         <VillaGallery
           photos={photos}
           alts={photoAlts}
@@ -2103,184 +2113,128 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           promo={promoKit}
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
           bleed
+          tilesAs="text"
         />
-        </div>
 
-        {/* Строки разделов «01 Объект · 02 Аналитика…» в макете нет — убрана (владелец 18.11.2026). */}
+        {priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
 
-        {/* Объект слева, цена справа — карточка не прилипает при прокрутке. */}
-        <div className="mt-12 flex flex-wrap gap-12 items-start">
-        <div className="min-w-0 flex flex-col gap-12" style={{ flex: '999 1 640px' }}>
+        {/* Разделы 01–04; между ними 64 / 96 px. */}
+        <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
         {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
-          <VillaChapter id="obekt" no="1" eyebrow={CH.obekt[0]}>
-            {/* Как в макете (владелец 18.11.2026): крупные цифры и описание; таблицы характеристик убраны по просьбе владельца. */}
+          <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} journal>
             {objTiles.length > 0 && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
+              <div className="grid grid-cols-2 md:grid-cols-4">
                 {objTiles.map(k => (
-                  <div key={k.l}>
-                    <div className="text-[28px] font-bold leading-[1.15] tracking-[-0.02em] tabular-nums">{k.v}</div>
-                    <div className="text-[13px] text-[var(--color-text-muted)]">{k.l}</div>
+                  <div key={k.l} className="flex min-w-0 flex-col gap-0.5 border-b border-[#ECEFED] py-[14px] pr-3 md:gap-1 md:py-5 md:pr-6">
+                    <div className="text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] text-[#0F1A15] tabular-nums md:text-[32px]">{k.v}</div>
+                    <div className="text-[13px] text-[#6B7570] md:text-[14px]">{k.l}</div>
                   </div>
                 ))}
               </div>
             )}
-            {/* Под цифрами — короткие строки: локация, удобства, расположение. */}
-            <div className="flex flex-col gap-1.5 text-[15px] leading-[1.6]">
-              {district && <div><span className="text-[var(--color-text-muted)]">{K('Локация:', 'Location:')}</span> {district}</div>}
-              {comforts.length > 0 && <div><span className="text-[var(--color-text-muted)]">{K('Удобства:', 'Amenities:')}</span> {comforts.join(', ')} <span className="text-[var(--color-text-muted)]">{K('(по фото)', '(from photos)')}</span></div>}
-              {placeNote && <div><span className="text-[var(--color-text-muted)]">{K('Расположение:', 'Setting:')}</span> {placeNote}</div>}
-            </div>
             {seoText && (
               <section>
-                <p className="text-[16px] leading-[1.65] text-[var(--color-text)] max-w-[68ch] m-0">{seoText.split('\n')[0]}</p>
+                <p className="m-0 max-w-[68ch] text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">{seoText.split('\n')[0]}</p>
                 {seoText.includes('\n') && (
                   <ExpandableText className="max-w-[68ch] mt-2" more={c.readMore} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-                    <div className="prose-balinsky text-[16px] leading-[1.65] text-[var(--color-text)] whitespace-pre-line">
+                    <div className="prose-balinsky whitespace-pre-line text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">
                       {seoText.split('\n').slice(1).join('\n')}
                     </div>
                   </ExpandableText>
                 )}
               </section>
             )}
+            {/* Короткие строки: локация, удобства, расположение. */}
+            {(district || comforts.length > 0 || placeNote) && (
+              <div className="flex max-w-[68ch] flex-col gap-1.5 text-[15px] leading-[1.6] text-[#0F1A15]">
+                {district && <div><span className="text-[#6B7570]">{K('Локация:', 'Location:')}</span> {district}</div>}
+                {comforts.length > 0 && <div><span className="text-[#6B7570]">{K('Удобства:', 'Amenities:')}</span> {comforts.join(', ')} <span className="text-[#6B7570]">{K('(по фото)', '(from photos)')}</span></div>}
+                {placeNote && <div><span className="text-[#6B7570]">{K('Расположение:', 'Setting:')}</span> {placeNote}</div>}
+              </div>
+            )}
           </VillaChapter>
         )}
 
-
-
-
-
-        </div>{/* ── /Main column ── */}
-
-        {/* ── Sticky sidebar (desktop only) ── */}
-        {priceNum != null && (
-          <aside className="hidden lg:flex flex-col gap-4" style={{ flex: '1 1 340px' }}>
-            <PriceCtaCard
-              sidebar
-              priceUsd={priceNum}
-              pricePerSqmUsd={priceM2}
-              updatedAt={priceUpdatedAt}
-              managerId={managers[0]?.id ?? null}
-              sellerUrl={sellerUrl}
-              listingKind="villa"
-              listingId={v.airtable_id}
-              listingSlug={slug}
-              listingTitle={title}
-              reservedUntil={activeReservation?.expires_at ?? null}
-              presentationButton={null}
-              dealRows={[
-                ...(paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : []),
-                // «Аренда земли» убрана: она уже в «01 Объект» (владелец 18.11.2026).
-              ]}
-              priceCompDiffPct={saleComps?.diffPct ?? null}
-            />
-            {managers.length > 0 && managers[0] && (
-              <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-                <div className="flex items-center gap-3">
-                  {managers[0].photo ? (
-                    <div className="shrink-0 w-[48px] h-[48px] rounded-full overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">
-                      <Image src={managers[0].photo} alt={managerName} fill sizes="48px" className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="shrink-0 w-[48px] h-[48px] rounded-full bg-[var(--color-search-bg)] border border-[var(--color-border)] flex items-center justify-center text-[18px] text-[var(--color-text-muted)]">
-                      {managerName.slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[var(--color-text)] truncate">
-                      {managerName}{developerName ? `, ${developerName}` : ''}
-                    </div>
-                    <div className="text-[13px] text-[var(--color-text-muted)]">
-                      {managerLangs.length > 0
-                        ? `Telegram, WhatsApp · ${managerLangs.join(', ')}`
-                        : 'Telegram, WhatsApp'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </aside>
-        )}
-        </div>{/* ═══ /Two-column layout ═══ */}
-
-        {/* Аналитика и ниже — на всю ширину, без колонки цены справа: она мешала
-            смотреть аналитику (владелец 18.11.2026). */}
-        <div className="mt-12 flex flex-col gap-12">
+        {/* Аналитика — заголовок «02 Проверьте виллу с ИИ» рисует сама панель. */}
         {analyses.length > 0 ? (
-          <VillaChapter id="analitika" no="2" plain eyebrow={CH.analitika[0]}>
-            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`}
+          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika[0]}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`} no="02"
               extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
           </VillaChapter>
         ) : (<>{mestoChapter}{analytics}</>)}
 
-        {/* Застройщик и вопросы — рядом, как в макете. */}
-        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2">
+        {/* Застройщик и вопросы — рядом на компьютере, как в макете. */}
+        <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
         {(developer || developerName || parentComplex) && (
-          <VillaChapter id="zastroyshchik" no={analyses.length > 0 ? '3' : '05'} eyebrow={CH.zastroyshchik[0]}>
-            <div className="grid grid-cols-1 gap-4 items-stretch">
+          <VillaChapter id="zastroyshchik" no={analyses.length > 0 ? '03' : '05'} eyebrow={CH.zastroyshchik[0]} journal>
+            <div className="flex flex-col gap-5 md:gap-6">
               {(developer || developerName) && (
-              <div className="rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4 h-full">
-                <div className="text-[13px] text-[#4C5751]">{c.developerLabel}</div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)]">{developer?.name ?? developerName}</span>
-                  {developer?.logoUrl ? (
-                    <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-1">
-                      <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-w-full max-h-full object-contain" />
-                    </div>
-                  ) : (
-                    <div className="shrink-0 w-12 h-12 rounded-lg bg-[#2C3B2F] flex items-center justify-center text-[10px] font-semibold text-white tracking-wide">
-                      {(developer?.name ?? developerName ?? '').slice(0, 6).toUpperCase()}
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[20px] font-semibold tracking-[-0.01em] text-[#0F1A15] md:text-[24px]">{developer?.name ?? developerName}</span>
+                  {developer?.logoUrl && (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#ECEFED] bg-white p-1">
+                      <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-h-full max-w-full object-contain" />
                     </div>
                   )}
                 </div>
-                {devStats && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[28px] font-semibold leading-[1.15]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
-                      <span className="text-[14px] text-[#4C5751]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</span>
-                    </div>
-                    {devStats.inProgress > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[28px] font-semibold leading-[1.15]">{devStats.inProgress}</span>
-                        <span className="text-[14px] text-[#4C5751]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</span>
-                      </div>
-                    )}
-                    {videos.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[28px] font-semibold leading-[1.15]">{videos.length} {pickCopy({ ru: 'видео', en: 'videos', id: 'video', fr: 'vidéos', de: 'Videos', zh: '视频', nl: 'video\'s', ban: 'vidéo', pl: 'wideo', uk: 'відео' }, lang)}</span>
-                        <span className="text-[14px] text-[#4C5751]">{pickCopy({ ru: 'об объекте', en: 'about the property', id: 'tentang properti', fr: 'sur le bien', de: 'über das Objekt', zh: '关于此物业', nl: 'over het object', ban: 'indik properti', pl: 'o obiekcie', uk: 'про об\'єкт' }, lang)}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {developer && (
-                  <Link href={`${developersRoot}/${developer.slug}`} className="mt-auto text-[15px] text-[var(--color-primary-pressed)] hover:underline">
-                    {c.openDeveloper}
-                  </Link>
-                )}
-              </div>
               )}
-              {parentComplex && (
-                <Link href={`${complexesRoot}/o/${parentComplex.slug}`} className="group rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4 h-full no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] focus-visible:border-[var(--color-primary)] transition-colors duration-[120ms]">
-                  <div className="text-[13px] text-[#4C5751]">{pickCopy({ ru: 'Жилой комплекс', en: 'Residential complex', id: 'Kompleks hunian', fr: 'Résidence', de: 'Wohnanlage', zh: '住宅项目', nl: 'Wooncomplex', ban: 'Kompleks hunian', pl: 'Kompleks mieszkaniowy', uk: 'Житловий комплекс' }, lang)}</div>
-                  {parentComplex.coverUrl && (
-                    <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#EEF2EF]">
-                      <Image src={parentComplex.coverUrl} alt={parentComplex.name} fill sizes="(min-width: 768px) 420px, 100vw" className="object-cover" />
+              {(devStats || parentComplex?.units) && (
+                <div className="flex flex-wrap gap-x-8 gap-y-4 md:gap-x-12">
+                  {devStats && (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{K('проектов', 'projects')} {c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</span>
+                    </span>
+                  )}
+                  {devStats && devStats.inProgress > 0 && (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.inProgress}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</span>
+                    </span>
+                  )}
+                  {parentComplex?.units ? (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{parentComplex.units}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{c.units(parentComplex.units).replace(/^\d+\s*/, '')} {K('в', 'in')} {parentComplex.name}</span>
+                    </span>
+                  ) : null}
+                </div>
+              )}
+              {(developer || parentComplex) && (
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
+                  {developer && (
+                    <Link href={`${developersRoot}/${developer.slug}`} className="py-1 text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
+                      {c.openDeveloper}
+                    </Link>
+                  )}
+                  {parentComplex && (
+                    <Link href={`${complexesRoot}/o/${parentComplex.slug}`} className="py-1 text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
+                      {pickCopy({ ru: 'Страница комплекса', en: 'Complex page', id: 'Halaman kompleks', fr: 'Page de la résidence', de: 'Seite der Anlage', zh: '项目页面', nl: 'Pagina van het complex', ban: 'Halaman kompleks', pl: 'Strona kompleksu', uk: 'Сторінка комплексу' }, lang)}
+                    </Link>
+                  )}
+                </div>
+              )}
+              {/* Менеджер застройщика — сюда ведёт зелёная кнопка «Связаться». */}
+              {managers.length > 0 && managers[0] && (
+                <div id="kontakty-operatora" className="flex scroll-mt-[136px] items-center gap-3 border-t border-[#ECEFED] pt-5">
+                  {managers[0].photo ? (
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[#F6F8F7]">
+                      <Image src={managers[0].photo} alt={managerName} fill sizes="48px" className="object-cover" />
+                    </div>
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F6F8F7] text-[18px] text-[#6B7570]">
+                      {managerName.slice(0, 1).toUpperCase()}
                     </div>
                   )}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[24px] font-semibold tracking-[-0.01em]">{parentComplex.name}</span>
-                    {(() => {
-                      const bits = [
-                        lang === 'ru' ? parentComplex.district : districtLatin(parentComplex.district),
-                        parentComplex.units ? c.units(parentComplex.units) : null,
-                      ].filter(Boolean)
-                      return bits.length > 0 ? <span className="text-[14px] text-[#4C5751]">{bits.join(' · ')}</span> : null
-                    })()}
+                  <div className="min-w-0">
+                    <div className="truncate text-[15px] font-semibold text-[#0F1A15]">
+                      {managerName}{developerName ? `, ${developerName}` : ''}
+                    </div>
+                    <div className="text-[13px] text-[#6B7570]">
+                      {managerLangs.length > 0 ? `Telegram, WhatsApp · ${managerLangs.join(', ')}` : 'Telegram, WhatsApp'}
+                    </div>
                   </div>
-                  <span className="mt-auto text-[15px] text-[var(--color-primary-pressed)] group-hover:underline">
-                    {pickCopy({ ru: 'Открыть страницу комплекса →', en: 'Open complex page →', id: 'Buka halaman kompleks →', fr: 'Voir la résidence →', de: 'Zur Anlage →', zh: '查看项目页面 →', nl: 'Naar het complex →', ban: 'Buka halaman kompleks →', pl: 'Otwórz stronę kompleksu →', uk: 'Відкрити сторінку комплексу →' }, lang)}
-                  </span>
-                </Link>
+                </div>
               )}
             </div>
           </VillaChapter>
@@ -2290,15 +2244,15 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           <VideoGrid jsonLdOnly videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
         )}
 
-        <VillaChapter id="voprosy" no={analyses.length > 0 ? '4' : '06'} eyebrow={CH.voprosy[0]} title={c.faqHeading}>
-          <div>
+        <VillaChapter id="voprosy" no={analyses.length > 0 ? '04' : '06'} eyebrow={CH.voprosy[0]} journal>
+          <div className="-mt-2 md:-mt-4">
             {faqItems.map((it, i) => (
-              <details key={i} className="group border-b border-[#E4E9E6]">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 py-4 text-[16px] text-[var(--color-text)]">
+              <details key={i} className="group border-b border-[#ECEFED]">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-[16px] text-[#0F1A15] transition-colors duration-[120ms] hover:text-[var(--color-primary)] md:text-[17px] [&::-webkit-details-marker]:hidden">
                   {it.q}
-                  <span className="text-[#94A29A] text-[20px] leading-none shrink-0"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
+                  <span className="shrink-0 text-[22px] leading-none text-[#6B7570]" aria-hidden><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
                 </summary>
-                <div className="pb-4 text-[15px] leading-[1.6] text-[#4C5751]">{it.a}</div>
+                <div className="max-w-[68ch] pb-4 text-[15px] leading-[1.6] text-[#4A5550]">{it.a}</div>
               </details>
             ))}
           </div>

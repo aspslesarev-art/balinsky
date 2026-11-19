@@ -140,6 +140,8 @@ export function PriceCtaCard({
   sidebarExtra = null,
   dealRows = null,
   priceCompDiffPct = null,
+  journal = false,
+  links = null,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
@@ -158,6 +160,10 @@ export function PriceCtaCard({
   sidebarExtra?: ReactNode
   dealRows?: { label: string; valueUsd?: number; valueText?: string; approx?: boolean }[] | null
   priceCompDiffPct?: number | null
+  /** Стиль «Журнал» (страница виллы, макет владельца 19.11.2026): без рамки,
+   *  крупная цена, одна зелёная кнопка, под ней ссылки `links`. */
+  journal?: boolean
+  links?: ReactNode
 }) {
   const { currency } = useCurrency()
   const pathname = usePathname() ?? ''
@@ -178,6 +184,47 @@ export function PriceCtaCard({
   void listingTitle
   void listingKind
   void listingSlug
+
+  if (journal) {
+    const updatedLine = updated ? c.priceUpdated(updated) : null
+    const meta = [
+      perSqm ? `${perSqm} ${c.perSqm}` : null,
+      updatedLine && (perSqm && lang !== 'de' ? updatedLine.replace(/^./, ch => ch.toLowerCase()) : updatedLine),
+    ].filter(Boolean).join(' · ')
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="text-[36px] md:text-[44px] font-semibold leading-none tracking-[-0.03em] text-[#0F1A15] tabular-nums">
+            {pricePrefix ? `${pricePrefix} ` : ''}{main}
+          </div>
+          <ApproxPrice usd={priceUsd} lang={lang} className="block mt-1 text-[14px] text-[#6B7570]" />
+          {meta && <div className="text-[14px] text-[#6B7570]">{meta}</div>}
+          {note && <div className="text-[14px] text-[#6B7570]">{note}</div>}
+          {dealRows && dealRows.map((row, i) => (
+            <div key={i} className="text-[14px] text-[#6B7570]">
+              {row.label}: <span className="text-[#0F1A15]">{row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : row.valueText}</span>
+            </div>
+          ))}
+        </div>
+        {reservedUntil ? (
+          <div className="flex items-start gap-2 text-[14px] leading-snug text-[#92400E]">
+            <Lock size={16} strokeWidth={1.6} className="shrink-0 mt-0.5" />
+            <span><span className="font-semibold">{c.reservedTitle}.</span> {c.reservedUntil(formatUpdated(reservedUntil, c.locale) ?? '')}</span>
+          </div>
+        ) : (
+          <a
+            href={isResale ? sellerUrl! : '#kontakty-operatora'}
+            {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
+            className="inline-flex h-12 w-full md:w-auto md:self-start items-center justify-center rounded-xl bg-[var(--color-primary)] px-7 text-[16px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            {buyLabel}
+          </a>
+        )}
+        {presentationButton}
+        {links}
+      </div>
+    )
+  }
 
   return (
     <div className={`rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid gap-5 md:gap-6 ${sidebar ? 'grid-cols-1 shadow-[0_1px_2px_rgb(0_0_0/.04),0_4px_12px_rgb(0_0_0/.06)]' : 'grid-cols-1 xl:grid-cols-[1fr_auto] xl:items-center'}`}>

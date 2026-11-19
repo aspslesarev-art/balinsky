@@ -40,7 +40,7 @@ const COPY = {
 } as const
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles' }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -69,6 +69,9 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   belowTiles?: ReactNode
   /** Главное фото во всю ширину экрана, от края до края (страница виллы). */
   bleed?: boolean
+  /** «text» — вместо плиток строка ссылок «Фото 10 · Видео 3 · …» (стиль
+   *  «Журнал», страница виллы; макет владельца 19.11.2026). */
+  tilesAs?: 'tiles' | 'text'
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansAreMasterplan ? { ...base, plans: base.master } : base
@@ -174,7 +177,27 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
       </div>
 
-      {hasTiles && (
+      {tilesAs === 'text' ? (() => {
+        const links: { key: string; label: string; onClick: () => void }[] = [
+          ...(photos.length > 0 ? [{ key: 'photos', label: `${c.photos} ${photos.length}`, onClick: () => { stop(); setOpen({ tab: 'photos', i: 0 }) } }] : []),
+          ...(videos.length > 0 ? [{ key: 'videos', label: `${c.videos} ${videos.length}`, onClick: () => setOpen({ tab: 'videos', i: 0 }) }] : []),
+          ...(planCount > 0 ? [{ key: 'plans', label: `${c.plans}${planCount > 1 ? ` ${planCount}` : ''}`, onClick: () => setOpen({ tab: 'plans', i: 0 }) }] : []),
+          ...(masterplan ? [{ key: 'master', label: c.master, onClick: () => setOpen({ tab: 'master', i: 0 }) }] : []),
+          ...(tourUrl ? [{ key: 'tour', label: c.tour, onClick: () => setOpen({ tab: 'tour', i: 0 }) }] : []),
+          ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, onClick: () => setOpen({ tab: `x:${v.key}`, i: 0 }) })),
+          ...(promo ? [{ key: 'promo', label: c.promo, onClick: () => setOpen({ tab: 'promo', i: 0 }) }] : []),
+        ]
+        return links.length > 0 && (
+          <nav aria-label={c.photos} className="-mx-6 mt-1 flex max-w-none gap-6 overflow-x-auto whitespace-nowrap px-6 text-[15px] md:mx-0 md:mt-2 md:flex-wrap md:gap-x-8 md:gap-y-1 md:overflow-visible md:px-0 md:whitespace-normal [scrollbar-width:none]">
+            {links.map((l, i) => (
+              <button key={l.key} type="button" onClick={l.onClick}
+                className={`shrink-0 cursor-pointer border-0 bg-transparent px-0 py-2 underline-offset-4 transition-colors duration-[120ms] hover:text-[#0F1A15] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${i === 0 ? 'font-semibold text-[#0F1A15]' : 'text-[#4A5550]'}`}>
+                {l.label}
+              </button>
+            ))}
+          </nav>
+        )
+      })() : hasTiles && (
         <div className="grid grid-cols-3 sm:grid-flow-col sm:auto-cols-fr gap-2">
           {planCount > 0 && (
             <button type="button" onClick={() => setOpen({ tab: 'plans', i: 0 })} className={MEDIA_TILE} aria-label={c.plans}>

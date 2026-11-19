@@ -64,7 +64,7 @@ export function VillaPresentationButton({
   variant = 'primary',
   lang = 'ru',
   ...props
-}: VillaPresentationData & { variant?: 'primary' | 'outline' | 'compact'; lang?: Lang }) {
+}: VillaPresentationData & { variant?: 'primary' | 'outline' | 'compact' | 'link'; lang?: Lang }) {
   const [open, setOpen] = useState(false)
   const t = lang === 'ru'
     ? { outline: 'Скачать презентацию PDF', compact: 'Презентация PDF', primary: 'Презентация',  aria: 'Открыть презентацию виллы' }
@@ -72,7 +72,10 @@ export function VillaPresentationButton({
   // 'outline' matches the new PriceCtaCard CTA row — same 54px height
   // as the green Buy button, white background with a hairline border so
   // the two CTAs read as siblings rather than mismatched controls.
-  const styles = variant === 'compact'
+  // 'link' — подчёркнутая текстовая ссылка (стиль «Журнал», страница виллы, 19.11.2026).
+  const styles = variant === 'link'
+    ? 'cursor-pointer border-0 bg-transparent p-0 py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
+    : variant === 'compact'
     ? 'h-10 px-4 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[14px] font-semibold leading-tight transition-colors'
     : variant === 'outline'
     ? 'w-full md:w-auto min-h-[54px] py-2 px-6 rounded-[10px] bg-white border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[#1A1F1C] text-[15px] md:text-[16px] font-semibold text-center leading-tight transition-colors'
@@ -85,10 +88,10 @@ export function VillaPresentationButton({
         className={`inline-flex items-center justify-center gap-2 ${styles}`}
         aria-label={t.aria}
       >
-        {variant !== 'primary'
+        {variant === 'link' ? null : variant !== 'primary'
           ? <FileText size={variant === 'compact' ? 16 : 18} strokeWidth={1.6} />
           : <Play size={15} fill="currentColor" />}
-        {variant === 'compact' ? t.compact : variant === 'outline' ? t.outline : t.primary}
+        {variant === 'compact' || variant === 'link' ? t.compact : variant === 'outline' ? t.outline : t.primary}
       </button>
       {/* «Скачать PDF» сразу открывает окно выбора блоков, без слайдов. */}
       {open && (variant !== 'primary'
