@@ -23,19 +23,10 @@ function plural(n: number, unit: string) {
   return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b >= 2 && b <= 4 ? f[1] : f[2]
 }
 
-// Цвет группы: номер темы, вкладки, полоса загрузки (владелец:
-// «части анализа должны быть ярко разделены», 18.11.2026).
-const TONES = [
-  { main: '#1F8B5F', bg: '#E6F2EC', ink: '#135E40' },
-  { main: '#C9772B', bg: '#FBEFE2', ink: '#8A4F17' },
-  { main: '#2E7DD1', bg: '#E6EFFA', ink: '#1C5596' },
-  { main: '#8E5BD0', bg: '#F0E9F9', ink: '#5E3A91' },
-]
-
 const STEP = 26 // тиков (по 100 мс) на один источник
 const COPY = {
   ru: {
-    heading: 'Проверьте виллу с помощью ИИ', lead: 'Нажмите на любую проверку — ИИ-аналитик соберёт данные из нужных источников и объяснит, что они значат для вас.', badge: 'ИИ-аналитик', working: (k: number, n: number) => `ИИ-аналитик работает · источник ${k} из ${n}`, finished: 'ИИ-аналитик закончил',
+    heading: 'Проверьте виллу с ИИ', meta: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'проверка' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'проверки' : 'проверок'} · нажмите — откроется на весь экран`, lead: 'Нажмите на любую проверку — ИИ-аналитик соберёт данные из нужных источников и объяснит, что они значат для вас.', badge: 'ИИ-аналитик', working: (k: number, n: number) => `ИИ-аналитик работает · источник ${k} из ${n}`, finished: 'ИИ-аналитик закончил',
     openAll: 'Открыть все отчёты', close: 'Закрыть', prev: 'Назад', of: (k: number, n: number) => `${k} из ${n}`, themes: 'Темы',
     add: 'Добавить в отчёт', added: 'В отчёте', inReport: 'в отчёте', download: (n: number) => `Скачать отчёт · ${n}`, building: 'Собираю PDF…', buildFail: 'Не получилось собрать PDF, попробуйте ещё раз',
     searching: 'ИИ ищет:', filtering: 'ИИ отбирает похожие…', meaning: 'Вывод ИИ:',
@@ -45,7 +36,7 @@ const COPY = {
     pendingTitle: 'Доступ Pro на проверке', pendingText: 'Графики, карты и фото откроются, как только проверим доступ. Обычно в течение дня.',
   },
   en: {
-    heading: 'Check the villa with AI', lead: 'Tap any check — the AI analyst gathers data from the right sources and explains what it means for you.', badge: 'AI analyst', working: (k: number, n: number) => `AI analyst at work · source ${k} of ${n}`, finished: 'AI analyst finished',
+    heading: 'Check the villa with AI', meta: (n: number) => `${n} checks · tap to open full screen`, lead: 'Tap any check — the AI analyst gathers data from the right sources and explains what it means for you.', badge: 'AI analyst', working: (k: number, n: number) => `AI analyst at work · source ${k} of ${n}`, finished: 'AI analyst finished',
     openAll: 'Open all reports', close: 'Close', prev: 'Back', of: (k: number, n: number) => `${k} of ${n}`, themes: 'Topics',
     add: 'Add to report', added: 'In report', inReport: 'in report', download: (n: number) => `Download report · ${n}`, building: 'Building PDF…', buildFail: 'Could not build the PDF, please try again',
     searching: 'AI is searching:', filtering: 'AI is picking similar…', meaning: 'AI verdict:',
@@ -87,11 +78,13 @@ function coverOf(a: Analysis): { v: Viz; open: boolean } | null {
   return v ? { v, open: false } : null
 }
 
-export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebrow, reportPath }: {
+export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, reportPath, no }: {
   analyses: Analysis[]
   lang: string
   /** Печатная страница PDF-отчёта (/ru/villy/o/<slug>/otchet); нет — кнопок отчёта нет. */
   reportPath?: string
+  /** Номер раздела страницы («02») перед заголовком. */
+  no?: string
   /** Готовые блоки страницы под итогом анализа (калькулятор дохода и т.п.) — только с доступом. */
   extras?: Record<string, ReactNode>
   signInHref: string
@@ -105,6 +98,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
   const [open, setOpen] = useState(false)
   // «Добавить в отчёт» (владелец 19.11.2026): что человек отобрал, в порядке добавления.
   const [inReport, setInReport] = useState<string[]>([])
+  // Тема, открытая на странице (текстовые вкладки над карточками).
+  const [pageTab, setPageTab] = useState(0)
   const [building, setBuilding] = useState<'idle' | 'busy' | 'fail'>('idle')
   const [t, setT] = useState(0)
   const [done, setDone] = useState<Record<string, true>>({})
@@ -203,64 +198,51 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
   const locked = access !== 'pro'
   const idx = G ? flat.findIndex(a => a.id === G.id) : -1
   const nextA = G ? flat[(idx + 1) % flat.length] : null
-  const prevA = G ? flat[(idx - 1 + flat.length) % flat.length] : null
   const gi = Math.max(0, groups.findIndex(g => g.name === G?.group))
   const progress = G ? Math.round(Math.min(1, t / end) * 100) : 0
 
   return (
-    <div className="flex flex-col gap-10">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div className="flex max-w-[68ch] flex-col gap-2">
-          {eyebrow && <div className="text-[13px] uppercase tracking-[0.06em] text-[var(--color-text-muted)]">{eyebrow}</div>}
-          <Badge text={c.badge} />
-          <h2 className="m-0 font-display text-[28px] md:text-[32px] font-bold leading-[1.2] tracking-[-0.02em]">{c.heading}</h2>
-          <p className="m-0 text-[16px] leading-[1.6] text-[var(--color-text-muted)]">{c.lead}</p>
-        </div>
-        <button type="button" onClick={() => pick(flat[0].id)} className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-          {c.openAll}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
-        </button>
+    <div className="flex flex-col gap-8">
+      {/* Страница — стиль «Журнал» (макет владельца 19.11.2026): номер раздела,
+          заголовок с тёмной линией, темы текстом, карточки выбранной темы. */}
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-[#0F1A15] pb-4">
+        {no && <span className="text-[13px] tabular-nums text-[#6B7570]">{no}</span>}
+        <h2 className="m-0 font-display text-[26px] md:text-[32px] font-bold leading-[1.15] tracking-[-0.02em]">{c.heading}</h2>
+        <span className="text-[15px] text-[#4A5550] md:ml-auto">{c.meta(flat.length)}</span>
       </div>
-
-      {groups.map((g, gi) => {
-        const tone = TONES[gi % TONES.length]
-        return (
-          <section key={g.name} className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-7 min-w-7 items-center justify-center rounded-lg px-1.5 text-[13px] font-bold tabular-nums text-white" style={{ background: tone.ink }}>{gi + 1}</span>
-              <h3 className="m-0 text-[20px] font-semibold leading-tight">{g.name}</h3>
-              <span className="h-px flex-grow bg-[var(--color-border)]" />
-            </div>
-            {/* Телефон — карточки листаются вбок; планшет и шире — сетка. */}
-            <div className="-mx-6 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-3 overflow-x-auto px-6 pb-1 md:mx-0 md:grid md:w-auto md:max-w-full md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-4">
-              {g.items.map(a => {
-                const cover = coverOf(a)
-                const blur = locked && cover && !cover.open
-                const big = a.bigs[0]
-                return (
-                  <button key={a.id} type="button" onClick={() => pick(a.id)}
-                    className="group flex w-[280px] shrink-0 cursor-pointer snap-start flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-white p-0 text-left shadow-[0_1px_2px_rgb(0_0_0/.04),0_4px_12px_rgb(0_0_0/.05)] transition-[box-shadow,transform] duration-[120ms] hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgb(0_0_0/.05),0_8px_24px_rgb(0_0_0/.09)] focus-visible:outline-2 focus-visible:outline-offset-2 md:w-auto"
-                    style={{ outlineColor: tone.main }}>
-                    <span className="relative block aspect-[7/4] w-full overflow-hidden" style={{ background: tone.bg }} aria-hidden={!cover}>
-                      {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: blur ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} /></span>}
-                      {done[a.id] && <span className="absolute right-2 top-2"><Check label={c.done} /></span>}
-                    </span>
-                    <span className="flex flex-grow flex-col gap-1 px-4 pb-4 pt-3">
-                      <span className="text-[17px] font-semibold leading-[1.3] text-[var(--color-text)]">{a.title}</span>
-                      {big ? (
-                        <span className="text-[14px] leading-[1.45] text-[var(--color-text-muted)]"><b className="font-semibold text-[var(--color-text)]">{big.v}</b> {big.l}</span>
-                      ) : (
-                        <span className="text-[14px] leading-[1.45] text-[var(--color-text-muted)]">{a.sub}</span>
-                      )}
-                      <span className="mt-auto inline-flex items-center gap-1 pt-2 text-[14px] font-semibold" style={{ color: tone.ink }}>{done[a.id] ? c.open : c.run}<Arrow color={tone.ink} /></span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-        )
-      })}
+      <nav aria-label={c.themes} className="-mx-6 flex w-[calc(100%+3rem)] max-w-none gap-6 overflow-x-auto px-6 md:mx-0 md:w-auto md:max-w-full md:gap-8 md:px-0">
+        {groups.map((g, i) => {
+          const on = i === pageTab
+          return (
+            <button key={g.name} type="button" onClick={() => setPageTab(i)} aria-pressed={on}
+              className={`shrink-0 cursor-pointer whitespace-nowrap border-0 border-b-2 bg-transparent px-0 pb-1 pt-2 text-[15px] transition-colors duration-[120ms] ${on ? 'border-[#0F1A15] font-semibold text-[#0F1A15]' : 'border-transparent text-[#6B7570] hover:text-[#0F1A15]'}`}>
+              {g.name}
+            </button>
+          )
+        })}
+      </nav>
+      {/* Телефон — карточки листаются вбок; планшет и шире — сетка. */}
+      <div className="-mx-6 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:grid md:w-auto md:max-w-full md:grid-cols-3 md:gap-8 md:overflow-visible md:px-0 lg:grid-cols-4">
+        {(groups[pageTab] ?? groups[0]).items.map(a => {
+          const cover = coverOf(a)
+          const blur = locked && cover && !cover.open
+          const big = a.bigs[0]
+          return (
+            <button key={a.id} type="button" onClick={() => pick(a.id)}
+              className="group flex w-[280px] shrink-0 cursor-pointer snap-start flex-col gap-3 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-auto">
+              <span className="relative block aspect-[7/4] w-full overflow-hidden rounded-md bg-[#F4F6F5]" aria-hidden={!cover}>
+                {cover && <span className="pointer-events-none absolute inset-0 transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.03]" style={{ filter: blur ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} /></span>}
+              </span>
+              <span className="flex items-center gap-1.5 text-[17px] font-semibold leading-[1.3] text-[#0F1A15] group-hover:underline group-hover:underline-offset-4">
+                {done[a.id] && <span aria-label={c.done} className="text-[#1F8B5F]">✓</span>}{a.title}
+              </span>
+              <span className="text-[15px] leading-[1.5] text-[#4A5550]">
+                {big ? <><b className="font-semibold text-[#0F1A15]">{big.v}</b> {big.l}</> : a.sub}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
       {open && G && (
         // Окно — вариант A «Журнал» (владелец 19.11.2026): белое, текст и
@@ -308,6 +290,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
               })}
             </nav>
 
+          {/* Справа — отчёт и под ним кнопки; колонка слева на всю высоту окна. */}
+          <div className="flex min-h-0 min-w-0 flex-grow flex-col">
           <div ref={bodyRef} className="min-h-0 flex-grow overflow-y-auto overscroll-contain">
             <div className="flex max-w-[1000px] flex-col gap-8 px-4 pb-10 pt-2 md:px-0">
               <div className="flex flex-col gap-3">
@@ -400,13 +384,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
               )}
             </div>
           </div>
-          </div>
 
-          <footer className="flex shrink-0 items-center gap-4 border-t border-[#ECEFED] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] md:border-0 md:px-12 md:pb-6 md:pt-4">
-            <button type="button" onClick={() => prevA && pick(prevA.id)} aria-label={c.prev} className="flex h-11 min-w-11 shrink-0 cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-[15px] text-[#6B7570] hover:text-[#0F1A15]">
-              ←<span className="hidden md:inline">{prevA?.title}</span>
-            </button>
-            <span className="mx-auto" />
+          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-[#ECEFED] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] md:px-0 md:pb-6 md:pt-4">
             {reportPath ? (<>
               {building === 'fail' && <span className="hidden text-[13px] text-[#9A3B2E] md:inline">{c.buildFail}</span>}
               {inReport.length > 0 && (locked
@@ -417,29 +396,12 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, eyebro
                 : <button type="button" onClick={addToReport} className="flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">{c.add}</button>}
             </>) : nextA && <button type="button" onClick={() => pick(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
           </footer>
+          </div>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-function Badge({ text }: { text: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-[#0F1A15] px-3 py-1 text-[13px] font-semibold text-white">
-      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2l1.8 5.6L19.5 9.5l-5.7 1.9L12 17l-1.8-5.6L4.5 9.5l5.7-1.9L12 2zm7 11l.9 2.6 2.6.9-2.6.9L19 20l-.9-2.6-2.6-.9 2.6-.9L19 13z" /></svg>
-      {text}
-    </span>
-  )
-}
 
-function Check({ label }: { label: string }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 20 20" role="img" aria-label={label} className="shrink-0">
-      <circle cx="10" cy="10" r="10" fill="#1F8B5F" />
-      <path d="M6 10.5l2.5 2.5L14 7.5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function Arrow({ color }: { color: string }) {
-  return <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0" style={{ color }}><path d="M4 9h10M10 5l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-}
