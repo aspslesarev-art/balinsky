@@ -243,7 +243,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
             <button key={a.id} type="button" onClick={() => pick(a.id)}
               className="group flex w-[280px] shrink-0 cursor-pointer snap-start flex-col gap-3 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-auto">
               <span className="relative block aspect-[7/4] w-full overflow-hidden rounded-md" style={{ background: tone.bg }} aria-hidden={!cover}>
-                {cover && <span className="pointer-events-none absolute inset-0 transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.03]" style={{ filter: blur ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} accent={tone.ink} /></span>}
+                {cover && <span className="pointer-events-none absolute inset-0 transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.03]" style={{ filter: blur ? 'blur(6px)' : undefined }}><CoverPlay><VizCover v={cover.v} lang={lang} accent={tone.ink} /></CoverPlay></span>}
               </span>
               <span className="flex items-center gap-1.5 text-[17px] font-semibold leading-[1.3] text-[#0F1A15] group-hover:underline group-hover:underline-offset-4">
                 {done[a.id] && <span aria-label={c.done} className="text-[#1F8B5F]">✓</span>}{a.title}
@@ -413,4 +413,21 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   )
 }
 
-
+/** Обложка оживает, когда карточка показалась на экране (до этого — пустая
+ *  подложка), и проигрывается заново при наведении на карточку. */
+function CoverPlay({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [seen, setSeen] = useState(false)
+  const [round, setRound] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setSeen(true); io.disconnect() } }, { threshold: 0.4 })
+    io.observe(el)
+    const card = el.closest('button')
+    const replay = () => setRound(r => r + 1)
+    card?.addEventListener('mouseenter', replay)
+    return () => { io.disconnect(); card?.removeEventListener('mouseenter', replay) }
+  }, [])
+  return <span ref={ref} className="absolute inset-0">{seen && <span key={round} className="absolute inset-0">{children}</span>}</span>
+}

@@ -585,6 +585,7 @@ html[data-goal="live"] #dokhodnost { display: none; }
 @keyframes ap-draw { from { stroke-dashoffset: 100 } to { stroke-dashoffset: 0 } }
 @keyframes ap-grow { from { transform: scaleX(0) } to { transform: none } }
 @keyframes ap-growy { from { transform: scaleY(0) } to { transform: none } }
+@keyframes ap-pulse { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.18) } }
 @keyframes ap-run { from { transform: translateX(-100%) } to { transform: translateX(250%) } }
 @keyframes ap-wind { 0% { transform: translateX(-14%); opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } 100% { transform: translateX(100%); opacity: 0 } }
 .ap-spin { animation: ap-spin 700ms linear infinite }
@@ -596,7 +597,26 @@ html[data-goal="live"] #dokhodnost { display: none; }
 .ap-growy { animation: ap-growy 600ms cubic-bezier(.2,.8,.2,1) both }
 .ap-wind { animation: ap-wind 3s linear infinite }
 .ap-run { animation: ap-run 1.4s cubic-bezier(.4,0,.2,1) infinite }
+/* Обложки проверок ИИ (владелец 19.11.2026): всё время лёгкое движение по
+   кругу — точки покачиваются, главная точка дышит, полоски и столбики
+   «дышат», карты медленно приближаются. SVG-фигуры — от своего центра. */
+.ap-cover * { transform-box: fill-box; transform-origin: center }
+@keyframes ap-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+@keyframes ap-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+@keyframes ap-breathe { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.06) } }
+@keyframes ap-breathe-x { 0%, 100% { transform: scaleX(1) } 50% { transform: scaleX(.92) } }
+@keyframes ap-breathe-y { 0%, 100% { transform: scaleY(1) } 50% { transform: scaleY(.9) } }
+@keyframes ap-breathe-dash { 0%, 100% { stroke-dashoffset: 0 } 50% { stroke-dashoffset: 6 } }
+@keyframes ap-kb { from { transform: scale(1) } to { transform: scale(1.08) } }
+.ap-float { animation: ap-float 4.2s ease-in-out infinite }
+.ap-bob { animation: ap-bob 3.2s ease-in-out infinite }
+.ap-pulse { animation: ap-pulse 3.4s ease-in-out infinite }
+.ap-breathe { animation: ap-breathe 3.8s ease-in-out infinite }
+.ap-breathe-x { animation: ap-breathe-x 4.6s ease-in-out infinite }
+.ap-breathe-y { animation: ap-breathe-y 4.2s ease-in-out infinite }
+.ap-breathe-dash { animation: ap-breathe-dash 3.2s ease-in-out infinite }
+.ap-kb { animation: ap-kb 14s ease-in-out infinite alternate; transform-origin: center }
 @media (prefers-reduced-motion: reduce) {
-  .ap-spin, .ap-chip, .ap-in, .ap-blink, .ap-draw, .ap-grow, .ap-growy, .ap-run { animation: none }
+  .ap-spin, .ap-chip, .ap-in, .ap-blink, .ap-draw, .ap-grow, .ap-growy, .ap-run, .ap-pulse, .ap-float, .ap-bob, .ap-breathe, .ap-breathe-x, .ap-breathe-y, .ap-breathe-dash, .ap-kb { animation: none }
   .ap-wind { animation: none; transform: translateX(43%) }
 }
