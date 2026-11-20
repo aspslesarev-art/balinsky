@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { detectLang, pickCopy } from '@/lib/i18n'
+import { detectLang, pickCopy, t } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
 import { Send, Lock } from 'lucide-react'
 import { ApproxPrice } from './InlinePrice'
@@ -209,8 +209,8 @@ export function PriceCtaCard({
     // Цена за м² и рассрочка — под ценой в карточке связи (владелец 20.11.2026).
     if (compact === 'meta') {
       const rows = [
-        ...(perSqm ? [{ l: c.perSqm.replace(/^\/\s*/, lang === 'ru' || lang === 'uk' ? 'за ' : 'per '), v: perSqm }] : []),
-        ...(dealRows ?? []).map(row => ({ l: row.label.toLowerCase(), v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? '') })),
+        ...(perSqm ? [{ l: t('price.perSqm', lang), v: perSqm }] : []),
+        ...(dealRows ?? []).map(row => ({ l: lang === 'de' ? row.label : row.label.toLowerCase(), v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? '') })),
       ]
       if (!rows.length) return null
       return (
@@ -235,8 +235,8 @@ export function PriceCtaCard({
   if (journal && bar) {
     const barLabel = isResale ? c.buySeller : ((c as { buyChatBar?: string }).buyChatBar ?? c.buyChat)
     const cols: { v: string; l: string }[] = [
-      ...(perSqm ? [{ v: perSqm, l: c.perSqm.replace(/^\/\s*/, lang === 'ru' || lang === 'uk' ? 'за ' : 'per ') }] : []),
-      ...(dealRows ?? []).map(row => ({ v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? ''), l: row.label.toLowerCase() })),
+      ...(perSqm ? [{ v: perSqm, l: t('price.perSqm', lang) }] : []),
+      ...(dealRows ?? []).map(row => ({ v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? ''), l: lang === 'de' ? row.label : row.label.toLowerCase() })),
     ]
     return (
       <div className="flex flex-wrap items-center gap-x-12 gap-y-4 border-b border-[#ECEFED] py-5">

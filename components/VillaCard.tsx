@@ -77,6 +77,25 @@ const COPY = {
   uk: { resale: 'Перепродаж',    secondary: 'Вторинний ринок', house: 'Будинок', land: 'Ділянка', sqm: 'm²' },
 } as const
 
+// «2 спальни» на каждом языке — раньше вне RU стояло английское «2 BR».
+const slavicForm = (n: number, f: [string, string, string], pl = false) => {
+  const m10 = n % 10, m100 = n % 100
+  if (pl ? n === 1 : m10 === 1 && m100 !== 11) return f[0]
+  return m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? f[1] : f[2]
+}
+const BEDS: Record<Lang, (n: number) => string> = {
+  ru: n => `${n} ${pluralRu(n, ['спальня', 'спальни', 'спален'])}`,
+  en: n => `${n} BR`,
+  id: n => `${n} kamar tidur`,
+  fr: n => `${n} ${n > 1 ? 'chambres' : 'chambre'}`,
+  de: n => `${n} Schlafzimmer`,
+  zh: n => `${n}间卧室`,
+  nl: n => `${n} ${n === 1 ? 'slaapkamer' : 'slaapkamers'}`,
+  ban: n => `${n} kamar pules`,
+  pl: n => `${n} ${slavicForm(n, ['sypialnia', 'sypialnie', 'sypialni'], true)}`,
+  uk: n => `${n} ${slavicForm(n, ['спальня', 'спальні', 'спалень'])}`,
+}
+
 export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardData; lang?: Lang; priority?: boolean }) {
   const { currency } = useCurrency()
   const copy = pickCopy(COPY, lang)
@@ -90,9 +109,9 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
   // Название без хвоста «- 74 м², 2 спальни»: цифры стоят строкой ниже.
   const shortTitle = a.title.split(/\s[-—–]\s(?=\d)/)[0]
   const meta = [
-    a.bedrooms != null ? (lang === 'ru' ? `${a.bedrooms} ${pluralRu(a.bedrooms, ['спальня', 'спальни', 'спален'])}` : `${a.bedrooms} BR`) : null,
+    a.bedrooms != null ? (BEDS[lang] ?? BEDS.en)(a.bedrooms) : null,
     a.area != null ? `${a.area} ${copy.sqm}` : null,
-    a.land != null ? `${copy.land.toLowerCase()} ${a.land} ${copy.sqm}` : null,
+    a.land != null ? `${lang === 'de' ? copy.land : copy.land.toLowerCase()} ${a.land} ${copy.sqm}` : null,
   ].filter(Boolean).join(' · ')
   return (
     <Link

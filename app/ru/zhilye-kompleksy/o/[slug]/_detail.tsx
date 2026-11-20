@@ -55,6 +55,8 @@ import { facetLabel } from '@/lib/filter-i18n'
 import { hasCyrillic, translitPreserveCase, completionLabel } from '@/lib/translit'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
+import { KM, METERS, MIN, decSep } from '@/lib/l10n-plural'
+import { CX_AI_HEADING, MONTHS_SHORT, NEAR } from '@/lib/listing-l10n'
 import { districtRu, districtLatin } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, loadVisionManifest, altFor } from '@/lib/listing-features'
@@ -88,8 +90,8 @@ const AIRPORT_LNG = 115.1667
 function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang): string | null {
   if (lat == null || lng == null) return null
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
-  if (lang !== 'ru') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
-  return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0).replace(".", ",")} км`
+  if (lang === 'en') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
+  return km < 1 ? `${Math.round(km * 1000)} ${METERS[lang]}` : `${km.toFixed(km < 10 ? 1 : 0).replace('.', decSep(lang))} ${KM[lang]}`
 }
 
 const COPY = {
@@ -1480,7 +1482,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     'Под заказ': 'Sur demande',
     'Готов': 'Prêt',
   }
-  const STATUS_MAP = lang === 'id' ? STATUS_ID : lang === 'fr' ? STATUS_FR : STATUS_EN
+  const STATUS_MORE: Partial<Record<Lang, Record<string, string>>> = {
+    de: { 'Строится': 'Im Bau', 'Построен': 'Fertiggestellt', 'Сдан': 'Fertiggestellt', 'Под заказ': 'Auf Anfrage', 'Готов': 'Bezugsfertig' },
+    zh: { 'Строится': '在建', 'Построен': '已竣工', 'Сдан': '已竣工', 'Под заказ': '按需定制', 'Готов': '现房' },
+    nl: { 'Строится': 'In aanbouw', 'Построен': 'Opgeleverd', 'Сдан': 'Opgeleverd', 'Под заказ': 'Op aanvraag', 'Готов': 'Gereed' },
+    ban: { 'Строится': 'Kantun kabangun', 'Построен': 'Sampun puput', 'Сдан': 'Sampun puput', 'Под заказ': 'Manut pangidih', 'Готов': 'Sampun sayaga' },
+    pl: { 'Строится': 'W budowie', 'Построен': 'Oddany', 'Сдан': 'Oddany', 'Под заказ': 'Na zamówienie', 'Готов': 'Gotowy' },
+    uk: { 'Строится': 'Будується', 'Построен': 'Збудовано', 'Сдан': 'Здано', 'Под заказ': 'Під замовлення', 'Готов': 'Готовий' },
+  }
+  const STATUS_MAP = lang === 'id' ? STATUS_ID : lang === 'fr' ? STATUS_FR : STATUS_MORE[lang] ?? STATUS_EN
   const enLabelFor = (map: Record<string, string>, v: string | null): string | null => v ? (lang === 'ru' ? v : (map[v] ?? v)) : null
   const typesRaw = strList(d['Типы юнитов'])
   // Central facetLabel covers all 8 langs + translit fallback → never Cyrillic on non-RU.
@@ -1491,15 +1501,21 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const isSold = salesStatus === 'Продано'
   // Permit is a free-text combo of Russian status words + acronyms (PBG/SLF/
   // RDTR). Translate the Russian tokens for non-RU; acronyms pass through.
-  const PERMIT_TOKENS: Record<'en' | 'id' | 'fr', Record<string, string>> = {
+  const PERMIT_TOKENS: Partial<Record<Lang, Record<string, string>>> & { en: Record<string, string> } = {
     en: { 'Заявка': 'Applied', 'заявка': 'applied', 'Подано': 'Submitted', 'подано': 'submitted', 'Получено': 'Obtained', 'получено': 'obtained', 'В процессе': 'In progress', 'в процессе': 'in progress', 'Оформляется': 'In progress', 'оформляется': 'in progress', 'Есть': 'Yes', 'есть': 'yes', 'нет': 'none' },
     id: { 'Заявка': 'Diajukan', 'заявка': 'diajukan', 'Подано': 'Diajukan', 'подано': 'diajukan', 'Получено': 'Diterima', 'получено': 'diterima', 'В процессе': 'Dalam proses', 'в процессе': 'dalam proses', 'Оформляется': 'Dalam proses', 'оформляется': 'dalam proses', 'Есть': 'Ada', 'есть': 'ada', 'нет': 'tidak ada' },
     fr: { 'Заявка': 'Demande déposée', 'заявка': 'demande déposée', 'Подано': 'Déposé', 'подано': 'déposé', 'Получено': 'Obtenu', 'получено': 'obtenu', 'В процессе': 'En cours', 'в процессе': 'en cours', 'Оформляется': 'En cours', 'оформляется': 'en cours', 'Есть': 'Oui', 'есть': 'oui', 'нет': 'aucun' },
+    de: { 'Заявка': 'Beantragt', 'заявка': 'beantragt', 'Подано': 'Eingereicht', 'подано': 'eingereicht', 'Получено': 'Erteilt', 'получено': 'erteilt', 'В процессе': 'In Bearbeitung', 'в процессе': 'in Bearbeitung', 'Оформляется': 'In Bearbeitung', 'оформляется': 'in Bearbeitung', 'Есть': 'Vorhanden', 'есть': 'vorhanden', 'нет': 'keine' },
+    zh: { 'Заявка': '已申请', 'заявка': '已申请', 'Подано': '已提交', 'подано': '已提交', 'Получено': '已取得', 'получено': '已取得', 'В процессе': '办理中', 'в процессе': '办理中', 'Оформляется': '办理中', 'оформляется': '办理中', 'Есть': '有', 'есть': '有', 'нет': '无' },
+    nl: { 'Заявка': 'Aangevraagd', 'заявка': 'aangevraagd', 'Подано': 'Ingediend', 'подано': 'ingediend', 'Получено': 'Verkregen', 'получено': 'verkregen', 'В процессе': 'In behandeling', 'в процессе': 'in behandeling', 'Оформляется': 'In behandeling', 'оформляется': 'in behandeling', 'Есть': 'Aanwezig', 'есть': 'aanwezig', 'нет': 'geen' },
+    ban: { 'Заявка': 'Sampun kaajuang', 'заявка': 'sampun kaajuang', 'Подано': 'Sampun kaaturang', 'подано': 'sampun kaaturang', 'Получено': 'Sampun kapolihang', 'получено': 'sampun kapolihang', 'В процессе': 'Kantun kaproses', 'в процессе': 'kantun kaproses', 'Оформляется': 'Kantun kaproses', 'оформляется': 'kantun kaproses', 'Есть': 'Wenten', 'есть': 'wenten', 'нет': 'nenten wenten' },
+    pl: { 'Заявка': 'Złożony wniosek', 'заявка': 'złożony wniosek', 'Подано': 'Złożono', 'подано': 'złożono', 'Получено': 'Uzyskano', 'получено': 'uzyskano', 'В процессе': 'W trakcie', 'в процессе': 'w trakcie', 'Оформляется': 'W trakcie', 'оформляется': 'w trakcie', 'Есть': 'Jest', 'есть': 'jest', 'нет': 'brak' },
+    uk: { 'Заявка': 'Заявка', 'заявка': 'заявка', 'Подано': 'Подано', 'подано': 'подано', 'Получено': 'Отримано', 'получено': 'отримано', 'В процессе': 'У процесі', 'в процессе': 'у процесі', 'Оформляется': 'Оформлюється', 'оформляется': 'оформлюється', 'Есть': 'Є', 'есть': 'є', 'нет': 'немає' },
   }
   const translatePermit = (v: string | null): string | null => {
     if (!v || lang === 'ru') return v
     let out = v
-    const tokens = PERMIT_TOKENS[lang as 'en' | 'id' | 'fr'] ?? PERMIT_TOKENS.en
+    const tokens = PERMIT_TOKENS[lang] ?? PERMIT_TOKENS.en
     for (const [ru, tr] of Object.entries(tokens)) out = out.split(ru).join(tr)
     return out
   }
@@ -1695,7 +1711,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     : null
 
   // ── Макет CxA (владелец 20.11.2026): страница ЖК в стиле «Журнал», как вилла ──
-  const K = (ru: string, en: string) => (lang === 'ru' ? ru : en)
   const lower = (s: string) => (lang === 'de' ? s : s.toLowerCase())
   const minOf = (kind: 'villa' | 'apartment') => {
     const xs = units.filter(u => u.kind === kind).map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n) && n > 0)
@@ -1811,8 +1826,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     (built || yearLabel) && { v: yearLabel ?? '✓', l: lower(built ? copy.factCompletionDone : copy.factCompletion) },
     leaseYears != null && { v: copy.factLeaseValue(String(Math.round(leaseYears))), l: pickCopy(LEASE_LBL, lang) },
     permitShort && { v: permit!, l: lower(copy.factPermits) },
-    plan && { v: plan.v, l: `${lower(pickCopy(PLAN_LABEL, lang))}${plan.months ? K(` · ${plan.months} мес.`, ` · ${plan.months} mo.`) : ''}` },
-    airportMin != null && { v: `${airportMin} ${K('мин', 'min')}`, l: lower(copy.factAirport) },
+    plan && { v: plan.v, l: `${lower(pickCopy(PLAN_LABEL, lang))}${plan.months ? ` · ${plan.months} ${pickCopy(MONTHS_SHORT, lang)}` : ''}` },
+    airportMin != null && { v: `${airportMin} ${MIN[lang]}`, l: lower(copy.factAirport) },
   ].filter(Boolean) as { v: string; l: string }[]
   const shortRows = [
     types.length > 0 && { k: copy.factType, v: types.join(', ') },
@@ -1824,14 +1839,14 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const CH = pickCopy({
     ru: { kompleks: 'Комплекс', yunity: 'Юниты в продаже', shakhmatka: 'Шахматка', analitika: 'Аналитика', zastroyshchik: 'Застройщик', voprosy: 'Вопросы', planHint: 'Нажмите на подсвеченную зону — откроется юнит или следующий план.' },
     en: { kompleks: 'Complex', yunity: 'Units for sale', shakhmatka: 'Availability plan', analitika: 'Analytics', zastroyshchik: 'Developer', voprosy: 'FAQ', planHint: 'Tap a highlighted area to open the unit or the next plan.' },
-    id: { kompleks: 'Kompleks', yunity: 'Unit dijual', shakhmatka: 'Denah ketersediaan', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'FAQ', planHint: 'Ketuk area yang disorot untuk membuka unit atau denah berikutnya.' },
-    fr: { kompleks: 'Résidence', yunity: 'Unités en vente', shakhmatka: 'Plan des disponibilités', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'FAQ', planHint: 'Touchez une zone en surbrillance pour ouvrir l’unité ou le plan suivant.' },
-    de: { kompleks: 'Anlage', yunity: 'Einheiten im Verkauf', shakhmatka: 'Verfügbarkeitsplan', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'FAQ', planHint: 'Tippen Sie auf eine markierte Fläche, um die Einheit oder den nächsten Plan zu öffnen.' },
+    id: { kompleks: 'Kompleks', yunity: 'Unit dijual', shakhmatka: 'Denah ketersediaan', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pertanyaan', planHint: 'Ketuk area yang disorot untuk membuka unit atau denah berikutnya.' },
+    fr: { kompleks: 'Résidence', yunity: 'Unités en vente', shakhmatka: 'Plan des disponibilités', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'Questions', planHint: 'Touchez une zone en surbrillance pour ouvrir l’unité ou le plan suivant.' },
+    de: { kompleks: 'Anlage', yunity: 'Einheiten im Verkauf', shakhmatka: 'Verfügbarkeitsplan', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'Fragen', planHint: 'Tippen Sie auf eine markierte Fläche, um die Einheit oder den nächsten Plan zu öffnen.' },
     zh: { kompleks: '项目', yunity: '在售单元', shakhmatka: '房源平面图', analitika: '分析', zastroyshchik: '开发商', voprosy: '常见问题', planHint: '点击高亮区域可打开单元或下一张平面图。' },
-    nl: { kompleks: 'Complex', yunity: 'Units te koop', shakhmatka: 'Beschikbaarheidsplan', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'FAQ', planHint: 'Tik op een gemarkeerd vlak om de unit of het volgende plan te openen.' },
-    ban: { kompleks: 'Kompleks', yunity: 'Unit kaadol', shakhmatka: 'Denah unit', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pitaken', planHint: 'Tekan wewidangan sane kasorot anggen ngungkab unit utawi denah salanturnyane.' },
+    nl: { kompleks: 'Complex', yunity: 'Units te koop', shakhmatka: 'Beschikbaarheidsplan', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'Vragen', planHint: 'Tik op een gemarkeerd vlak om de unit of het volgende plan te openen.' },
+    ban: { kompleks: 'Kompleks', yunity: 'Unit kaadol', shakhmatka: 'Denah unit', analitika: 'Analitik', zastroyshchik: 'Pangwangun', voprosy: 'Pitaken', planHint: 'Tekan wewidangan sane kasorot anggen ngungkab unit utawi denah salanturnyane.' },
     pl: { kompleks: 'Kompleks', yunity: 'Lokale na sprzedaż', shakhmatka: 'Plan dostępności', analitika: 'Analityka', zastroyshchik: 'Deweloper', voprosy: 'Pytania', planHint: 'Dotknij podświetlonego obszaru, aby otworzyć lokal lub kolejny plan.' },
-    uk: { kompleks: 'Комплекс', yunity: 'Юніти в продажу', shakhmatka: 'Шахматка', analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Питання', planHint: 'Натисніть на підсвічену зону — відкриється юніт або наступний план.' },
+    uk: { kompleks: 'Комплекс', yunity: 'Юніти в продажу', shakhmatka: 'Шахматка', analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Запитання', planHint: 'Натисніть на підсвічену зону — відкриється юніт або наступний план.' },
   }, lang)
   const MGR_ROLE = { ru: 'Менеджер застройщика', en: 'Developer’s manager', id: 'Manajer pengembang', fr: 'Responsable du promoteur', de: 'Ansprechpartner des Bauträgers', zh: '开发商经理', nl: 'Manager van de ontwikkelaar', ban: 'Manajer pengembang', pl: 'Menedżer dewelopera', uk: 'Менеджер забудовника' }
   const OPEN_DEV = { ru: 'Открыть страницу застройщика', en: 'Open developer page', id: 'Buka halaman pengembang', fr: 'Ouvrir la page du promoteur', de: 'Zur Seite des Bauträgers', zh: '打开开发商页面', nl: 'Open pagina ontwikkelaar', ban: 'Bukak kaca pangwangun', pl: 'Otwórz stronę dewelopera', uk: 'Відкрити сторінку забудовника' }
@@ -1889,21 +1904,21 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       const z = 16, n2 = 2 ** z
       const tx = Math.floor(((lng + 180) / 360) * n2)
       const ty = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n2)
-      const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${K('м', 'm')}` : `${km.toFixed(1).replace('.', en ? '.' : ',')} ${K('км', 'km')}`
+      const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${METERS[lang]}` : `${km.toFixed(1).replace('.', decSep(lang))} ${KM[lang]}`
       const row = (k: string) => livingFacts?.rows.find(r => r.key === k)?.km ?? null
       const beach = beachPick?.beach ?? null
       const near: { label: string; value: string }[] = []
-      if (beachPick?.km != null) near.push({ label: [K('Пляж', 'Beach'), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
-      if (row('shop') != null) near.push({ label: K('Магазин', 'Shop'), value: dist(row('shop')!) })
-      if (row('school') != null) near.push({ label: K('Школа', 'School'), value: dist(row('school')!) })
-      if (livingFacts?.airportMin != null) near.push({ label: K('Аэропорт', 'Airport'), value: `${livingFacts.airportMin} ${K('мин', 'min')}` })
+      if (beachPick?.km != null) near.push({ label: [pickCopy(NEAR.beach, lang), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
+      if (row('shop') != null) near.push({ label: pickCopy(NEAR.shop, lang), value: dist(row('shop')!) })
+      if (row('school') != null) near.push({ label: pickCopy(NEAR.school, lang), value: dist(row('school')!) })
+      if (livingFacts?.airportMin != null) near.push({ label: pickCopy(NEAR.airport, lang), value: `${livingFacts.airportMin} ${MIN[lang]}` })
       tabs.push({
         key: 'location',
         label: pickCopy({ ru: 'Локация', en: 'Location', id: 'Lokasi', fr: 'Emplacement', de: 'Lage', zh: '位置', nl: 'Locatie', ban: 'Genah', pl: 'Lokalizacja', uk: 'Локація' }, lang),
         icon: <MapPin size={18} aria-hidden />,
         cover: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`,
         bleed: true,
-        content: <LocationView key="loc" lat={lat} lng={lng} place={district ? `${district}, ${K('Бали', 'Bali')}` : null} near={near} lang={lang} />,
+        content: <LocationView key="loc" lat={lat} lng={lng} place={district ? `${district}, ${pickCopy(NEAR.bali, lang)}` : null} near={near} lang={lang} />,
       })
     }
     if (sunPlan && sunSettings?.enabled) {
@@ -2123,7 +2138,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         {analyses.length > 0 && (
           <VillaChapter id="analitika" no={no('analitika')} plain eyebrow={CH.analitika}>
             <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${complexesRoot}/o/${slug}`)}`} no={no('analitika')}
-              heading={lang === 'ru' ? 'Проверьте комплекс с ИИ' : 'Check the complex with AI'} />
+              heading={pickCopy(CX_AI_HEADING, lang)} />
           </VillaChapter>
         )}
 

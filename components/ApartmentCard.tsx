@@ -1,6 +1,6 @@
 'use client'
 
-import { pluralRu } from '@/lib/plural-ru'
+import { nPlural, BEDROOMS } from '@/lib/l10n-plural'
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
 import { PhotoSlider } from './PhotoSlider'
@@ -84,7 +84,7 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
   // Название без хвоста «- 74 м², 2 спальни»: цифры стоят строкой ниже.
   const shortTitle = a.title.split(/\s[-—–]\s(?=\d)/)[0]
   const meta = [
-    a.bedrooms != null ? (lang === 'ru' ? `${a.bedrooms} ${pluralRu(a.bedrooms, ['спальня', 'спальни', 'спален'])}` : `${a.bedrooms} BR`) : null,
+    a.bedrooms != null ? (lang === 'en' ? `${a.bedrooms} BR` : nPlural(lang, a.bedrooms, BEDROOMS)) : null,
     a.area != null ? `${a.area} ${c.sqm}` : null,
     a.floor ? `${c.floor.toLowerCase()} ${a.floor}` : null,
   ].filter(Boolean).join(' · ')

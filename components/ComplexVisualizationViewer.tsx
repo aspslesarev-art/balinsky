@@ -79,19 +79,38 @@ const STATUS_WORDS: Record<Lang, { free: string; reserved: string; sold: string 
 }
 // Названия слоёв плана вводят в админке по-русски («Апарты 2», «Виллы»,
 // «Этаж 3»). Вне RU — частые слова по словарю, прочее транслитом.
-const LAYER_WORDS: Record<string, string> = {
-  'апарты': 'Apartments', 'апартаменты': 'Apartments', 'виллы': 'Villas', 'вилла': 'Villa', 'этаж': 'Floor',
-  'корпус': 'Building', 'блок': 'Block', 'генплан': 'Master plan', 'план': 'Plan', 'таунхаусы': 'Townhouses',
-  'дома': 'Houses', 'дом': 'House', 'участки': 'Plots', 'фаза': 'Phase', 'очередь': 'Phase', 'башня': 'Tower',
+type L9 = Record<Exclude<Lang, 'ru'>, string>
+// en · id · fr · de · zh · nl · ban · pl · uk
+const lw = (en: string, id: string, fr: string, de: string, zh: string, nl: string, ban: string, pl: string, uk: string): L9 => ({ en, id, fr, de, zh, nl, ban, pl, uk })
+const LAYER_WORDS: Record<string, L9> = {
+  'апарты': lw('Apartments', 'Apartemen', 'Appartements', 'Apartments', '公寓', 'Appartementen', 'Apartemen', 'Apartamenty', 'Апартаменти'),
+  'апартаменты': lw('Apartments', 'Apartemen', 'Appartements', 'Apartments', '公寓', 'Appartementen', 'Apartemen', 'Apartamenty', 'Апартаменти'),
+  'виллы': lw('Villas', 'Vila', 'Villas', 'Villen', '别墅', 'Villa’s', 'Vila', 'Wille', 'Вілли'),
+  'вилла': lw('Villa', 'Vila', 'Villa', 'Villa', '别墅', 'Villa', 'Vila', 'Willa', 'Вілла'),
+  'этаж': lw('Floor', 'Lantai', 'Étage', 'Etage', '楼层', 'Verdieping', 'Lantai', 'Piętro', 'Поверх'),
+  'корпус': lw('Building', 'Gedung', 'Bâtiment', 'Gebäude', '楼栋', 'Gebouw', 'Gedung', 'Budynek', 'Корпус'),
+  'блок': lw('Block', 'Blok', 'Bloc', 'Block', '区', 'Blok', 'Blok', 'Blok', 'Блок'),
+  'генплан': lw('Master plan', 'Rencana induk', 'Plan de masse', 'Lageplan', '总平面图', 'Masterplan', 'Rencana induk', 'Plan zagospodarowania', 'Генплан'),
+  'план': lw('Plan', 'Denah', 'Plan', 'Plan', '平面图', 'Plattegrond', 'Denah', 'Plan', 'План'),
+  'таунхаусы': lw('Townhouses', 'Rumah deret', 'Maisons de ville', 'Reihenhäuser', '联排别墅', 'Rijtjeshuizen', 'Umah deret', 'Szeregowce', 'Таунхауси'),
+  'дома': lw('Houses', 'Rumah', 'Maisons', 'Häuser', '住宅', 'Huizen', 'Umah', 'Domy', 'Будинки'),
+  'дом': lw('House', 'Rumah', 'Maison', 'Haus', '住宅', 'Huis', 'Umah', 'Dom', 'Будинок'),
+  'участки': lw('Plots', 'Kavling', 'Terrains', 'Grundstücke', '地块', 'Kavels', 'Kavling', 'Działki', 'Ділянки'),
+  'фаза': lw('Phase', 'Tahap', 'Phase', 'Bauabschnitt', '期', 'Fase', 'Tahap', 'Etap', 'Черга'),
+  'очередь': lw('Phase', 'Tahap', 'Phase', 'Bauabschnitt', '期', 'Fase', 'Tahap', 'Etap', 'Черга'),
+  'башня': lw('Tower', 'Menara', 'Tour', 'Turm', '塔楼', 'Toren', 'Menara', 'Wieża', 'Вежа'),
 }
-const LAYER_TITLES: Record<string, string> = {
-  'общий план': 'Master plan', 'общий': 'Overview', 'шахматка': 'Unit grid', 'вид на рисовые поля': 'Rice field view',
+const LAYER_TITLES: Record<string, L9> = {
+  'общий план': lw('Master plan', 'Rencana induk', 'Plan de masse', 'Lageplan', '总平面图', 'Masterplan', 'Rencana induk', 'Plan zagospodarowania', 'Генплан'),
+  'общий': lw('Overview', 'Ikhtisar', 'Vue d’ensemble', 'Übersicht', '总览', 'Overzicht', 'Ringkesan', 'Przegląd', 'Загальний план'),
+  'шахматка': lw('Unit grid', 'Denah unit', 'Grille des lots', 'Einheitenübersicht', '房源分布图', 'Unitoverzicht', 'Denah unit', 'Plan lokali', 'Шахматка'),
+  'вид на рисовые поля': lw('Rice field view', 'Pemandangan sawah', 'Vue sur les rizières', 'Blick auf die Reisfelder', '稻田景观', 'Uitzicht op rijstvelden', 'Pemandangan carik', 'Widok na pola ryżowe', 'Вид на рисові поля'),
 }
 function layerTitle(t: string | null | undefined, lang: Lang): string | null {
-  if (!t || lang === 'ru' || lang === 'uk' || !hasCyrillic(t)) return t ?? null
+  if (!t || lang === 'ru' || !hasCyrillic(t)) return t ?? null
   const whole = LAYER_TITLES[t.trim().toLowerCase()]
-  if (whole) return whole
-  return t.replace(/\p{L}+/gu, w => LAYER_WORDS[w.toLowerCase()] ?? (hasCyrillic(w) ? translitPreserveCase(w) : w))
+  if (whole) return whole[lang]
+  return t.replace(/\p{L}+/gu, w => LAYER_WORDS[w.toLowerCase()]?.[lang] ?? (hasCyrillic(w) && lang !== 'uk' ? translitPreserveCase(w) : w))
 }
 
 function statusWord(a: string, lang: Lang): string {
@@ -170,9 +189,18 @@ export function ComplexVisualizationViewer({
     setPopup(null)
   }
 
-  const COPY = lang === 'ru'
-    ? { back: 'Назад', open: 'Открыть', sqm: 'м²', br: 'BR' }
-    : { back: 'Back', open: 'Open', sqm: 'm²', br: 'BR' }
+  const COPY = pickCopy({
+    ru: { back: 'Назад', open: 'Открыть', sqm: 'м²', br: 'BR' },
+    en: { back: 'Back', open: 'Open', sqm: 'm²', br: 'BR' },
+    id: { back: 'Kembali', open: 'Buka', sqm: 'm²', br: 'KT' },
+    fr: { back: 'Retour', open: 'Ouvrir', sqm: 'm²', br: 'ch.' },
+    de: { back: 'Zurück', open: 'Öffnen', sqm: 'm²', br: 'SZ' },
+    zh: { back: '返回', open: '打开', sqm: 'm²', br: '室' },
+    nl: { back: 'Terug', open: 'Openen', sqm: 'm²', br: 'slpk.' },
+    ban: { back: 'Mawali', open: 'Buka', sqm: 'm²', br: 'KT' },
+    pl: { back: 'Wstecz', open: 'Otwórz', sqm: 'm²', br: 'syp.' },
+    uk: { back: 'Назад', open: 'Відкрити', sqm: 'м²', br: 'сп.' },
+  }, lang)
 
   return (
     <section className={bare ? '' : 'mb-10'}>
@@ -181,9 +209,18 @@ export function ComplexVisualizationViewer({
         {pickCopy({ ru: 'Интерактивный план', en: 'Interactive plan', id: 'Denah interaktif', fr: 'Plan interactif', de: 'Interaktiver Plan', zh: '交互式平面图', nl: 'Interactieve plattegrond', ban: 'Denah interaktif', pl: 'Plan interaktywny', uk: 'Інтерактивний план' }, lang)}
       </h2>
       <div className="text-[13px] text-[var(--color-text-muted)] mb-4">
-        {lang === 'ru'
-          ? 'Тап по подсвеченной зоне — детализация или страница юнита.'
-          : 'Tap a highlighted area to drill in or open the unit\'s page.'}
+        {pickCopy({
+          ru: 'Тап по подсвеченной зоне — детализация или страница юнита.',
+          en: 'Tap a highlighted area to drill in or open the unit\'s page.',
+          id: 'Ketuk area yang disorot untuk melihat detail atau membuka halaman unit.',
+          fr: 'Touchez une zone en surbrillance pour zoomer ou ouvrir la page du lot.',
+          de: 'Tippen Sie auf eine markierte Fläche, um Details oder die Seite der Einheit zu öffnen.',
+          zh: '点击高亮区域查看详情或打开单元页面。',
+          nl: 'Tik op een gemarkeerd vlak voor details of de pagina van de unit.',
+          ban: 'Tekan wewidangan sane kasorot anggen ngantenang detail utawi halaman unit.',
+          pl: 'Dotknij podświetlonego obszaru, aby zobaczyć szczegóły lub stronę lokalu.',
+          uk: 'Натисніть на підсвічену зону — деталізація або сторінка юніта.',
+        }, lang)}
       </div>
       </>}
 

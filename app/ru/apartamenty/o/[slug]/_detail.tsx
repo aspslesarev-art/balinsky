@@ -88,6 +88,8 @@ import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
+import { plural, nPlural, BEDROOMS, BATHROOMS, YEARS, SQM, KM, METERS, MIN, decSep } from '@/lib/l10n-plural'
+import { APT, COMFORT, COMFORT_AMEN, COMFORT_OUT, DETAIL_LINES, KEYLINE, NEAR, PAY_MONTHS, PAY_UPFRONT, TILE, UNITS_IN } from '@/lib/listing-l10n'
 import { districtRu, districtLatin } from '@/lib/district-ru'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
@@ -1054,7 +1056,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     : []
 
   const facts: { Icon: typeof BedDouble; label: string; value: ReactNode }[] = [
-    bedrooms != null && { Icon: BedDouble, label: pickCopy({ ru: 'Спальни', en: 'Bedrooms', id: 'Kamar tidur', fr: 'Chambres', de: 'Schlafzimmer', zh: '卧室', nl: 'Slaapkamers', ban: 'Kamar pules', pl: 'Sypialnie', uk: 'Спальні' }, lang), value: `${bedrooms} BR` },
+    bedrooms != null && { Icon: BedDouble, label: pickCopy({ ru: 'Спальни', en: 'Bedrooms', id: 'Kamar tidur', fr: 'Chambres', de: 'Schlafzimmer', zh: '卧室', nl: 'Slaapkamers', ban: 'Kamar pules', pl: 'Sypialnie', uk: 'Спальні' }, lang), value: lang === 'en' ? `${bedrooms} BR` : String(bedrooms) },
     area != null && { Icon: Square, label: c.factArea, value: `${area} ${c.sqm}` },
     floor && { Icon: Layers, label: c.factFloor, value: floor === 'GROUND FLOOR' ? c.factGround : floor },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearRaw },
@@ -1399,24 +1401,23 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   // «Локация» в окне медиа — как у вилл (владелец 20.11.2026, макет LocA).
   if (lat != null && lng != null) {
     const en = lang !== 'ru'
-    const KK = (ru: string, enText: string) => (en ? enText : ru)
     const z = 16, n2 = 2 ** z
     const tx = Math.floor(((lng + 180) / 360) * n2)
     const ty = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n2)
-    const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${KK('м', 'm')}` : `${km.toFixed(1).replace('.', en ? '.' : ',')} ${KK('км', 'km')}`
+    const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${METERS[lang]}` : `${km.toFixed(1).replace('.', decSep(lang))} ${KM[lang]}`
     const row = (k: string) => livingFacts?.rows.find(r => r.key === k)?.km ?? null
     const near: { label: string; value: string }[] = []
-    if (beachPick?.km != null) near.push({ label: [KK('Пляж', 'Beach'), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
-    if (row('shop') != null) near.push({ label: KK('Магазин', 'Shop'), value: dist(row('shop')!) })
-    if (row('school') != null) near.push({ label: KK('Школа', 'School'), value: dist(row('school')!) })
-    if (livingFacts?.airportMin != null) near.push({ label: KK('Аэропорт', 'Airport'), value: `${livingFacts.airportMin} ${KK('мин', 'min')}` })
+    if (beachPick?.km != null) near.push({ label: [pickCopy(NEAR.beach, lang), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
+    if (row('shop') != null) near.push({ label: pickCopy(NEAR.shop, lang), value: dist(row('shop')!) })
+    if (row('school') != null) near.push({ label: pickCopy(NEAR.school, lang), value: dist(row('school')!) })
+    if (livingFacts?.airportMin != null) near.push({ label: pickCopy(NEAR.airport, lang), value: `${livingFacts.airportMin} ${MIN[lang]}` })
     aptViewerTabs.unshift({
       key: 'location',
       label: pickCopy({ ru: 'Локация', en: 'Location', id: 'Lokasi', fr: 'Emplacement', de: 'Lage', zh: '位置', nl: 'Locatie', ban: 'Genah', pl: 'Lokalizacja', uk: 'Локація' }, lang),
       icon: <MapPin size={18} aria-hidden />,
       cover: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`,
       bleed: true,
-      content: <LocationView lat={lat} lng={lng} place={district ? `${district}, ${KK('Бали', 'Bali')}` : null} near={near} lang={lang} />,
+      content: <LocationView lat={lat} lng={lng} place={district ? `${district}, ${pickCopy(NEAR.bali, lang)}` : null} near={near} lang={lang} />,
     })
   }
 
@@ -1429,19 +1430,18 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     name: lang === 'ru' ? m0.name : (m0.nameEn || (hasCyrillic(m0.name) ? translitPreserveCase(m0.name) : m0.name)),
     langs: lang === 'ru' ? m0.languages : managerLanguagesEn(m0.languages, m0.languagesEn),
   } : null
-  const K = (ru: string, en: string) => (lang === 'ru' ? ru : en)
   // Главы страницы — те же, что у виллы (макет «Журнал», 19.11.2026).
   const CH = pickCopy({
     ru: { obekt: 'Объект', analitika: 'Аналитика', zastroyshchik: 'Застройщик', voprosy: 'Вопросы' },
     en: { obekt: 'Property', analitika: 'Analytics', zastroyshchik: 'Developer', voprosy: 'FAQ' },
-    id: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'FAQ' },
-    fr: { obekt: 'Bien', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'FAQ' },
-    de: { obekt: 'Objekt', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'FAQ' },
+    id: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pertanyaan' },
+    fr: { obekt: 'Le bien', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'Questions' },
+    de: { obekt: 'Objekt', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'Fragen' },
     zh: { obekt: '房源', analitika: '分析', zastroyshchik: '开发商', voprosy: '常见问题' },
-    nl: { obekt: 'Object', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'FAQ' },
-    ban: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pitaken' },
+    nl: { obekt: 'Object', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'Vragen' },
+    ban: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pangwangun', voprosy: 'Pitaken' },
     pl: { obekt: 'Obiekt', analitika: 'Analityka', zastroyshchik: 'Deweloper', voprosy: 'Pytania' },
-    uk: { obekt: "Об'єкт", analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Питання' },
+    uk: { obekt: 'Об’єкт', analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Запитання' },
   }, lang)
   const MGR_ROLE = { ru: 'Менеджер застройщика', en: 'Developer’s manager', id: 'Manajer pengembang', fr: 'Responsable du promoteur', de: 'Ansprechpartner des Bauträgers', zh: '开发商经理', nl: 'Manager van de ontwikkelaar', ban: 'Manajer pengembang', pl: 'Menedżer dewelopera', uk: 'Менеджер забудовника' }
   const PLAN_LABEL = { ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }
@@ -1449,12 +1449,11 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const paymentPlanText = (() => {
     const raw = (firstString(aptComplex.data?.['Payment plan,%']) ?? '').replace(/\s+/g, ' ').trim()
     if (!raw || raw.includes('...')) return null
-    const ru = lang === 'ru' || lang === 'uk'
-    if (/^100\s*%?$/.test(raw)) return ru ? 'нет, 100% сразу' : 'no, 100% upfront'
+    if (/^100\s*%?$/.test(raw)) return pickCopy(PAY_UPFRONT, lang)
     const m = raw.match(/^(.*?)\s*\/\s*(\d+)$/)
     const parts = (m ? m[1] : raw).split('+').map(x => x.replace(/[^\d.]/g, '')).filter(Boolean)
     if (parts.length < 2) return null
-    return `${parts.join(' / ')}%${m ? (ru ? ` · на ${m[2]} мес.` : ` · over ${m[2]} mo.`) : ''}`
+    return `${parts.join(' / ')}%${m ? ` · ${pickCopy(PAY_MONTHS, lang)(m[2])}` : ''}`
   })()
   const dealRows = () => paymentPlanText ? [{ label: pickCopy(PLAN_LABEL, lang), valueText: paymentPlanText }] : null
   const leadPrice = (size: 'lg' | 'sm') => priceNum != null && (
@@ -1583,37 +1582,35 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const yearShort = yearRaw && /^\d{4}$/.test(yearRaw.trim()) ? yearRaw.trim() : null
   const plotZone = rdtr ? plotLabel(rdtr, lang) : null
   const objTiles = [
-    area != null && { v: `${Math.round(area)} ${K('м²', 'm²')}`, l: K('площадь апартаментов', 'apartment area') },
-    bedrooms != null && { v: String(bedrooms), l: K(bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален', 'bedrooms') },
-    baths != null && { v: String(baths), l: K(baths === 1 ? 'ванная' : baths < 5 ? 'ванные' : 'ванных', 'bathrooms') },
-    floor && { v: isGround ? c.factGround : floor, l: isGround ? c.factFloor.toLowerCase() : K('этаж', 'floor') },
-    leaseYears != null && { v: K(`${Math.round(leaseYears)} лет`, `${Math.round(leaseYears)} yrs`), l: K(`аренда земли${leaseUntil ? `, до ${leaseUntil.slice(0, 4)}` : ''}${ext ? ' + продление' : ''}`, `land lease${leaseUntil ? `, until ${leaseUntil.slice(0, 4)}` : ''}${ext ? ' + extension' : ''}`) },
-    (built || yearShort) && { v: yearShort ?? '✓', l: built ? K('готовый объект', 'completed') : K('год сдачи', 'completion') },
+    area != null && { v: `${Math.round(area)} ${SQM[lang]}`, l: pickCopy(APT.area, lang) },
+    bedrooms != null && { v: String(bedrooms), l: lang === 'en' ? 'bedrooms' : plural(lang, bedrooms, BEDROOMS) },
+    baths != null && { v: String(baths), l: lang === 'en' ? 'bathrooms' : plural(lang, baths, BATHROOMS) },
+    floor && { v: isGround ? c.factGround : floor, l: isGround ? c.factFloor.toLowerCase() : pickCopy(APT.floor, lang) },
+    leaseYears != null && { v: lang === 'ru' ? `${Math.round(leaseYears)} лет` : nPlural(lang, Math.round(leaseYears), YEARS), l: pickCopy(TILE.lease, lang)(leaseUntil ? leaseUntil.slice(0, 4) : null, !!ext) },
+    (built || yearShort) && { v: yearShort ?? '✓', l: built ? pickCopy(TILE.completed, lang) : pickCopy(TILE.completion, lang) },
     plotZone && { v: plotZone.label.split('·').pop()!.trim(), l: plotZone.label.split('·')[0].trim() },
   ].filter(Boolean) as { v: string; l: string }[]
   const vf = visionRaw?.features
-  const OUT: Record<string, [string, string]> = { terrace: ['терраса', 'terrace'], garden: ['сад', 'garden'], rooftop_terrace: ['руфтоп', 'rooftop'], parking: ['парковка', 'parking'], bbq: ['BBQ-зона', 'BBQ area'] }
-  const AMEN: Record<string, [string, string]> = { jacuzzi: ['джакузи', 'jacuzzi'], gym: ['спортзал', 'gym'], coworking: ['коворкинг', 'coworking'] }
   const comforts = [
-    vf?.pool ? K('бассейн', 'pool') : null,
-    ...(vf?.outdoor ?? []).map(o => OUT[o] ? K(OUT[o][0], OUT[o][1]) : null),
-    ...(vf?.amenities ?? []).map(o => AMEN[o] ? K(AMEN[o][0], AMEN[o][1]) : null),
+    vf?.pool ? pickCopy(COMFORT.pool, lang) : null,
+    ...(vf?.outdoor ?? []).map(o => COMFORT_OUT[o] ? pickCopy(COMFORT_OUT[o], lang) : null),
+    ...(vf?.amenities ?? []).map(o => COMFORT_AMEN[o] ? pickCopy(COMFORT_AMEN[o], lang) : null),
   ].filter(Boolean) as string[]
   const placeNote = firstString(d['Расположение'])
   const permitText = permitLabel(permit, lang)
   const airportText = fmtAirportDistance(lat, lng, lang)
   // Строка ключевых цифр под названием: площадь · спальни · этаж · аренда земли.
   const keyLine = [
-    area != null ? `${Math.round(area)} ${K('м²', 'm²')}` : null,
-    bedrooms != null ? K(`${bedrooms} ${bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален'}`, `${bedrooms} ${bedrooms === 1 ? 'bedroom' : 'bedrooms'}`) : null,
-    floor ? (isGround ? K('цокольный этаж', 'ground floor') : K(`этаж ${floor}`, `floor ${floor}`)) : null,
+    area != null ? `${Math.round(area)} ${SQM[lang]}` : null,
+    bedrooms != null ? nPlural(lang, bedrooms, BEDROOMS) : null,
+    floor ? (isGround ? pickCopy(APT.groundFloor, lang) : pickCopy(APT.floorN, lang)(floor)) : null,
     (() => {
       const left = leaseYears != null ? Math.round(leaseYears)
         : leaseUntil && /^\d{4}/.test(leaseUntil) ? Number(leaseUntil.slice(0, 4)) - new Date().getFullYear() : null
       if (left == null || left <= 0) return null
       const m10 = left % 10, m100 = left % 100
       const ru = m10 === 1 && m100 !== 11 ? 'год' : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? 'года' : 'лет'
-      return K(`аренда земли ${left} ${ru}`, `${left}-year land lease`)
+      return lang === 'ru' ? `аренда земли ${left} ${ru}` : pickCopy(KEYLINE.lease, lang)(left)
     })(),
   ].filter(Boolean).join(' · ')
 
@@ -1646,9 +1643,9 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
                 разрешения и дорога до аэропорта (были в «Характеристиках»). */}
             {(district || comforts.length > 0 || placeNote || permitText || airportText) && (
               <div className="flex max-w-[68ch] flex-col gap-1.5 text-[15px] leading-[1.6] text-[#0F1A15]">
-                {district && <div><span className="text-[#6B7570]">{K('Локация:', 'Location:')}</span> {district}</div>}
-                {comforts.length > 0 && <div><span className="text-[#6B7570]">{K('Удобства:', 'Amenities:')}</span> {comforts.join(', ')} <span className="text-[#6B7570]">{K('(по фото)', '(from photos)')}</span></div>}
-                {placeNote && <div><span className="text-[#6B7570]">{K('Расположение:', 'Setting:')}</span> {placeNote}</div>}
+                {district && <div><span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.location, lang)}</span> {district}</div>}
+                {comforts.length > 0 && <div><span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.amenities, lang)}</span> {comforts.join(', ')} <span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.fromPhotos, lang)}</span></div>}
+                {placeNote && <div><span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.setting, lang)}</span> {placeNote}</div>}
                 {permitText && <div><span className="text-[#6B7570]">{c.factPermits}:</span> {permitText}</div>}
                 {airportText && <div><span className="text-[#6B7570]">{c.factAirport}:</span> {airportText}</div>}
               </div>
@@ -1722,7 +1719,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
         {analyses.length > 0 && (
           <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika}>
             <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${apartmentsRoot}/o/${slug}`)}`} no="02"
-              heading={lang === 'ru' ? 'Проверьте апартаменты с ИИ' : 'Check the apartment with AI'}
+              heading={pickCopy(APT.aiHeading, lang)}
               extras={{ daily: calcBlock }} />
           </VillaChapter>
         )}
@@ -1759,7 +1756,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
                   {parentComplex?.units ? (
                     <span className="flex flex-col gap-0.5 md:gap-1">
                       <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{parentComplex.units}</span>
-                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{c.units(parentComplex.units).replace(/^\d+\s*/, '')} {K('в', 'in')} {parentComplex.name}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{c.units(parentComplex.units).replace(/^\d+\s*/, '')} {pickCopy(UNITS_IN, lang)} {parentComplex.name}</span>
                     </span>
                   ) : null}
                 </div>
