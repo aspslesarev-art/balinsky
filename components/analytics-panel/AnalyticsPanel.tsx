@@ -227,12 +227,6 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
           </div>
           <span className="text-[15px] text-[#4A5550] md:text-[17px]">{lang === 'ru' ? `${flat.length} проверок по открытым данным — выберите, что интересно` : `${flat.length} checks on open data — pick what matters to you`}</span>
         </div>
-        {flat[0] && (
-          <button type="button" onClick={() => pick(flat[0].id)}
-            className="inline-flex h-[52px] cursor-pointer items-center rounded-xl border-0 bg-[var(--color-primary)] px-7 text-[16px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-            {lang === 'ru' ? 'Проверить всё' : 'Check everything'}
-          </button>
-        )}
       </div>
       {/* Все проверки сразу, без переключения тем (владелец 20.11.2026, макет AiAllC):
           4 столбца — по теме в каждом, плитка «картинка + название + ›». */}
