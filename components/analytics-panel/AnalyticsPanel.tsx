@@ -16,12 +16,18 @@ import { VizCover, VizView } from './VizView'
 // после входа (решение владельца 18.11.2026). Доступ — html[data-pro], его
 // ставит AuthFlag.
 
-function plural(n: number, unit: string) {
+// Единица счётчика: «a|b|c» — три формы (ru, uk, pl), «one|other» — две, иначе одна.
+function plural(n: number, unit: string, lang: string) {
   const f = unit.split('|')
+  const r = Math.abs(Math.round(n))
+  if (f.length === 2) return (lang === 'fr' ? r < 2 : r === 1) ? f[0] : f[1]
   if (f.length < 3) return f[0]
-  const a = Math.abs(Math.round(n)) % 100, b = a % 10
+  if (lang === 'pl') { const b = r % 10, c = r % 100; return r === 1 ? f[0] : b >= 2 && b <= 4 && !(c >= 12 && c <= 14) ? f[1] : f[2] }
+  const a = r % 100, b = a % 10
   return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b >= 2 && b <= 4 ? f[1] : f[2]
 }
+
+const NUM_LOCALE: Record<string, string> = { ru: 'ru-RU', en: 'en-US', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID', pl: 'pl-PL', uk: 'uk-UA' }
 
 // Цвет темы для обложек: мягкая подложка и цвет графика (макет «Обложки —
 // чистый график», владелец 19.11.2026).
@@ -43,6 +49,8 @@ const COPY = {
     lockTitle: (n: number) => n > 0 ? `Ещё ${n} ${n === 1 ? 'график или карта' : n < 5 ? 'графика и карты' : 'графиков и карт'} — и фото объектов` : 'Фото объектов и детали',
     lockText: 'Откроются после входа — через Google или почту.', signIn: 'Войти и открыть всё',
     pendingTitle: 'Доступ Pro на проверке', pendingText: 'Графики, карты и фото откроются, как только проверим доступ. Обычно в течение дня.',
+    ai: 'ИИ', sub: (n: number) => `${n} проверок по открытым данным — выберите, что интересно`, pick: 'Выберите проверку слева',
+    limitTitle: (n: number) => `Бесплатные проверки на сегодня закончились — ${n} из ${n}`, limitText: 'С Pro — без ограничений. Или вернитесь завтра.', getPro: 'Открыть Pro',
   },
   en: {
     heading: 'Check the villa with AI', meta: (n: number) => `${n} checks · tap to open full screen`, lead: 'Tap any check — the AI analyst gathers data from the right sources and explains what it means for you.', badge: 'AI analyst', working: (k: number, n: number) => `AI analyst at work · source ${k} of ${n}`, finished: 'AI analyst finished',
@@ -53,7 +61,105 @@ const COPY = {
     lockTitle: (n: number) => n > 0 ? `${n} more charts and maps — plus listing photos` : 'Listing photos and details',
     lockText: 'Available after signing in — with Google or email.', signIn: 'Sign in to see everything',
     pendingTitle: 'Pro access under review', pendingText: 'Charts, maps and photos open once we approve access. Usually within a day.',
+    ai: 'AI', sub: (n: number) => `${n} checks on open data — pick what matters to you`, pick: 'Pick a check on the left',
+    limitTitle: (n: number) => `You’ve used today’s ${n} free checks`, limitText: 'Pro has no limits. Or come back tomorrow.', getPro: 'Get Pro',
   },
+  id: {
+      heading: 'Periksa vila dengan AI', meta: (n: number) => `${n} pemeriksaan · ketuk untuk membuka layar penuh`, lead: 'Ketuk pemeriksaan mana saja — analis AI mengumpulkan data dari sumber yang tepat dan menjelaskan artinya bagi Anda.', badge: 'Analis AI', working: (k: number, n: number) => `Analis AI sedang bekerja · sumber ${k} dari ${n}`, finished: 'Analis AI selesai',
+      openAll: 'Buka semua laporan', close: 'Tutup', prev: 'Kembali', of: (k: number, n: number) => `${k} dari ${n}`, themes: 'Topik',
+      add: 'Tambahkan ke laporan', added: 'Di laporan', inReport: 'di laporan', download: (n: number) => `Unduh laporan · ${n}`, building: 'Menyusun PDF…', buildFail: 'PDF gagal disusun, silakan coba lagi',
+      searching: 'AI mencari:', filtering: 'AI memilih yang serupa…', meaning: 'Kesimpulan AI:',
+      next: (t: string) => `Berikutnya: ${t.toLowerCase()} →`, again: 'Ulangi', done: 'selesai', open: 'Lihat', run: 'Jalankan AI',
+      lockTitle: (n: number) => n > 0 ? `${n} grafik dan peta lagi — plus foto objek` : 'Foto objek dan detailnya',
+      lockText: 'Terbuka setelah masuk — lewat Google atau email.', signIn: 'Masuk dan buka semuanya',
+      pendingTitle: 'Akses Pro sedang diperiksa', pendingText: 'Grafik, peta, dan foto akan terbuka setelah akses disetujui. Biasanya dalam sehari.',
+      ai: 'AI', sub: (n: number) => `${n} pemeriksaan dari data terbuka — pilih yang menarik bagi Anda`, pick: 'Pilih pemeriksaan di sebelah kiri',
+      limitTitle: (n: number) => `Pemeriksaan gratis hari ini sudah habis — ${n} dari ${n}`, limitText: 'Dengan Pro tanpa batas. Atau kembali besok.', getPro: 'Buka Pro',
+    },
+  fr: {
+      heading: 'Vérifiez la villa avec l’IA', meta: (n: number) => `${n} ${n < 2 ? 'vérification' : 'vérifications'} · touchez pour ouvrir en plein écran`, lead: 'Touchez une vérification — l’analyste IA rassemble les données des bonnes sources et vous explique ce qu’elles signifient pour vous.', badge: 'Analyste IA', working: (k: number, n: number) => `L’analyste IA travaille · source ${k} sur ${n}`, finished: 'L’analyste IA a terminé',
+      openAll: 'Ouvrir tous les rapports', close: 'Fermer', prev: 'Retour', of: (k: number, n: number) => `${k} sur ${n}`, themes: 'Thèmes',
+      add: 'Ajouter au rapport', added: 'Dans le rapport', inReport: 'dans le rapport', download: (n: number) => `Télécharger le rapport · ${n}`, building: 'Création du PDF…', buildFail: 'Impossible de créer le PDF, veuillez réessayer',
+      searching: 'L’IA cherche :', filtering: 'L’IA sélectionne les biens similaires…', meaning: 'Verdict de l’IA :',
+      next: (t: string) => `Suivant : ${t.toLowerCase()} →`, again: 'Relancer', done: 'terminé', open: 'Voir', run: 'Lancer l’IA',
+      lockTitle: (n: number) => n > 0 ? `Encore ${n} ${n === 1 ? 'graphique ou carte' : 'graphiques et cartes'} — et les photos des biens` : 'Photos des biens et détails',
+      lockText: 'Accessible après connexion — avec Google ou par e-mail.', signIn: 'Se connecter pour tout voir',
+      pendingTitle: 'Accès Pro en cours de vérification', pendingText: 'Les graphiques, cartes et photos s’ouvriront dès que nous aurons validé l’accès. En général sous 24 heures.',
+      ai: 'IA', sub: (n: number) => `${n} vérifications sur données ouvertes — choisissez ce qui vous intéresse`, pick: 'Choisissez une vérification à gauche',
+      limitTitle: (n: number) => `Vous avez utilisé vos ${n} vérifications gratuites du jour`, limitText: 'Avec Pro, sans limite. Ou revenez demain.', getPro: 'Passer à Pro',
+    },
+  de: {
+      heading: 'Prüfen Sie die Villa mit KI', meta: (n: number) => `${n} ${n === 1 ? 'Prüfung' : 'Prüfungen'} · tippen für Vollbild`, lead: 'Tippen Sie auf eine beliebige Prüfung — der KI-Analyst sammelt Daten aus den passenden Quellen und erklärt, was sie für Sie bedeuten.', badge: 'KI-Analyst', working: (k: number, n: number) => `KI-Analyst arbeitet · Quelle ${k} von ${n}`, finished: 'KI-Analyst ist fertig',
+      openAll: 'Alle Berichte öffnen', close: 'Schließen', prev: 'Zurück', of: (k: number, n: number) => `${k} von ${n}`, themes: 'Themen',
+      add: 'Zum Bericht hinzufügen', added: 'Im Bericht', inReport: 'im Bericht', download: (n: number) => `Bericht herunterladen · ${n}`, building: 'PDF wird erstellt…', buildFail: 'PDF konnte nicht erstellt werden, bitte versuchen Sie es erneut',
+      searching: 'KI sucht:', filtering: 'KI wählt ähnliche aus…', meaning: 'KI-Fazit:',
+      next: (t: string) => `Weiter: ${t} →`, again: 'Noch einmal', done: 'fertig', open: 'Ansehen', run: 'KI starten',
+      lockTitle: (n: number) => n > 0 ? `Noch ${n} ${n === 1 ? 'Diagramm oder Karte' : 'Diagramme und Karten'} — plus Fotos der Objekte` : 'Fotos der Objekte und Details',
+      lockText: 'Verfügbar nach der Anmeldung — mit Google oder E-Mail.', signIn: 'Anmelden und alles sehen',
+      pendingTitle: 'Pro-Zugang wird geprüft', pendingText: 'Diagramme, Karten und Fotos werden freigeschaltet, sobald wir den Zugang bestätigt haben. Meist innerhalb eines Tages.',
+      ai: 'KI', sub: (n: number) => `${n} Prüfungen mit offenen Daten — wählen Sie, was Sie interessiert`, pick: 'Wählen Sie links eine Prüfung',
+      limitTitle: (n: number) => `Ihre ${n} kostenlosen Prüfungen für heute sind aufgebraucht`, limitText: 'Mit Pro ohne Limit. Oder kommen Sie morgen wieder.', getPro: 'Pro freischalten',
+    },
+  zh: {
+      heading: '用 AI 检查这栋别墅', meta: (n: number) => `${n} 项检查 · 点击全屏打开`, lead: '点击任意一项检查——AI 分析师会从相应来源收集数据，并解释它们对您意味着什么。', badge: 'AI 分析师', working: (k: number, n: number) => `AI 分析师工作中 · 来源 ${k}/${n}`, finished: 'AI 分析师已完成',
+      openAll: '打开全部报告', close: '关闭', prev: '返回', of: (k: number, n: number) => `${k}/${n}`, themes: '主题',
+      add: '加入报告', added: '已在报告中', inReport: '已在报告中', download: (n: number) => `下载报告 · ${n}`, building: '正在生成 PDF…', buildFail: 'PDF 生成失败，请重试',
+      searching: 'AI 正在搜索：', filtering: 'AI 正在筛选同类…', meaning: 'AI 结论：',
+      next: (t: string) => `下一项：${t.toLowerCase()} →`, again: '再来一次', done: '完成', open: '查看', run: '启动 AI',
+      lockTitle: (n: number) => n > 0 ? `还有 ${n} 张图表和地图，以及房源照片` : '房源照片和详情',
+      lockText: '登录后即可查看——使用 Google 或邮箱。', signIn: '登录查看全部',
+      pendingTitle: 'Pro 权限审核中', pendingText: '权限审核通过后即可查看图表、地图和照片。通常一天内完成。',
+      ai: 'AI', sub: (n: number) => `${n} 项基于公开数据的检查——选择您关心的`, pick: '请在左侧选择一项检查',
+      limitTitle: (n: number) => `今天的 ${n} 次免费检查已用完`, limitText: 'Pro 无次数限制。或者明天再来。', getPro: '开通 Pro',
+    },
+  nl: {
+      heading: 'Controleer de villa met AI', meta: (n: number) => `${n} ${n === 1 ? 'controle' : 'controles'} · tik om op volledig scherm te openen`, lead: 'Tik op een controle — de AI-analist verzamelt gegevens uit de juiste bronnen en legt uit wat ze voor u betekenen.', badge: 'AI-analist', working: (k: number, n: number) => `AI-analist aan het werk · bron ${k} van ${n}`, finished: 'AI-analist is klaar',
+      openAll: 'Alle rapporten openen', close: 'Sluiten', prev: 'Terug', of: (k: number, n: number) => `${k} van ${n}`, themes: 'Onderwerpen',
+      add: 'Toevoegen aan rapport', added: 'In rapport', inReport: 'in rapport', download: (n: number) => `Rapport downloaden · ${n}`, building: 'PDF wordt gemaakt…', buildFail: 'De PDF kon niet worden gemaakt, probeer het opnieuw',
+      searching: 'AI zoekt:', filtering: 'AI selecteert vergelijkbare…', meaning: 'AI-oordeel:',
+      next: (t: string) => `Volgende: ${t.toLowerCase()} →`, again: 'Opnieuw', done: 'klaar', open: 'Bekijken', run: 'AI starten',
+      lockTitle: (n: number) => n > 0 ? `Nog ${n} ${n === 1 ? 'grafiek of kaart' : 'grafieken en kaarten'} — plus foto's van het object` : `Foto's en details van het object`,
+      lockText: 'Beschikbaar na inloggen — via Google of e-mail.', signIn: 'Inloggen en alles bekijken',
+      pendingTitle: 'Pro-toegang wordt beoordeeld', pendingText: `Grafieken, kaarten en foto's worden zichtbaar zodra we de toegang hebben goedgekeurd. Meestal binnen een dag.`,
+      ai: 'AI', sub: (n: number) => `${n} controles op basis van open data — kies wat u interesseert`, pick: 'Kies links een controle',
+      limitTitle: (n: number) => `De gratis controles voor vandaag zijn op — ${n} van ${n}`, limitText: 'Met Pro zonder limiet. Of kom morgen terug.', getPro: 'Pro nemen',
+    },
+  ban: {
+      heading: 'Cek vila nganggen AI', meta: (n: number) => `${n} pamariksan · klik — jagi kabuka layar penuh`, lead: 'Klik pamariksan sané kayunin — analis AI ngumpulang data saking sumber sané patut tur nlatarang napi artinnyane majeng ragane.', badge: 'Analis AI', working: (k: number, n: number) => `Analis AI makarya · sumber ${k} saking ${n}`, finished: 'Analis AI sampun puput',
+      openAll: 'Buka sami laporan', close: 'Tutup', prev: 'Mawali', of: (k: number, n: number) => `${k} saking ${n}`, themes: 'Topik',
+      add: 'Tambahin ka laporan', added: 'Ring laporan', inReport: 'ring laporan', download: (n: number) => `Unduh laporan · ${n}`, building: 'Ngawi PDF…', buildFail: 'PDF nenten prasida kakawi, cobi malih',
+      searching: 'AI ngrereh:', filtering: 'AI milihin sané mirip…', meaning: 'Kesimpulan AI:',
+      next: (t: string) => `Salanturnyane: ${t.toLowerCase()} →`, again: 'Malih', done: 'puput', open: 'Cingakin', run: 'Jalanang AI',
+      lockTitle: (n: number) => n > 0 ? `${n} grafik lan peta malih — miwah foto objek` : 'Foto objek lan detail',
+      lockText: 'Kabuka sasampun macelep — nganggen Google utawi surel.', signIn: 'Macelep tur cingakin sami',
+      pendingTitle: 'Akses Pro kantun kapariksa', pendingText: 'Grafik, peta lan foto jagi kabuka sasampun akses kapastiang. Biasane ring arahina.',
+      ai: 'AI', sub: (n: number) => `${n} pamariksan manut data terbuka — pilih sané kayunin`, pick: 'Pilih pamariksan ring kiwa',
+      limitTitle: (n: number) => `Pamariksan gratis rahinane mangkin sampun telas — ${n} saking ${n}`, limitText: 'Sareng Pro — tanpa wates. Utawi mawali benjang.', getPro: 'Buka Pro',
+    },
+  pl: {
+      heading: 'Sprawdź willę z AI', meta: (n: number) => `${n} ${n === 1 ? 'analiza' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'analizy' : 'analiz'} · kliknij — otworzy się na pełnym ekranie`, lead: 'Kliknij dowolną analizę — analityk AI zbierze dane z właściwych źródeł i wyjaśni, co oznaczają dla Ciebie.', badge: 'Analityk AI', working: (k: number, n: number) => `Analityk AI pracuje · źródło ${k} z ${n}`, finished: 'Analityk AI skończył',
+      openAll: 'Otwórz wszystkie raporty', close: 'Zamknij', prev: 'Wstecz', of: (k: number, n: number) => `${k} z ${n}`, themes: 'Tematy',
+      add: 'Dodaj do raportu', added: 'W raporcie', inReport: 'w raporcie', download: (n: number) => `Pobierz raport · ${n}`, building: 'Tworzę PDF…', buildFail: 'Nie udało się utworzyć PDF, spróbuj jeszcze raz',
+      searching: 'AI szuka:', filtering: 'AI wybiera podobne…', meaning: 'Wniosek AI:',
+      next: (t: string) => `Dalej: ${t.toLowerCase()} →`, again: 'Jeszcze raz', done: 'gotowe', open: 'Zobacz', run: 'Uruchom AI',
+      lockTitle: (n: number) => n > 0 ? `Jeszcze ${n} ${n === 1 ? 'wykres lub mapa' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'wykresy i mapy' : 'wykresów i map'} — oraz zdjęcia obiektów` : 'Zdjęcia obiektów i szczegóły',
+      lockText: 'Dostępne po zalogowaniu — przez Google lub e-mail.', signIn: 'Zaloguj się i zobacz wszystko',
+      pendingTitle: 'Dostęp Pro w trakcie weryfikacji', pendingText: 'Wykresy, mapy i zdjęcia otworzą się, gdy tylko zatwierdzimy dostęp. Zwykle w ciągu dnia.',
+      ai: 'AI', sub: (n: number) => `${n} ${n === 1 ? 'analiza' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'analizy' : 'analiz'} na podstawie otwartych danych — wybierz, co Cię interesuje`, pick: 'Wybierz analizę po lewej',
+      limitTitle: (n: number) => `Darmowe analizy na dziś się skończyły — ${n} z ${n}`, limitText: 'Z Pro — bez ograniczeń. Albo wróć jutro.', getPro: 'Otwórz Pro',
+    },
+  uk: {
+      heading: 'Перевірте віллу з ШІ', meta: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'перевірка' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'перевірки' : 'перевірок'} · натисніть — відкриється на весь екран`, lead: 'Натисніть на будь-яку перевірку — ШІ-аналітик збере дані з потрібних джерел і пояснить, що вони означають для вас.', badge: 'ШІ-аналітик', working: (k: number, n: number) => `ШІ-аналітик працює · джерело ${k} з ${n}`, finished: 'ШІ-аналітик закінчив',
+      openAll: 'Відкрити всі звіти', close: 'Закрити', prev: 'Назад', of: (k: number, n: number) => `${k} з ${n}`, themes: 'Теми',
+      add: 'Додати до звіту', added: 'У звіті', inReport: 'у звіті', download: (n: number) => `Завантажити звіт · ${n}`, building: 'Збираю PDF…', buildFail: 'Не вдалося зібрати PDF, спробуйте ще раз',
+      searching: 'ШІ шукає:', filtering: 'ШІ відбирає схожі…', meaning: 'Висновок ШІ:',
+      next: (t: string) => `Далі: ${t.toLowerCase()} →`, again: 'Ще раз', done: 'готово', open: 'Дивитися', run: 'Запустити ШІ',
+      lockTitle: (n: number) => n > 0 ? `Ще ${n} ${n % 10 === 1 && n % 100 !== 11 ? 'графік або карта' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'графіки й карти' : 'графіків і карт'} — і фото об’єктів` : 'Фото об’єктів і деталі',
+      lockText: 'Відкриються після входу — через Google або пошту.', signIn: 'Увійти й відкрити все',
+      pendingTitle: 'Доступ Pro на перевірці', pendingText: 'Графіки, карти й фото відкриються, щойно ми перевіримо доступ. Зазвичай протягом дня.',
+      ai: 'ШІ', sub: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'перевірка' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'перевірки' : 'перевірок'} за відкритими даними — оберіть, що цікаво`, pick: 'Оберіть перевірку ліворуч',
+      limitTitle: (n: number) => `Безкоштовні перевірки на сьогодні закінчилися — ${n} з ${n}`, limitText: 'З Pro — без обмежень. Або поверніться завтра.', getPro: 'Відкрити Pro',
+    },
 }
 
 function useAccess(): 'pro' | 'pending' | 'guest' {
@@ -69,9 +175,9 @@ function useAccess(): 'pro' | 'pending' | 'guest' {
   return a
 }
 
-// Аналитика открыта всем (владелец 20.11.2026): без Pro — 50 разных проверок в
-// день на устройстве. Счёт в localStorage; 51-я показывает «Открыть Pro».
-export const FREE_CHECKS_PER_DAY = 50
+// Аналитика открыта всем (владелец 20.11.2026): без Pro — 10 разных проверок в
+// день на устройстве. Счёт в localStorage; 11-я показывает «Открыть Pro».
+export const FREE_CHECKS_PER_DAY = 10
 const QUOTA_KEY = 'bx-ai-quota'
 const today = () => new Date().toISOString().slice(0, 10)
 function readQuota(): string[] {
@@ -132,7 +238,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   /** Заголовок вместо «Проверьте виллу с ИИ» (апартаменты). */
   heading?: string
 }) {
-  const c = lang === 'ru' ? COPY.ru : COPY.en
+  const L = lang === 'ua' ? 'uk' : lang
+  const c = COPY[L as keyof typeof COPY] ?? COPY.en
   const access = useAccess()
   // Ключ квоты — страница: одна и та же проверка на разных объектах считается отдельно.
   const quota = useQuota(typeof window === 'undefined' ? '' : window.location.pathname)
@@ -264,12 +371,12 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
     <div className="-mx-6 flex w-[calc(100%+3rem)] max-w-none flex-col gap-8 bg-[#F1F7F3] px-6 py-12 md:py-14 lg:mx-[calc(50%-50vw)] lg:w-screen lg:px-[max(24px,calc((100vw-1280px)/2+24px))]">
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
         <div className="flex min-w-0 flex-col gap-3">
-          <span className="inline-flex h-7 items-center gap-1.5 self-start rounded-full bg-white px-3 text-[13px] font-semibold text-[#1F8B5F] shadow-[0_0_0_1px_rgb(31_139_95/0.25)]">✦ {lang === 'ru' ? 'ИИ' : 'AI'}</span>
+          <span className="inline-flex h-7 items-center gap-1.5 self-start rounded-full bg-white px-3 text-[13px] font-semibold text-[#1F8B5F] shadow-[0_0_0_1px_rgb(31_139_95/0.25)]">✦ {c.ai}</span>
           <div className="flex items-baseline gap-4">
             {no && <span className="text-[13px] tabular-nums text-[#6B7570]">{no}</span>}
             <h2 className="m-0 font-display text-[28px] font-bold leading-[1.15] tracking-[-0.02em] md:text-[40px]">{heading ?? c.heading}</h2>
           </div>
-          <span className="text-[15px] text-[#4A5550] md:text-[17px]">{lang === 'ru' ? `${flat.length} проверок по открытым данным — выберите, что интересно` : `${flat.length} checks on open data — pick what matters to you`}</span>
+          <span className="text-[15px] text-[#4A5550] md:text-[17px]">{c.sub(flat.length)}</span>
         </div>
       </div>
       {/* Все проверки сразу, строками (владелец 20.11.2026, макет AiAllB): тема
@@ -357,7 +464,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
             <div className="flex max-w-[1000px] flex-col gap-8 px-4 pb-10 pt-2 md:px-0">
               <div className="flex flex-col gap-3">
                 {idle ? (
-                  <span className="text-[13px] uppercase tracking-[0.06em] text-[#6B7570]">{lang === 'ru' ? 'Выберите проверку слева' : 'Pick a check on the left'}</span>
+                  <span className="text-[13px] uppercase tracking-[0.06em] text-[#6B7570]">{c.pick}</span>
                 ) : (
                 <span className="text-[13px] uppercase tracking-[0.06em] text-[#6B7570]" aria-live="polite">
                   {finished ? c.finished : c.working(Math.min(G.sources.length, Math.floor(t / STEP) + 1), G.sources.length)}
@@ -388,7 +495,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                       )}
                       {lt >= 6 && lt < 20 && (
                         <span className="flex items-baseline gap-4 text-[16px] text-[#4A5550]">
-                          <span className="shrink-0 font-semibold tabular-nums text-[#0F1A15]">{Math.round(s.total * scanT).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US')} {plural(s.total * scanT, s.unit)}</span>
+                          <span className="shrink-0 font-semibold tabular-nums text-[#0F1A15]">{Math.round(s.total * scanT).toLocaleString(NUM_LOCALE[L] ?? 'en-US')} {plural(s.total * scanT, s.unit, L)}</span>
                           <span className="truncate text-[#0F1A15]">{s.names[Math.floor(lt) % Math.max(1, s.names.length)]}<span className="ap-blink">▍</span></span>
                         </span>
                       )}
@@ -422,10 +529,10 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                 <div className="col-span-full">
                     <div className="flex flex-wrap items-center gap-6 border-y border-[#ECEFED] py-6">
                       <div className="flex flex-col gap-1.5" style={{ flex: '1 1 260px' }}>
-                        <div className="text-[17px] font-semibold">{lang === 'ru' ? `Бесплатные проверки на сегодня закончились — ${FREE_CHECKS_PER_DAY} из ${FREE_CHECKS_PER_DAY}` : `You’ve used today’s ${FREE_CHECKS_PER_DAY} free checks`}</div>
-                        <div className="text-[15px] leading-[1.5] text-[#4A5550]">{lang === 'ru' ? 'С Pro — без ограничений. Или вернитесь завтра.' : 'Pro has no limits. Or come back tomorrow.'}</div>
+                        <div className="text-[17px] font-semibold">{c.limitTitle(FREE_CHECKS_PER_DAY)}</div>
+                        <div className="text-[15px] leading-[1.5] text-[#4A5550]">{c.limitText}</div>
                       </div>
-                      <a href={signInHref} className="flex h-12 items-center rounded-xl bg-[var(--color-primary)] px-6 text-[15px] font-semibold text-white no-underline hover:bg-[var(--color-primary-pressed)]">{lang === 'ru' ? 'Открыть Pro' : 'Get Pro'}</a>
+                      <a href={signInHref} className="flex h-12 items-center rounded-xl bg-[var(--color-primary)] px-6 text-[15px] font-semibold text-white no-underline hover:bg-[var(--color-primary-pressed)]">{c.getPro}</a>
                     </div>
                 </div>
               )}

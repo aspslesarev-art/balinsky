@@ -231,6 +231,12 @@ const TILE = {
   sat: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile',
 }
 
+// Стороны света на розе ветров: север, юг, запад, восток.
+const COMPASS: Record<string, string[]> = {
+  ru: ['С', 'Ю', 'З', 'В'], en: ['N', 'S', 'W', 'E'], uk: ['Пн', 'Пд', 'Зх', 'Сх'], pl: ['N', 'S', 'W', 'E'], de: ['N', 'S', 'W', 'O'],
+  fr: ['N', 'S', 'O', 'E'], nl: ['N', 'Z', 'W', 'O'], id: ['U', 'S', 'B', 'T'], ban: ['U', 'S', 'B', 'T'], zh: ['北', '南', '西', '东'],
+}
+
 function MapView({ v, lang, bare }: { v: Extract<Viz, { kind: 'map' }>; lang: string; bare?: boolean }) {
   const W = 960, H = Math.round(W / v.aspect)
   const c = world(v.center.lat, v.center.lng, v.zoom)
@@ -336,8 +342,8 @@ function MapView({ v, lang, bare }: { v: Extract<Viz, { kind: 'map' }>; lang: st
         )}
         {v.rose && !bare && (
           <>
-            {([['С', 'N', 'left-1/2 top-2 -translate-x-1/2'], ['Ю', 'S', 'left-1/2 bottom-2 -translate-x-1/2'], ['З', 'W', 'left-2 top-1/2 -translate-y-1/2'], ['В', 'E', 'right-2 top-1/2 -translate-y-1/2']] as const).map(([ru, en, pos]) => (
-              <span key={ru} className={`absolute ${pos} grid h-8 w-8 place-items-center rounded-full bg-white text-[13px] font-bold text-[#0F1A15] shadow`}>{lang === 'ru' || lang === 'uk' ? ru : en}</span>
+            {(['left-1/2 top-2 -translate-x-1/2', 'left-1/2 bottom-2 -translate-x-1/2', 'left-2 top-1/2 -translate-y-1/2', 'right-2 top-1/2 -translate-y-1/2'] as const).map((pos, k) => (
+              <span key={pos} className={`absolute ${pos} grid h-8 w-8 place-items-center rounded-full bg-white text-[13px] font-bold text-[#0F1A15] shadow`}>{(COMPASS[lang === 'ua' ? 'uk' : lang] ?? COMPASS.en)[k]}</span>
             ))}
           </>
         )}

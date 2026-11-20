@@ -26,6 +26,46 @@ const COPY = {
     meaning: 'AI verdict:', sources: 'Sources', foot: 'Balinsky · AI analyst report · figures from public sources, not a promise of income',
     print: 'Save as PDF', printHint: 'In the print dialog choose “Save as PDF”.',
   },
+  id: {
+      kicker: 'Laporan analis AI Balinsky', inside: 'Isi laporan', date: (d: string) => `Disusun ${d}`,
+      meaning: 'Kesimpulan AI:', sources: 'Sumber', foot: 'Balinsky · laporan analis AI · angka dari sumber terbuka, bukan janji penghasilan',
+      print: 'Simpan sebagai PDF', printHint: 'Di jendela cetak, pilih “Simpan sebagai PDF”.',
+    },
+  fr: {
+      kicker: 'Rapport de l’analyste IA Balinsky', inside: 'Dans ce rapport', date: (d: string) => `Créé le ${d}`,
+      meaning: 'Verdict de l’IA :', sources: 'Sources', foot: 'Balinsky · rapport de l’analyste IA · chiffres issus de sources publiques, ce n’est pas une promesse de revenu',
+      print: 'Enregistrer en PDF', printHint: 'Dans la fenêtre d’impression, choisissez « Enregistrer au format PDF ».',
+    },
+  de: {
+      kicker: 'Bericht des Balinsky-KI-Analysten', inside: 'Im Bericht', date: (d: string) => `Erstellt am ${d}`,
+      meaning: 'KI-Fazit:', sources: 'Quellen', foot: 'Balinsky · Bericht des KI-Analysten · Zahlen aus offenen Quellen, kein Ertragsversprechen',
+      print: 'Als PDF speichern', printHint: 'Wählen Sie im Druckdialog „Als PDF speichern“.',
+    },
+  zh: {
+      kicker: 'Balinsky AI 分析师报告', inside: '报告内容', date: (d: string) => `生成于 ${d}`,
+      meaning: 'AI 结论：', sources: '数据来源', foot: 'Balinsky · AI 分析师报告 · 数据来自公开来源，不构成收益承诺',
+      print: '保存为 PDF', printHint: '在打印窗口中选择“另存为 PDF”。',
+    },
+  nl: {
+      kicker: 'Rapport van de Balinsky AI-analist', inside: 'In dit rapport', date: (d: string) => `Gemaakt op ${d}`,
+      meaning: 'AI-oordeel:', sources: 'Bronnen', foot: 'Balinsky · rapport van de AI-analist · cijfers uit openbare bronnen, geen belofte van inkomsten',
+      print: 'Opslaan als PDF', printHint: 'Kies in het afdrukvenster „Opslaan als PDF”.',
+    },
+  ban: {
+      kicker: 'Laporan analis AI Balinsky', inside: 'Ring laporan', date: (d: string) => `Kakawi ${d}`,
+      meaning: 'Kesimpulan AI:', sources: 'Sumber', foot: 'Balinsky · laporan analis AI · angka saking sumber terbuka, nenten janji pikolih',
+      print: 'Simpen dados PDF', printHint: 'Ring jendela cetak pilih “Simpan sebagai PDF”.',
+    },
+  pl: {
+      kicker: 'Raport analityka AI Balinsky', inside: 'W raporcie', date: (d: string) => `Utworzono ${d}`,
+      meaning: 'Wniosek AI:', sources: 'Źródła', foot: 'Balinsky · raport analityka AI · dane z otwartych źródeł, to nie jest obietnica dochodu',
+      print: 'Zapisz jako PDF', printHint: 'W oknie drukowania wybierz „Zapisz jako PDF”.',
+    },
+  uk: {
+      kicker: 'Звіт ШІ-аналітика Balinsky', inside: 'У звіті', date: (d: string) => `Зібрано ${d}`,
+      meaning: 'Висновок ШІ:', sources: 'Джерела', foot: 'Balinsky · звіт ШІ-аналітика · цифри з відкритих джерел, це не обіцянка доходу',
+      print: 'Зберегти в PDF', printHint: 'У вікні друку оберіть «Зберегти як PDF».',
+    },
 }
 
 export function AnalyticsReport({ analyses: raw, lang, title, subtitle, photo, autoPrint }: {
@@ -36,10 +76,11 @@ export function AnalyticsReport({ analyses: raw, lang, title, subtitle, photo, a
   photo: string | null
   autoPrint: boolean
 }) {
-  const c = lang === 'ru' ? COPY.ru : COPY.en
+  const L = lang === 'ua' ? 'uk' : lang
+  const c = COPY[L as keyof typeof COPY] ?? COPY.en
   const { currency } = useCurrency()
   const analyses = useMemo(() => withMoney(raw, s => s.replace(MONEY_RE, (_, n) => formatMoney(Number(n), currency, lang as Lang))), [raw, currency, lang])
-  const today = new Date().toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  const today = new Date().toLocaleDateString(({ ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID', pl: 'pl-PL', uk: 'uk-UA' } as Record<string, string>)[L] ?? 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <PdfShell autoPrint={autoPrint} printLabel={c.print} printHint={c.printHint}>
