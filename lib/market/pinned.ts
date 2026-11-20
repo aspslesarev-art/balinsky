@@ -16,7 +16,7 @@
 
 import { extractUnits } from './extract'
 import { textAt, type Grid } from './grid'
-import { parseDune, parsePredmet, parseSectionTable, parseSwoiFloors } from './adapters/grid-natives'
+import { parseDune, parseEcoWood, parsePredmet, parseSectionTable, parseSwoiFloors } from './adapters/grid-natives'
 import type { ExtractResult, MarketLayout, UnitStatus } from './types'
 
 type Anchor = { col: number; re: RegExp }
@@ -196,6 +196,8 @@ export const PINNED: Record<string, PinnedParser> = {
   },
   // 143. SWOI Development — SWOI BERAWA
   'gs:1uukTUQjm6k1ds17F-5fdWJEp6YSdkvRz-ZV_dV-E9cM:2096436159': { kind: 'native', parse: parseSwoiFloors },
+  // Our Place Invest — EcoWood (шахматка от Михаила Пиманова, 20.11.2026)
+  'gs:1vDa9PA7ZVmEeB5qIE-vGpkZsWhveT_F1NRNYzf4faI0:0': { kind: 'native', parse: parseEcoWood },
   // 170–172. MAISON VERDE
   'gs:1ekW3nqn0DT4KPlDU49xMuHUlThBfhncDsfxnRcEKeq0:0': maisonVerde(
     11,

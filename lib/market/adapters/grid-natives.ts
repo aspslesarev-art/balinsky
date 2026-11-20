@@ -252,3 +252,41 @@ function headerCols(grid: Grid, r: number): Record<string, number> | null {
   }
   return out.key && out.price ? out : null
 }
+
+// EcoWood (Our Place Invest): одна ячейка — один юнит, текст в три строки
+// «70m2 / 1 / 1br - $166 950». Статус — заливка ячейки по легенде справа
+// («— unit for sale», «— reserved…», «— holding deposit received», «— sold»):
+// цвет стоит квадратиком слева от подписи.
+export function parseEcoWood(grid: Grid): ExtractResult {
+  const words: Array<[RegExp, UnitStatus]> = [
+    [/for sale/i, 'available'], [/reserved/i, 'reserved'], [/deposit received/i, 'reserved'], [/\bsold\b/i, 'sold'],
+  ]
+  const legend: Legend = []
+  for (let r = 1; r <= grid.rowCount; r++) {
+    for (let c = 1; c <= grid.colCount; c++) {
+      const t = textAt(grid, r, c)
+      if (!t.trim().startsWith('—')) continue
+      const hit = words.find(([re]) => re.test(t))
+      const hex = cellAt(grid, r, c - 1).color ?? cellAt(grid, r, c).color
+      if (hit && hex) legend.push({ hex, status: hit[1] })
+    }
+  }
+  const units: ScrapedUnit[] = []
+  for (let r = 1; r <= grid.rowCount; r++) {
+    for (let c = 1; c <= grid.colCount; c++) {
+      const t = textAt(grid, r, c)
+      const m = t.match(/^\s*(\d+(?:[.,]\d+)?)\s*m2\s*\n\s*(\d+)\s*\n\s*(\d)\s*br\s*-\s*(.+)$/im)
+      if (!m) continue
+      units.push(unit({
+        unitKey: m[2],
+        unitType: 'villa',
+        bedrooms: Number(m[3]),
+        areaM2: parseArea(m[1]),
+        priceUsd: parseMoney(m[4]),
+        status: colorStatus(cellAt(grid, r, c).color, legend) ?? 'unknown',
+        raw: { cell: t },
+      }))
+    }
+  }
+  return result(units, 10)
+}
