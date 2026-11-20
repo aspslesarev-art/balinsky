@@ -26,7 +26,7 @@ const COPY = {
 
 const LOCALE: Record<string, string> = { ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID', pl: 'pl-PL', uk: 'uk-UA' }
 // Часы созвона по Бали (UTC+8) — рабочий день застройщиков.
-const HOURS = [10, 11, 13, 15, 17]
+const HOURS = [10, 11, 14, 16]
 const BALI_MS = 8 * 3600_000
 const STORE_KEY = 'bx_lead_contact'
 
@@ -43,9 +43,11 @@ function tgHandle(s: string) {
 const baliDayStart = (t: number) => Math.floor((t + BALI_MS) / 86400_000) * 86400_000 - BALI_MS
 const slotAt = (day: number, h: number) => day + h * 3600_000
 
-export function LeadHeroCard({ lang, price, developerName, managerName, managerId, listingTitle, id, framed = true }: {
+export function LeadHeroCard({ lang, price, priceNote, developerName, managerName, managerId, listingTitle, id, framed = true }: {
   lang: Lang
   price?: ReactNode
+  /** «обновлена вчера» — справа от подписи «Цена», как в макете. */
+  priceNote?: ReactNode
   developerName: string | null
   managerName: string | null
   managerId: string | null
@@ -151,7 +153,7 @@ export function LeadHeroCard({ lang, price, developerName, managerName, managerI
 
   return (
     <div id={id} className={`flex scroll-mt-[136px] flex-col gap-4 bg-white ${framed ? 'rounded-md p-6 shadow-[0_1px_2px_rgb(0_0_0/.05),0_12px_32px_rgb(0_0_0/.14)]' : ''}`}>
-      {price && <div className="flex flex-col gap-1"><span className={cap}>{c.price}</span>{price}</div>}
+      {price && <div className="flex flex-col gap-2"><span className="flex items-baseline justify-between gap-3"><span className={cap}>{c.price}</span>{priceNote}</span>{price}</div>}
       <div className={`flex flex-col gap-3 ${price ? 'border-t border-[#ECEFED] pt-4' : ''}`}>
         <span className={cap}>{c.cap}</span>
         <div role="tablist" className="flex gap-5 text-[14px]">
@@ -221,7 +223,17 @@ export function LeadHeroCard({ lang, price, developerName, managerName, managerI
           </button>
         </form>
       )}
-      <p className="text-[12px] leading-[1.5] text-[#6B7570]">{c.note}</p>
+      <p className="text-center text-[12px] leading-[1.5] text-[#6B7570]">{c.note}</p>
+      {tab !== 2 && (
+        <div className="-mt-1 flex justify-center gap-5 text-[14px]">
+          {([['telegram', 'Telegram', Send], ['whatsapp', 'WhatsApp', MessageCircle]] as const).map(([ch, label, Icon]) => (
+            <button key={ch} type="button" onClick={() => { setDialog(ch); reportLeadFormEvent('click', ch, { managerId: managerId ?? undefined, managerName: managerName ?? undefined, developerName }) }}
+              className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-transparent px-0 py-1 text-[#0F1A15] underline underline-offset-4 hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+              <Icon size={16} strokeWidth={1.8} aria-hidden />{label}
+            </button>
+          ))}
+        </div>
+      )}
       {dialog && (
         <ContactLeadDialog open onClose={() => setDialog(null)} channel={dialog} lang={lang}
           developerName={developerName} managerName={managerName ?? ''} managerId={managerId ?? ''} listingTitle={listingTitle} />

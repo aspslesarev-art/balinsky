@@ -66,6 +66,8 @@ type Body = {
   // или «перезвоните мне». Имя там не спрашиваем — меньше полей, больше заявок.
   request?: string
   slot?: string
+  // «Сообщить об ошибке» (VillaActions): контакт необязателен, свободным текстом.
+  contactText?: string
 }
 
 // Те же, что OTHER_MESSENGERS в components/ContactLeadDialog.tsx.
@@ -136,7 +138,9 @@ export async function POST(req: Request) {
   }
 
   const isCallRequest = body.page === 'call-request'
-  const name = (body.name ?? '').trim() || (isCallRequest ? 'не указано' : '')
+  const isReport = body.page === 'report'
+  const contactText = isReport ? (body.contactText ?? '').trim().slice(0, 100) : ''
+  const name = (body.name ?? '').trim() || (isCallRequest || isReport ? 'не указано' : '')
   const slot = isCallRequest ? (body.slot ?? '').trim().slice(0, 120) : ''
   const email = (body.email ?? '').trim()
   const phone = (body.phone ?? '').trim()
@@ -162,7 +166,10 @@ export async function POST(req: Request) {
   if (messengerId && (!messenger || messengerId.length > 60)) {
     return NextResponse.json({ ok: false, error: 'invalid_messenger' }, { status: 400 })
   }
-  if (!phone && !email && !telegram && !messengerId) {
+  if (isReport && message.length < 3) {
+    return NextResponse.json({ ok: false, error: 'no_message' }, { status: 400 })
+  }
+  if (!isReport && !phone && !email && !telegram && !messengerId) {
     return NextResponse.json({ ok: false, error: 'no_contact' }, { status: 400 })
   }
   if (phone.length > 40) {
@@ -193,15 +200,16 @@ export async function POST(req: Request) {
   }
   // Форма у карточки менеджера (ContactLeadDialog) — заявки только владельцу
   // в админ-чат, застройщику он передаёт сам.
-  const ownerOnly = isResale || body.page === 'manager-card' || isCallRequest
+  const ownerOnly = isResale || body.page === 'manager-card' || isCallRequest || isReport
   const devChat = ownerOnly ? null : await developerChatId({ name: developerName, slug: developerSlug })
 
   const lines: string[] = [
-    isCallRequest ? (slot ? '📅 <b>Запись на созвон</b>' : '📞 <b>Просит перезвонить</b>') : '🆕 <b>Новая заявка с сайта</b>',
+    isReport ? '⚠️ <b>Сообщение об ошибке на странице</b>' : isCallRequest ? (slot ? '📅 <b>Запись на созвон</b>' : '📞 <b>Просит перезвонить</b>') : '🆕 <b>Новая заявка с сайта</b>',
     '',
     ...(slot ? [`<b>Когда:</b> ${escapeHtml(slot)}`] : []),
-    `<b>Имя:</b> ${escapeHtml(name)}`,
+    ...(isReport ? [] : [`<b>Имя:</b> ${escapeHtml(name)}`]),
   ]
+  if (contactText) lines.push(`<b>Контакт:</b> ${escapeHtml(contactText)}`)
   if (phone) lines.push(`<b>Телефон:</b> ${escapeHtml(phone)}`)
   if (telegram) lines.push(`<b>Telegram:</b> ${escapeHtml(telegram)} (https://t.me/${telegram.slice(1)})`)
   if (email) lines.push(`<b>Email:</b> ${escapeHtml(email)}`)
@@ -260,7 +268,8 @@ export async function POST(req: Request) {
   // "вопросы" block). httpOnly so the gate can't be forged from the client;
   // the UI mirrors it in localStorage only to decide whether to auto-reveal.
   const res = NextResponse.json({ ok: true, leadId })
-  res.cookies.set('bx_lead', '1', {
+  // Сообщение об ошибке — не заявка, закрытые разделы им не открываем.
+  if (!isReport) res.cookies.set('bx_lead', '1', {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',

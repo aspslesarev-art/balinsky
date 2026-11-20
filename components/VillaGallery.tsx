@@ -183,7 +183,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
       className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
       style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }} />
   )
-  const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[600px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
+  const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[640px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
   const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.some(v => !v.hideTile)
 
@@ -221,7 +221,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         )}
         {n > 1 && !showing && (
           <button type="button" onClick={play} aria-label={c.play}
-            className="absolute left-1/2 top-1/2 z-10 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition-transform duration-[120ms] [filter:drop-shadow(0_2px_8px_rgb(0_0_0/.35))] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            className={`absolute left-1/2 top-1/2 z-10 flex h-20 w-20 -translate-x-1/2 ${overHero ? 'lg:left-[36%]' : ''} -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition-transform duration-[120ms] [filter:drop-shadow(0_2px_8px_rgb(0_0_0/.35))] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white`}>
             {/* Классический значок (образец владельца 19.11.2026): толстое кольцо ~7% диаметра,
                 острый треугольник 40% высоты, по центру тяжести. */}
             <svg width="80" height="80" viewBox="0 0 100 100" aria-hidden="true" className="block">

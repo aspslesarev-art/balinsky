@@ -78,6 +78,7 @@ import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { ManagerContactButtons } from '@/components/ManagerContactButtons'
 import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
+import { VillaActions } from '@/components/VillaActions'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { loadLandmarks } from '@/lib/landmarks'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
@@ -2079,7 +2080,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
     <PriceCtaCard compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
   )
   const leadCard = (id: string, framed: boolean) => (
-    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')} developerName={developerName ?? null}
+    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')} priceNote={priceNum != null && <PriceCtaCard compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />} developerName={developerName ?? null}
       managerName={managers[0]?.name ?? null} managerId={managers[0]?.id ?? null} listingTitle={title} />
   )
   // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.
@@ -2101,17 +2102,22 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
       presentationButton={null}
       dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null}
       links={
-        <div className="bx-pro-only">
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:justify-start">
-            <AddToCollection asLink kind="villa" slug={slug} lang={lang} snapshot={{
-              title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-              district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
-              leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
-              id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
-            }} />
-            {presentationPdf}
-          </div>
-        </div>
+        <VillaActions lang={lang} title={title} item={{
+          kind: 'villa', slug, title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+          district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null, land: land ?? null,
+        }} proLinks={
+          <span className="bx-pro-only">
+            <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">
+              <AddToCollection asLink kind="villa" slug={slug} lang={lang} snapshot={{
+                title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+                district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+                leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+                id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
+              }} />
+              {presentationPdf}
+            </span>
+          </span>
+        } />
       }
     />
   )

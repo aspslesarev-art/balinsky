@@ -159,9 +159,9 @@ export function AddToCollection({ kind, slug, snapshot, lang = 'ru', compact = f
     <div ref={box} className="relative md:w-auto">
       <button type="button" onClick={toggleOpen} aria-expanded={open}
         className={asLink
-          ? 'cursor-pointer border-0 bg-transparent p-0 py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
+          ? 'inline-flex items-center gap-1.5 cursor-pointer border-0 bg-transparent p-0 py-1 text-[14px] text-[#0F1A15] transition-colors duration-[120ms] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
           : `flex ${compact ? 'h-10 px-4 text-[14px]' : 'min-h-[54px] w-full px-4 text-[15px]'} cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-pressed)] transition-colors duration-[120ms] hover:bg-[var(--color-primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]`}>
-        {!asLink && <ListPlus size={18} strokeWidth={2} aria-hidden />} {c.button}
+        <ListPlus size={asLink ? 16 : 18} strokeWidth={asLink ? 1.7 : 2} aria-hidden /> {c.button}
       </button>
       {open && (
         <>

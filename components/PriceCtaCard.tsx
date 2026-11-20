@@ -172,7 +172,7 @@ export function PriceCtaCard({
   bar?: boolean
   links?: ReactNode
   /** Только цена и «обновлена …» — для формы записи (LeadHeroCard) и нижней кнопки на телефоне. */
-  compact?: 'lg' | 'sm' | null
+  compact?: 'lg' | 'sm' | 'updated' | null
   /** Полоса без цены и кнопки — их показывает форма записи на созвон (владелец 20.11.2026). */
   hideMain?: boolean
 }) {
@@ -203,13 +203,11 @@ export function PriceCtaCard({
   // Вариант A (владелец 19.11.2026): полоса под главным фото — цена и «обновлена»,
   // за м² и рассрочка столбиками «значение / подпись», справа ссылки и кнопка.
   if (compact) {
+    if (compact === 'updated') return updated ? <span className="text-[12px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</span> : null
     return compact === 'sm' ? (
       <span className="text-[18px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
     ) : (
-      <span className="flex flex-col gap-1">
-        <span className="text-[32px] font-semibold leading-none tracking-[-0.03em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
-        {updated && <span className="text-[13px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</span>}
-      </span>
+      <span className="text-[32px] font-semibold leading-none tracking-[-0.03em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
     )
   }
 
