@@ -14,6 +14,8 @@ import { createPortal } from 'react-dom'
 import { X, Send, MessageCircle, MessagesSquare } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { reportLeadFormEvent } from '@/lib/contact-click'
+import { PhoneField, phoneE164, defaultCountry, ipCountry } from '@/components/PhoneField'
+import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/min'
 
 export type LeadChannel = 'telegram' | 'whatsapp' | 'other'
 
@@ -109,6 +111,8 @@ export function ContactLeadDialog({
   const c = pickCopy(COPY, lang)
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
+  // WhatsApp — номер с кодом страны, как в Telegram (владелец 20.11.2026).
+  const [wa, setWa] = useState<{ country: CountryCode; national: string }>({ country: 'ID', national: '' })
   const [messenger, setMessenger] = useState<OtherMessenger>(initialMessenger)
   const [website, setWebsite] = useState('') // honeypot
   const [error, setError] = useState<string | null>(null)
@@ -123,6 +127,12 @@ export function ContactLeadDialog({
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') as
         { name?: string; phone?: string; telegram?: string; other?: string } | null
+      const p = saved?.phone ? parsePhoneNumberFromString(saved.phone) : undefined
+      if (p?.country) setWa({ country: p.country, national: p.formatNational() })
+      else {
+        setWa({ country: defaultCountry(lang), national: '' })
+        void ipCountry().then(cc => { if (cc) setWa(v => (v.national ? v : { ...v, country: cc })) })
+      }
       if (saved) {
         setName(saved.name ?? '')
         setContact((channel === 'telegram' ? saved.telegram || saved.phone
@@ -139,7 +149,7 @@ export function ContactLeadDialog({
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
     }
-  }, [open, channel, initialMessenger, onClose])
+  }, [open, channel, initialMessenger, onClose, lang])
 
   if (!open || typeof document === 'undefined') return null
 
@@ -155,8 +165,9 @@ export function ContactLeadDialog({
       if (raw.length < 3) { setError(c.errOther); return }
       other = raw
     } else if (channel === 'whatsapp') {
-      if (!isPhone(raw)) { setError(c.errPhone); return }
-      phone = raw
+      const e164 = phoneE164(wa.country, wa.national)
+      if (!e164) { setError(c.errPhone); return }
+      phone = e164
     } else if (isPhone(raw)) {
       phone = raw
     } else {
@@ -277,19 +288,21 @@ export function ContactLeadDialog({
             <span className="mb-2 block text-[14px] font-medium text-[var(--color-text)]">
               {channel === 'telegram' ? c.tg : channel === 'other' ? c.other(messenger) : c.phone}
             </span>
-            <input
+            {channel === 'whatsapp' ? (
+              <PhoneField id="lead-dialog-wa" lang={lang} variant="box" value={wa} onChange={v => { setWa(v); setError(null) }} invalid={!!error} placeholder={c.phone} />
+            ) : <input
               className={inputCls}
               value={contact}
               onChange={e => { setContact(e.target.value); setError(null) }}
               placeholder={channel === 'telegram' ? c.tgPh : channel === 'other' ? c.otherPh : '+62 812 3456 7890'}
-              type={channel === 'whatsapp' ? 'tel' : 'text'}
-              inputMode={channel === 'whatsapp' ? 'tel' : 'text'}
-              autoComplete={channel === 'whatsapp' ? 'tel' : 'off'}
+              type="text"
+              inputMode="text"
+              autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
               maxLength={60}
-            />
+            />}
           </label>
           {/* honeypot */}
           <input

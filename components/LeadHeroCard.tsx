@@ -6,6 +6,8 @@ import { Send, MessageCircle, Check } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { ContactLeadDialog, type LeadChannel } from '@/components/ContactLeadDialog'
 import { reportLeadFormEvent } from '@/lib/contact-click'
+import { PhoneField, phoneE164, defaultCountry, ipCountry } from '@/components/PhoneField'
+import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/min'
 
 // Запись на созвон с менеджером застройщика — вверху страницы объекта
 // (владелец 20.11.2026, макет HeroA «Журнал»). Заявка уходит владельцу в бота
@@ -13,16 +15,16 @@ import { reportLeadFormEvent } from '@/lib/contact-click'
 // остаётся информационным и сделок не ведёт.
 
 const COPY = {
-  ru: { price: 'Цена', cap: 'Созвон с застройщиком · бесплатно', tabs: ['Созвон', 'Перезвоните мне', 'Написать'], today: 'сегодня', bali: 'время Бали', yours: (t: string) => `у вас ${t}`, ph: 'Номер или ник в Telegram', book: 'Записаться на созвон', callback: 'Жду звонка', callbackLead: 'Оставьте номер — менеджер застройщика позвонит или напишет.', writeLead: 'Напишите менеджеру застройщика сами — откроется короткая форма.', note: 'Менеджер застройщика подтвердит время. Balinsky в сделке не участвует.', doneT: 'Заявка отправлена', done: (s: string | null) => s ? `Менеджер застройщика напишет вам, чтобы подтвердить созвон: ${s}.` : 'Менеджер застройщика свяжется с вами в рабочее время Бали.', again: 'Изменить', err: 'Нужен номер с кодом страны (+7…, +62…) или ник вида @username', fail: 'Не отправилось. Попробуйте ещё раз или напишите в Telegram.', sending: 'Отправляем…', jump: 'Записаться на созвон', free: 'созвон бесплатно' },
-  en: { price: 'Price', cap: 'Call with the developer · free', tabs: ['Call', 'Call me back', 'Message'], today: 'today', bali: 'Bali time', yours: (t: string) => `${t} your time`, ph: 'Phone or Telegram @username', book: 'Book a call', callback: 'Call me back', callbackLead: 'Leave your number — the developer’s manager will call or message you.', writeLead: 'Message the developer’s manager yourself — a short form opens.', note: 'The developer’s manager confirms the time. Balinsky takes no part in the deal.', doneT: 'Request sent', done: (s: string | null) => s ? `The developer’s manager will message you to confirm the call: ${s}.` : 'The developer’s manager will contact you during Bali working hours.', again: 'Change', err: 'Enter a number with country code or a @username', fail: 'Not sent. Try again or message on Telegram.', sending: 'Sending…', jump: 'Book a call', free: 'free call' },
-  id: { price: 'Harga', cap: 'Panggilan dengan pengembang · gratis', tabs: ['Panggilan', 'Telepon saya', 'Kirim pesan'], today: 'hari ini', bali: 'waktu Bali', yours: (t: string) => `${t} waktu Anda`, ph: 'Nomor atau @username Telegram', book: 'Jadwalkan panggilan', callback: 'Telepon saya', callbackLead: 'Tinggalkan nomor — manajer pengembang akan menelepon atau mengirim pesan.', writeLead: 'Kirim pesan sendiri ke manajer pengembang — formulir singkat akan terbuka.', note: 'Manajer pengembang akan mengonfirmasi waktunya. Balinsky tidak terlibat dalam transaksi.', doneT: 'Permintaan terkirim', done: (s: string | null) => s ? `Manajer pengembang akan menghubungi Anda untuk konfirmasi: ${s}.` : 'Manajer pengembang akan menghubungi Anda pada jam kerja Bali.', again: 'Ubah', err: 'Masukkan nomor dengan kode negara atau @username', fail: 'Gagal terkirim. Coba lagi atau kirim pesan di Telegram.', sending: 'Mengirim…', jump: 'Jadwalkan panggilan', free: 'panggilan gratis' },
-  fr: { price: 'Prix', cap: 'Appel avec le promoteur · gratuit', tabs: ['Appel', 'Rappelez-moi', 'Écrire'], today: 'auj.', bali: 'heure de Bali', yours: (t: string) => `${t} chez vous`, ph: 'Téléphone ou @pseudo Telegram', book: 'Réserver un appel', callback: 'Rappelez-moi', callbackLead: 'Laissez votre numéro — le responsable du promoteur vous appellera ou vous écrira.', writeLead: 'Écrivez vous-même au responsable — un court formulaire s’ouvre.', note: 'Le responsable du promoteur confirme l’heure. Balinsky ne participe pas à la transaction.', doneT: 'Demande envoyée', done: (s: string | null) => s ? `Le responsable du promoteur vous écrira pour confirmer l’appel : ${s}.` : 'Le responsable du promoteur vous contactera aux heures de bureau de Bali.', again: 'Modifier', err: 'Numéro avec indicatif ou @pseudo', fail: 'Échec de l’envoi. Réessayez ou écrivez sur Telegram.', sending: 'Envoi…', jump: 'Réserver un appel', free: 'appel gratuit' },
-  de: { price: 'Preis', cap: 'Gespräch mit dem Bauträger · kostenlos', tabs: ['Gespräch', 'Rückruf', 'Schreiben'], today: 'heute', bali: 'Bali-Zeit', yours: (t: string) => `${t} bei Ihnen`, ph: 'Telefon oder Telegram-@Name', book: 'Gespräch buchen', callback: 'Rückruf anfordern', callbackLead: 'Nummer hinterlassen — der Ansprechpartner des Bauträgers ruft an oder schreibt.', writeLead: 'Schreiben Sie dem Ansprechpartner selbst — ein kurzes Formular öffnet sich.', note: 'Der Ansprechpartner des Bauträgers bestätigt die Zeit. Balinsky ist am Geschäft nicht beteiligt.', doneT: 'Anfrage gesendet', done: (s: string | null) => s ? `Der Ansprechpartner meldet sich zur Bestätigung: ${s}.` : 'Der Ansprechpartner meldet sich während der Geschäftszeiten auf Bali.', again: 'Ändern', err: 'Nummer mit Ländervorwahl oder @Name', fail: 'Nicht gesendet. Erneut versuchen oder per Telegram schreiben.', sending: 'Senden…', jump: 'Gespräch buchen', free: 'kostenloses Gespräch' },
-  zh: { price: '价格', cap: '与开发商通话 · 免费', tabs: ['预约通话', '请回电', '留言'], today: '今天', bali: '巴厘岛时间', yours: (t: string) => `您的时间 ${t}`, ph: '电话或 Telegram 用户名', book: '预约通话', callback: '请回电', callbackLead: '留下号码，开发商经理会致电或发消息。', writeLead: '直接给开发商经理留言，将打开简短表单。', note: '开发商经理会确认时间。Balinsky 不参与交易。', doneT: '已发送', done: (s: string | null) => s ? `开发商经理会联系您确认通话：${s}。` : '开发商经理会在巴厘岛工作时间联系您。', again: '修改', err: '请输入带国家代码的号码或 @用户名', fail: '发送失败，请重试或通过 Telegram 联系。', sending: '发送中…', jump: '预约通话', free: '免费通话' },
-  nl: { price: 'Prijs', cap: 'Gesprek met de ontwikkelaar · gratis', tabs: ['Gesprek', 'Bel me terug', 'Bericht'], today: 'vandaag', bali: 'Bali-tijd', yours: (t: string) => `${t} bij u`, ph: 'Telefoon of Telegram-@naam', book: 'Gesprek plannen', callback: 'Bel me terug', callbackLead: 'Laat uw nummer achter — de manager van de ontwikkelaar belt of stuurt een bericht.', writeLead: 'Stuur de manager zelf een bericht — er opent een kort formulier.', note: 'De manager van de ontwikkelaar bevestigt de tijd. Balinsky neemt geen deel aan de deal.', doneT: 'Aanvraag verstuurd', done: (s: string | null) => s ? `De manager neemt contact op om het gesprek te bevestigen: ${s}.` : 'De manager neemt contact op tijdens Bali-kantooruren.', again: 'Wijzigen', err: 'Nummer met landcode of @naam', fail: 'Niet verstuurd. Probeer opnieuw of stuur een bericht via Telegram.', sending: 'Versturen…', jump: 'Gesprek plannen', free: 'gratis gesprek' },
-  ban: { price: 'Aji', cap: 'Telepon sareng pengembang · gratis', tabs: ['Telepon', 'Telepon tiang', 'Pesan'], today: 'dina mangkin', bali: 'galah Bali', yours: (t: string) => `${t} galah ragane`, ph: 'Nomor utawi @username Telegram', book: 'Jadwalang telepon', callback: 'Telepon tiang', callbackLead: 'Tinggalang nomor — manajer pengembang jagi nelepon utawi ngirim pesan.', writeLead: 'Kirim pesan ring manajer pengembang — formulir cutet jagi kabuka.', note: 'Manajer pengembang jagi ngonfirmasi galah. Balinsky nenten ngiring ring transaksi.', doneT: 'Sampun kakirim', done: (s: string | null) => s ? `Manajer pengembang jagi ngabarin ragane: ${s}.` : 'Manajer pengembang jagi ngabarin ring galah makarya Bali.', again: 'Uah', err: 'Nomor sareng kode negara utawi @username', fail: 'Nenten kakirim. Cobak malih.', sending: 'Ngirim…', jump: 'Jadwalang telepon', free: 'telepon gratis' },
-  pl: { price: 'Cena', cap: 'Rozmowa z deweloperem · bezpłatnie', tabs: ['Rozmowa', 'Oddzwońcie', 'Napisz'], today: 'dziś', bali: 'czas Bali', yours: (t: string) => `${t} u ciebie`, ph: 'Telefon lub @nazwa w Telegramie', book: 'Umów rozmowę', callback: 'Czekam na telefon', callbackLead: 'Zostaw numer — menedżer dewelopera zadzwoni lub napisze.', writeLead: 'Napisz do menedżera sam — otworzy się krótki formularz.', note: 'Menedżer dewelopera potwierdzi termin. Balinsky nie uczestniczy w transakcji.', doneT: 'Wysłano', done: (s: string | null) => s ? `Menedżer dewelopera napisze, aby potwierdzić rozmowę: ${s}.` : 'Menedżer dewelopera skontaktuje się w godzinach pracy na Bali.', again: 'Zmień', err: 'Numer z kodem kraju lub @nazwa', fail: 'Nie wysłano. Spróbuj ponownie lub napisz w Telegramie.', sending: 'Wysyłanie…', jump: 'Umów rozmowę', free: 'rozmowa bezpłatna' },
-  uk: { price: 'Ціна', cap: 'Дзвінок із забудовником · безкоштовно', tabs: ['Дзвінок', 'Передзвоніть', 'Написати'], today: 'сьогодні', bali: 'час Балі', yours: (t: string) => `у вас ${t}`, ph: 'Номер або нік у Telegram', book: 'Записатися на дзвінок', callback: 'Чекаю дзвінка', callbackLead: 'Залиште номер — менеджер забудовника зателефонує або напише.', writeLead: 'Напишіть менеджеру забудовника самі — відкриється коротка форма.', note: 'Менеджер забудовника підтвердить час. Balinsky в угоді не бере участі.', doneT: 'Заявку надіслано', done: (s: string | null) => s ? `Менеджер забудовника напише вам, щоб підтвердити дзвінок: ${s}.` : 'Менеджер забудовника зв’яжеться з вами в робочий час Балі.', again: 'Змінити', err: 'Потрібен номер із кодом країни або нік @username', fail: 'Не надіслано. Спробуйте ще раз або напишіть у Telegram.', sending: 'Надсилаємо…', jump: 'Записатися на дзвінок', free: 'дзвінок безкоштовно' },
+  ru: { price: 'Цена', cap: 'Созвон с застройщиком · бесплатно', tabs: ['Созвон', 'Перезвоните мне', 'Написать'], today: 'сегодня', bali: 'время Бали', yours: (t: string) => `у вас ${t}`, ph: 'Номер телефона', book: 'Записаться на созвон', callback: 'Жду звонка', callbackLead: 'Оставьте номер — менеджер застройщика позвонит или напишет.', writeLead: 'Напишите менеджеру застройщика сами — откроется короткая форма.', note: 'Менеджер застройщика подтвердит время. Balinsky в сделке не участвует.', doneT: 'Заявка отправлена', done: (s: string | null) => s ? `Менеджер застройщика напишет вам, чтобы подтвердить созвон: ${s}.` : 'Менеджер застройщика свяжется с вами в рабочее время Бали.', again: 'Изменить', err: 'Проверьте номер — для этой страны он неполный или неверный', search: 'Поиск страны', fail: 'Не отправилось. Попробуйте ещё раз или напишите в Telegram.', sending: 'Отправляем…', jump: 'Записаться на созвон', free: 'созвон бесплатно' },
+  en: { price: 'Price', cap: 'Call with the developer · free', tabs: ['Call', 'Call me back', 'Message'], today: 'today', bali: 'Bali time', yours: (t: string) => `${t} your time`, ph: 'Phone number', book: 'Book a call', callback: 'Call me back', callbackLead: 'Leave your number — the developer’s manager will call or message you.', writeLead: 'Message the developer’s manager yourself — a short form opens.', note: 'The developer’s manager confirms the time. Balinsky takes no part in the deal.', doneT: 'Request sent', done: (s: string | null) => s ? `The developer’s manager will message you to confirm the call: ${s}.` : 'The developer’s manager will contact you during Bali working hours.', again: 'Change', err: 'Check the number — it looks incomplete or wrong for this country', search: 'Search country', fail: 'Not sent. Try again or message on Telegram.', sending: 'Sending…', jump: 'Book a call', free: 'free call' },
+  id: { price: 'Harga', cap: 'Panggilan dengan pengembang · gratis', tabs: ['Panggilan', 'Telepon saya', 'Kirim pesan'], today: 'hari ini', bali: 'waktu Bali', yours: (t: string) => `${t} waktu Anda`, ph: 'Nomor telepon', book: 'Jadwalkan panggilan', callback: 'Telepon saya', callbackLead: 'Tinggalkan nomor — manajer pengembang akan menelepon atau mengirim pesan.', writeLead: 'Kirim pesan sendiri ke manajer pengembang — formulir singkat akan terbuka.', note: 'Manajer pengembang akan mengonfirmasi waktunya. Balinsky tidak terlibat dalam transaksi.', doneT: 'Permintaan terkirim', done: (s: string | null) => s ? `Manajer pengembang akan menghubungi Anda untuk konfirmasi: ${s}.` : 'Manajer pengembang akan menghubungi Anda pada jam kerja Bali.', again: 'Ubah', err: 'Periksa nomornya — tidak lengkap atau salah untuk negara ini', search: 'Cari negara', fail: 'Gagal terkirim. Coba lagi atau kirim pesan di Telegram.', sending: 'Mengirim…', jump: 'Jadwalkan panggilan', free: 'panggilan gratis' },
+  fr: { price: 'Prix', cap: 'Appel avec le promoteur · gratuit', tabs: ['Appel', 'Rappelez-moi', 'Écrire'], today: 'auj.', bali: 'heure de Bali', yours: (t: string) => `${t} chez vous`, ph: 'Numéro de téléphone', book: 'Réserver un appel', callback: 'Rappelez-moi', callbackLead: 'Laissez votre numéro — le responsable du promoteur vous appellera ou vous écrira.', writeLead: 'Écrivez vous-même au responsable — un court formulaire s’ouvre.', note: 'Le responsable du promoteur confirme l’heure. Balinsky ne participe pas à la transaction.', doneT: 'Demande envoyée', done: (s: string | null) => s ? `Le responsable du promoteur vous écrira pour confirmer l’appel : ${s}.` : 'Le responsable du promoteur vous contactera aux heures de bureau de Bali.', again: 'Modifier', err: 'Vérifiez le numéro — incomplet ou incorrect pour ce pays', search: 'Rechercher un pays', fail: 'Échec de l’envoi. Réessayez ou écrivez sur Telegram.', sending: 'Envoi…', jump: 'Réserver un appel', free: 'appel gratuit' },
+  de: { price: 'Preis', cap: 'Gespräch mit dem Bauträger · kostenlos', tabs: ['Gespräch', 'Rückruf', 'Schreiben'], today: 'heute', bali: 'Bali-Zeit', yours: (t: string) => `${t} bei Ihnen`, ph: 'Telefonnummer', book: 'Gespräch buchen', callback: 'Rückruf anfordern', callbackLead: 'Nummer hinterlassen — der Ansprechpartner des Bauträgers ruft an oder schreibt.', writeLead: 'Schreiben Sie dem Ansprechpartner selbst — ein kurzes Formular öffnet sich.', note: 'Der Ansprechpartner des Bauträgers bestätigt die Zeit. Balinsky ist am Geschäft nicht beteiligt.', doneT: 'Anfrage gesendet', done: (s: string | null) => s ? `Der Ansprechpartner meldet sich zur Bestätigung: ${s}.` : 'Der Ansprechpartner meldet sich während der Geschäftszeiten auf Bali.', again: 'Ändern', err: 'Bitte Nummer prüfen — für dieses Land unvollständig oder falsch', search: 'Land suchen', fail: 'Nicht gesendet. Erneut versuchen oder per Telegram schreiben.', sending: 'Senden…', jump: 'Gespräch buchen', free: 'kostenloses Gespräch' },
+  zh: { price: '价格', cap: '与开发商通话 · 免费', tabs: ['预约通话', '请回电', '留言'], today: '今天', bali: '巴厘岛时间', yours: (t: string) => `您的时间 ${t}`, ph: '电话号码', book: '预约通话', callback: '请回电', callbackLead: '留下号码，开发商经理会致电或发消息。', writeLead: '直接给开发商经理留言，将打开简短表单。', note: '开发商经理会确认时间。Balinsky 不参与交易。', doneT: '已发送', done: (s: string | null) => s ? `开发商经理会联系您确认通话：${s}。` : '开发商经理会在巴厘岛工作时间联系您。', again: '修改', err: '请检查号码：对该国家/地区不完整或不正确', search: '搜索国家/地区', fail: '发送失败，请重试或通过 Telegram 联系。', sending: '发送中…', jump: '预约通话', free: '免费通话' },
+  nl: { price: 'Prijs', cap: 'Gesprek met de ontwikkelaar · gratis', tabs: ['Gesprek', 'Bel me terug', 'Bericht'], today: 'vandaag', bali: 'Bali-tijd', yours: (t: string) => `${t} bij u`, ph: 'Telefoonnummer', book: 'Gesprek plannen', callback: 'Bel me terug', callbackLead: 'Laat uw nummer achter — de manager van de ontwikkelaar belt of stuurt een bericht.', writeLead: 'Stuur de manager zelf een bericht — er opent een kort formulier.', note: 'De manager van de ontwikkelaar bevestigt de tijd. Balinsky neemt geen deel aan de deal.', doneT: 'Aanvraag verstuurd', done: (s: string | null) => s ? `De manager neemt contact op om het gesprek te bevestigen: ${s}.` : 'De manager neemt contact op tijdens Bali-kantooruren.', again: 'Wijzigen', err: 'Controleer het nummer — onvolledig of onjuist voor dit land', search: 'Land zoeken', fail: 'Niet verstuurd. Probeer opnieuw of stuur een bericht via Telegram.', sending: 'Versturen…', jump: 'Gesprek plannen', free: 'gratis gesprek' },
+  ban: { price: 'Aji', cap: 'Telepon sareng pengembang · gratis', tabs: ['Telepon', 'Telepon tiang', 'Pesan'], today: 'dina mangkin', bali: 'galah Bali', yours: (t: string) => `${t} galah ragane`, ph: 'Nomor telepon', book: 'Jadwalang telepon', callback: 'Telepon tiang', callbackLead: 'Tinggalang nomor — manajer pengembang jagi nelepon utawi ngirim pesan.', writeLead: 'Kirim pesan ring manajer pengembang — formulir cutet jagi kabuka.', note: 'Manajer pengembang jagi ngonfirmasi galah. Balinsky nenten ngiring ring transaksi.', doneT: 'Sampun kakirim', done: (s: string | null) => s ? `Manajer pengembang jagi ngabarin ragane: ${s}.` : 'Manajer pengembang jagi ngabarin ring galah makarya Bali.', again: 'Uah', err: 'Cingakin nomorne — nenten jangkep utawi iwang', search: 'Rereh negara', fail: 'Nenten kakirim. Cobak malih.', sending: 'Ngirim…', jump: 'Jadwalang telepon', free: 'telepon gratis' },
+  pl: { price: 'Cena', cap: 'Rozmowa z deweloperem · bezpłatnie', tabs: ['Rozmowa', 'Oddzwońcie', 'Napisz'], today: 'dziś', bali: 'czas Bali', yours: (t: string) => `${t} u ciebie`, ph: 'Numer telefonu', book: 'Umów rozmowę', callback: 'Czekam na telefon', callbackLead: 'Zostaw numer — menedżer dewelopera zadzwoni lub napisze.', writeLead: 'Napisz do menedżera sam — otworzy się krótki formularz.', note: 'Menedżer dewelopera potwierdzi termin. Balinsky nie uczestniczy w transakcji.', doneT: 'Wysłano', done: (s: string | null) => s ? `Menedżer dewelopera napisze, aby potwierdzić rozmowę: ${s}.` : 'Menedżer dewelopera skontaktuje się w godzinach pracy na Bali.', again: 'Zmień', err: 'Sprawdź numer — niepełny lub błędny dla tego kraju', search: 'Szukaj kraju', fail: 'Nie wysłano. Spróbuj ponownie lub napisz w Telegramie.', sending: 'Wysyłanie…', jump: 'Umów rozmowę', free: 'rozmowa bezpłatna' },
+  uk: { price: 'Ціна', cap: 'Дзвінок із забудовником · безкоштовно', tabs: ['Дзвінок', 'Передзвоніть', 'Написати'], today: 'сьогодні', bali: 'час Балі', yours: (t: string) => `у вас ${t}`, ph: 'Номер телефону', book: 'Записатися на дзвінок', callback: 'Чекаю дзвінка', callbackLead: 'Залиште номер — менеджер забудовника зателефонує або напише.', writeLead: 'Напишіть менеджеру забудовника самі — відкриється коротка форма.', note: 'Менеджер забудовника підтвердить час. Balinsky в угоді не бере участі.', doneT: 'Заявку надіслано', done: (s: string | null) => s ? `Менеджер забудовника напише вам, щоб підтвердити дзвінок: ${s}.` : 'Менеджер забудовника зв’яжеться з вами в робочий час Балі.', again: 'Змінити', err: 'Перевірте номер — для цієї країни він неповний або неправильний', search: 'Пошук країни', fail: 'Не надіслано. Спробуйте ще раз або напишіть у Telegram.', sending: 'Надсилаємо…', jump: 'Записатися на дзвінок', free: 'дзвінок безкоштовно' },
 } as const
 
 const LOCALE: Record<string, string> = { ru: 'ru-RU', en: 'en-GB', id: 'id-ID', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', nl: 'nl-NL', ban: 'id-ID', pl: 'pl-PL', uk: 'uk-UA' }
@@ -31,15 +33,6 @@ const HOURS = [10, 11, 14, 16]
 const BALI_MS = 8 * 3600_000
 const STORE_KEY = 'bx_lead_contact'
 
-function isPhone(s: string) {
-  if (!/^\+?[\d\s()\-.]+$/.test(s)) return false
-  const d = s.replace(/\D/g, '')
-  return d.length >= 8 && d.length <= 15
-}
-function tgHandle(s: string) {
-  const m = s.trim().match(/^(?:@|(?:https?:\/\/)?t\.me\/)?([a-zA-Z][a-zA-Z0-9_]{4,31})$/)
-  return m ? `@${m[1]}` : null
-}
 // Полночь дня по Бали, в которой лежит момент t (как UTC-метка).
 const baliDayStart = (t: number) => Math.floor((t + BALI_MS) / 86400_000) * 86400_000 - BALI_MS
 const slotAt = (day: number, h: number) => day + h * 3600_000
@@ -66,7 +59,7 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
   const [now, setNow] = useState<number | null>(null)
   const [day, setDay] = useState<number | null>(null)
   const [hour, setHour] = useState<number | null>(null)
-  const [contact, setContact] = useState('')
+  const [phone, setPhone] = useState<{ country: CountryCode; national: string }>({ country: 'ID', national: '' })
   const [err, setErr] = useState<string | null>(null)
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle')
   const [sentSlot, setSentSlot] = useState<string | null>(null)
@@ -75,10 +68,13 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
   useEffect(() => {
     const t = Date.now()
     setNow(t)
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') as { phone?: string; telegram?: string } | null
-      if (saved) setContact(saved.telegram || saved.phone || '')
-    } catch { /* приватный режим */ }
+    let saved: { phone?: string } | null = null
+    try { saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') } catch { /* приватный режим */ }
+    const p = saved?.phone ? parsePhoneNumberFromString(saved.phone) : undefined
+    if (p?.country) { setPhone({ country: p.country, national: p.formatNational() }); return }
+    setPhone(v => ({ ...v, country: defaultCountry(lang) }))
+    void ipCountry().then(cc => { if (cc) setPhone(v => (v.national ? v : { ...v, country: cc })) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const days = useMemo(() => {
@@ -110,9 +106,8 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    const raw = contact.trim()
-    const tg = isPhone(raw) ? null : tgHandle(raw)
-    if (!isPhone(raw) && !tg) { setErr(c.err); return }
+    const e164 = phoneE164(phone.country, phone.national)
+    if (!e164) { setErr(c.err); return }
     setErr(null)
     const slot = tab === 0 && selDay != null && selHour != null ? `${fmtDay(selDay).long}, ${String(selHour).padStart(2, '0')}:00 (${c.bali})` : null
     setState('sending')
@@ -120,7 +115,7 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
     try {
       const prev = JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}') as Record<string, string>
       name = prev.name ?? ''
-      localStorage.setItem(STORE_KEY, JSON.stringify({ ...prev, ...(tg ? { telegram: tg } : { phone: raw }) }))
+      localStorage.setItem(STORE_KEY, JSON.stringify({ ...prev, phone: e164 }))
     } catch { /* не критично */ }
     try {
       const res = await fetch('/api/contact', {
@@ -128,9 +123,7 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name || undefined,
-          phone: tg ? undefined : raw,
-          telegram: tg ?? undefined,
-          channel: tg ? 'telegram' : undefined,
+          phone: e164,
           slot: slot ?? undefined,
           request: tab === 0 ? 'call' : 'callback',
           managerName: managerName ?? undefined,
@@ -141,7 +134,7 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
         }),
       })
       if (!res.ok) throw new Error(String(res.status))
-      reportLeadFormEvent('lead', tg ? 'telegram' : 'whatsapp', { managerId: managerId ?? undefined, managerName: managerName ?? undefined, developerName })
+      reportLeadFormEvent('lead', 'other', { managerId: managerId ?? undefined, managerName: managerName ?? undefined, developerName })
       setSentSlot(slot)
       setState('done')
     } catch {
@@ -227,8 +220,7 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
             <p className="text-[14px] leading-[1.55] text-[#4A5550]">{c.callbackLead}</p>
           )}
           <label className="sr-only" htmlFor={`${id ?? 'lead'}-contact`}>{c.ph}</label>
-          <input id={`${id ?? 'lead'}-contact`} value={contact} onChange={e => { setContact(e.target.value); setErr(null) }} placeholder={c.ph} inputMode="text" autoComplete="tel"
-            aria-invalid={!!err} className={`h-12 w-full border-0 border-b-[1.5px] bg-transparent px-0 text-[17px] text-[#0F1A15] outline-none placeholder:text-[#9AA39E] focus:border-[var(--color-primary)] ${err ? 'border-[#B42318]' : 'border-[#0F1A15]'}`} />
+          <PhoneField id={`${id ?? 'lead'}-contact`} lang={lang} value={phone} onChange={v => { setPhone(v); setErr(null) }} invalid={!!err} placeholder={c.ph} search={c.search} />
           {err && <span className="-mt-1 text-[13px] text-[#B42318]" role="alert">{err}</span>}
           <button type="submit" disabled={state === 'sending'}
             className="mt-1 inline-flex h-[52px] w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--color-primary)] text-[16px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-70">
