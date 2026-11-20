@@ -13,7 +13,7 @@ import { unstable_cache } from 'next/cache'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import {
   BedDouble, Square, Calendar, FileCheck2, Lock, MapPin, Plane,
-  ChevronRight, Layers, HardHat, Star,
+  Layers,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { ExpandableText } from '@/components/ExpandableText'
@@ -21,7 +21,6 @@ import { PageContainer } from '@/components/PageContainer'
 import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { ZoningMap } from '@/components/ZoningMap'
 import { ZoningCard } from '@/components/ZoningCard'
-import { KeyFactsInline } from '@/components/KeyFactsInline'
 import { loadLandmarks } from '@/lib/landmarks'
 import { LandmarksList } from '@/components/NearbyHighlights'
 import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows } from '@/lib/rdtr-zones'
@@ -46,7 +45,9 @@ const LandProfileBlock = dynamic(
   () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
 )
 import { LazyMount } from '@/components/LazyMount'
-import { ManagerCard } from '@/components/ManagerCard'
+import { ManagerContactButtons } from '@/components/ManagerContactButtons'
+import { VillaActions } from '@/components/VillaActions'
+import { VillaChapter } from '@/components/VillaChapter'
 import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
 import { LocationView } from '@/components/LocationView'
 import { managerLanguagesEn } from '@/lib/manager-lang'
@@ -65,7 +66,6 @@ import { ListingVerdict, SafetyCards, SafetyChecks, DemandSummary, DemandBandsPd
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
 import type { PdfRequest } from '@/lib/pdf-request'
 import { anonListingTitle } from '@/lib/listing-title'
-import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { findActiveReservation } from '@/lib/reservations'
@@ -83,7 +83,6 @@ import { normalizeSlug } from '@/lib/slug-normalize'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
 import { districtRu, districtLatin } from '@/lib/district-ru'
-import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
 import { loadListingVision, altFor } from '@/lib/listing-features'
@@ -1272,6 +1271,12 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     <>
         <ProPendingNote lang={lang} />
         <div className="bx-auth-block">
+        {/* Заголовок главы «02 Аналитика» — как у виллы; на странице ЖК его нет. */}
+        {!analyticsOnly && (
+          <div className="mb-8 md:mb-10">
+            <VillaChapter id="analitika" no="02" eyebrow={pickCopy({ ru: 'Аналитика', en: 'Analytics', id: 'Analitik', fr: 'Analyse', de: 'Analyse', zh: '分析', nl: 'Analyse', ban: 'Analitik', pl: 'Analityka', uk: 'Аналітика' }, lang)} journal>{null}</VillaChapter>
+          </div>
+        )}
         {analyticsOnly ? liveVerdict : <GoalSwitch lang={lang}
           income={
             <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={null}
@@ -1388,12 +1393,235 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     name: lang === 'ru' ? m0.name : (m0.nameEn || (hasCyrillic(m0.name) ? translitPreserveCase(m0.name) : m0.name)),
     langs: lang === 'ru' ? m0.languages : managerLanguagesEn(m0.languages, m0.languagesEn),
   } : null
-  const leadPrice = (size: 'lg' | 'sm') => priceNum != null && <PriceCtaCard compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
+  const K = (ru: string, en: string) => (lang === 'ru' ? ru : en)
+  // Главы страницы — те же, что у виллы (макет «Журнал», 19.11.2026).
+  const CH = pickCopy({
+    ru: { obekt: 'Объект', analitika: 'Аналитика', zastroyshchik: 'Застройщик', voprosy: 'Вопросы', others: 'Другие апартаменты', related: 'По теме' },
+    en: { obekt: 'Property', analitika: 'Analytics', zastroyshchik: 'Developer', voprosy: 'FAQ', others: 'Other apartments', related: 'Related' },
+    id: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'FAQ', others: 'Apartemen lain', related: 'Terkait' },
+    fr: { obekt: 'Bien', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'FAQ', others: 'Autres appartements', related: 'À voir aussi' },
+    de: { obekt: 'Objekt', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'FAQ', others: 'Weitere Apartments', related: 'Verwandte Seiten' },
+    zh: { obekt: '房源', analitika: '分析', zastroyshchik: '开发商', voprosy: '常见问题', others: '其他公寓', related: '相关' },
+    nl: { obekt: 'Object', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'FAQ', others: 'Andere appartementen', related: 'Gerelateerd' },
+    ban: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pitaken', others: 'Apartemen lianan', related: 'Terkait' },
+    pl: { obekt: 'Obiekt', analitika: 'Analityka', zastroyshchik: 'Deweloper', voprosy: 'Pytania', others: 'Inne apartamenty', related: 'Powiązane' },
+    uk: { obekt: "Об'єкт", analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Питання', others: 'Інші апартаменти', related: 'За темою' },
+  }, lang)
+  const MGR_ROLE = { ru: 'Менеджер застройщика', en: 'Developer’s manager', id: 'Manajer pengembang', fr: 'Responsable du promoteur', de: 'Ansprechpartner des Bauträgers', zh: '开发商经理', nl: 'Manager van de ontwikkelaar', ban: 'Manajer pengembang', pl: 'Menedżer dewelopera', uk: 'Менеджер забудовника' }
+  const PLAN_LABEL = { ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }
+  // Рассрочка комплекса («Payment plan,%») — как у виллы: «30 / 20 / 50% · на 12 мес.».
+  const paymentPlanText = (() => {
+    const raw = (firstString(aptComplex.data?.['Payment plan,%']) ?? '').replace(/\s+/g, ' ').trim()
+    if (!raw || raw.includes('...')) return null
+    const ru = lang === 'ru' || lang === 'uk'
+    if (/^100\s*%?$/.test(raw)) return ru ? 'нет, 100% сразу' : 'no, 100% upfront'
+    const m = raw.match(/^(.*?)\s*\/\s*(\d+)$/)
+    const parts = (m ? m[1] : raw).split('+').map(x => x.replace(/[^\d.]/g, '')).filter(Boolean)
+    if (parts.length < 2) return null
+    return `${parts.join(' / ')}%${m ? (ru ? ` · на ${m[2]} мес.` : ` · over ${m[2]} mo.`) : ''}`
+  })()
+  const dealRows = () => paymentPlanText ? [{ label: pickCopy(PLAN_LABEL, lang), valueText: paymentPlanText }] : null
+  const leadPrice = (size: 'lg' | 'sm') => priceNum != null && (
+    <PriceCtaCard key={`p-${size}`} compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
+  )
   const leadCard = (id: string, framed: boolean) => (
-    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')}
-      priceNote={priceNum != null && <PriceCtaCard compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
+    <LeadHeroCard key={id} id={id} framed={framed} lang={lang} price={leadPrice('lg')}
+      priceNote={priceNum != null && <PriceCtaCard key="upd" compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
+      priceMeta={priceNum != null && <PriceCtaCard key="meta" compact="meta" priceUsd={priceNum} pricePerSqmUsd={priceM2} presentationButton={null} dealRows={dealRows()} />}
       manager={leadManager} developerName={devName ?? null} managerName={m0?.name ?? null} managerId={m0?.id ?? null} listingTitle={title} />
   )
+
+  const presentationPdf = (variant: 'link' | 'icon') => (
+    <VillaPresentationButton
+      key={variant}
+      variant={variant}
+      lang={lang}
+      villaId={a.airtable_id}
+      slug={slug}
+      kind="apartment"
+      title={title}
+      district={district}
+      photos={photos}
+      priceUsd={priceNum}
+      pricePerM2={priceM2}
+      bedrooms={bedrooms}
+      area={area}
+      land={null}
+      yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
+      lease={lease}
+      permit={permit}
+      lat={lat}
+      lng={lng}
+      seoText={seoText}
+    />
+  )
+  const aptWishlist = {
+    kind: 'apartment' as const, slug, title,
+    photo: photos[0] ?? null,
+    priceUsd: priceNum ?? null,
+    district: district ?? null,
+    bedrooms: bedrooms ?? null,
+    area: area ?? null,
+    floor: floor ?? null,
+    pricePerSqmUsd: priceM2 ?? null,
+    pricePerSqmYearUsd: numberOrNull(d['Цена м² в год']),
+    leaseYears: lease ? Number(lease) || null : null,
+    permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
+    status: status ?? null,
+    claimedYieldPct: (() => {
+      const y = numberOrNull(d['Заявленная доходность'])
+      return y != null ? Math.round(y * 1000) / 10 : null
+    })(),
+    landUse: firstString(d['Назначение земли']) ?? null,
+    developerName: devName,
+    developerCompletedCount: devStats?.ready ?? null,
+    developerInProgressCount: devStats?.inProgress ?? null,
+    airtableId: a.airtable_id,
+  }
+  // Кнопки: сохранить, поделиться, PDF (Pro), сообщить об ошибке — как у виллы.
+  const aptActions = (icons = false) => (
+    <VillaActions key={icons ? 'ai' : 'al'} icons={icons} lang={lang} title={title} item={aptWishlist} proLinks={
+      <span key="pro" className="bx-pro-only">
+        {icons ? presentationPdf('icon') : <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">{presentationPdf('link')}</span>}
+      </span>
+    } />
+  )
+  // Без формы (переуступка или бронь) — цена карточкой, как у виллы.
+  const priceCard = priceNum != null && (
+    <PriceCtaCard
+      journal
+      priceUsd={priceNum}
+      pricePerSqmUsd={priceM2}
+      updatedAt={priceUpdatedAt}
+      managerId={managers[0]?.id ?? null}
+      sellerUrl={sellerUrl}
+      listingKind="apartment"
+      listingId={a.airtable_id}
+      listingSlug={slug}
+      listingTitle={title}
+      reservedUntil={activeReservation?.expires_at ?? null}
+      presentationButton={null}
+      dealRows={dealRows()}
+      links={
+        <div className="bx-pro-only">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:justify-start">
+            <AddToCollection asLink kind="apartment" slug={slug} lang={lang} snapshot={{
+              title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+              district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+              leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+              id: a.airtable_id, land: null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
+            }} />
+            {presentationPdf('link')}
+          </div>
+        </div>
+      }
+    />
+  )
+  const makePriceBar = () => priceNum != null && (
+    <PriceCtaCard
+      journal
+      bar
+      hideMain={leadOn}
+      priceUsd={priceNum}
+      pricePerSqmUsd={priceM2}
+      updatedAt={priceUpdatedAt}
+      managerId={managers[0]?.id ?? null}
+      sellerUrl={sellerUrl}
+      listingKind="apartment"
+      listingId={a.airtable_id}
+      listingSlug={slug}
+      listingTitle={title}
+      reservedUntil={activeReservation?.expires_at ?? null}
+      presentationButton={null}
+      dealRows={dealRows()}
+      links={aptActions()}
+    />
+  )
+
+  // «01 Объект» — крупные цифры с короткой подписью, как у виллы.
+  const built = !!status && /построен|сдан|ready|completed/i.test(status)
+  const leaseUntil = firstString(d['Leasehold до'])
+  const ext = firstString(d['Продление аренды']) ?? firstString(d['Продление'])
+  const baths = numberOrNull(d['Ванные'] ?? d['Санузлы'])
+  const isGround = floor === 'GROUND FLOOR'
+  const yearShort = yearRaw && /^\d{4}$/.test(yearRaw.trim()) ? yearRaw.trim() : null
+  const plotZone = rdtr ? plotLabel(rdtr, lang) : null
+  const objTiles = [
+    area != null && { v: `${Math.round(area)} ${K('м²', 'm²')}`, l: K('площадь апартаментов', 'apartment area') },
+    bedrooms != null && { v: String(bedrooms), l: K(bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален', 'bedrooms') },
+    baths != null && { v: String(baths), l: K(baths === 1 ? 'ванная' : baths < 5 ? 'ванные' : 'ванных', 'bathrooms') },
+    floor && { v: isGround ? c.factGround : floor, l: isGround ? c.factFloor.toLowerCase() : K('этаж', 'floor') },
+    leaseYears != null && { v: K(`${Math.round(leaseYears)} лет`, `${Math.round(leaseYears)} yrs`), l: K(`аренда земли${leaseUntil ? `, до ${leaseUntil.slice(0, 4)}` : ''}${ext ? ' + продление' : ''}`, `land lease${leaseUntil ? `, until ${leaseUntil.slice(0, 4)}` : ''}${ext ? ' + extension' : ''}`) },
+    (built || yearShort) && { v: yearShort ?? '✓', l: built ? K('готовый объект', 'completed') : K('год сдачи', 'completion') },
+    plotZone && { v: plotZone.label.split('·').pop()!.trim(), l: plotZone.label.split('·')[0].trim() },
+  ].filter(Boolean) as { v: string; l: string }[]
+  const vf = visionRaw?.features
+  const OUT: Record<string, [string, string]> = { terrace: ['терраса', 'terrace'], garden: ['сад', 'garden'], rooftop_terrace: ['руфтоп', 'rooftop'], parking: ['парковка', 'parking'], bbq: ['BBQ-зона', 'BBQ area'] }
+  const AMEN: Record<string, [string, string]> = { jacuzzi: ['джакузи', 'jacuzzi'], gym: ['спортзал', 'gym'], coworking: ['коворкинг', 'coworking'] }
+  const comforts = [
+    vf?.pool ? K('бассейн', 'pool') : null,
+    ...(vf?.outdoor ?? []).map(o => OUT[o] ? K(OUT[o][0], OUT[o][1]) : null),
+    ...(vf?.amenities ?? []).map(o => AMEN[o] ? K(AMEN[o][0], AMEN[o][1]) : null),
+  ].filter(Boolean) as string[]
+  const placeNote = firstString(d['Расположение'])
+  const permitText = permitLabel(permit, lang)
+  const airportText = fmtAirportDistance(lat, lng, lang)
+  // Строка ключевых цифр под названием: площадь · спальни · этаж · аренда земли.
+  const keyLine = [
+    area != null ? `${Math.round(area)} ${K('м²', 'm²')}` : null,
+    bedrooms != null ? K(`${bedrooms} ${bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален'}`, `${bedrooms} ${bedrooms === 1 ? 'bedroom' : 'bedrooms'}`) : null,
+    floor ? (isGround ? K('цокольный этаж', 'ground floor') : K(`этаж ${floor}`, `floor ${floor}`)) : null,
+    (() => {
+      const left = leaseYears != null ? Math.round(leaseYears)
+        : leaseUntil && /^\d{4}/.test(leaseUntil) ? Number(leaseUntil.slice(0, 4)) - new Date().getFullYear() : null
+      if (left == null || left <= 0) return null
+      const m10 = left % 10, m100 = left % 100
+      const ru = m10 === 1 && m100 !== 11 ? 'год' : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? 'года' : 'лет'
+      return K(`аренда земли ${left} ${ru}`, `${left}-year land lease`)
+    })(),
+  ].filter(Boolean).join(' · ')
+
+  const hasObjekt = objTiles.length > 0 || !!seoText || !!district || comforts.length > 0 || !!placeNote
+  const objektChapter = () => hasObjekt && (
+          <VillaChapter id="obekt" no="01" eyebrow={CH.obekt} journal>
+            {objTiles.length > 0 && (
+              <div className={`grid grid-cols-2 ${leadOn ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
+                {objTiles.map(k => (
+                  <div key={k.l} className="flex min-w-0 flex-col gap-0.5 border-b border-[#ECEFED] py-[14px] pr-3 md:gap-1 md:py-5 md:pr-6">
+                    <div className="text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] text-[#0F1A15] tabular-nums md:text-[32px]">{k.v}</div>
+                    <div className="text-[13px] text-[#6B7570] md:text-[14px]">{k.l}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {seoText && (
+              <section>
+                <p className="m-0 max-w-[68ch] text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">{seoText.split('\n')[0]}</p>
+                {seoText.includes('\n') && (
+                  <ExpandableText className="max-w-[68ch] mt-2" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
+                    <div className="prose-balinsky whitespace-pre-line text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">
+                      {seoText.split('\n').slice(1).join('\n')}
+                    </div>
+                  </ExpandableText>
+                )}
+              </section>
+            )}
+            {/* Короткие строки: локация, удобства, расположение; у апартаментов ещё
+                разрешения и дорога до аэропорта (были в «Характеристиках»). */}
+            {(district || comforts.length > 0 || placeNote || permitText || airportText) && (
+              <div className="flex max-w-[68ch] flex-col gap-1.5 text-[15px] leading-[1.6] text-[#0F1A15]">
+                {district && <div><span className="text-[#6B7570]">{K('Локация:', 'Location:')}</span> {district}</div>}
+                {comforts.length > 0 && <div><span className="text-[#6B7570]">{K('Удобства:', 'Amenities:')}</span> {comforts.join(', ')} <span className="text-[#6B7570]">{K('(по фото)', '(from photos)')}</span></div>}
+                {placeNote && <div><span className="text-[#6B7570]">{K('Расположение:', 'Setting:')}</span> {placeNote}</div>}
+                {permitText && <div><span className="text-[#6B7570]">{c.factPermits}:</span> {permitText}</div>}
+                {airportText && <div><span className="text-[#6B7570]">{c.factAirport}:</span> {airportText}</div>}
+              </div>
+            )}
+          </VillaChapter>
+        )
+  const hasDevChapter = !!(developer || devName || (parentComplex?.slug && parentComplex.name))
+  const noDev = hasDevChapter ? '03' : null
+  const noFaq = hasDevChapter ? '04' : '03'
 
   return (
     <>
@@ -1401,7 +1629,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
       <PageViewTracker kind="apartment" slug={slug} title={title} airtableId={a.airtable_id} lang={lang} />
       <PageEditButton kind="apartment" id={a.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs currentUrl={`${apartmentsRoot}/o/${slug}`} items={[
+        <Breadcrumbs hideLast currentUrl={`${apartmentsRoot}/o/${slug}`} items={[
           { label: c.home, href: home },
           { label: c.aptCrumb, href: apartmentsRoot },
           // Regency crumb dropped (no page → no `item` → GSC error).
@@ -1411,237 +1639,172 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
           { label: title },
         ]} />
 
-        <section className="mb-6 mt-2">
-          <VillaGallery
-            photos={photos}
-            alts={photoAlts}
-            plans={curated.plans}
-            plan3dUrl={getApartment3DPlanUrl(slug)}
-            videos={aptVideos.map(vd => ({ url: vd.url, name: vd.name }))}
-            tourUrl={aptTourUrl}
-            viewerTabs={aptViewerTabs}
-            title={title}
-            lang={lang}
-            bleed
-            tilesAs="text"
-            ambient={(() => {
-              // Звук под слайд-шоу — как у вилл: у моря волны, в глубине острова джунгли, иначе сад.
-              if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
-              const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
-              if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|убуд|табанан|менгви/i.test(where)) return '/ambient/jungle.mp3'
-              return '/ambient/garden.mp3'
-            })()}
-            wishlistItem={{
-              kind: 'apartment', slug, title,
-              photo: photos[0] ?? null,
-              priceUsd: priceNum ?? null,
-              district: district ?? null,
-              bedrooms: bedrooms ?? null,
-              area: area ?? null,
-              floor: floor ?? null,
-              pricePerSqmUsd: priceM2 ?? null,
-              pricePerSqmYearUsd: numberOrNull(d['Цена м² в год']),
-              leaseYears: lease ? Number(lease) || null : null,
-              permit: permit && permit.toLowerCase() !== 'нет' ? permit : null,
-              status: status ?? null,
-              claimedYieldPct: (() => {
-                const y = numberOrNull(d['Заявленная доходность'])
-                return y != null ? Math.round(y * 1000) / 10 : null
-              })(),
-              landUse: firstString(d['Назначение земли']) ?? null,
-              developerName: devName,
-              developerCompletedCount: devStats?.ready ?? null,
-              developerInProgressCount: devStats?.inProgress ?? null,
-              airtableId: a.airtable_id,
-            }}
-          />
+        {/* Верх — как у виллы (макет «Журнал»): название и строка фактов. */}
+        <section className="pb-5 md:pb-6">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
+              {/* Без «— 62 м² с 1 спальней»: эти цифры стоят строкой ниже. */}
+              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
+            </h1>
+            {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
+          </div>
         </section>
 
-        {leadOn && <LeadStickyBar lang={lang} targetId="zapis" price={leadPrice('sm')} />}
+        <VillaGallery
+          photos={photos}
+          alts={photoAlts}
+          plans={curated.plans}
+          plan3dUrl={getApartment3DPlanUrl(slug)}
+          videos={aptVideos.map(vd => ({ url: vd.url, name: vd.name }))}
+          tourUrl={aptTourUrl}
+          viewerTabs={aptViewerTabs}
+          title={title}
+          lang={lang}
+          bleed
+          tilesAs="text"
+          belowHero={!leadOn && priceNum != null ? <div key="bar" className="hidden lg:block">{makePriceBar()}</div> : null}
+          aside={leadOn ? leadCard('zapis', true) : null}
+          topRight={aptActions(true)}
+          afterTiles={leadOn ? <div key="obj" className="mt-16 lg:mt-20">{objektChapter()}</div> : null}
+          ambient={(() => {
+            // Звук под слайд-шоу — как у вилл: у моря волны, в глубине острова джунгли, иначе сад.
+            if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
+            const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
+            if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|убуд|табанан|менгви/i.test(where)) return '/ambient/jungle.mp3'
+            return '/ambient/garden.mp3'
+          })()}
+        />
 
-        {/* Форма связи справа от описания, едет рядом (владелец 20.11.2026, макет FormA). */}
-        <div className={leadOn ? 'mb-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_392px] lg:items-start lg:gap-16' : 'contents'}>
-        <section className={leadOn ? 'min-w-0' : 'mb-10'}>
-          <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
-            <Link href={apartmentsRoot} className="hover:text-[var(--color-text)]">{c.aptCrumb}</Link>
-            {district && <> · {district}</>}
-          </div>
-          <h1 className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
-            {title}
-          </h1>
-          {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link mb-3 inline-block"><VerifiedYieldBadge lang={lang} /></a>}
-          <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
-            {bedrooms != null && <span>{bedrooms} BR</span>}
-            {area != null && <span>{area} {c.sqm}</span>}
-            {floor && <span>{c.floor}: {floor}</span>}
-            {district && <span>{districtRaw ? geoChainString(districtRaw) : `${district}, ${c.bali}`}</span>}
-            <KeyFactsInline facts={livingFacts} lang={lang} />
-          </div>
-          {priceNum != null && (
-            <PriceCtaCard
-              priceUsd={priceNum}
-              pricePerSqmUsd={priceM2}
-              updatedAt={priceUpdatedAt}
-              managerId={managers[0]?.id ?? null}
-              sellerUrl={sellerUrl}
-              listingKind="apartment"
-              listingId={a.airtable_id}
-              listingSlug={slug}
-              listingTitle={title}
-              reservedUntil={activeReservation?.expires_at ?? null}
-              presentationButton={
-                // PDF-презентация — только для Pro (.bx-pro-only в globals.css).
-                <span className="bx-pro-only">
-                <AddToCollection kind="apartment" slug={slug} lang={lang} snapshot={{
-                  title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-                  district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
-                  leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
-                  id: a.airtable_id, land: null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
-                }} />
-                <VillaPresentationButton
-                  variant="outline"
-                  lang={lang}
-                  villaId={a.airtable_id}
-                  slug={slug}
-                  kind="apartment"
-                  title={title}
-                  district={district}
-                  photos={photos}
-                  priceUsd={priceNum}
-                  pricePerM2={priceM2}
-                  bedrooms={bedrooms}
-                  area={area}
-                  land={null}
-                  yearLabel={yearRaw && status?.toLowerCase().includes('построен') ? c.completed : (yearRaw ?? null)}
-                  lease={lease}
-                  permit={permit}
-                  lat={lat}
-                  lng={lng}
-                  seoText={seoText}
-                />
-                </span>
-              }
-            />
-          )}
-        </section>
-        {leadOn && <aside className="lg:sticky lg:top-[96px]">{leadCard('zapis', true)}</aside>}
-        </div>
+        {leadOn ? <LeadStickyBar lang={lang} targetId="zapis" price={leadPrice('sm')} />
+          : priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
 
-        {facts.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {c.factsHeading}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {facts.map(({ Icon, label, value }) => (
-                <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
-                  <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
-                    <Icon size={16} className="shrink-0" />
-                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
-                  </div>
-                  <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Разделы 01–04; между ними 64 / 96 px. */}
+        <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
+        {!leadOn && objektChapter()}
 
-        {seoText && (
-          <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {c.descHeading}
-            </h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-                {seoText}
-              </div>
-            </ExpandableText>
-          </section>
-        )}
-
-        {/* Аналитика — четыре раздела в одном порядке: место → аренда
-            рядом → доходность → участок (как на странице виллы). */}
-        {/* «Для дохода / Для жизни»: в режиме «для жизни» — только безопасность и удобство (lib/living.ts). */}
-        {/* Итог «Для дохода / Для жизни» и разделы аналитики — только для вошедших
-            (.bx-auth-block в globals.css); гостю после описания сразу контакты менеджера. */}
+        {/* Аналитика — только Pro (.bx-auth-block); заголовок главы внутри неё. */}
         {analytics}
 
-        {/* Карточка застройщика — тоже только для вошедших (владелец 21.10.2026):
-            гостю после описания сразу контакты менеджера. */}
-        <div className="bx-auth-block">
-        {(developer || devName) && (
-          <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Карточку комплекса убрали 21.10.2026 (владелец): остаются застройщик, контакты, видео. */}
-            {developer ? (
-              <Link
-                href={`${developersRoot}/${developer.slug}`}
-                className="group block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors"
-              >
-                <div className="p-5 flex items-start gap-4">
-                  <div className="shrink-0 w-[72px] h-[72px] rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-2">
-                    {developer.logoUrl ? (
-                      <Image src={developer.logoUrl} alt={developer.name} width={56} height={56} className="max-w-full max-h-full object-contain" />
-                    ) : (
-                      <HardHat size={28} className="text-[var(--color-text-muted)]" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                      <HardHat size={14} /> {c.developerLabel}
+        {/* Застройщик и вопросы — рядом на компьютере, как у виллы. */}
+        <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
+        {hasDevChapter && noDev && (
+          <VillaChapter id="zastroyshchik" no={noDev} eyebrow={CH.zastroyshchik} journal>
+            <div className="flex flex-col gap-5 md:gap-6">
+              {(developer || devName) && (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[20px] font-semibold tracking-[-0.01em] text-[#0F1A15] md:text-[24px]">{developer?.name ?? devName}</span>
+                  {developer?.logoUrl && (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#ECEFED] bg-white p-1">
+                      <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-h-full max-w-full object-contain" />
                     </div>
-                    <div className="text-[19px] font-semibold text-[var(--color-text)] truncate">{developer.name}</div>
+                  )}
+                </div>
+              )}
+              {(devStats || parentComplex?.units) && (
+                <div className="flex flex-wrap gap-x-8 gap-y-4 md:gap-x-12">
+                  {devStats && (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{pickCopy({ ru: 'проектов сдано', en: 'projects completed', id: 'proyek selesai', fr: 'projets livrés', de: 'Projekte fertiggestellt', zh: '个项目已交付', nl: 'projecten opgeleverd', ban: 'proyek sampun puput', pl: 'projektów ukończonych', uk: 'проєктів здано' }, lang)}</span>
+                    </span>
+                  )}
+                  {devStats && devStats.inProgress > 0 && (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.inProgress}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{pickCopy({ ru: 'строится', en: 'under construction', id: 'sedang dibangun', fr: 'en construction', de: 'im Bau', zh: '在建', nl: 'in aanbouw', ban: 'kantun kabangun', pl: 'w budowie', uk: 'будується' }, lang)}</span>
+                    </span>
+                  )}
+                  {parentComplex?.units ? (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{parentComplex.units}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{c.units(parentComplex.units).replace(/^\d+\s*/, '')} {K('в', 'in')} {parentComplex.name}</span>
+                    </span>
+                  ) : null}
+                </div>
+              )}
+              {/* Комплекс — карточкой с фото, нажимается целиком. */}
+              {parentComplex?.slug && parentComplex.name && (
+                <Link href={`${complexesRoot}/o/${parentComplex.slug}`}
+                  className="group flex items-center gap-3 rounded-xl border border-[#ECEFED] p-2 pr-4 text-[#0F1A15] no-underline transition-colors duration-[120ms] hover:border-[#C9D3CE] md:gap-4">
+                  <span className="relative aspect-[16/10] w-[112px] shrink-0 overflow-hidden rounded-lg bg-[#F6F8F7] md:w-[168px]">
+                    {parentComplex.cover_url && (
+                      <Image src={parentComplex.cover_url} alt={parentComplex.name} fill sizes="168px" className="object-cover" />
+                    )}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 md:gap-1">
+                    <span className="text-[13px] text-[#6B7570]">{pickCopy({ ru: 'Комплекс', en: 'Complex', id: 'Kompleks', fr: 'Résidence', de: 'Anlage', zh: '项目', nl: 'Complex', ban: 'Kompleks', pl: 'Kompleks', uk: 'Комплекс' }, lang)}</span>
+                    <span className="truncate text-[16px] font-semibold md:text-[17px]">{parentComplex.name}</span>
+                    <span className="text-[13px] leading-[1.4] text-[#4A5550] md:text-[14px]">{pickCopy({ ru: 'Все апартаменты, генплан и фото комплекса', en: 'All apartments, master plan and photos', id: 'Semua apartemen, rencana induk dan foto', fr: 'Tous les appartements, plan de masse et photos', de: 'Alle Apartments, Lageplan und Fotos', zh: '全部公寓、总平面图和照片', nl: 'Alle appartementen, masterplan en foto’s', ban: 'Sami apartemen, rencana induk lan foto', pl: 'Wszystkie apartamenty, plan zagospodarowania i zdjęcia', uk: 'Усі апартаменти, генплан і фото комплексу' }, lang)}</span>
+                  </span>
+                  <span className="shrink-0 text-[22px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>
+                </Link>
+              )}
+              {developer && (
+                <Link href={`${developersRoot}/${developer.slug}`} className="self-start py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
+                  {c.openDeveloper}
+                </Link>
+              )}
+              {/* Менеджер застройщика — сюда ведёт зелёная кнопка «Связаться». */}
+              {m0 && leadManager && (
+                <div id="kontakty-operatora" className="flex scroll-mt-[136px] flex-col gap-4 border-t border-[#ECEFED] pt-5">
+                <div className="flex items-center gap-3">
+                  {m0.photo ? (
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[#F6F8F7]">
+                      <Image src={m0.photo} alt={leadManager.name} fill sizes="48px" className="object-cover" />
+                    </div>
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F6F8F7] text-[18px] text-[#6B7570]">
+                      {leadManager.name.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-[15px] font-semibold text-[#0F1A15]">
+                      {leadManager.name}{devName ? `, ${devName}` : ''}
+                    </div>
+                    <div className="text-[13px] text-[#6B7570]">
+                      {leadManager.langs.length > 0 ? leadManager.langs.join(', ') : pickCopy(MGR_ROLE, lang)}
+                    </div>
                   </div>
                 </div>
-                {developer.highlights.length > 0 && (
-                  <div className="px-5 pb-2">
-                    <ul className="space-y-1.5 text-[13px] text-[var(--color-text)]">
-                      {developer.highlights.map((h, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <Star size={12} className="mt-1 shrink-0 text-[var(--color-primary)]" />
-                          <span>{lang !== 'ru' && lang !== 'uk' && hasCyrillic(h) ? translitPreserveCase(h) : h}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="px-5 pb-5 pt-2 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                  {c.openDeveloper} <ChevronRight size={14} />
+                <ManagerContactButtons lang={lang} managerId={m0.id} managerName={m0.name} developerName={devName ?? null} listingTitle={title} />
                 </div>
-              </Link>
-            ) : devName ? (
-              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
-                <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                  <HardHat size={14} /> {c.developerLabel}
-                </div>
-                <div className="text-[19px] font-semibold text-[var(--color-text)]">{devName}</div>
-              </div>
-            ) : null}
-          </section>
+              )}
+            </div>
+          </VillaChapter>
         )}
-        </div>
-
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={devName} inquiry={{ kind: 'apartment', name: title, complexName: parentComplexName, priceUsd: priceNum }} />}
-
-        {/* «Что сдают рядом помесячно» убран 17.10.2026: повторял вкладку «Помесячно» в «Будет ли спрос?». */}
 
         {aptVideos.length > 0 && (
           <VideoGrid jsonLdOnly videos={aptVideos} title={parentComplexName ? `${pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)}: ${parentComplexName}` : pickCopy({ ru: 'Видео', en: 'Videos', id: 'Video', fr: 'Vidéos', de: 'Videos', zh: '视频', nl: "Video's", ban: 'Video', pl: 'Filmy', uk: 'Відео' }, lang)} />
         )}
 
+        <VillaChapter id="voprosy" no={noFaq} eyebrow={CH.voprosy} journal>
+          <div className="-mt-2 md:-mt-4">
+            {faqItems.map((it, i) => (
+              <details key={i} className="group border-b border-[#ECEFED]">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-[16px] text-[#0F1A15] transition-colors duration-[120ms] hover:text-[var(--color-primary)] md:text-[17px] [&::-webkit-details-marker]:hidden">
+                  {it.q}
+                  <span className="shrink-0 text-[22px] leading-none text-[#6B7570]" aria-hidden><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
+                </summary>
+                <div className="max-w-[68ch] pb-4 text-[15px] leading-[1.6] text-[#4A5550]">{it.a}</div>
+              </details>
+            ))}
+          </div>
+        </VillaChapter>
+        </div>
+
+        {/* Другие апартаменты района и ссылки «По теме» — главный источник
+            внутренних ссылок для поиска, поэтому остаются (в стиле «Журнал»). */}
         {otherApts.length > 0 && district && (
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {pickCopy({ ru: `Другие апартаменты в районе ${district}`, en: `Other apartments in ${district}`, id: `Apartemen lain di ${district}`, fr: `Autres appartements à ${district}`, de: `Weitere Apartments in ${district}`, zh: `${district}的其他公寓`, nl: `Andere appartementen in ${district}`, ban: `Apartemen lianan ring ${district}`, pl: `Inne apartamenty w ${district}`, uk: `Інші апартаменти в ${district}` }, lang)}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <VillaChapter id="drugie" no={String(Number(noFaq) + 1).padStart(2, '0')} eyebrow={CH.others}
+            title={pickCopy({ ru: `Другие апартаменты в районе ${district}`, en: `Other apartments in ${district}`, id: `Apartemen lain di ${district}`, fr: `Autres appartements à ${district}`, de: `Weitere Apartments in ${district}`, zh: `${district}的其他公寓`, nl: `Andere appartementen in ${district}`, ban: `Apartemen lianan ring ${district}`, pl: `Inne apartamenty w ${district}`, uk: `Інші апартаменти в ${district}` }, lang)} journal>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {otherApts.map(o => <ApartmentCard key={o.id} a={o} lang={lang} />)}
             </div>
-          </section>
+          </VillaChapter>
         )}
 
-        <section className="mb-10">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.relatedHeading}</h2>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
+        <VillaChapter id="po-teme" no={String(Number(noFaq) + (otherApts.length > 0 && district ? 2 : 1)).padStart(2, '0')} eyebrow={CH.related} title={c.relatedHeading} journal>
+          <ul className="m-0 grid max-w-3xl list-none grid-cols-1 gap-x-12 p-0 md:grid-cols-2">
             {[
               // Buy-intent anchors, not «Все апартаменты»: these listing pages
               // are the site's main internal-link source, so the anchor text is
@@ -1657,31 +1820,16 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
                 { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: pickCopy({ ru: `${bedrooms}-комнатные апартаменты`, en: `${bedrooms}-bedroom apartments`, id: `Apartemen ${bedrooms} kamar`, fr: `Appartements ${bedrooms} chambres`, de: `${bedrooms}-Zimmer-Apartments`, zh: `${bedrooms}居室公寓`, nl: `${bedrooms}-slaapkamerappartementen`, ban: `Apartemen ${bedrooms} kamar`, pl: `Apartamenty ${bedrooms}-sypialniane`, uk: `${bedrooms}-кімнатні апартаменти` }, lang) },
               ] : []),
             ].map(l => (
-              <li key={l.href + l.label}>
-                <Link href={l.href} className="inline-flex items-center gap-1 text-[14px] text-[var(--color-text)] hover:text-[var(--color-primary-pressed)]">
-                  <ChevronRight size={14} className="text-[var(--color-primary)]" /> {l.label}
+              <li key={l.href + l.label} className="border-b border-[#ECEFED]">
+                <Link href={l.href} className="flex min-h-12 items-center justify-between gap-4 py-2 text-[15px] text-[#0F1A15] no-underline transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
+                  {l.label}
+                  <span className="shrink-0 text-[20px] leading-none text-[#6B7570]" aria-hidden>›</span>
                 </Link>
               </li>
             ))}
           </ul>
-        </section>
-
-        <section className="mb-10">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-            {c.faqHeading}
-          </h2>
-          <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
-            {faqItems.map((it, i) => (
-              <details key={i} className="group py-4">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
-                  {it.q}
-                  <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-[14px] text-[var(--color-text-muted)] leading-relaxed">{it.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
+        </VillaChapter>
+        </div>
 
         {/* Emit the Product/merchant-listing schema ONLY when it carries an
             image — Google's merchant validator marks an image-less Product
