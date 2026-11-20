@@ -13,7 +13,9 @@ import { getDistrictCopy, getBuyHeading } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
-import { loadCatalogPage, buildHeadingLoc, type VillaFilterState } from './_lib'
+import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString, type VillaFilterState } from './_lib'
+import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
+import { CATALOG_EYEBROW } from '@/lib/catalog-eyebrow'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
 import { HeadingPrice } from '@/components/Money'
@@ -165,6 +167,25 @@ export async function VillasCatalog({
   const isSearch = filters.q.trim().length > 0
   const copy = pickCopy(COPY, lang)
 
+  // Карта рядом со списком (владелец 20.11.2026, макет CatB): все объекты
+  // под текущими фильтрами, юниты одного места — одной точкой.
+  const mapGroups: CatalogMapGroup[] = await (async () => {
+    const { enriched, manifest } = await loadAll()
+    let rows = enriched.filter(e => passes(e, filters))
+    if (filters.q.trim()) rows = applySearch(rows, filters.q)
+    const by = new globalThis.Map<string, CatalogMapGroup>()
+    for (const e of rows) {
+      const slug = e.slug ?? firstString(e.data['SEO:Slug'])
+      if (e.lat == null || e.lng == null || !slug || slug.startsWith('-')) continue
+      const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
+      const title = (firstString(e.data['SEO:Title']) ?? slug).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim()
+      let g = by.get(key)
+      if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
+      g.items.push({ slug, title, href: switchLangPath(`/ru/villy/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: manifest[e.id]?.[0] ?? null })
+    }
+    return [...by.values()]
+  })().catch(() => [])
+
   // Single-district filter with no other narrowing → show the rich
   // SEO intro block for that district above the grid. Strict check
   // keeps the block off mixed filter combos (e.g. district + 2 bedrooms),
@@ -247,7 +268,8 @@ export async function VillasCatalog({
       <Header active="villy" />
 
       <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
+        <p className="pt-8 text-[12px] uppercase tracking-[0.08em] text-[#6B7570]">{CATALOG_EYEBROW[lang] ?? CATALOG_EYEBROW.en}</p>
+        <h1 className="mt-2 mb-2 text-[28px] [overflow-wrap:normal] [word-break:normal] md:text-[44px] font-semibold leading-[1.1] tracking-[-0.03em] text-[var(--color-text)]">
           {h1Text}
           {hasPrice && <HeadingPrice min={filters.priceMin} max={filters.priceMax} lang={lang} />}
           {actualPage > 1 && (
@@ -273,6 +295,8 @@ export async function VillasCatalog({
           <VillaFiltersBar state={filters} options={options} view="list" lang={lang} />
         </div>
 
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.75fr)] lg:gap-8">
+        <div className="min-w-0">
         {cards.length > 1 && (
           <div className="mt-3">
             <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} />
@@ -300,7 +324,7 @@ export async function VillasCatalog({
           )
         ) : (
           <>
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
               {cards.map((c, i) => <VillaCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
             </div>
             <VillaInfiniteScrollClient
@@ -310,6 +334,13 @@ export async function VillasCatalog({
             />
           </>
         )}
+        </div>
+        {mapGroups.length > 0 && (
+          <aside className="lg:sticky lg:top-[88px] lg:mt-6 lg:h-[calc(100vh-112px)] lg:self-start">
+            <CatalogMap groups={mapGroups} lang={lang} />
+          </aside>
+        )}
+        </div>
 
         {/* Telegram alerts CTA — under the catalog so the visitor sees
             it after browsing some results. Filters get collapsed:

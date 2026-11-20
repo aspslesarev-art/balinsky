@@ -89,13 +89,20 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
     : a.dealType === 'secondary' ? copy.secondary
     : null
   const detailHref = a.detailHref ?? switchLangPath(`/ru/villy/o/${a.slug}`, lang)
+  // Название без хвоста «- 74 м², 2 спальни»: цифры стоят строкой ниже.
+  const shortTitle = a.title.split(/\s[-—–]\s(?=\d)/)[0]
+  const meta = [
+    a.bedrooms != null ? (lang === 'ru' ? `${a.bedrooms} ${pluralRu(a.bedrooms, ['спальня', 'спальни', 'спален'])}` : `${a.bedrooms} BR`) : null,
+    a.area != null ? `${a.area} ${copy.sqm}` : null,
+    a.land != null ? `${copy.land.toLowerCase()} ${a.land} ${copy.sqm}` : null,
+  ].filter(Boolean).join(' · ')
   return (
     <Link
       href={detailHref}
-      className="magic-card group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
+      className="group flex h-full flex-col gap-3 text-[#0F1A15] no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]"
     >
-      <div className="relative">
-        <PhotoSlider photos={a.photos} alt={a.title} trackingId={`villa:${a.slug}`} priority={priority} />
+      <div className="relative overflow-hidden rounded-md">
+        <PhotoSlider heightClass="aspect-[4/3]" photos={a.photos} alt={a.title} trackingId={`villa:${a.slug}`} priority={priority} />
         {a.verifiedYield && <VerifiedYieldBadge lang={lang} onPhoto className="absolute bottom-3 left-3 z-10" />}
         {dealLabel && (
           <span className="absolute top-3 left-3 z-10 inline-flex items-center text-[11px] font-semibold uppercase tracking-wide bg-white text-[var(--color-text)] rounded-full px-2.5 py-1 shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
@@ -130,39 +137,27 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
         />
       </div>
 
-      {/* Карточки в ряду одной высоты (владелец 04.11.2026): название всегда
-          занимает две строки, нижняя строка прижата к низу. */}
-      <div className="flex flex-1 flex-col p-6">
-        <h3
-          className="min-h-[2.6em] text-[20px] font-semibold text-[var(--color-text)] leading-[1.3] mb-4 overflow-hidden"
-          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
-        >
-          {a.title}
+      {/* «Журнал» (владелец 20.11.2026, макет CatA): район капсом, короткое название,
+          строка цифр, цена; карточки в ряду одной высоты — низ прижат. */}
+      <div className="flex flex-1 flex-col gap-1.5">
+        {a.district && <span className="text-[12px] uppercase tracking-[0.06em] text-[#6B7570]">{lang === 'ru' ? districtRu(a.district) : districtLatin(a.district)}</span>}
+        <h3 title={a.title}
+          className="m-0 overflow-hidden text-[18px] font-semibold leading-[1.3] text-[#0F1A15] transition-colors duration-[120ms] group-hover:text-[var(--color-primary)]"
+          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+          {shortTitle}
         </h3>
-
+        {meta && <span className="text-[14px] text-[#4A5550]">{meta}</span>}
         {price && (
-          <div className="text-[18px] font-semibold text-[var(--color-text)] mb-3">
+          <div className="mt-1 text-[20px] font-semibold leading-[1.2] tracking-[-0.02em] tabular-nums">
             {price}
-            {a.priceUsd != null && <ApproxPrice usd={a.priceUsd} lang={lang} className="block text-[13px] font-normal text-[var(--color-text-muted)]" />}
+            {a.priceUsd != null && <ApproxPrice usd={a.priceUsd} lang={lang} className="block text-[13px] font-normal tracking-normal text-[#6B7570]" />}
           </div>
         )}
-
-        {a.living
-          ? <CardLiving data={a.living} lang={lang} className="-mt-1 mb-3" />
-          : a.yieldRange
-            ? <CardYieldPro range={a.yieldRange} lang={lang} className="mb-4" />
-            : <CardYieldPro range={null} pct={a.yieldPct} lang={lang} className="-mt-1 mb-3" />}
-
-        {/* Балл востребованности прижат к правому краю нижней строки: это
-            последнее, что читает глаз, и он не конкурирует с ценой. */}
-        <div className="mt-auto flex items-center justify-between gap-3">
-          <div className="flex items-center flex-wrap gap-x-5 gap-y-1 text-[14px] text-[var(--color-text-muted)]">
-            {a.bedrooms != null && <span>{lang === 'ru' ? `${a.bedrooms} ${pluralRu(a.bedrooms, ['спальня', 'спальни', 'спален'])}` : `${a.bedrooms} BR`}</span>}
-            {a.area != null && <span>{copy.house}: {a.area} {copy.sqm}</span>}
-            {a.land != null && <span>{copy.land}: {a.land} {copy.sqm}</span>}
-            {a.district && <span>{lang === 'ru' ? districtRu(a.district) : districtLatin(a.district)}</span>}
-          </div>
-          {a.demand && <UnitDemandBadge demand={a.demand} lang={lang} />}
+        <div className="mt-auto flex flex-col gap-2 pt-1">
+          {a.living
+            ? <CardLiving data={a.living} lang={lang} />
+            : <CardYieldPro range={a.yieldRange ?? null} pct={a.yieldPct} lang={lang} />}
+          {a.demand && <div className="flex justify-end"><UnitDemandBadge demand={a.demand} lang={lang} /></div>}
         </div>
       </div>
     </Link>

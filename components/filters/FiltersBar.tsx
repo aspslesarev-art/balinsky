@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
+import { MoreFilters } from './MoreFilters'
 import { MultiSelectFilter, type Option } from './MultiSelectFilter'
 import { PriceRangeFilter } from './PriceRangeFilter'
 import { GoalFilter } from './GoalFilter'
@@ -142,17 +143,19 @@ export function FiltersBar({
 
   return (
     <Suspense fallback={null}>
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         <GoalFilter current={state} view={view} lang={lang} />
         <PriceRangeFilter label={c.price} min={state.priceMin} max={state.priceMax} current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable groups={buildDistrictGroups(options.district, lang)} />
         <MultiSelectFilter stateKey="bedrooms"  label={c.bedrooms}  options={options.bedrooms}  selected={state.bedrooms}  current={state} view={view} lang={lang} />
+        <MoreFilters lang={lang} count={6} active={[state.floor, state.developer, state.status, state.permit, state.dealType, state.features].filter(x => x.length > 0).length}>
         <MultiSelectFilter stateKey="floor"     label={c.floor}     options={options.floor}     selected={state.floor}     current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="developer" label={c.developer} options={options.developer} selected={state.developer} current={state} view={view} lang={lang} searchable />
         <MultiSelectFilter stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="permit"    label={c.permit}    options={options.permit}    selected={state.permit}    current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="dealType"  label={c.dealType}  options={options.dealType}  selected={state.dealType}  current={state} view={view} lang={lang} />
         <MultiSelectFilter stateKey="features"  label={c.features}  options={options.features}  selected={state.features}  current={state} view={view} lang={lang} />
+        </MoreFilters>
         <ResetAll activeCount={activeCount} current={state} view={view} lang={lang} />
       </div>
     </Suspense>
