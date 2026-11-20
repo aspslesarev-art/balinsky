@@ -530,6 +530,7 @@ const SLIM_APT_FIELDS = [
   ['Опубликовать', 'pub'],
   ['SEO:Title', 'seo_title'],
   ['SEO:Title EN', 'seo_title_en'],
+  ['Комплекс 1', 'complex1'],
   ['SEO:Slug', 'seo_slug'],
   ['ИИ Имя', 'ai_name'],
   ['ИИ Имя EN', 'ai_name_en'],
@@ -579,6 +580,22 @@ async function _loadAllInternal(): Promise<CachedAll> {
     loadVisionManifest('apartment'),
     loadLivingMap('apartment'),
   ])
+  // Район жилого комплекса — для юнитов, у которых свой район не заполнен
+  // (владелец 20.11.2026, ~300 апартаментов). Сбой не ломает каталог.
+  const cxRes = await sb.from('raw_complexes').select('name:data->>Project, d2:data->>"Location 2", d1:data->>Location')
+  const cxDistrict = new Map<string, string>()
+  for (const c of (cxRes.data ?? []) as { name: string | null; d2: string | null; d1: string | null }[]) {
+    const dd = [c.d2, c.d1].find(x => x && !x.startsWith('[') && !/^rec[A-Za-z0-9]{14}$/.test(x))
+    if (c.name && dd) cxDistrict.set(c.name.trim().toLowerCase(), dd)
+  }
+  const cxNames = [...cxDistrict.keys()].filter(n => n.length >= 4).sort((a, b) => b.length - a.length)
+  const districtFor = (data: Record<string, unknown>): string | null => {
+    const byName = cxDistrict.get((firstString(data['Комплекс 1']) ?? '').trim().toLowerCase())
+    if (byName) return byName
+    const t = (firstString(data['SEO:Title']) ?? '').toLowerCase()
+    const hit = t ? cxNames.find(n => t.includes(n)) : undefined
+    return hit ? cxDistrict.get(hit) ?? null : null
+  }
   // Фото-аудит: выбранная обложка встаёт первой, брак выкидывается.
   const manifest = curateManifest(cdnRewriteManifest(manifestRaw), visionMap)
   // Сбой базы бросаем: иначе пустой каталог закэшировался бы на весь TTL,
@@ -597,6 +614,7 @@ async function _loadAllInternal(): Promise<CachedAll> {
     })
     .map(r => ({ ...r, data: mergeAllTranslations(r.data, r.airtable_id, enCache) }))
     .map(r => enrich(r, devMap, featuresMap))
+    .map(e => (e.district ? e : { ...e, district: districtFor(e.data) }))
     .map(e => ({ ...e, views: viewCounts[e.id] ?? 0, living: livingMap.get(e.id) ?? null }))
   return { enriched, manifest }
 }

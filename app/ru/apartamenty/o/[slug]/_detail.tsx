@@ -949,7 +949,10 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const visionRaw = await loadListingVision('apartment', a.airtable_id)
   const curated = curatePhotos(manifest[a.airtable_id] ?? [], visionRaw)
   const photos = curated.photos.slice(0, 12)
+  // Район не заполнен у ~300 апартаментов — берём район их жилого комплекса
+  // (владелец 20.11.2026: «мы же знаем, что он в Сануре»).
   const districtRaw = firstString(d['Location filter'])
+    ?? (() => { const pc = findParentComplex(title, complexes, firstString(d['Комплекс 1'])); return firstString(pc?.district) ?? firstString(pc?.district_alt) })()
   const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
   // District orientation card: only when the district maps to a real hub
   // slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
