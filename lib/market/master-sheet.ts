@@ -1,6 +1,7 @@
 
 import { parseXlsxBuffer, parseXlsxHyperlinks, colToNum } from './xlsx'
 import { toGrid, cellAt, type Grid } from './grid'
+import { hqcAgentUrl } from './adapters/hqc-agent'
 
 // Чтение мастер-таблицы «прайсы застройщиков»: одна её строка = один
 // комплекс с ссылками на прайс в разных колонках (Google / Unitbox /
@@ -71,7 +72,11 @@ export function parseMaster(buf: Uint8Array): MasterReadResult {
     const complex = cellAt(grid, r, header.complex).text
     if (!developer && !complex) continue
 
-    const picked = pickSource(grid, links, r, header.sources)
+    const listed = pickSource(grid, links, r, header.sources)
+    // HQC бросает старые файлы шахматок и заводит новые — источник у них
+    // всегда страница проекта на сайте агентов (adapters/hqc-agent.ts).
+    const hqc = hqcAgentUrl(developer, complex)
+    const picked = hqc ? { kind: 'site' as const, url: hqc } : listed
     if (!picked) {
       skipped.push({ developer, complex, reason: 'ни в одной колонке нет ссылки на прайс' })
       continue

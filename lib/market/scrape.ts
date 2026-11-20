@@ -15,6 +15,7 @@ import { fetchHtml, scrapeWebpage } from './adapters/webpage'
 import { scrapeSplan, splanConfig } from './adapters/splan'
 import { mapsvgTables, scrapeMapsvg, usesMapsvg } from './adapters/mapsvg'
 import { isDriveSource, scrapeDrivePdf } from './adapters/drive-pdf'
+import { isHqcAgentSource, scrapeHqcAgent } from './adapters/hqc-agent'
 import { pinnedFor, runPinned } from './pinned'
 import { KnownRefusalError, isRefusalMessage } from './refusal'
 import { isTextCache, type MarketSource, type ScrapedUnit, type SourceLayout } from './types'
@@ -60,6 +61,12 @@ export async function scrapeSource(source: MarketSource, opts: ScrapeOptions = {
     const meta = { developer: source.developer, complex: source.complex }
     const { units, warnings, textHash } = await scrapeDrivePdf(source.source_url, meta, cache)
     return { units, warnings, layout: { kind: 'text', textHash, units }, fingerprint: textHash }
+  }
+
+  // HQC: шахматка — по кнопке на сайте агентов, файл они меняют сами.
+  if (isHqcAgentSource(source.source_url)) {
+    const { units, warnings } = await scrapeHqcAgent(source.source_url, opts.onGrid)
+    return { units, warnings }
   }
 
   if (source.source_kind === 'site') {
