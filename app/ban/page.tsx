@@ -1,30 +1,30 @@
-import { HomeLanding } from '@/components/HomeLanding'
+import { HomeJournal } from '@/components/HomeJournal'
 import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Bali Property Prices & Rental Data — Compare Before You Buy | Balinsky',
-  description: 'Bali villas and apartments compared with the market: price per m² vs the area, nearby rental rates, lease terms and permit status. Free, no sign-up.',
+  title: 'Properti Bali majeng Wong Dura Negara — Vila lan Apartemen Leasehold | Balinsky',
+  description: 'Pasar properti Bali majeng wong dura negara: vila lan apartemen leasehold saking pangwangun. Aji, suen sewa tanah, dokumen, lan pikolih sabilang properti.',
   alternates: {
     canonical: '/ban',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
-    title: 'Bali Property Prices & Rental Data — Compare Before You Buy',
-    description: 'Bali villas and apartments compared with the market: price per m² vs the area, nearby rental rates, lease terms and permit status. Free, no sign-up.',
+    title: 'Properti Bali majeng wong dura negara — sami leasehold',
+    description: 'Pasar properti Bali majeng wong dura negara: vila lan apartemen leasehold saking pangwangun. Aji, suen sewa tanah, dokumen, lan pikolih sabilang properti.',
     type: 'website',
     url: '/ban',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bali property, in numbers',
-    description: 'Price per m² vs the district, nearby rental rates, lease term and permit status — compare before you buy.',
+    title: 'Properti Bali majeng wong dura negara — sami leasehold',
+    description: 'Vila lan apartemen leasehold: aji, suen sewa tanah, dokumen, lan pikolih sabilang properti.',
     images: ['/andrei.jpg'],
   },
 }
 
 export default function EnHome() {
-  return <HomeLanding lang="ban" />
+  return <HomeJournal lang="ban" />
 }

@@ -1,30 +1,30 @@
-import { HomeLanding } from '@/components/HomeLanding'
+import { HomeJournal } from '@/components/HomeJournal'
 import { hreflangMap } from '@/lib/hreflang'
 
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Bali Property Prices & Rental Data — Compare Before You Buy | Balinsky',
-  description: 'Bali villas and apartments compared with the market: price per m² vs the area, nearby rental rates, lease terms and permit status. Free, no sign-up.',
+  title: 'Bali Property for Foreigners — Leasehold Villas & Apartments | Balinsky',
+  description: 'Bali property marketplace for foreigners: leasehold villas and apartments from developers. Price, land-lease term, documents and income for every property.',
   alternates: {
     canonical: '/en',
     languages: hreflangMap('/ru'),
   },
   openGraph: {
-    title: 'Bali Property Prices & Rental Data — Compare Before You Buy',
-    description: 'Bali villas and apartments compared with the market: price per m² vs the area, nearby rental rates, lease terms and permit status. Free, no sign-up.',
+    title: 'Bali property for foreigners — everything leasehold',
+    description: 'Bali property marketplace for foreigners: leasehold villas and apartments from developers. Price, land-lease term, documents and income for every property.',
     type: 'website',
     url: '/en',
     images: [{ url: '/andrei.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bali property, in numbers',
-    description: 'Price per m² vs the district, nearby rental rates, lease term and permit status — compare before you buy.',
+    title: 'Bali property for foreigners — everything leasehold',
+    description: 'Leasehold villas and apartments: price, land-lease term, documents and income for every property.',
     images: ['/andrei.jpg'],
   },
 }
 
 export default function EnHome() {
-  return <HomeLanding lang="en" />
+  return <HomeJournal lang="en" />
 }
