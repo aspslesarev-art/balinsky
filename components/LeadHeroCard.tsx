@@ -155,7 +155,6 @@ export function LeadHeroCard({ lang, price, priceNote, developerName, managerNam
     <div id={id} className={`flex scroll-mt-[136px] flex-col gap-4 bg-white ${framed ? 'rounded-md p-6 shadow-[0_1px_2px_rgb(0_0_0/.05),0_12px_32px_rgb(0_0_0/.14)]' : ''}`}>
       {price && <div className="flex flex-col gap-2"><span className="flex items-baseline justify-between gap-3"><span className={cap}>{c.price}</span>{priceNote}</span>{price}</div>}
       <div className={`flex flex-col gap-3 ${price ? 'border-t border-[#ECEFED] pt-4' : ''}`}>
-        <span className={cap}>{c.cap}</span>
         <div role="tablist" className="flex gap-5 text-[14px]">
           {c.tabs.map((t, i) => (
             <button key={t} type="button" role="tab" aria-selected={tab === i} onClick={() => { setTab(i); setState('idle'); setErr(null) }}
