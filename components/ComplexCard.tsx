@@ -3,7 +3,6 @@
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
 import { ProgressBar } from './ProgressBar'
-import { ComplexYieldPro } from './CardYieldPro'
 import type { ComplexYieldRange } from '@/lib/investment/chance'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
@@ -129,7 +128,6 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
         )}
         <span className="text-[13px] text-[#6B7570]">{permitLine(c.permit, copy, lang)}</span>
         <div className="mt-auto flex flex-col gap-3 pt-1">
-          {c.yieldRange && <ComplexYieldPro range={c.yieldRange} lang={lang} />}
           <div className="flex items-center gap-3">
             <span className="shrink-0 text-[13px] text-[#6B7570]">{copy.readiness}</span>
             <div className="flex-1"><ProgressBar value={c.readiness} /></div>

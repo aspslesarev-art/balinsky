@@ -9,10 +9,8 @@ import { useCurrency } from './CurrencyContext'
 import { WishlistButton } from './WishlistButton'
 import { formatPriceExact } from '@/lib/currency'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
-import { UnitDemandBadge } from './UnitDemandBadge'
-import { CardYieldPro } from './CardYieldPro'
 import type { YieldRange } from '@/lib/investment/chance'
-import { CardLiving, type CardLivingData } from './CardLiving'
+import type { CardLivingData } from './CardLiving'
 import { districtRu, districtLatin } from '@/lib/district-ru'
 import type { UnitDemandView } from '@/lib/unit-demand-view'
 
@@ -153,12 +151,7 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
             {a.priceUsd != null && <ApproxPrice usd={a.priceUsd} lang={lang} className="block text-[13px] font-normal tracking-normal text-[#6B7570]" />}
           </div>
         )}
-        <div className="mt-auto flex flex-col gap-2 pt-1">
-          {a.living
-            ? <CardLiving data={a.living} lang={lang} />
-            : <CardYieldPro range={a.yieldRange ?? null} pct={a.yieldPct} lang={lang} />}
-          {a.demand && <div className="flex justify-end"><UnitDemandBadge demand={a.demand} lang={lang} /></div>}
-        </div>
+        {/* Доходность на карточке каталога не показываем (владелец 20.11.2026): только район, название, цифры, цена. */}
       </div>
     </Link>
   )
