@@ -1,6 +1,4 @@
 import { Header } from '@/components/Header'
-import { PageContainer } from '@/components/PageContainer'
-import { CatalogTabs } from '@/components/CatalogTabs'
 import { ComplexCard } from '@/components/ComplexCard'
 import { ComplexesSeoContent } from '@/components/ComplexesSeoContent'
 import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
@@ -14,7 +12,7 @@ import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
 import { loadCatalogPage, buildHeading, buildHeadingLocalized, loadAll, passes, applySearch, type ComplexFilterState } from './_lib'
 import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
-import { CATALOG_EYEBROW } from '@/lib/catalog-eyebrow'
+import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
 
@@ -136,7 +134,6 @@ export async function ComplexesCatalog({
   })().catch(() => [])
 
   // Use complex tab hrefs (not the apartments ones from CatalogTabs defaults).
-  const listTabHref = buildListHref(filters, lang)
   const mapTabHref = buildMapHref(filters, lang)
 
   const isSingleDistrictHub = filters.district.length === 1
@@ -157,37 +154,29 @@ export async function ComplexesCatalog({
     <>
       <Header active="zhilye-kompleksy" />
 
-      <PageContainer>
-        <p className="pt-8 text-[12px] uppercase tracking-[0.08em] text-[#6B7570]">{CATALOG_EYEBROW[lang] ?? CATALOG_EYEBROW.en}</p>
-        <h1 className="mt-2 mb-2 text-[28px] [overflow-wrap:normal] [word-break:normal] md:text-[44px] font-semibold leading-[1.1] tracking-[-0.03em] text-[var(--color-text)]">
+      <CatalogShell
+        lang={lang}
+        heading={<>
           {heading}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]">
               {' '}— {copy.page} {actualPage}
             </span>
           )}
-        </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
+        </>}
+        count={<>
           {copy.complexes(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
-        </div>
-
-        {districtCopy && (
+        </>}
+        mapHref={mapTabHref}
+        intro={districtCopy && (
           <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
         )}
-
-        <CatalogTabs active="list" listHref={listTabHref} mapHref={mapTabHref} lang={lang} />
-
-        <div className="mt-6">
-          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
-        </div>
-
-        <div className="mt-4">
-          <ComplexFiltersBar state={filters} options={options} view="list" lang={lang} />
-        </div>
-
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.75fr)] lg:gap-8">
-        <div className="min-w-0">
+        search={<ComplexCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />}
+        filters={<ComplexFiltersBar state={filters} options={options} view="list" lang={lang} />}
+        
+        map={mapGroups.length > 0 ? <CatalogMap groups={mapGroups} lang={lang} /> : null}
+      >
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
             {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
@@ -205,13 +194,6 @@ export async function ComplexesCatalog({
             />
           </>
         )}
-        </div>
-        {mapGroups.length > 0 && (
-          <aside className="lg:sticky lg:top-[88px] lg:mt-6 lg:h-[calc(100vh-112px)] lg:self-start">
-            <CatalogMap groups={mapGroups} lang={lang} />
-          </aside>
-        )}
-        </div>
 
         {cards.length > 0 && (
           <div className="mt-10">
@@ -238,7 +220,7 @@ export async function ComplexesCatalog({
         <ComplexesSeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
-      </PageContainer>
+      </CatalogShell>
     </>
   )
 }

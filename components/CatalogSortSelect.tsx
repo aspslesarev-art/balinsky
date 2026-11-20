@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useCatalogRouter } from '@/lib/use-catalog-router'
 import { CATALOG_SORTS, sortCopy, type CatalogSort } from '@/lib/catalog-sort'
 import type { Lang } from '@/lib/i18n'
@@ -20,25 +20,21 @@ export function CatalogSortSelect({
 }) {
   const router = useCatalogRouter()
   const c = sortCopy(lang)
-  const active = current != null
+  // «Журнал» (макет CatB, 20.11.2026): не кнопка, а строка «Сортировка: …» справа от фильтров.
   return (
-    <label
-      className={`relative inline-flex items-center gap-1.5 py-2.5 pl-4 pr-4 rounded-full border text-[14px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:ring-offset-2 ${
-        active
-          ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white font-medium'
-          : 'bg-[var(--color-card-bg)] border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]'
-      }`}
-    >
-      <ArrowUpDown size={16} strokeWidth={2} aria-hidden className={active ? 'text-white' : 'text-[var(--color-text-muted)]'} />
-      <span className="sr-only">{c.label}</span>
-      <select
-        value={current ?? 'default'}
-        onChange={e => router.push(hrefs[e.target.value as CatalogSort | 'default'], { scroll: false })}
-        className="appearance-none bg-transparent text-inherit [font:inherit] cursor-pointer focus:outline-none"
-      >
-        <option value="default" className="text-[var(--color-text)] bg-[var(--color-card-bg)]">{c.default}</option>
-        {CATALOG_SORTS.map(s => <option key={s} value={s} className="text-[var(--color-text)] bg-[var(--color-card-bg)]">{c[s]}</option>)}
-      </select>
+    <label className="relative inline-flex items-center gap-1.5 whitespace-nowrap text-[14px] text-[#6B7570]">
+      <span>{c.label}:</span>
+      <span className="relative inline-flex items-center gap-1 font-semibold text-[#0F1A15]">
+        <select
+          value={current ?? 'default'}
+          onChange={e => router.push(hrefs[e.target.value as CatalogSort | 'default'], { scroll: false })}
+          className="cursor-pointer appearance-none border-0 bg-transparent pr-5 text-inherit [font:inherit] focus:outline-none focus-visible:underline"
+        >
+          <option value="default">{c.default}</option>
+          {CATALOG_SORTS.map(s => <option key={s} value={s}>{c[s]}</option>)}
+        </select>
+        <ChevronDown size={14} aria-hidden className="pointer-events-none absolute right-0" />
+      </span>
     </label>
   )
 }

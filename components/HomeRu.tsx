@@ -3,7 +3,8 @@
 // лизхолде — то, что законно может купить человек без индонезийского паспорта.
 //   1. Фото на весь экран, заголовок и поиск поверх
 //   2. Цифры каталога
-//   3. 01 Почему здесь всё в лизхолде
+//   3. 01 Каждый объект проверяет ИИ (13 проверок)
+//      02 Почему здесь всё в лизхолде
 //   4. 02 Виллы с лучшей доходностью
 //   5. 03 Для тех, кто покупает издалека
 // Balinsky в сделке не участвует (project_balinsky_info_only) — это сказано внизу.
@@ -30,6 +31,27 @@ const WHY = [
   { t: 'Срок аренды у каждого дома', d: 'Сколько лет аренды земли осталось и до какого года — прямо в карточке объекта.' },
   { t: 'Как купить — по шагам', d: 'Договор, нотариус, проверка документов и налоги — понятным языком.', href: '/ru/kak-kupit' },
 ]
+
+// 13 проверок ИИ на странице каждого объекта (AnalyticsPanel), по темам —
+// как в окне «Проверьте виллу с ИИ» (владелец 20.11.2026, макет HomeAI_A).
+const AI = [
+  { g: 'Деньги', bg: '#E8F1EC', ink: '#1F8B5F', items: ['Сдавать посуточно', 'Оценить для Booking', 'Сдавать надолго', 'Не переплатить'] },
+  { g: 'Документы и участок', bg: '#F6EEE4', ink: '#C9772B', items: ['Проверить документы', 'Оценить землю', 'Проверить участок'] },
+  { g: 'Место', bg: '#E8EFF8', ink: '#2E7DD1', items: ['Что рядом', 'Уровень туризма', 'Как добраться'] },
+  { g: 'Жизнь в доме', bg: '#EFEAF7', ink: '#8E5BD0', items: ['Погода и ветер', 'Воздух', 'Климат к 2050'] },
+]
+const AI_DEMO = '/ru/villy/o/maison-boheme-sanur-108m2-2-bedroom#analitika'
+
+// Картинка темы — без цифр, только образ (точки соседей, галочки, метки, солнце).
+function AiCover({ i, ink }: { i: number; ink: string }) {
+  const shapes = [
+    [[60, 100], [110, 70], [150, 110], [205, 60], [245, 100]].map(([x, y], k) => <circle key={k} cx={x} cy={y} r="8" className="ap-float" style={{ animationDelay: `${-k * 0.7}s` }} />),
+    [0, 1, 2].map(k => <g key={k} className="ap-breathe" style={{ animationDelay: `${-k * 1.2}s` }}><circle cx={80 + k * 70} cy="86" r="22" fill="none" stroke={ink} strokeWidth="4" /><path d={`M${70 + k * 70} 86l7 8 14-16`} fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" /></g>),
+    [[90, 70], [160, 105], [215, 60]].map(([x, y], k) => <path key={k} className="ap-bob" style={{ animationDelay: `${-k}s` }} d={`M${x} ${y + 22}c-12-14-18-22-18-30a18 18 0 0 1 36 0c0 8-6 16-18 30z`} />),
+    [<circle key="s" cx="150" cy="86" r="26" className="ap-pulse" />, ...[0, 45, 90, 135, 180, 225, 270, 315].map(a => <line key={a} x1={150 + 38 * Math.cos(a * Math.PI / 180)} y1={86 + 38 * Math.sin(a * Math.PI / 180)} x2={150 + 50 * Math.cos(a * Math.PI / 180)} y2={86 + 50 * Math.sin(a * Math.PI / 180)} stroke={ink} strokeWidth="4" strokeLinecap="round" />)],
+  ][i]
+  return <svg viewBox="0 0 300 172" className="ap-cover block h-full w-full" aria-hidden><g fill={ink} opacity=".85">{shapes}</g></svg>
+}
 
 const LANGS = [
   ['🇬🇧', 'English'], ['🇫🇷', 'Français'], ['🇩🇪', 'Deutsch'], ['🇳🇱', 'Nederlands'], ['🇵🇱', 'Polski'],
@@ -100,9 +122,38 @@ export async function HomeRu() {
       )}
 
       <div className="mx-auto flex max-w-[1280px] flex-col gap-16 px-6 py-16 md:gap-24 md:py-24">
-        {/* 3. Почему лизхолд */}
+        {/* 3. ИИ проверяет каждый объект */}
         <section className="flex flex-col gap-8">
-          <Head no="01" title="Почему здесь всё в лизхолде" />
+          <div className="flex flex-col gap-4">
+            <Head no="01" title="Не просто объявления: каждый объект проверяет ИИ" />
+            <p className="max-w-[68ch] text-[17px] leading-[1.6] text-[#4A5550] md:text-[18px]">
+              13 проверок по открытым данным: документы, цена против соседей, доход от аренды, что рядом, погода. Всё это — до звонка застройщику.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+            {AI.map((t, i) => (
+              <div key={t.g} className="flex flex-col gap-3">
+                <div className="aspect-[300/172] overflow-hidden rounded-md" style={{ background: t.bg }}><AiCover i={i} ink={t.ink} /></div>
+                <span className={`${CAP} text-[#6B7570]`}>{t.g}</span>
+                <ul className="m-0 flex list-none flex-col p-0">
+                  {t.items.map(it => (
+                    <li key={it} className="flex items-center gap-2 border-t border-[#ECEFED] py-2.5 text-[16px]"><span style={{ color: t.ink }} aria-hidden>✓</span>{it}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Link href={AI_DEMO} className="inline-flex h-[52px] items-center rounded-xl bg-[var(--color-primary)] px-7 text-[16px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+              Посмотреть на примере виллы
+            </Link>
+            <span className="text-[14px] text-[#6B7570]">Откроется проверка MAISON BOHEME в Сануре</span>
+          </div>
+        </section>
+
+        {/* 4. Почему лизхолд */}
+        <section className="flex flex-col gap-8">
+          <Head no="02" title="Почему здесь всё в лизхолде" />
           <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-12">
             {WHY.map(w => (
               <div key={w.t} className="flex flex-col gap-2.5 border-t-2 border-[#0F1A15] pt-4">
@@ -117,7 +168,7 @@ export async function HomeRu() {
         {/* 4. Виллы */}
         {picks.length > 0 && (
           <section className="flex flex-col gap-8">
-            <Head no="02" title="Виллы с лучшей доходностью" link={{ href: '/ru/villy', label: 'Весь каталог' }} />
+            <Head no="03" title="Виллы с лучшей доходностью" link={{ href: '/ru/villy', label: 'Весь каталог' }} />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
               {picks.slice(0, 6).map(v => <VillaCard key={v.slug} a={v} lang="ru" />)}
             </div>
@@ -127,7 +178,7 @@ export async function HomeRu() {
         {/* 5. Издалека */}
         <section className="grid grid-cols-1 items-center gap-8 border-t border-[#ECEFED] pt-16 md:grid-cols-2 md:gap-16 md:pt-24">
           <div className="flex flex-col gap-4">
-            <Head no="03" title="Для тех, кто покупает издалека" />
+            <Head no="04" title="Для тех, кто покупает издалека" />
             <p className="max-w-[60ch] text-[17px] leading-[1.6] text-[#4A5550]">
               Сайт на 10 языках, цены в вашей валюте. Созвониться с застройщиком по видео можно из любой страны — запись прямо на странице объекта.
             </p>

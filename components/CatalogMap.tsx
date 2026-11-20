@@ -124,7 +124,7 @@ export function CatalogMap({ groups: all, lang = 'ru' }: { groups: CatalogMapGro
     return () => { document.body.style.overflow = prev; document.removeEventListener('keydown', onKey) }
   }, [open])
 
-  if (wide) return <MapCanvas groups={groups} lang={lang} className="h-full rounded-md" />
+  if (wide) return <MapCanvas groups={groups} lang={lang} className="h-full" />
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}

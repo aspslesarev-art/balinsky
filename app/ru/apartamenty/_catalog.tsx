@@ -1,6 +1,4 @@
 import { Header } from '@/components/Header'
-import { PageContainer } from '@/components/PageContainer'
-import { CatalogTabs } from '@/components/CatalogTabs'
 import { ApartmentCard } from '@/components/ApartmentCard'
 import { SeoContent } from '@/components/SeoContent'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
@@ -16,7 +14,7 @@ import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString } from './_lib'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
-import { CATALOG_EYEBROW } from '@/lib/catalog-eyebrow'
+import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
 import { HeadingPrice } from '@/components/Money'
@@ -248,9 +246,9 @@ export async function ApartamentyCatalog({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(catalogJsonLd) }} />
       <Header active="apartamenty" />
 
-      <PageContainer>
-        <p className="pt-8 text-[12px] uppercase tracking-[0.08em] text-[#6B7570]">{CATALOG_EYEBROW[lang] ?? CATALOG_EYEBROW.en}</p>
-        <h1 className="mt-2 mb-2 text-[28px] [overflow-wrap:normal] [word-break:normal] md:text-[44px] font-semibold leading-[1.1] tracking-[-0.03em] text-[var(--color-text)]">
+      <CatalogShell
+        lang={lang}
+        heading={<>
           {h1Text}
           {hasPrice && <HeadingPrice min={filters.priceMin} max={filters.priceMax} lang={lang} />}
           {actualPage > 1 && (
@@ -258,39 +256,20 @@ export async function ApartamentyCatalog({
               {' '}— {copy.page} {actualPage}
             </span>
           )}
-        </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
+        </>}
+        count={<>
           {copy.objects(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
-        </div>
-
-        {districtCopy && (
+        </>}
+        mapHref={buildMapHref(filters, lang)}
+        intro={districtCopy && (
           <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
         )}
-
-        <CatalogTabs
-          active="list"
-          listHref={buildListHref(filters, lang)}
-          mapHref={buildMapHref(filters, lang)}
-          lang={lang}
-        />
-
-        <div className="mt-6">
-          <CatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
-        </div>
-
-        <div className="mt-4">
-          <FiltersBar state={filters} options={options} lang={lang} />
-        </div>
-
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.75fr)] lg:gap-8">
-        <div className="min-w-0">
-        {cards.length > 1 && (
-          <div className="mt-3">
-            <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} />
-          </div>
-        )}
-
+        search={<CatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />}
+        filters={<FiltersBar state={filters} options={options} lang={lang} />}
+        sort={cards.length > 1 ? <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} /> : null}
+        map={mapGroups.length > 0 ? <CatalogMap groups={mapGroups} lang={lang} /> : null}
+      >
         {cards.length === 0 ? (
           alternatives ? (
             <section className="mt-8" aria-labelledby="catalog-alternatives">
@@ -323,13 +302,6 @@ export async function ApartamentyCatalog({
             />
           </>
         )}
-        </div>
-        {mapGroups.length > 0 && (
-          <aside className="lg:sticky lg:top-[88px] lg:mt-6 lg:h-[calc(100vh-112px)] lg:self-start">
-            <CatalogMap groups={mapGroups} lang={lang} />
-          </aside>
-        )}
-        </div>
 
         {cards.length > 0 && (
           <div className="mt-10">
@@ -361,7 +333,7 @@ export async function ApartamentyCatalog({
         <SeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
-      </PageContainer>
+      </CatalogShell>
     </>
   )
 }
