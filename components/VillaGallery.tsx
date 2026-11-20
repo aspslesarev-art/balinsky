@@ -201,7 +201,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         ...(planCount > 0 ? [{ key: 'plans', label: c.plans, count: planCount > 1 ? planCount : undefined, cover: plans[0] ?? null, tab: 'plans' as Tab, i: 0 }] : []),
         ...(masterplan ? [{ key: 'master', label: c.master, cover: masterplanCover ?? null, tab: 'master' as Tab, i: 0 }] : []),
         ...(tourUrl ? [{ key: 'tour', label: c.tour, cover: photos[2] ?? photos[0] ?? null, tab: 'tour' as Tab, i: 0 }] : []),
-        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, cover: v.cover ?? null, tab: `x:${v.key}` as Tab, i: 0 })),
+        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, cover: v.cover ?? null, unopt: /arcgisonline\.com/.test(v.cover ?? ''), tab: `x:${v.key}` as Tab, i: 0 })),
         ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, tab: 'promo' as Tab, i: 0 }] : []),
       ]
 
@@ -255,7 +255,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           {extraTiles}
           {viewerTabs.filter(v => !v.hideTile).map(v => (
             <button key={v.key} type="button" onClick={() => setOpen({ tab: `x:${v.key}`, i: 0 })} className={MEDIA_TILE} aria-label={v.label}>
-              {v.cover && <Image src={v.cover} alt="" width={200} height={96} sizes="200px" className="w-full h-full object-cover" />}
+              {v.cover && <Image src={v.cover} alt="" width={200} height={96} sizes="200px" unoptimized={/arcgisonline\.com/.test(v.cover)} className="w-full h-full object-cover" />}
               <MediaTileLabel icon={v.icon}>{v.label}</MediaTileLabel>
             </button>
           ))}

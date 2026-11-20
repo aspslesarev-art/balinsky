@@ -78,6 +78,7 @@ import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { ManagerContactButtons } from '@/components/ManagerContactButtons'
 import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
+import { LocationView } from '@/components/LocationView'
 import { VillaActions } from '@/components/VillaActions'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { loadLandmarks } from '@/lib/landmarks'
@@ -1252,6 +1253,28 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
   const buildViewerTabs = (wind: Wind | null): ViewerTab[] => {
     const tabs: ViewerTab[] = []
     const en = lang !== 'ru'
+    // «Локация» (владелец 20.11.2026, макет LocA): карта, спутник, улица Google
+    // (встроенные — бесплатно) и «Рядом». Обложка — спутниковый снимок Esri.
+    if (lat != null && lng != null) {
+      const z = 16, n = 2 ** z
+      const tx = Math.floor(((lng + 180) / 360) * n)
+      const ty = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n)
+      const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${K('м', 'm')}` : `${km.toFixed(1).replace('.', en ? '.' : ',')} ${K('км', 'km')}`
+      const row = (k: string) => livingFacts?.rows.find(r => r.key === k)?.km ?? null
+      const near: { label: string; value: string }[] = []
+      if (beachPick?.km != null) near.push({ label: [K('Пляж', 'Beach'), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
+      if (row('shop') != null) near.push({ label: K('Магазин', 'Shop'), value: dist(row('shop')!) })
+      if (row('school') != null) near.push({ label: K('Школа', 'School'), value: dist(row('school')!) })
+      if (livingFacts?.airportMin != null) near.push({ label: K('Аэропорт', 'Airport'), value: `${livingFacts.airportMin} ${K('мин', 'min')}` })
+      tabs.push({
+        key: 'location',
+        label: pickCopy({ ru: 'Локация', en: 'Location', id: 'Lokasi', fr: 'Emplacement', de: 'Lage', zh: '位置', nl: 'Locatie', ban: 'Genah', pl: 'Lokalizacja', uk: 'Локація' }, lang),
+        icon: <MapPin size={18} aria-hidden />,
+        cover: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`,
+        bleed: true,
+        content: <LocationView lat={lat} lng={lng} place={district ? `${district}, ${K('Бали', 'Bali')}` : null} near={near} lang={lang} />,
+      })
+    }
     if (sunPlan && sunSettings?.enabled) {
       tabs.push({
         key: 'sun',

@@ -48,6 +48,7 @@ const LandProfileBlock = dynamic(
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
+import { LocationView } from '@/components/LocationView'
 import { managerLanguagesEn } from '@/lib/manager-lang'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
@@ -1353,6 +1354,30 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     </>
   )
   if (analyticsOnly) return analytics
+
+  // «Локация» в окне медиа — как у вилл (владелец 20.11.2026, макет LocA).
+  if (lat != null && lng != null) {
+    const en = lang !== 'ru'
+    const KK = (ru: string, enText: string) => (en ? enText : ru)
+    const z = 16, n2 = 2 ** z
+    const tx = Math.floor(((lng + 180) / 360) * n2)
+    const ty = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n2)
+    const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${KK('м', 'm')}` : `${km.toFixed(1).replace('.', en ? '.' : ',')} ${KK('км', 'km')}`
+    const row = (k: string) => livingFacts?.rows.find(r => r.key === k)?.km ?? null
+    const near: { label: string; value: string }[] = []
+    if (beachPick?.km != null) near.push({ label: [KK('Пляж', 'Beach'), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
+    if (row('shop') != null) near.push({ label: KK('Магазин', 'Shop'), value: dist(row('shop')!) })
+    if (row('school') != null) near.push({ label: KK('Школа', 'School'), value: dist(row('school')!) })
+    if (livingFacts?.airportMin != null) near.push({ label: KK('Аэропорт', 'Airport'), value: `${livingFacts.airportMin} ${KK('мин', 'min')}` })
+    aptViewerTabs.unshift({
+      key: 'location',
+      label: pickCopy({ ru: 'Локация', en: 'Location', id: 'Lokasi', fr: 'Emplacement', de: 'Lage', zh: '位置', nl: 'Locatie', ban: 'Genah', pl: 'Lokalizacja', uk: 'Локація' }, lang),
+      icon: <MapPin size={18} aria-hidden />,
+      cover: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`,
+      bleed: true,
+      content: <LocationView lat={lat} lng={lng} place={district ? `${district}, ${KK('Бали', 'Bali')}` : null} near={near} lang={lang} />,
+    })
+  }
 
   // Форма записи и «Написать менеджеру» поверх фото — как на странице виллы
   // (владелец 20.11.2026). Не для переуступок и не для брони.
