@@ -87,7 +87,6 @@ import { BeachBlock } from '@/components/BeachBlock'
 import { nearestBeachProfile, nearestBeachProfileByPoint } from '@/lib/beaches'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
-import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { localizeSnapshot } from '@/lib/competitor-names-en'
@@ -2038,8 +2037,16 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
     area != null ? `${Math.round(area)} ${K('м²', 'm²')}` : null,
     bedrooms != null ? K(`${bedrooms} ${bedrooms === 1 ? 'спальня' : bedrooms < 5 ? 'спальни' : 'спален'}`, `${bedrooms} ${bedrooms === 1 ? 'bedroom' : 'bedrooms'}`) : null,
     land != null && land > 0 ? K(`участок ${Math.round(land)} м²`, `plot ${Math.round(land)} m²`) : null,
-    leaseUntil ? K(`аренда земли до ${leaseUntil.slice(0, 4)}`, `land lease until ${leaseUntil.slice(0, 4)}`)
-      : leaseYears != null ? K(`аренда земли ${Math.round(leaseYears)} лет`, `${Math.round(leaseYears)}-year land lease`) : null,
+    // Сколько лет аренды осталось, а не «до 2054» (владелец 20.11.2026): то же
+    // число, что в фактах «Объекта»; нет его — считаем от года окончания.
+    (() => {
+      const left = leaseYears != null ? Math.round(leaseYears)
+        : leaseUntil && /^\d{4}/.test(leaseUntil) ? Number(leaseUntil.slice(0, 4)) - new Date().getFullYear() : null
+      if (left == null || left <= 0) return null
+      const m10 = left % 10, m100 = left % 100
+      const ru = m10 === 1 && m100 !== 11 ? 'год' : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? 'года' : 'лет'
+      return K(`аренда земли ${left} ${ru}`, `${left}-year land lease`)
+    })(),
   ].filter(Boolean).join(' · ')
   // Цена, «Связаться» и ссылки «В подборку» / «Презентация PDF» (только Pro) —
   // справа от названия на компьютере и под фото на телефоне (макет «Журнал», 19.11.2026).
@@ -2081,15 +2088,30 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
   )
   const leadCard = (id: string, framed: boolean) => (
     <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')} priceNote={priceNum != null && <PriceCtaCard compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
+      priceMeta={priceNum != null && <PriceCtaCard compact="meta" priceUsd={priceNum} pricePerSqmUsd={priceM2} presentationButton={null}
+        dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null} />}
       manager={managers[0] ? { photo: managers[0].photo ?? null, name: managerName, langs: managerLangs } : null} developerName={developerName ?? null}
       managerName={managers[0]?.name ?? null} managerId={managers[0]?.id ?? null} listingTitle={title} />
   )
   // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.
+  // Кнопки под фото: сохранить, поделиться, PDF (Pro), сообщить об ошибке.
+  const villaActions = () => (
+        <VillaActions lang={lang} title={title} item={{
+          kind: 'villa', slug, title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+          district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null, land: land ?? null,
+        }} proLinks={
+          <span className="bx-pro-only">
+            <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">
+              {presentationPdf}
+            </span>
+          </span>
+        } />
+  )
   const makePriceBar = () => priceNum != null && (
     <PriceCtaCard
       journal
       bar
-      ctaHref={leadOn ? '#zapis' : null}
+      hideMain={leadOn}
       priceUsd={priceNum}
       pricePerSqmUsd={priceM2}
       updatedAt={priceUpdatedAt}
@@ -2103,93 +2125,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
       presentationButton={null}
       dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null}
       links={
-        <VillaActions lang={lang} title={title} item={{
-          kind: 'villa', slug, title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-          district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null, land: land ?? null,
-        }} proLinks={
-          <span className="bx-pro-only">
-            <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">
-              <AddToCollection asLink kind="villa" slug={slug} lang={lang} snapshot={{
-                title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-                district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
-                leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
-                id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
-              }} />
-              {presentationPdf}
-            </span>
-          </span>
-        } />
+        villaActions()
       }
     />
   )
 
-  return (
-    <>
-      <Header active="villy" />
-      <PageViewTracker kind="villa" slug={slug} title={title} airtableId={v.airtable_id} lang={lang} />
-      <PageEditButton kind="villa" id={v.airtable_id} lang={lang} />
-      <PageContainer>
-        <Breadcrumbs hideLast currentUrl={`${villasRoot}/o/${slug}`} items={[
-          { label: c.home, href: home },
-          { label: c.villasCrumb, href: villasRoot },
-          // Regency level dropped: it has no page, so its crumb had no `item`
-          // and GSC flagged the whole BreadcrumbList. Chain goes straight to
-          // the district (which does have a page).
-          ...(district ? [{ label: district, href: districtSlug ? `${villasRoot}/${districtSlug}` : undefined }] : []),
-          { label: title },
-        ]} />
-
-        {/* Верх — вариант A (макет владельца 19.11.2026): компактно, только
-            название и строка фактов; цена — полосой под фото (на телефоне —
-            после ряда медиа). */}
-        <section className="pb-5 md:pb-6">
-          <div className="flex min-w-0 flex-col gap-2">
-            <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
-              {/* Без «— 86 м², 2 спальни…»: эти цифры стоят строкой ниже (владелец 19.11.2026). */}
-              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
-            </h1>
-            {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
-            {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block self-start"><VerifiedYieldBadge lang={lang} /></a>}
-          </div>
-        </section>
-
-        <VillaGallery
-          photos={photos}
-          alts={photoAlts}
-          plans={curated.plans}
-          plan3dUrl={plan3dUrl}
-          videos={videos.map(vd => ({ url: vd.url, name: vd.name }))}
-          title={title}
-          lang={lang}
-          masterplan={masterplanNode}
-          masterplanCover={masterplanCover}
-          tourUrl={complexMedia.tourUrl}
-          promo={promoKit}
-          viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
-          bleed
-          tilesAs="text"
-          belowHero={priceNum != null ? <div className={leadOn ? '' : 'hidden lg:block'}>{makePriceBar()}</div> : null}
-          ambient={(() => {
-            // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
-            // или рисовые поля (если вид на рис), остальное — тропический сад.
-            if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
-            const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
-            if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|kedungu|nyanyi|убуд|табанан|менгви/i.test(where)) {
-              return /рис|rice/i.test(firstString(d['Вид']) ?? '') ? '/ambient/ricefield.mp3' : '/ambient/jungle.mp3'
-            }
-            return '/ambient/garden.mp3'
-          })()}
-        />
-
-        {leadOn ? <LeadStickyBar lang={lang} targetId="zapis" price={leadPrice('sm')} />
-          : priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
-
-        {/* Разделы 01–04; между ними 64 / 96 px. */}
-        <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
-        {/* Форма связи — справа от «Объекта» и едет рядом с ним (владелец 20.11.2026,
-            макет FormA); на телефоне — сразу после раздела. */}
-        <div className={leadOn ? 'grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_392px] lg:items-start lg:gap-16' : 'contents'}>
-        {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
+  // Раздел «01 Объект» — при форме связи он стоит слева от неё (в VillaGallery, aside).
+  const objektChapter = () => ((villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
           <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} journal>
             {objTiles.length > 0 && (
               <div className={`grid grid-cols-2 ${leadOn ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
@@ -2222,9 +2164,78 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
               </div>
             )}
           </VillaChapter>
-        )}
-        {leadOn && <aside className="lg:sticky lg:top-[96px]">{leadCard('zapis', true)}</aside>}
-        </div>
+        ))
+
+  return (
+    <>
+      <Header active="villy" />
+      <PageViewTracker kind="villa" slug={slug} title={title} airtableId={v.airtable_id} lang={lang} />
+      <PageEditButton kind="villa" id={v.airtable_id} lang={lang} />
+      <PageContainer>
+        <Breadcrumbs hideLast currentUrl={`${villasRoot}/o/${slug}`} items={[
+          { label: c.home, href: home },
+          { label: c.villasCrumb, href: villasRoot },
+          // Regency level dropped: it has no page, so its crumb had no `item`
+          // and GSC flagged the whole BreadcrumbList. Chain goes straight to
+          // the district (which does have a page).
+          ...(district ? [{ label: district, href: districtSlug ? `${villasRoot}/${districtSlug}` : undefined }] : []),
+          { label: title },
+        ]} />
+
+        {/* Верх — вариант A (макет владельца 19.11.2026): компактно, только
+            название и строка фактов; цена — полосой под фото (на телефоне —
+            после ряда медиа). */}
+        <section className="pb-5 md:pb-6">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
+              {/* Без «— 86 м², 2 спальни…»: эти цифры стоят строкой ниже (владелец 19.11.2026). */}
+              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
+            </h1>
+            {/* Строка фактов, справа на той же строке — сохранить · PDF · поделиться · ошибка
+                (владелец 20.11.2026). Плашку «Подтверждённая доходность» убрали: занимала место. */}
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+              {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
+              {leadOn && <div className="shrink-0">{villaActions()}</div>}
+            </div>
+          </div>
+        </section>
+
+        <VillaGallery
+          photos={photos}
+          alts={photoAlts}
+          plans={curated.plans}
+          plan3dUrl={plan3dUrl}
+          videos={videos.map(vd => ({ url: vd.url, name: vd.name }))}
+          title={title}
+          lang={lang}
+          masterplan={masterplanNode}
+          masterplanCover={masterplanCover}
+          tourUrl={complexMedia.tourUrl}
+          promo={promoKit}
+          viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
+          bleed
+          tilesAs="text"
+          belowHero={!leadOn && priceNum != null ? <div className="hidden lg:block">{makePriceBar()}</div> : null}
+          aside={leadOn ? leadCard('zapis', true) : null}
+          afterTiles={leadOn ? <div className="mt-16 lg:mt-20">{objektChapter()}</div> : null}
+          ambient={(() => {
+            // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
+            // или рисовые поля (если вид на рис), остальное — тропический сад.
+            if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
+            const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
+            if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|kedungu|nyanyi|убуд|табанан|менгви/i.test(where)) {
+              return /рис|rice/i.test(firstString(d['Вид']) ?? '') ? '/ambient/ricefield.mp3' : '/ambient/jungle.mp3'
+            }
+            return '/ambient/garden.mp3'
+          })()}
+        />
+
+        {leadOn ? <LeadStickyBar lang={lang} targetId="zapis" price={leadPrice('sm')} />
+          : priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
+
+        {/* Разделы 01–04; между ними 64 / 96 px. */}
+        <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
+        {!leadOn && objektChapter()}
 
         {/* Аналитика — заголовок «02 Проверьте виллу с ИИ» рисует сама панель. */}
         {analyses.length > 0 ? (

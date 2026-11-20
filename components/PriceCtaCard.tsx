@@ -173,7 +173,7 @@ export function PriceCtaCard({
   bar?: boolean
   links?: ReactNode
   /** Только цена и «обновлена …» — для формы записи (LeadHeroCard) и нижней кнопки на телефоне. */
-  compact?: 'lg' | 'sm' | 'updated' | null
+  compact?: 'lg' | 'sm' | 'updated' | 'meta' | null
   /** Полоса без цены и кнопки — их показывает форма записи на созвон (владелец 20.11.2026). */
   hideMain?: boolean
   /** Куда ведёт кнопка полосы — к форме записи (#zapis), если она на странице. */
@@ -206,6 +206,24 @@ export function PriceCtaCard({
   // Вариант A (владелец 19.11.2026): полоса под главным фото — цена и «обновлена»,
   // за м² и рассрочка столбиками «значение / подпись», справа ссылки и кнопка.
   if (compact) {
+    // Цена за м² и рассрочка — под ценой в карточке связи (владелец 20.11.2026).
+    if (compact === 'meta') {
+      const rows = [
+        ...(perSqm ? [{ l: c.perSqm.replace(/^\/\s*/, lang === 'ru' || lang === 'uk' ? 'за ' : 'per '), v: perSqm }] : []),
+        ...(dealRows ?? []).map(row => ({ l: row.label.toLowerCase(), v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? '') })),
+      ]
+      if (!rows.length) return null
+      return (
+        <span className="flex flex-wrap gap-x-8 gap-y-2">
+          {rows.map(r => (
+            <span key={r.l} className="flex flex-col gap-0.5">
+              <span className="text-[15px] font-semibold text-[#0F1A15] tabular-nums">{r.v}</span>
+              <span className="text-[13px] text-[#6B7570]">{r.l}</span>
+            </span>
+          ))}
+        </span>
+      )
+    }
     if (compact === 'updated') return updated ? <span className="text-[12px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</span> : null
     return compact === 'sm' ? (
       <span className="text-[18px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
@@ -233,7 +251,7 @@ export function PriceCtaCard({
           </div>
         ))}
         {note && <div className="text-[14px] text-[#6B7570]">{note}</div>}
-        <div className="ml-auto flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className={`${hideMain ? '' : 'ml-auto '}flex flex-wrap items-center gap-x-6 gap-y-3`}>
           {links}
           {hideMain ? null : reservedUntil ? (
             <span className="flex items-center gap-2 text-[14px] text-[#92400E]"><Lock size={16} strokeWidth={1.6} /><span className="font-semibold">{c.reservedTitle}</span></span>

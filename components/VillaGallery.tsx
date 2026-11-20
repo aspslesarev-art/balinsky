@@ -40,7 +40,7 @@ const COPY = {
 } as const
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero, overHero }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero, overHero, aside, afterTiles }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -78,6 +78,9 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   belowHero?: ReactNode
   /** Поверх фото справа, по сетке страницы (только компьютер) — форма записи на созвон. */
   overHero?: ReactNode
+  /** Колонка справа под фото (карточка связи) и что идёт слева после превью. */
+  aside?: ReactNode
+  afterTiles?: ReactNode
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansAreMasterplan ? { ...base, plans: base.master } : base
@@ -200,58 +203,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, tab: 'promo' as Tab, i: 0 }] : []),
       ]
 
-  return (
-    <section className="flex flex-col gap-2">
-      <div className={`relative overflow-hidden bg-[#1B211E] ${heroH} ${round} ${bleed ? 'ml-[calc(50%-50vw)] w-screen max-w-none' : ''}`}
-        onPointerDown={e => { if (e.pointerType !== 'mouse') swipe.current = e.clientX }}
-        onPointerUp={e => {
-          const x0 = swipe.current; swipe.current = null
-          if (x0 == null || n < 2) return
-          const dx = e.clientX - x0
-          if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1)
-        }}>
-        {shown && (
-          // Как на YouTube (владелец 20.11.2026): нажал на кадр — пошло, ещё раз — пауза.
-          <button type="button" onClick={n > 1 ? (showing ? stop : play) : openAt} aria-label={n > 1 ? (showing ? c.pause : c.play) : c.open}
-            className={`absolute inset-0 block ${n > 1 ? 'cursor-pointer' : 'cursor-zoom-in'} overflow-hidden ${round} focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white`}>
-            <Image key={shown} src={shown} alt={alts?.[Math.min(cur, n - 1)] ?? title} fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'} priority={cur === 0}
-              className={`object-cover transition-opacity duration-[600ms] ${showing ? 'opacity-0' : 'opacity-100'}`} draggable={false} />
-            {showing && <>{layer('a', aIdx, aTop)}{layer('b', bIdx, !aTop)}</>}
-          </button>
-        )}
-        {n > 1 && !showing && (
-          <button type="button" onClick={play} aria-label={c.play}
-            className={`absolute left-1/2 top-1/2 z-10 flex h-20 w-20 -translate-x-1/2 ${overHero ? 'lg:left-[36%]' : ''} -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition-transform duration-[120ms] [filter:drop-shadow(0_2px_8px_rgb(0_0_0/.35))] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white`}>
-            {/* Классический значок (образец владельца 19.11.2026): толстое кольцо ~7% диаметра,
-                острый треугольник 40% высоты, по центру тяжести. */}
-            <svg width="80" height="80" viewBox="0 0 100 100" aria-hidden="true" className="block">
-              <circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" />
-              <path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" />
-            </svg>
-          </button>
-        )}
-        {showing && <>
-          <button type="button" onClick={stop} aria-label={c.pause}
-            className="absolute bottom-3 left-3 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(16_24_20/0.6)] text-white hover:bg-[rgb(16_24_20/0.8)] focus-visible:outline-2 focus-visible:outline-white">
-            <Pause size={18} fill="currentColor" aria-hidden />
-          </button>
-          {ambient && (
-            <button type="button" onClick={toggleMute} aria-label={muted ? c.unmute : c.mute} aria-pressed={muted}
-              className="absolute bottom-3 left-16 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(16_24_20/0.6)] text-white hover:bg-[rgb(16_24_20/0.8)] focus-visible:outline-2 focus-visible:outline-white">
-              {muted ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />}
-            </button>
-          )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[3px] bg-white/30">
-            <div key={Math.floor(show.k / n)} className="h-full bg-white" style={{ animation: `photo-progress ${n * ADVANCE_MS}ms linear forwards` }} />
-          </div>
-        </>}
-        {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
-        {overHero && (
-          <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[11] hidden w-full max-w-[1280px] -translate-x-1/2 px-6 lg:block">
-            <div className="pointer-events-auto ml-auto mt-6 w-[392px]">{overHero}</div>
-          </div>
-        )}
-      </div>
+  const belowBlock = (
+    <>
       {belowHero}
 
       {tilesAs === 'text' ? (links.length > 0 && (
@@ -315,6 +268,69 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
       )}
 
       {belowTiles}
+    </>
+  )
+
+  return (
+    <section className="flex flex-col gap-2">
+      <div className={`relative overflow-hidden bg-[#1B211E] ${heroH} ${round} ${bleed ? 'ml-[calc(50%-50vw)] w-screen max-w-none' : ''}`}
+        onPointerDown={e => { if (e.pointerType !== 'mouse') swipe.current = e.clientX }}
+        onPointerUp={e => {
+          const x0 = swipe.current; swipe.current = null
+          if (x0 == null || n < 2) return
+          const dx = e.clientX - x0
+          if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1)
+        }}>
+        {shown && (
+          // Как на YouTube (владелец 20.11.2026): нажал на кадр — пошло, ещё раз — пауза.
+          <button type="button" onClick={n > 1 ? (showing ? stop : play) : openAt} aria-label={n > 1 ? (showing ? c.pause : c.play) : c.open}
+            className={`absolute inset-0 block ${n > 1 ? 'cursor-pointer' : 'cursor-zoom-in'} overflow-hidden ${round} focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white`}>
+            <Image key={shown} src={shown} alt={alts?.[Math.min(cur, n - 1)] ?? title} fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'} priority={cur === 0}
+              className={`object-cover transition-opacity duration-[600ms] ${showing ? 'opacity-0' : 'opacity-100'}`} draggable={false} />
+            {showing && <>{layer('a', aIdx, aTop)}{layer('b', bIdx, !aTop)}</>}
+          </button>
+        )}
+        {n > 1 && !showing && (
+          <button type="button" onClick={play} aria-label={c.play}
+            className={`absolute left-1/2 top-1/2 z-10 flex h-20 w-20 -translate-x-1/2 ${overHero ? 'lg:left-[36%]' : ''} -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition-transform duration-[120ms] [filter:drop-shadow(0_2px_8px_rgb(0_0_0/.35))] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white`}>
+            {/* Классический значок (образец владельца 19.11.2026): толстое кольцо ~7% диаметра,
+                острый треугольник 40% высоты, по центру тяжести. */}
+            <svg width="80" height="80" viewBox="0 0 100 100" aria-hidden="true" className="block">
+              <circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" />
+              <path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" />
+            </svg>
+          </button>
+        )}
+        {showing && <>
+          <button type="button" onClick={stop} aria-label={c.pause}
+            className="absolute bottom-3 left-3 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(16_24_20/0.6)] text-white hover:bg-[rgb(16_24_20/0.8)] focus-visible:outline-2 focus-visible:outline-white">
+            <Pause size={18} fill="currentColor" aria-hidden />
+          </button>
+          {ambient && (
+            <button type="button" onClick={toggleMute} aria-label={muted ? c.unmute : c.mute} aria-pressed={muted}
+              className="absolute bottom-3 left-16 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(16_24_20/0.6)] text-white hover:bg-[rgb(16_24_20/0.8)] focus-visible:outline-2 focus-visible:outline-white">
+              {muted ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />}
+            </button>
+          )}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[3px] bg-white/30">
+            <div key={Math.floor(show.k / n)} className="h-full bg-white" style={{ animation: `photo-progress ${n * ADVANCE_MS}ms linear forwards` }} />
+          </div>
+        </>}
+        {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
+        {overHero && (
+          <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[11] hidden w-full max-w-[1280px] -translate-x-1/2 px-6 lg:block">
+            <div className="pointer-events-auto ml-auto mt-6 w-[392px]">{overHero}</div>
+          </div>
+        )}
+      </div>
+      {aside ? (
+        // Справа от полосы под фото, превью и раздела «Объект» — карточка связи,
+        // едет рядом (владелец 20.11.2026); на телефоне — после «Объекта».
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_392px] lg:items-start lg:gap-16">
+          <div className="flex min-w-0 flex-col gap-2">{belowBlock}{afterTiles}</div>
+          <aside className="mt-10 lg:sticky lg:top-[96px] lg:mt-6">{aside}</aside>
+        </div>
+      ) : belowBlock}
 
       {open && (
         <MediaViewer

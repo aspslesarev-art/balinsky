@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Heart, Share2, Printer, Flag, Check, X } from 'lucide-react'
+import { Heart, Share2, Flag, Check, X } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { useWishlist } from '@/components/WishlistContext'
 import type { WishlistInput } from '@/components/WishlistButton'
@@ -49,9 +49,6 @@ export function VillaActions({ lang, item, title, proLinks }: { lang: Lang; item
       {proLinks}
       <button type="button" onClick={share} className={ACT}>
         {copied ? <Check size={16} strokeWidth={1.7} aria-hidden /> : <Share2 size={16} strokeWidth={1.7} aria-hidden />} <span aria-live="polite">{copied ? c.copied : c.share}</span>
-      </button>
-      <button type="button" onClick={() => window.print()} className={`${ACT} max-md:hidden`}>
-        <Printer size={16} strokeWidth={1.7} aria-hidden /> {c.print}
       </button>
       <button type="button" onClick={() => setReport(true)} className={ACT}>
         <Flag size={16} strokeWidth={1.7} aria-hidden /> {c.report}
