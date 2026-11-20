@@ -113,7 +113,6 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   // «Добавить в отчёт» (владелец 19.11.2026): что человек отобрал, в порядке добавления.
   const [inReport, setInReport] = useState<string[]>([])
   // Тема, открытая на странице (текстовые вкладки над карточками).
-  const [pageTab, setPageTab] = useState(0)
   const [building, setBuilding] = useState<'idle' | 'busy' | 'fail'>('idle')
   const [t, setT] = useState(0)
   const [done, setDone] = useState<Record<string, true>>({})
@@ -226,42 +225,42 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
             {no && <span className="text-[13px] tabular-nums text-[#6B7570]">{no}</span>}
             <h2 className="m-0 font-display text-[28px] font-bold leading-[1.15] tracking-[-0.02em] md:text-[40px]">{heading ?? c.heading}</h2>
           </div>
-          <span className="text-[15px] text-[#4A5550] md:text-[17px]">{lang === 'ru' ? `${flat.length} проверок по открытым данным — до звонка застройщику` : `${flat.length} checks on open data — before you call the developer`}</span>
+          <span className="text-[15px] text-[#4A5550] md:text-[17px]">{lang === 'ru' ? `${flat.length} проверок по открытым данным — выберите, что интересно` : `${flat.length} checks on open data — pick what matters to you`}</span>
         </div>
         {flat[0] && (
           <button type="button" onClick={() => pick(flat[0].id)}
             className="inline-flex h-[52px] cursor-pointer items-center rounded-xl border-0 bg-[var(--color-primary)] px-7 text-[16px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-            {lang === 'ru' ? 'Начать проверку' : 'Start the check'}
+            {lang === 'ru' ? 'Проверить всё' : 'Check everything'}
           </button>
         )}
       </div>
-      <nav aria-label={c.themes} className="-mx-6 flex w-[calc(100%+3rem)] max-w-none gap-6 overflow-x-auto px-6 md:mx-0 md:w-auto md:max-w-full md:gap-8 md:px-0">
-        {groups.map((g, i) => {
-          const on = i === pageTab
+      {/* Все проверки сразу, без переключения тем (владелец 20.11.2026, макет AiAllC):
+          4 столбца — по теме в каждом, плитка «картинка + название + ›». */}
+      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+        {groups.map((g, gi2) => {
+          const tone = COVER[gi2 % COVER.length]
           return (
-            <button key={g.name} type="button" onClick={() => setPageTab(i)} aria-pressed={on}
-              className={`shrink-0 cursor-pointer whitespace-nowrap border-0 border-b-2 bg-transparent px-0 pb-1 pt-2 text-[15px] transition-colors duration-[120ms] ${on ? 'border-[#0F1A15] font-semibold text-[#0F1A15]' : 'border-transparent text-[#6B7570] hover:text-[#0F1A15]'}`}>
-              {g.name}
-            </button>
-          )
-        })}
-      </nav>
-      {/* Телефон — карточки листаются вбок; планшет и шире — сетка. */}
-      <div className="-mx-6 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:grid md:w-auto md:max-w-full md:grid-cols-3 md:gap-8 md:overflow-visible md:px-0 lg:grid-cols-4">
-        {(groups[pageTab] ?? groups[0]).items.map(a => {
-          const cover = coverOf(a)
-          const blur = locked && cover && !cover.open
-          const tone = COVER[pageTab % COVER.length]
-          return (
-            <button key={a.id} type="button" onClick={() => pick(a.id)}
-              className="group flex w-[280px] shrink-0 cursor-pointer snap-start flex-col gap-3 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-auto">
-              <span className="relative block aspect-[7/4] w-full overflow-hidden rounded-md" style={{ background: tone.bg }} aria-hidden={!cover}>
-                {cover && <span className="pointer-events-none absolute inset-0 transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.03]" style={{ filter: blur ? 'blur(6px)' : undefined }}><CoverPlay><VizCover v={cover.v} lang={lang} accent={tone.ink} /></CoverPlay></span>}
+            <div key={g.name} className="flex min-w-0 flex-col gap-2">
+              <span className="mb-1 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#6B7570]">
+                <span className="h-2 w-2 rounded-[2px]" style={{ background: tone.ink }} aria-hidden />{g.name}
               </span>
-              <span className="flex items-center gap-1.5 text-[17px] font-semibold leading-[1.3] text-[#0F1A15] group-hover:underline group-hover:underline-offset-4">
-                {done[a.id] && <span aria-label={c.done} className="text-[#1F8B5F]">✓</span>}{a.title}
-              </span>
-            </button>
+              {g.items.map(a => {
+                const cover = coverOf(a)
+                const blur = locked && cover && !cover.open
+                return (
+                  <button key={a.id} type="button" onClick={() => pick(a.id)}
+                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-2.5 text-left shadow-[0_0_0_1px_#DCE7E0] transition-shadow duration-[120ms] hover:shadow-[0_0_0_1px_#0F1A15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1A15]">
+                    <span className="relative block aspect-[7/4] w-[84px] shrink-0 overflow-hidden rounded-md" style={{ background: tone.bg }} aria-hidden>
+                      {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: blur ? 'blur(4px)' : undefined }}><CoverPlay><VizCover v={cover.v} lang={lang} accent={tone.ink} /></CoverPlay></span>}
+                    </span>
+                    <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[15px] font-semibold leading-[1.3] text-[#0F1A15]">
+                      {done[a.id] && <span aria-label={c.done} className="text-[#1F8B5F]">✓</span>}{a.title}
+                    </span>
+                    <span className="shrink-0 text-[18px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>
+                  </button>
+                )
+              })}
+            </div>
           )
         })}
       </div>
