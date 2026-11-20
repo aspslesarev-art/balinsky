@@ -4,7 +4,7 @@
 // пузырями, нажал — список объектов в этой точке со ссылками. Подложка —
 // OpenFreeMap (OpenStreetMap), без ключа и без оплаты, как ListingMap.
 // На телефоне карта открывается кнопкой «На карте» поверх списка.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { Map as MapIcon, X } from 'lucide-react'
@@ -127,7 +127,12 @@ function MapCanvas({ groups, lang, className, onArea, onView }: { groups: Catalo
 // отодвигала карту на полрегиона.
 const onBali = (g: CatalogMapGroup) => g.lng > 114.4 && g.lng < 115.75 && g.lat > -8.95 && g.lat < -8.05
 
-export function CatalogMap({ groups: all, lang = 'ru' }: { groups: CatalogMapGroup[]; lang?: Lang }) {
+// Карта читает адресную строку (?area=) — без Suspense статичная сборка каталога падает.
+export function CatalogMap(props: { groups: CatalogMapGroup[]; lang?: Lang }) {
+  return <Suspense fallback={null}><CatalogMapInner {...props} /></Suspense>
+}
+
+function CatalogMapInner({ groups: all, lang = 'ru' }: { groups: CatalogMapGroup[]; lang?: Lang }) {
   const groups = useMemo(() => all.filter(onBali), [all])
   const c = pickCopy(COPY, lang)
   const router = useRouter()
