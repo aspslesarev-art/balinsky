@@ -19,21 +19,21 @@ export type CatalogMapItem = { slug: string; title: string; href: string; priceU
 export type CatalogMapGroup = { key: string; lat: number; lng: number; items: CatalogMapItem[] }
 
 const COPY = {
-  ru: { all: 'Показать все', open: 'На карте', close: 'Закрыть карту', n: (k: number) => `${k} ${k % 10 === 1 && k % 100 !== 11 ? 'объект' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'объекта' : 'объектов'}` },
-  en: { all: 'Show all', open: 'Map', close: 'Close map', n: (k: number) => `${k} listings` },
-  id: { all: 'Tampilkan semua', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
-  fr: { all: 'Tout afficher', open: 'Carte', close: 'Fermer la carte', n: (k: number) => `${k} biens` },
-  de: { all: 'Alle zeigen', open: 'Karte', close: 'Karte schließen', n: (k: number) => `${k} Objekte` },
-  zh: { all: '显示全部', open: '地图', close: '关闭地图', n: (k: number) => `${k} 个房源` },
-  nl: { all: 'Alles tonen', open: 'Kaart', close: 'Kaart sluiten', n: (k: number) => `${k} objecten` },
-  ban: { all: 'Tampilang sami', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
-  pl: { all: 'Pokaż wszystkie', open: 'Mapa', close: 'Zamknij mapę', n: (k: number) => `${k} ofert` },
-  uk: { all: 'Показати всі', open: 'На мапі', close: 'Закрити мапу', n: (k: number) => `${k} об’єктів` },
+  ru: { here: (k: number) => `Показать ${k} ${k % 10 === 1 && k % 100 !== 11 ? 'объект' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'объекта' : 'объектов'} здесь`, all: 'Показать все', open: 'На карте', close: 'Закрыть карту', n: (k: number) => `${k} ${k % 10 === 1 && k % 100 !== 11 ? 'объект' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'объекта' : 'объектов'}` },
+  en: { here: (k: number) => `Show ${k} listings here`, all: 'Show all', open: 'Map', close: 'Close map', n: (k: number) => `${k} listings` },
+  id: { here: (k: number) => `Tampilkan ${k} properti di sini`, all: 'Tampilkan semua', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
+  fr: { here: (k: number) => `Afficher ${k} biens ici`, all: 'Tout afficher', open: 'Carte', close: 'Fermer la carte', n: (k: number) => `${k} biens` },
+  de: { here: (k: number) => `${k} Objekte hier zeigen`, all: 'Alle zeigen', open: 'Karte', close: 'Karte schließen', n: (k: number) => `${k} Objekte` },
+  zh: { here: (k: number) => `显示此处 ${k} 个房源`, all: '显示全部', open: '地图', close: '关闭地图', n: (k: number) => `${k} 个房源` },
+  nl: { here: (k: number) => `Toon ${k} objecten hier`, all: 'Alles tonen', open: 'Kaart', close: 'Kaart sluiten', n: (k: number) => `${k} objecten` },
+  ban: { here: (k: number) => `Tampilang ${k} properti driki`, all: 'Tampilang sami', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
+  pl: { here: (k: number) => `Pokaż ${k} ofert tutaj`, all: 'Pokaż wszystkie', open: 'Mapa', close: 'Zamknij mapę', n: (k: number) => `${k} ofert` },
+  uk: { here: (k: number) => `Показати ${k} об’єктів тут`, all: 'Показати всі', open: 'На мапі', close: 'Закрити мапу', n: (k: number) => `${k} об’єктів` },
 } as const
 
 const esc = (s: string) => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))
 
-function MapCanvas({ groups, lang, className, onArea }: { groups: CatalogMapGroup[]; lang: Lang; className: string; onArea?: (a: [number, number, number, number]) => void }) {
+function MapCanvas({ groups, lang, className, onArea, onView }: { groups: CatalogMapGroup[]; lang: Lang; className: string; onArea?: (a: [number, number, number, number]) => void; onView?: (v: { area: [number, number, number, number]; n: number } | null) => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
@@ -49,7 +49,18 @@ function MapCanvas({ groups, lang, className, onArea }: { groups: CatalogMapGrou
         if (!groups.length) return
         const b = new ml.LngLatBounds([groups[0].lng, groups[0].lat], [groups[0].lng, groups[0].lat])
         for (const g of groups) b.extend([g.lng, g.lat])
+        // Сдвиги карты самим сайтом (подгонка, клик по группе) не считаем —
+        // кнопка «Показать N здесь» только после движения человеком.
+        let auto = true
         m.fitBounds(b, { padding: 48, maxZoom: 14, animate: false })
+        m.on('movestart', e => { if ((e as { originalEvent?: Event }).originalEvent) auto = false })
+        m.on('moveend', () => {
+          if (auto) { auto = false; return }
+          const bb = m.getBounds()
+          const area: [number, number, number, number] = [bb.getWest(), bb.getSouth(), bb.getEast(), bb.getNorth()]
+          const n = groups.reduce((t, g) => t + (g.lng >= area[0] && g.lng <= area[2] && g.lat >= area[1] && g.lat <= area[3] ? g.items.length : 0), 0)
+          onView?.({ area, n })
+        })
         ref.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
         // Точки ближе 90 px друг к другу на экране — одним пузырём «N объектов»;
         // нажал — карта приближается к ним. Пересчёт после каждого сдвига.
@@ -86,6 +97,8 @@ function MapCanvas({ groups, lang, className, onArea }: { groups: CatalogMapGrou
                 e.stopPropagation()
                 const bb = new ml.LngLatBounds([members[0].g.lng, members[0].g.lat], [members[0].g.lng, members[0].g.lat])
                 members.forEach(x => bb.extend([x.g.lng, x.g.lat]))
+                auto = true
+                onView?.(null)
                 m.fitBounds(bb, { padding: 80, maxZoom: 16 })
                 // И список слева — только объекты этой области (запас ~150 м по краям).
                 const pad = 0.0015
@@ -105,7 +118,7 @@ function MapCanvas({ groups, lang, className, onArea }: { groups: CatalogMapGrou
       })
     })
     return () => { cancelled = true; map?.remove() }
-  }, [groups, currency, lang, c, onArea])
+  }, [groups, currency, lang, c, onArea, onView])
   return <div ref={ref} className={`w-full overflow-hidden bg-[#EEF1EF] ${className}`} />
 }
 
@@ -134,6 +147,15 @@ export function CatalogMap({ groups: all, lang = 'ru' }: { groups: CatalogMapGro
     const q = sp.toString()
     router.push(q ? `${pathname}?${q}` : pathname, { scroll: false })
   }
+  const [view, setView] = useState<{ area: [number, number, number, number]; n: number } | null>(null)
+  const onView = useMemo(() => (v: { area: [number, number, number, number]; n: number } | null) => setView(v), [])
+  // Вариант B (владелец 20.11.2026): после сдвига карты — «Показать N объектов здесь».
+  const hereBtn = view && view.n > 0 && (
+    <button type="button" onClick={() => { const a = view.area; setView(null); setOpen(false); onArea(a) }}
+      className="absolute bottom-6 left-1/2 z-[5] inline-flex h-12 -translate-x-1/2 cursor-pointer items-center whitespace-nowrap rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white shadow-[0_8px_24px_rgb(0_0_0/.25)] hover:bg-[var(--color-primary-pressed)]">
+      {c.here(view.n)}
+    </button>
+  )
   const allBtn = area && (
     <button type="button" onClick={clearArea}
       className="absolute left-3 top-3 z-[5] inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border-0 bg-[#0F1A15] px-4 text-[14px] font-semibold text-white shadow-[0_1px_2px_rgb(0_0_0/.1),0_6px_16px_rgb(0_0_0/.2)]">
@@ -157,7 +179,7 @@ export function CatalogMap({ groups: all, lang = 'ru' }: { groups: CatalogMapGro
     return () => { document.body.style.overflow = prev; document.removeEventListener('keydown', onKey) }
   }, [open])
 
-  if (wide) return <div className="relative h-full"><MapCanvas groups={groups} lang={lang} className="h-full" onArea={onArea} />{allBtn}</div>
+  if (wide) return <div className="relative h-full"><MapCanvas groups={groups} lang={lang} className="h-full" onArea={onArea} onView={onView} />{allBtn}{hereBtn}</div>
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
@@ -166,7 +188,7 @@ export function CatalogMap({ groups: all, lang = 'ru' }: { groups: CatalogMapGro
       </button>
       {open && createPortal(
         <div className="fixed inset-0 z-[9999] bg-white" role="dialog" aria-modal="true" aria-label={c.open}>
-          <MapCanvas groups={groups} lang={lang} className="h-full" onArea={a => { setOpen(false); onArea(a) }} />{allBtn}
+          <MapCanvas groups={groups} lang={lang} className="h-full" onArea={a => { setOpen(false); onArea(a) }} onView={onView} />{allBtn}{hereBtn}
           <button type="button" onClick={() => setOpen(false)} aria-label={c.close}
             className="absolute left-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-white text-[#0F1A15] shadow-[0_1px_2px_rgb(0_0_0/.1),0_6px_16px_rgb(0_0_0/.18)]">
             <X size={20} />
