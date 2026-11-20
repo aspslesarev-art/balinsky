@@ -29,7 +29,7 @@ const ACT = 'inline-flex items-center gap-1.5 cursor-pointer border-0 bg-transpa
 // Круглый значок на фото с подписью при наведении (макет BtnA, владелец 20.11.2026).
 export const ICON_BTN = 'group/ib relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 bg-white/90 text-[#0F1A15] shadow-[0_1px_2px_rgb(0_0_0/.08),0_4px_12px_rgb(0_0_0/.12)] transition-colors duration-[120ms] hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
 export function IconTip({ text }: { text: string }) {
-  return <span className="pointer-events-none absolute right-0 top-[calc(100%+6px)] whitespace-nowrap rounded bg-[#0F1A15] px-2 py-1 text-[12px] font-normal text-white opacity-0 transition-opacity duration-[120ms] group-hover/ib:opacity-100 group-focus-visible/ib:opacity-100">{text}</span>
+  return <span className="pointer-events-none absolute right-0 top-[calc(100%+6px)] w-max max-w-none whitespace-nowrap rounded bg-[#0F1A15] px-2 py-1 text-[12px] font-normal text-white opacity-0 transition-opacity duration-[120ms] group-hover/ib:opacity-100 group-focus-visible/ib:opacity-100">{text}</span>
 }
 
 export function VillaActions({ lang, item, title, proLinks, icons = false }: { lang: Lang; item: WishlistInput; title: string; proLinks?: ReactNode; icons?: boolean }) {
