@@ -90,7 +90,7 @@ function coverOf(a: Analysis): { v: Viz; open: boolean } | null {
   return v ? { v, open: false } : null
 }
 
-export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, reportPath, no }: {
+export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, reportPath, no, heading }: {
   analyses: Analysis[]
   lang: string
   /** Печатная страница PDF-отчёта (/ru/villy/o/<slug>/otchet); нет — кнопок отчёта нет. */
@@ -101,6 +101,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   extras?: Record<string, ReactNode>
   signInHref: string
   eyebrow?: string
+  /** Заголовок вместо «Проверьте виллу с ИИ» (апартаменты). */
+  heading?: string
 }) {
   const c = lang === 'ru' ? COPY.ru : COPY.en
   const access = useAccess()
@@ -214,13 +216,24 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   const progress = G ? Math.round(Math.min(1, t / end) * 100) : 0
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Страница — стиль «Журнал» (макет владельца 19.11.2026): номер раздела,
-          заголовок с тёмной линией, темы текстом, карточки выбранной темы. */}
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-[#0F1A15] pb-4">
-        {no && <span className="text-[13px] tabular-nums text-[#6B7570]">{no}</span>}
-        <h2 className="m-0 font-display text-[26px] md:text-[32px] font-bold leading-[1.15] tracking-[-0.02em]">{c.heading}</h2>
-        <span className="text-[15px] text-[#4A5550] md:ml-auto">{c.meta(flat.length)}</span>
+    // Выделенный блок (макет AiBlockA, владелец 20.11.2026): светло-зелёная полоса
+    // на всю ширину, значок «ИИ», подзаголовок и кнопка «Начать проверку».
+    <div className="-mx-6 flex w-[calc(100%+3rem)] max-w-none flex-col gap-8 bg-[#F1F7F3] px-6 py-12 md:py-14 lg:mx-[calc(50%-50vw)] lg:w-screen lg:px-[max(24px,calc((100vw-1280px)/2+24px))]">
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+        <div className="flex min-w-0 flex-col gap-3">
+          <span className="inline-flex h-7 items-center gap-1.5 self-start rounded-full bg-white px-3 text-[13px] font-semibold text-[#1F8B5F] shadow-[0_0_0_1px_rgb(31_139_95/0.25)]">✦ {lang === 'ru' ? 'ИИ' : 'AI'}</span>
+          <div className="flex items-baseline gap-4">
+            {no && <span className="text-[13px] tabular-nums text-[#6B7570]">{no}</span>}
+            <h2 className="m-0 font-display text-[28px] font-bold leading-[1.15] tracking-[-0.02em] md:text-[40px]">{heading ?? c.heading}</h2>
+          </div>
+          <span className="text-[15px] text-[#4A5550] md:text-[17px]">{lang === 'ru' ? `${flat.length} проверок по открытым данным — до звонка застройщику` : `${flat.length} checks on open data — before you call the developer`}</span>
+        </div>
+        {flat[0] && (
+          <button type="button" onClick={() => pick(flat[0].id)}
+            className="inline-flex h-[52px] cursor-pointer items-center rounded-xl border-0 bg-[var(--color-primary)] px-7 text-[16px] font-semibold text-white transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+            {lang === 'ru' ? 'Начать проверку' : 'Start the check'}
+          </button>
+        )}
       </div>
       <nav aria-label={c.themes} className="-mx-6 flex w-[calc(100%+3rem)] max-w-none gap-6 overflow-x-auto px-6 md:mx-0 md:w-auto md:max-w-full md:gap-8 md:px-0">
         {groups.map((g, i) => {
