@@ -110,6 +110,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   const analyses = useMemo(() => withMoney(raw, s => s.replace(MONEY_RE, (_, n) => formatMoney(Number(n), currency, lang as Lang))), [raw, currency, lang])
   const [goal, setGoal] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  // Выбрана тема, но проверка ещё не выбрана — ничего не запускаем (владелец 20.11.2026).
+  const [idle, setIdle] = useState(false)
   // «Добавить в отчёт» (владелец 19.11.2026): что человек отобрал, в порядке добавления.
   const [inReport, setInReport] = useState<string[]>([])
   // Тема, открытая на странице (текстовые вкладки над карточками).
@@ -123,10 +125,19 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   const byId = Object.fromEntries(analyses.map(a => [a.id, a]))
   const endOf = (a: Analysis) => a.sources.length * STEP + 6
 
+  // Показать проверку в окне, не запуская: после смены темы или «Добавить в отчёт».
+  function browse(id: string) {
+    if (!byId[id]) return
+    if (timer.current) clearInterval(timer.current)
+    setGoal(id); setIdle(true); setT(0); setOpen(true)
+    bodyRef.current?.scrollTo({ top: 0 })
+  }
+
   function pick(id: string, replay = false) {
     const a = byId[id]
     if (!a) return
     if (timer.current) clearInterval(timer.current)
+    setIdle(false)
     setGoal(id)
     setOpen(true)
     bodyRef.current?.scrollTo({ top: 0 })
@@ -152,12 +163,12 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
     setOpen(false)
   }
 
-  // «Добавить в отчёт»: отметить и сразу перейти к следующей проверке.
+  // «Добавить в отчёт»: отметить и показать следующую проверку — запускает её сам человек.
   function addToReport() {
     if (!G) return
     setInReport(r => (r.includes(G.id) ? r : [...r, G.id]))
     const nx = flat[(flat.findIndex(a => a.id === G.id) + 1) % flat.length]
-    if (nx && !inReport.includes(nx.id) && nx.id !== G.id) pick(nx.id)
+    if (nx && !inReport.includes(nx.id) && nx.id !== G.id) browse(nx.id)
   }
 
   // PDF собирает сервер (app/api/pdf) из печатной страницы отчёта — как «Презентацию PDF».
@@ -206,8 +217,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   const flat = groups.flatMap(g => g.items)
   const G = goal ? byId[goal] : null
   const end = G ? endOf(G) : 0
-  const busy = G && t < end ? G.id : null
-  const finished = !!G && t >= end
+  const busy = G && !idle && t < end ? G.id : null
+  const finished = !!G && !idle && t >= end
   const locked = access !== 'pro'
   const idx = G ? flat.findIndex(a => a.id === G.id) : -1
   const nextA = G ? flat[(idx + 1) % flat.length] : null
@@ -271,7 +282,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
               {groups.map(g => {
                 const on = g.name === G.group
                 return (
-                  <button key={g.name} type="button" onClick={() => pick(g.items[0].id)} aria-current={on ? 'true' : undefined}
+                  <button key={g.name} type="button" onClick={() => browse(g.items[0].id)} aria-current={on ? 'true' : undefined}
                     className={`shrink-0 cursor-pointer whitespace-nowrap border-0 border-b-2 bg-transparent px-0 pb-1 pt-2 text-[15px] transition-colors duration-[120ms] ${on ? 'border-[#0F1A15] font-semibold text-[#0F1A15]' : 'border-transparent text-[#6B7570] hover:text-[#0F1A15]'}`}>
                     {g.name}
                   </button>
@@ -287,7 +298,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
             {/* Проверки темы с картинками: на компьютере — столбиком слева, на телефоне — лентой. */}
             <nav aria-label={G.group} className="flex shrink-0 gap-3 overflow-x-auto px-4 pb-3 pt-2 md:-mx-2 md:w-[236px] md:flex-col md:gap-5 md:overflow-y-auto md:px-2 md:pb-6 md:pt-2">
               {groups[gi].items.map(a => {
-                const on = a.id === G.id
+                const on = !idle && a.id === G.id
                 const cover = coverOf(a)
                 return (
                   <button key={a.id} type="button" data-ap-tab={a.id} onClick={() => pick(a.id)} aria-current={on ? 'true' : undefined}
@@ -312,17 +323,21 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
           <div ref={bodyRef} className="min-h-0 flex-grow overflow-y-auto overscroll-contain">
             <div className="flex max-w-[1000px] flex-col gap-8 px-4 pb-10 pt-2 md:px-0">
               <div className="flex flex-col gap-3">
+                {idle ? (
+                  <span className="text-[13px] uppercase tracking-[0.06em] text-[#6B7570]">{lang === 'ru' ? 'Выберите проверку слева' : 'Pick a check on the left'}</span>
+                ) : (
                 <span className="text-[13px] uppercase tracking-[0.06em] text-[#6B7570]" aria-live="polite">
                   {finished ? c.finished : c.working(Math.min(G.sources.length, Math.floor(t / STEP) + 1), G.sources.length)}
                 </span>
-                <h3 className="m-0 font-display text-[32px] md:text-[44px] font-bold leading-[1.1] tracking-[-0.03em]">{G.title}</h3>
-                <p className="m-0 max-w-[56ch] text-[17px] leading-[1.6] text-[#4A5550]">{G.sub}</p>
+                )}
+                <h3 className="m-0 font-display text-[32px] md:text-[44px] font-bold leading-[1.1] tracking-[-0.03em]">{idle ? G.group : G.title}</h3>
+                {!idle && <p className="m-0 max-w-[56ch] text-[17px] leading-[1.6] text-[#4A5550]">{G.sub}</p>}
               </div>
 
               {/* Готовый источник — маленькая карточка, по 2–3 в ряд (владелец 19.11.2026).
                   На всю ширину — тот, что сейчас идёт, и те, где лента фото или карта. */}
               <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 xl:grid-cols-3">
-              {G.sources.map((s, i) => {
+              {!idle && G.sources.map((s, i) => {
                 const lt = t - i * STEP
                 if (lt < 0) return null
                 const fin = lt >= 24
@@ -408,10 +423,10 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
               {inReport.length > 0 && (locked
                 ? <a href={signInHref} className="flex h-12 shrink-0 items-center rounded-xl border border-[var(--color-primary)] px-5 text-[16px] font-semibold text-[var(--color-primary)] no-underline hover:bg-[#E6F2EC]">{c.download(inReport.length)}</a>
                 : <button type="button" onClick={downloadReport} disabled={building === 'busy'} className="flex h-12 shrink-0 cursor-pointer items-center rounded-xl border border-[var(--color-primary)] bg-white px-5 text-[16px] font-semibold text-[var(--color-primary)] hover:bg-[#E6F2EC] disabled:cursor-wait disabled:opacity-60">{building === 'busy' ? c.building : c.download(inReport.length)}</button>)}
-              {inReport.includes(G.id)
+              {idle ? null : inReport.includes(G.id)
                 ? <button type="button" onClick={() => setInReport(r => r.filter(x => x !== G.id))} className="flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[#E6F2EC] px-6 text-[16px] font-semibold text-[#135E40]">✓ {c.added}</button>
                 : <button type="button" onClick={addToReport} className="flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">{c.add}</button>}
-            </>) : nextA && <button type="button" onClick={() => pick(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
+            </>) : !idle && nextA && <button type="button" onClick={() => browse(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
           </footer>
           </div>
           </div>
