@@ -76,6 +76,7 @@ import { loadAll as loadVillaCatalog } from '@/app/ru/villy/_lib'
 import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
+import { ManagerContactButtons } from '@/components/ManagerContactButtons'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { loadLandmarks } from '@/lib/landmarks'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
@@ -945,6 +946,8 @@ const _loadComplexesIndex = unstable_cache(
   ['villy-complex-index-v5'],
   { revalidate: 604800, tags: ['content:complexes'] },
 )
+
+const MGR_ROLE = { ru: 'Менеджер застройщика', en: 'Developer’s manager', id: 'Manajer pengembang', fr: 'Responsable du promoteur', de: 'Ansprechpartner des Bauträgers', zh: '开发商经理', nl: 'Manager van de ontwikkelaar', ban: 'Manajer pengembang', pl: 'Menedżer dewelopera', uk: 'Менеджер забудовника' }
 
 function findParentComplex(villaTitle: string, complexes: ComplexLite[], complexName?: string | null): ComplexLite | null {
   // The «Комплекс 1» field is what the complex page lists its units by, so
@@ -2242,23 +2245,32 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
                   ) : null}
                 </div>
               )}
-              {(developer || parentComplex) && (
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
-                  {developer && (
-                    <Link href={`${developersRoot}/${developer.slug}`} className="py-1 text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
-                      {c.openDeveloper}
-                    </Link>
-                  )}
-                  {parentComplex && (
-                    <Link href={`${complexesRoot}/o/${parentComplex.slug}`} className="py-1 text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
-                      {pickCopy({ ru: 'Страница комплекса', en: 'Complex page', id: 'Halaman kompleks', fr: 'Page de la résidence', de: 'Seite der Anlage', zh: '项目页面', nl: 'Pagina van het complex', ban: 'Halaman kompleks', pl: 'Strona kompleksu', uk: 'Сторінка комплексу' }, lang)}
-                    </Link>
-                  )}
-                </div>
+              {/* Комплекс — карточкой с фото (макет MgrA), нажимается целиком. */}
+              {parentComplex && (
+                <Link href={`${complexesRoot}/o/${parentComplex.slug}`}
+                  className="group flex items-center gap-3 rounded-xl border border-[#ECEFED] p-2 pr-4 text-[#0F1A15] no-underline transition-colors duration-[120ms] hover:border-[#C9D3CE] md:gap-4">
+                  <span className="relative aspect-[16/10] w-[112px] shrink-0 overflow-hidden rounded-lg bg-[#F6F8F7] md:w-[168px]">
+                    {parentComplex.coverUrl && (
+                      <Image src={parentComplex.coverUrl} alt={parentComplex.name} fill sizes="168px" className="object-cover" />
+                    )}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 md:gap-1">
+                    <span className="text-[13px] text-[#6B7570]">{pickCopy({ ru: 'Комплекс', en: 'Complex', id: 'Kompleks', fr: 'Résidence', de: 'Anlage', zh: '项目', nl: 'Complex', ban: 'Kompleks', pl: 'Kompleks', uk: 'Комплекс' }, lang)}</span>
+                    <span className="truncate text-[16px] font-semibold md:text-[17px]">{parentComplex.name}</span>
+                    <span className="text-[13px] leading-[1.4] text-[#4A5550] md:text-[14px]">{pickCopy({ ru: 'Все виллы, генплан и фото комплекса', en: 'All villas, master plan and photos', id: 'Semua vila, rencana induk dan foto', fr: 'Toutes les villas, plan de masse et photos', de: 'Alle Villen, Lageplan und Fotos', zh: '全部别墅、总平面图和照片', nl: 'Alle villa’s, masterplan en foto’s', ban: 'Sami vila, rencana induk lan foto', pl: 'Wszystkie wille, plan zagospodarowania i zdjęcia', uk: 'Усі вілли, генплан і фото комплексу' }, lang)}</span>
+                  </span>
+                  <span className="shrink-0 text-[22px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>
+                </Link>
+              )}
+              {developer && (
+                <Link href={`${developersRoot}/${developer.slug}`} className="self-start py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
+                  {c.openDeveloper}
+                </Link>
               )}
               {/* Менеджер застройщика — сюда ведёт зелёная кнопка «Связаться». */}
               {managers.length > 0 && managers[0] && (
-                <div id="kontakty-operatora" className="flex scroll-mt-[136px] items-center gap-3 border-t border-[#ECEFED] pt-5">
+                <div id="kontakty-operatora" className="flex scroll-mt-[136px] flex-col gap-4 border-t border-[#ECEFED] pt-5">
+                <div className="flex items-center gap-3">
                   {managers[0].photo ? (
                     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[#F6F8F7]">
                       <Image src={managers[0].photo} alt={managerName} fill sizes="48px" className="object-cover" />
@@ -2273,9 +2285,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
                       {managerName}{developerName ? `, ${developerName}` : ''}
                     </div>
                     <div className="text-[13px] text-[#6B7570]">
-                      {managerLangs.length > 0 ? `Telegram, WhatsApp · ${managerLangs.join(', ')}` : 'Telegram, WhatsApp'}
+                      {managerLangs.length > 0 ? managerLangs.join(', ') : pickCopy(MGR_ROLE, lang)}
                     </div>
                   </div>
+                </div>
+                <ManagerContactButtons lang={lang} managerId={managers[0].id} managerName={managers[0].name} developerName={developerName ?? null} listingTitle={title} />
                 </div>
               )}
             </div>

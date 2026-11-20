@@ -13,7 +13,7 @@ import type { ContactInquiry } from '@/lib/contact-inquiry'
 import { ContactLeadDialog, type LeadChannel, type OtherMessenger } from '@/components/ContactLeadDialog'
 import { reportLeadFormEvent } from '@/lib/contact-click'
 
-const COPY = {
+export const MANAGER_COPY = {
   ru: {
     heading: 'Контакты застройщика',
     headingMany: 'Контакты застройщика',
@@ -123,7 +123,7 @@ export function ManagerCard({
 }) {
   const pathname = usePathname() ?? ''
   const lang: Lang = detectLang(pathname)
-  const c = pickCopy(COPY, lang)
+  const c = pickCopy(MANAGER_COPY, lang)
 
   const list = managers && managers.length > 0
     ? managers
