@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Play, Pause, MapPinned, Rotate3d, Megaphone, Volume2, VolumeX } from 'lucide-react'
+import { Play, Pause, MapPinned, Rotate3d, Megaphone, Volume2, VolumeX } from 'lucide-react'
 import type { PromoKit } from '@/lib/promo-kits'
 import { MediaViewer, ytThumb, type GalleryVideo, type Tab, type ViewerTab } from './MediaViewer'
 import { pickCopy, type Lang } from '@/lib/i18n'
@@ -185,7 +185,6 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   )
   const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[600px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
-  const arrow = 'absolute top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[rgb(16_24_20/0.55)] hover:bg-[rgb(16_24_20/0.75)] text-white flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-white'
   const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.some(v => !v.hideTile)
 
   // «Журнал» (владелец 19.11.2026): медиа под фото — превью-картинки с
@@ -212,8 +211,9 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1)
         }}>
         {shown && (
-          <button type="button" onClick={openAt} aria-label={c.open}
-            className={`absolute inset-0 block cursor-zoom-in overflow-hidden ${round} focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white`}>
+          // Как на YouTube (владелец 20.11.2026): нажал на кадр — пошло, ещё раз — пауза.
+          <button type="button" onClick={n > 1 ? (showing ? stop : play) : openAt} aria-label={n > 1 ? (showing ? c.pause : c.play) : c.open}
+            className={`absolute inset-0 block ${n > 1 ? 'cursor-pointer' : 'cursor-zoom-in'} overflow-hidden ${round} focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white`}>
             <Image key={shown} src={shown} alt={alts?.[Math.min(cur, n - 1)] ?? title} fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'} priority={cur === 0}
               className={`object-cover transition-opacity duration-[600ms] ${showing ? 'opacity-0' : 'opacity-100'}`} draggable={false} />
             {showing && <>{layer('a', aIdx, aTop)}{layer('b', bIdx, !aTop)}</>}
@@ -244,10 +244,6 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[3px] bg-white/30">
             <div key={Math.floor(show.k / n)} className="h-full bg-white" style={{ animation: `photo-progress ${n * ADVANCE_MS}ms linear forwards` }} />
           </div>
-        </>}
-        {n > 1 && <>
-          <button type="button" onClick={() => step(-1)} aria-label={c.prev} className={`${arrow} left-3 hidden sm:flex`}><ChevronLeft size={22} /></button>
-          <button type="button" onClick={() => step(1)} aria-label={c.next} className={`${arrow} right-3 hidden sm:flex`}><ChevronRight size={22} /></button>
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
         {overHero && (
