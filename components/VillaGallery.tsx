@@ -210,10 +210,10 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
       {belowHero}
 
       {tilesAs === 'text' ? (links.length > 0 && (
-          <nav aria-label={c.photos} className="-mx-6 mt-2 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:mt-4 md:w-auto md:max-w-full md:gap-5 md:overflow-visible md:px-0 [scrollbar-width:none]">
+          <nav aria-label={c.photos} className="-mx-6 mt-2 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:mt-4 md:w-auto md:max-w-full md:flex-wrap md:gap-x-5 md:gap-y-6 md:overflow-visible md:px-0 [scrollbar-width:none]">
             {links.map(l => (
               <button key={l.key} type="button" onClick={() => { stop(); setOpen({ tab: l.tab, i: l.i }) }}
-                className="group flex w-[148px] shrink-0 cursor-pointer snap-start flex-col gap-2 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-[calc((100%-120px)/7)] md:min-w-0 md:flex-none">
+                className="group flex w-[148px] shrink-0 cursor-pointer snap-start flex-col gap-2 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-[calc((100%-60px)/4)] md:min-w-0 md:flex-none xl:w-[calc((100%-120px)/7)]">
                 <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-[#F1F3F2]">
                   {l.cover && <Image src={l.cover} alt="" fill sizes="(min-width: 768px) 200px, 148px" unoptimized={l.unopt} className="object-cover transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.04]" />}
                   {l.key === 'videos' && <span className="absolute inset-0 flex items-center justify-center text-white [filter:drop-shadow(0_2px_6px_rgb(0_0_0/.4))]"><svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" /><path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" /></svg></span>}
