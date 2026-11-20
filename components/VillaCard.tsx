@@ -97,6 +97,9 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
   return (
     <Link
       href={detailHref}
+      // Подсветка точки на карте каталога (components/CatalogMap.tsx).
+      onMouseEnter={() => window.dispatchEvent(new CustomEvent('bx-cat-hover', { detail: a.slug }))}
+      onMouseLeave={() => window.dispatchEvent(new CustomEvent('bx-cat-hover', { detail: null }))}
       className="group flex h-full flex-col gap-3 text-[#0F1A15] no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]"
     >
       <div className="relative overflow-hidden rounded-md">

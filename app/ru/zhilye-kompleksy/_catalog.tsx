@@ -98,6 +98,7 @@ function toQueryString(f: ComplexFilterState): string {
   if (f.permit.length) sp.set('permit', f.permit.join(','))
   if (f.year.length) sp.set('year', f.year.join(','))
   if (f.developer.length) sp.set('developer', f.developer.join(','))
+  if (f.area) sp.set('area', f.area.join(','))
   return sp.toString()
 }
 

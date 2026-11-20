@@ -116,6 +116,7 @@ function toQueryString(f: VillaFilterState): string {
   if (f.goal) sp.set('goal', f.goal)
   if (f.dealType.length) sp.set('deal', f.dealType.join(','))
   if (f.sort) sp.set('sort', f.sort)
+  if (f.area) sp.set('area', f.area.join(','))
   return sp.toString()
 }
 

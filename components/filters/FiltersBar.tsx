@@ -84,6 +84,8 @@ export type FilterState = {
   goal: 'invest' | 'live' | null
   // Явная сортировка (?sort=…, lib/catalog-sort.ts). Нет — умный порядок.
   sort?: CatalogSort
+  /** Область карты (?area=w,s,e,n) — см. lib/catalog-area. */
+  area?: [number, number, number, number] | null
 }
 
 export type FilterOptions = {
