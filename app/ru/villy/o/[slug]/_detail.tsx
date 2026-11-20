@@ -2010,9 +2010,10 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
   )
   if (analyticsOnly) return analytics
 
-  const presentationPdf = (
+  const presentationPdf = (variant: 'link' | 'icon') => (
   <VillaPresentationButton
-    variant="link"
+    key={variant}
+    variant={variant}
     lang={lang}
     villaId={v.airtable_id}
     slug={slug}
@@ -2074,7 +2075,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
               leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
               id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
             }} />
-            {presentationPdf}
+            {presentationPdf('link')}
           </div>
         </div>
       }
@@ -2084,26 +2085,24 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
   // переезжает в форму. Не для переуступок (продаёт владелец) и не для брони.
   const leadOn = priceNum != null && !sellerUrl && !activeReservation
   const leadPrice = (size: 'lg' | 'sm') => priceNum != null && (
-    <PriceCtaCard compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
+    <PriceCtaCard key={`p-${size}`} compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
   )
   const leadCard = (id: string, framed: boolean) => (
-    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')} priceNote={priceNum != null && <PriceCtaCard compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
-      priceMeta={priceNum != null && <PriceCtaCard compact="meta" priceUsd={priceNum} pricePerSqmUsd={priceM2} presentationButton={null}
+    <LeadHeroCard key={id} id={id} framed={framed} lang={lang} price={leadPrice('lg')} priceNote={priceNum != null && <PriceCtaCard key="upd" compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
+      priceMeta={priceNum != null && <PriceCtaCard key="meta" compact="meta" priceUsd={priceNum} pricePerSqmUsd={priceM2} presentationButton={null}
         dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null} />}
       manager={managers[0] ? { photo: managers[0].photo ?? null, name: managerName, langs: managerLangs } : null} developerName={developerName ?? null}
       managerName={managers[0]?.name ?? null} managerId={managers[0]?.id ?? null} listingTitle={title} />
   )
   // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.
   // Кнопки под фото: сохранить, поделиться, PDF (Pro), сообщить об ошибке.
-  const villaActions = () => (
-        <VillaActions lang={lang} title={title} item={{
+  const villaActions = (icons = false) => (
+        <VillaActions key={icons ? 'ai' : 'al'} icons={icons} lang={lang} title={title} item={{
           kind: 'villa', slug, title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
           district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null, land: land ?? null,
         }} proLinks={
-          <span className="bx-pro-only">
-            <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">
-              {presentationPdf}
-            </span>
+          <span key="pro" className="bx-pro-only">
+            {icons ? presentationPdf('icon') : <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">{presentationPdf('link')}</span>}
           </span>
         } />
   )
@@ -2179,6 +2178,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           // and GSC flagged the whole BreadcrumbList. Chain goes straight to
           // the district (which does have a page).
           ...(district ? [{ label: district, href: districtSlug ? `${villasRoot}/${districtSlug}` : undefined }] : []),
+          // Жилой комплекс виллы — последней видимой ступенью (владелец 20.11.2026).
+          ...(parentComplex ? [{ label: parentComplex.name, href: `${complexesRoot}/o/${parentComplex.slug}` }] : []),
           { label: title },
         ]} />
 
@@ -2195,7 +2196,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
                 (владелец 20.11.2026). Плашку «Подтверждённая доходность» убрали: занимала место. */}
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
               {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
-              {leadOn && <div className="shrink-0">{villaActions()}</div>}
             </div>
           </div>
         </section>
@@ -2217,7 +2217,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           tilesAs="text"
           belowHero={!leadOn && priceNum != null ? <div className="hidden lg:block">{makePriceBar()}</div> : null}
           aside={leadOn ? leadCard('zapis', true) : null}
-          afterTiles={leadOn ? <div className="mt-16 lg:mt-20">{objektChapter()}</div> : null}
+          topRight={villaActions(true)}
+          afterTiles={leadOn ? <div key="obj" className="mt-16 lg:mt-20">{objektChapter()}</div> : null}
           ambient={(() => {
             // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
             // или рисовые поля (если вид на рис), остальное — тропический сад.

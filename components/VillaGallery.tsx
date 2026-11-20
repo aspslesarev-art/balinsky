@@ -40,7 +40,7 @@ const COPY = {
 } as const
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero, overHero, aside, afterTiles }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero, overHero, aside, afterTiles, topRight }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -80,6 +80,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   overHero?: ReactNode
   /** Колонка справа под фото (карточка связи) и что идёт слева после превью. */
   aside?: ReactNode
+  /** Значки справа сверху на фото: сохранить, поделиться, PDF, ошибка (макет BtnA). */
+  topRight?: ReactNode
   afterTiles?: ReactNode
 }) {
   const base = pickCopy(COPY, lang)
@@ -317,6 +319,11 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           </div>
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
+        {topRight && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 mx-auto w-full max-w-[1280px] px-4 pt-4 md:px-6 md:pt-5">
+            <div className="pointer-events-auto ml-auto w-fit">{topRight}</div>
+          </div>
+        )}
         {overHero && (
           <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[11] hidden w-full max-w-[1280px] -translate-x-1/2 px-6 lg:block">
             <div className="pointer-events-auto ml-auto mt-6 w-[392px]">{overHero}</div>

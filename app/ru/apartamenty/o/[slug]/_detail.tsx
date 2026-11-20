@@ -1381,6 +1381,8 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
           { label: c.aptCrumb, href: apartmentsRoot },
           // Regency crumb dropped (no page → no `item` → GSC error).
           ...(district ? [{ label: district, href: districtSlug ? `${apartmentsRoot}/${districtSlug}` : undefined }] : []),
+          // Жилой комплекс — ступенью перед названием (владелец 20.11.2026).
+          ...(parentComplex?.slug && parentComplex.name ? [{ label: parentComplex.name, href: `${complexesRoot}/o/${parentComplex.slug}` }] : []),
           { label: title },
         ]} />
 
