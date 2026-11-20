@@ -4,9 +4,8 @@ import { useCallback, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { detectLang, pickCopy } from '@/lib/i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
-import { managerLanguagesEn } from '@/lib/manager-lang'
 import Image from 'next/image'
-import { Languages, Video, Clock, Send, MessageCircle, MessagesSquare } from 'lucide-react'
+import { Video, Clock, Send, MessageCircle, MessagesSquare } from 'lucide-react'
 import type { ManagerItem } from '@/lib/managers'
 import type { Lang } from '@/lib/i18n'
 import type { ContactInquiry } from '@/lib/contact-inquiry'
@@ -209,7 +208,6 @@ function ManagerRow({
   // filled in Airtable yet — manager cards already render fine in
   // mixed locales and a literal "Name En" placeholder would look odd.
   const displayName = lang === 'ru' ? m.name : m.nameEn || (hasCyrillic(m.name) ? translitPreserveCase(m.name) : m.name)
-  const displayLanguages = lang === 'ru' ? m.languages : managerLanguagesEn(m.languages, m.languagesEn)
 
 
   return (
@@ -236,12 +234,7 @@ function ManagerRow({
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
             {/* Звёзды рейтинга не показываем: сайт не ставит оценок людям и компаниям. */}
-            {lang === 'ru' && displayLanguages.length > 0 && (
-              <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
-                <Languages size={12} />
-                <span className="truncate">{displayLanguages.join(', ')}</span>
-              </span>
-            )}
+            {/* Языки менеджеров не показываем (владелец 20.11.2026). */}
           </div>
           <div className="mt-2 inline-flex items-start gap-1.5 text-[12px] text-[var(--color-text-muted)]">
             <Clock size={12} className="mt-0.5 shrink-0" />

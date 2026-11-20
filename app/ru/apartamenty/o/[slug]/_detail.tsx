@@ -1804,7 +1804,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
                       {leadManager.name}{devName ? `, ${devName}` : ''}
                     </div>
                     <div className="text-[13px] text-[#6B7570]">
-                      {leadManager.langs.length > 0 ? leadManager.langs.join(', ') : pickCopy(MGR_ROLE, lang)}
+                      {pickCopy(MGR_ROLE, lang)}
                     </div>
                   </div>
                 </div>

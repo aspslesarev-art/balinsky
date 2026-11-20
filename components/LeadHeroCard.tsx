@@ -177,7 +177,6 @@ export function LeadHeroCard({ lang, price, priceNote, priceMeta, manager, devel
               </span>
               <span className="flex min-w-0 flex-col">
                 <span className="truncate text-[15px] font-semibold text-[#0F1A15]">{manager.name}{developerName ? `, ${developerName}` : ''}</span>
-                {manager.langs.length > 0 && <span className="truncate text-[13px] text-[#6B7570]">{manager.langs.join(', ')}</span>}
               </span>
             </div>
           )}

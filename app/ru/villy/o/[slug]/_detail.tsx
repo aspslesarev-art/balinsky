@@ -2346,7 +2346,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
                       {managerName}{developerName ? `, ${developerName}` : ''}
                     </div>
                     <div className="text-[13px] text-[#6B7570]">
-                      {managerLangs.length > 0 ? managerLangs.join(', ') : pickCopy(MGR_ROLE, lang)}
+                      {pickCopy(MGR_ROLE, lang)}
                     </div>
                   </div>
                 </div>
