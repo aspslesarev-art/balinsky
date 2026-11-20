@@ -147,6 +147,7 @@ export function PriceCtaCard({
   links = null,
   compact = null,
   hideMain = false,
+  ctaHref = null,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
@@ -175,6 +176,8 @@ export function PriceCtaCard({
   compact?: 'lg' | 'sm' | 'updated' | null
   /** Полоса без цены и кнопки — их показывает форма записи на созвон (владелец 20.11.2026). */
   hideMain?: boolean
+  /** Куда ведёт кнопка полосы — к форме записи (#zapis), если она на странице. */
+  ctaHref?: string | null
 }) {
   const { currency } = useCurrency()
   const pathname = usePathname() ?? ''
@@ -235,7 +238,7 @@ export function PriceCtaCard({
           {hideMain ? null : reservedUntil ? (
             <span className="flex items-center gap-2 text-[14px] text-[#92400E]"><Lock size={16} strokeWidth={1.6} /><span className="font-semibold">{c.reservedTitle}</span></span>
           ) : (
-            <a href={isResale ? sellerUrl! : '#kontakty-operatora'} {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
+            <a href={isResale ? sellerUrl! : (ctaHref ?? '#kontakty-operatora')} {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
               className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
               {barLabel}
             </a>

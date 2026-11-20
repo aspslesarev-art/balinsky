@@ -1397,7 +1397,6 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             lang={lang}
             bleed
             tilesAs="text"
-            overHero={leadOn ? leadCard('zapis', true) : null}
             ambient={(() => {
               // Звук под слайд-шоу — как у вилл: у моря волны, в глубине острова джунгли, иначе сад.
               if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
@@ -1431,14 +1430,11 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
           />
         </section>
 
-        {leadOn && (
-          <div className="mb-8 lg:hidden">
-            {leadCard('zapis-m', false)}
-            <LeadStickyBar lang={lang} targetId="zapis-m" price={leadPrice('sm')} />
-          </div>
-        )}
+        {leadOn && <LeadStickyBar lang={lang} targetId="zapis" price={leadPrice('sm')} />}
 
-        <section className="mb-10">
+        {/* Форма связи справа от описания, едет рядом (владелец 20.11.2026, макет FormA). */}
+        <div className={leadOn ? 'mb-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_392px] lg:items-start lg:gap-16' : 'contents'}>
+        <section className={leadOn ? 'min-w-0' : 'mb-10'}>
           <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
             <Link href={apartmentsRoot} className="hover:text-[var(--color-text)]">{c.aptCrumb}</Link>
             {district && <> · {district}</>}
@@ -1501,6 +1497,8 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             />
           )}
         </section>
+        {leadOn && <aside className="lg:sticky lg:top-[96px]">{leadCard('zapis', true)}</aside>}
+        </div>
 
         {facts.length > 0 && (
           <section className="mb-10">

@@ -2089,7 +2089,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
     <PriceCtaCard
       journal
       bar
-      hideMain={leadOn}
+      ctaHref={leadOn ? '#zapis' : null}
       priceUsd={priceNum}
       pricePerSqmUsd={priceM2}
       updatedAt={priceUpdatedAt}
@@ -2168,8 +2168,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
           bleed
           tilesAs="text"
-          belowHero={priceNum != null ? <div className="hidden lg:block">{makePriceBar()}</div> : null}
-          overHero={leadOn ? leadCard('zapis', true) : null}
+          belowHero={priceNum != null ? <div className={leadOn ? '' : 'hidden lg:block'}>{makePriceBar()}</div> : null}
           ambient={(() => {
             // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
             // или рисовые поля (если вид на рис), остальное — тропический сад.
@@ -2182,20 +2181,18 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           })()}
         />
 
-        {leadOn ? (
-          <div className="mt-6 flex flex-col gap-2 lg:hidden">
-            {leadCard('zapis-m', false)}
-            {makePriceBar()}
-            <LeadStickyBar lang={lang} targetId="zapis-m" price={leadPrice('sm')} />
-          </div>
-        ) : priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
+        {leadOn ? <LeadStickyBar lang={lang} targetId="zapis" price={leadPrice('sm')} />
+          : priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
 
         {/* Разделы 01–04; между ними 64 / 96 px. */}
         <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
+        {/* Форма связи — справа от «Объекта» и едет рядом с ним (владелец 20.11.2026,
+            макет FormA); на телефоне — сразу после раздела. */}
+        <div className={leadOn ? 'grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_392px] lg:items-start lg:gap-16' : 'contents'}>
         {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
           <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} journal>
             {objTiles.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4">
+              <div className={`grid grid-cols-2 ${leadOn ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
                 {objTiles.map(k => (
                   <div key={k.l} className="flex min-w-0 flex-col gap-0.5 border-b border-[#ECEFED] py-[14px] pr-3 md:gap-1 md:py-5 md:pr-6">
                     <div className="text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] text-[#0F1A15] tabular-nums md:text-[32px]">{k.v}</div>
@@ -2226,6 +2223,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
             )}
           </VillaChapter>
         )}
+        {leadOn && <aside className="lg:sticky lg:top-[96px]">{leadCard('zapis', true)}</aside>}
+        </div>
 
         {/* Аналитика — заголовок «02 Проверьте виллу с ИИ» рисует сама панель. */}
         {analyses.length > 0 ? (
