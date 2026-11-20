@@ -215,13 +215,15 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const by = (k: string) => (human.has(k) ? T(' · отмечено вручную', ' · marked by hand') : '')
     const extras = BOOKING_EXTRA.filter(x => bf.marks[x.key] === 'yes')
     const aiPresent = present.filter(k => !human.has(k))
-    if (present.length) {
+    // Карточка нужна и когда на фото ничего ценного не нашлось (владелец 20.11.2026,
+    // Premier Umalas): тогда она показывает балл среди соседей и чего не хватает.
+    if (present.length || i.demand || missing.length) {
       const dm = i.demand
       const rows: Extract<Viz, { kind: 'checks' }>['rows'] = [
         ...present.map(k => ({ state: (bf.adr[k] >= 1 ? 'ok' : 'warn') as 'ok' | 'warn', label: lab(k) + by(k), value: T(`${pctTxt(bf.adr[k])} к цене ночи`, `${pctTxt(bf.adr[k])} per night`) })),
         ...missing.slice(0, 3).map(k => ({ state: 'info' as const, label: T(`Нет: ${lab(k).toLowerCase()}`, `Missing: ${lab(k).toLowerCase()}`) + by(k), value: T(`у кого есть — ${pctTxt(bf.adr[k])}`, `those who have it: ${pctTxt(bf.adr[k])}`) })),
       ]
-      const vizs: Viz[] = [{ kind: 'checks', title: T('Что важно гостям Booking', 'What matters to Booking guests'), rows }]
+      const vizs: Viz[] = rows.length ? [{ kind: 'checks', title: T('Что важно гостям Booking', 'What matters to Booking guests'), rows }] : []
       if (extras.length) vizs.push({ kind: 'checks', title: T('Ещё есть для гостей', 'Also for guests'),
         rows: extras.map(x => ({ state: 'ok' as const, label: T(x.ru, x.en), value: T('на цену не считаем', 'not priced') })) })
       if (dm) vizs.unshift({ kind: 'gauge', title: T(`Среди ${dm.compsN} похожих объектов рядом на Booking`, `Among ${dm.compsN} similar listings nearby on Booking`), avg: Math.min(97, Math.max(3, dm.score)), min: null, max: null,

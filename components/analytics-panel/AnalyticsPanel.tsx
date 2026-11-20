@@ -228,33 +228,34 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
           <span className="text-[15px] text-[#4A5550] md:text-[17px]">{lang === 'ru' ? `${flat.length} проверок по открытым данным — выберите, что интересно` : `${flat.length} checks on open data — pick what matters to you`}</span>
         </div>
       </div>
-      {/* Все проверки сразу, без переключения тем (владелец 20.11.2026, макет AiAllC):
-          4 столбца — по теме в каждом, плитка «картинка + название + ›». */}
-      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Все проверки сразу, строками (владелец 20.11.2026, макет AiAllB): тема
+          слева, её проверки в ряд — плиткой «картинка + вопрос». */}
+      <div className="flex flex-col">
         {groups.map((g, gi2) => {
           const tone = COVER[gi2 % COVER.length]
           return (
-            <div key={g.name} className="flex min-w-0 flex-col gap-2">
-              <span className="mb-1 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#6B7570]">
+            <div key={g.name} className="grid grid-cols-1 gap-3 border-t border-[#DCE7E0] py-5 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-6">
+              <span className="flex items-center gap-2 self-start text-[12px] font-semibold uppercase tracking-[0.08em] text-[#6B7570] lg:pt-3">
                 <span className="h-2 w-2 rounded-[2px]" style={{ background: tone.ink }} aria-hidden />{g.name}
               </span>
-              {g.items.map(a => {
-                const cover = coverOf(a)
-                const blur = locked && cover && !cover.open
-                return (
-                  <button key={a.id} type="button" onClick={() => pick(a.id)}
-                    className="group relative flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-2.5 text-left shadow-[0_0_0_1px_#DCE7E0] transition-shadow duration-[120ms] hover:shadow-[0_0_0_1px_#0F1A15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1A15]">
-                    <span className="relative block aspect-[7/4] w-[84px] shrink-0 overflow-hidden rounded-md" style={{ background: tone.bg }} aria-hidden>
-                      {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: blur ? 'blur(4px)' : undefined }}><CoverPlay><VizCover v={cover.v} lang={lang} accent={tone.ink} /></CoverPlay></span>}
-                    </span>
-                    <span className="min-w-0 flex-1 text-[15px] font-semibold leading-[1.3] text-[#0F1A15]">{a.title}</span>
-                    {/* «Проверено» — зелёный кружок вместо стрелки, внутри плитки (владелец 20.11.2026). */}
-                    {done[a.id]
-                      ? <span aria-label={c.done} className="flex h-5 w-5 shrink-0 items-center justify-center self-start rounded-full bg-[#1F8B5F] text-[11px] font-bold leading-none text-white">✓</span>
-                      : <span className="shrink-0 text-[18px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>}
-                  </button>
-                )
-              })}
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {g.items.map(a => {
+                  const cover = coverOf(a)
+                  const blur = locked && cover && !cover.open
+                  return (
+                    <button key={a.id} type="button" onClick={() => pick(a.id)}
+                      className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-2.5 text-left shadow-[0_0_0_1px_#DCE7E0] transition-shadow duration-[120ms] hover:shadow-[0_0_0_1px_#0F1A15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1A15]">
+                      <span className="relative block aspect-[7/4] w-[72px] shrink-0 overflow-hidden rounded-md" style={{ background: tone.bg }} aria-hidden>
+                        {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: blur ? 'blur(4px)' : undefined }}><CoverPlay><VizCover v={cover.v} lang={lang} accent={tone.ink} /></CoverPlay></span>}
+                      </span>
+                      <span className="min-w-0 flex-1 text-[15px] font-semibold leading-[1.3] text-[#0F1A15] xl:text-[14px] [hyphens:manual] [overflow-wrap:normal] [word-break:normal]">{a.title}</span>
+                      {done[a.id]
+                        ? <span aria-label={c.done} className="flex h-5 w-5 shrink-0 items-center justify-center self-start rounded-full bg-[#1F8B5F] text-[11px] font-bold leading-none text-white">✓</span>
+                        : <span className="shrink-0 text-[18px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )
         })}
