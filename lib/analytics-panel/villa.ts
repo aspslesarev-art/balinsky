@@ -58,6 +58,8 @@ export type VillaAnalyticsInput = {
   demand: UnitDemand | null
   /** Признаки с фото и их вклад в цену ночи на Booking (lib/analytics-panel/booking-fit). */
   bookingFit: BookingFit | null
+  /** Чей это объект: подписи «вилла» / «апартаменты». По умолчанию вилла. */
+  kind?: 'villa' | 'apartment'
 }
 
 const GREEN = '#1F8B5F'
@@ -75,12 +77,15 @@ function med(xs: number[]): number | null {
 export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
   const ru = i.lang === 'ru'
   const T = (r: string, e: string) => (ru ? r : e)
+  // Апартаменты (страница апартаментов, 20.11.2026): свои слова вместо «вилла».
+  const apt = i.kind === 'apartment'
+  const VA = (villa: string, apartment: string) => (apt ? apartment : villa)
   const loc = ru ? 'ru-RU' : 'en-US'
   const num = (n: number) => Math.round(n).toLocaleString(loc)
   // Деньги — меткой ⟦usd⟧: панель на клиенте подставит валюту посетителя.
   const usd = (n: number) => `⟦${Math.round(n * 100) / 100}⟧`
   const dist = (km: number) => (km < 1 ? `${Math.round(km * 1000)} ${T('м', 'm')}` : `${km.toFixed(1).replace('.', ru ? ',' : '.')} ${T('км', 'km')}`)
-  const G = { money: T('Деньги', 'Money'), docs: T('Документы и участок', 'Documents & land'), place: T('Место', 'Location'), life: T('Жизнь в доме', 'Living') }
+  const G = { money: T('Деньги', 'Money'), docs: T('Документы и участок', 'Documents & land'), place: T('Место', 'Location'), life: VA(T('Жизнь в доме', 'Living'), T('Жизнь и климат', 'Living')) }
   const out: Analysis[] = []
   // «пешком 6 мин» / «12 мин на машине» вместо километров; нет данных — км.
   const trip = (key: string, kmFallback: number) => { const t = i.travel[key]; if (!t) return dist(kmFallback); return t.meters <= 2500 ? T(`пешком ${Math.max(1, Math.round(t.meters / 80))} мин`, `${Math.max(1, Math.round(t.meters / 80))} min walk`) : T(`${t.min} мин на машине`, `${t.min} min drive`) }
@@ -221,11 +226,11 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         rows: extras.map(x => ({ state: 'ok' as const, label: T(x.ru, x.en), value: T('на цену не считаем', 'not priced') })) })
       if (dm) vizs.unshift({ kind: 'gauge', title: T(`Среди ${dm.compsN} похожих объектов рядом на Booking`, `Among ${dm.compsN} similar listings nearby on Booking`), avg: Math.min(97, Math.max(3, dm.score)), min: null, max: null,
         avgLabel: T(`${dm.score} из 100`, `${dm.score} of 100`), loLabel: T('слабее соседей', 'weaker'), hiLabel: T('сильнее соседей', 'stronger'),
-        caption: T(`Вилла ожидаемо сильнее ${dm.score}% объектов того же типа и размера рядом.`, `The villa is expected to beat ${dm.score}% of similar listings nearby.`) })
+        caption: T(`${VA('Вилла', 'Апартаменты')} ожидаемо сильнее ${dm.score}% объектов того же типа и размера рядом.`, `The ${VA('villa', 'apartment')} is expected to beat ${dm.score}% of similar listings nearby.`) })
       vizs.push({ kind: 'bars', title: T('Что сильнее всего поднимает цену ночи на Бали', 'What lifts the nightly rate most in Bali'), max: Math.max(...top.slice(0, 7).map(k => bf.adr[k] - 1)), color: GREEN,
         rows: top.slice(0, 7).map(k => ({ label: lab(k) + (bf.feats[k] === 1 ? T(' ✓ есть', ' ✓ has') : ''), value: bf.adr[k] - 1, text: pctTxt(bf.adr[k]) })) })
       const sources: Source[] = [
-        { name: T('ИИ разбирает фото виллы', 'AI reviews the villa photos'), fresh: T(`${bf.photos} ${plw(bf.photos, 'фото|фото|фото')}`, `${bf.photos} photos`),
+        { name: T(`ИИ разбирает фото ${VA('виллы', 'апартаментов')}`, `AI reviews the ${VA('villa', 'apartment')} photos`), fresh: T(`${bf.photos} ${plw(bf.photos, 'фото|фото|фото')}`, `${bf.photos} photos`),
           chips: [T('вид', 'view'), T('бассейн', 'pool'), T('планировка', 'layout'), T('ванная', 'bathroom')],
           total: aiPresent.length, unit: T('признак|признака|признаков', 'features'),
           names: [...aiPresent.map(lab), ...(bf.wow ? [T(`изюминка: ${bf.wow}`, `standout: ${bf.wow}`)] : [])],
@@ -252,7 +257,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         bigs: [...(dm ? [{ v: T(`${dm.score} из 100`, `${dm.score} of 100`), l: T('против соседей на Booking', 'vs Booking neighbours') }] : []),
           ...(dm?.expectedAdrUsd ? [{ v: usd(dm.expectedAdrUsd), l: T('ожидаемая цена ночи', 'expected nightly rate') }] : [{ v: String(present.length), l: T('признаков на фото', 'photo features') }])],
         meaning: [
-          dm ? (dm.score >= 70 ? T('на Booking вилла сильнее большинства похожих объектов рядом', 'on Booking the villa beats most similar listings nearby') : dm.score <= 45 ? T('на Booking вилла слабее многих похожих объектов рядом', 'on Booking the villa is weaker than many similar listings nearby') : T('на Booking вилла на уровне похожих объектов рядом', 'on Booking the villa is on par with similar listings nearby')) : null,
+          dm ? (dm.score >= 70 ? T(`на Booking ${VA('вилла', 'апартаменты')} сильнее большинства похожих объектов рядом`, `on Booking the ${VA('villa', 'apartment')} beats most similar listings nearby`) : dm.score <= 45 ? T(`на Booking ${VA('вилла', 'апартаменты')} слабее многих похожих объектов рядом`, `on Booking the ${VA('villa', 'apartment')} is weaker than many similar listings nearby`) : T(`на Booking ${VA('вилла', 'апартаменты')} на уровне похожих объектов рядом`, `on Booking the ${VA('villa', 'apartment')} is on par with similar listings nearby`)) : null,
           best.length ? T(`в плюс — ${best.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}`, `pluses: ${best.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}`) : null,
         ].filter(Boolean).join('; ') + '.',
         footnote: T(`Учитываем то, что видно на фото и рендерах, и отметки застройщика.${unknown.length ? ` Пока не понять: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Кофемашину, Wi-Fi и другие мелочи видно гостю, но на цену ночи по нашим данным они не влияют.`, `Based on photos, renders and the developer’s marks.${unknown.length ? ` Still unclear: ${unknown.slice(0, 3).map(k => lab(k).toLowerCase()).join(', ')}.` : ''} Coffee machine, Wi-Fi and similar extras are shown to guests but don’t move the nightly rate in our data.`),
@@ -287,11 +292,11 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const lo = Math.floor(Math.min(...vals) * 0.9), hi = Math.ceil(Math.max(...vals) * 1.1)
     out.push({
       id: 'monthly', group: G.money, title: T('Сдавать надолго', 'Long-term rental'),
-      sub: T('Сколько просят за месяц и год за похожие виллы', 'Monthly and yearly asking rents for similar villas'),
+      sub: T(`Сколько просят за месяц и год за похожие ${VA('виллы', 'апартаменты')}`, `Monthly and yearly asking rents for similar ${VA('villas', 'apartments')}`),
       sources,
-      vizs: vals.length >= 3 ? [{ kind: 'strip', title: T('Аренда на месяц: похожие виллы', 'Monthly rent: similar villas'), points: vals, lo, hi, mark: { value: m.p50, label: T(`середина ${usd(m.p50)}`, `median ${usd(m.p50)}`) }, loLabel: usd(lo), hiLabel: usd(hi) }] : [],
+      vizs: vals.length >= 3 ? [{ kind: 'strip', title: T(`Аренда на месяц: похожие ${VA('виллы', 'апартаменты')}`, `Monthly rent: similar ${VA('villas', 'apartments')}`), points: vals, lo, hi, mark: { value: m.p50, label: T(`середина ${usd(m.p50)}`, `median ${usd(m.p50)}`) }, loLabel: usd(lo), hiLabel: usd(hi) }] : [],
       bigs: [{ v: usd(m.p50), l: T('в месяц — середина рынка', 'a month, market median') }, { v: num(m.n), l: T('объявлений в сравнении', 'listings compared') }],
-      meaning: T(`если сдавать на год, ориентир — около ${usd(m.p50)} в месяц за похожую виллу.`, `for a yearly lease, expect about ${usd(m.p50)} a month for a similar villa.`),
+      meaning: T(`если сдавать на год, ориентир — около ${usd(m.p50)} в месяц за ${VA('похожую виллу', 'похожие апартаменты')}.`, `for a yearly lease, expect about ${usd(m.p50)} a month for a similar ${VA('villa', 'apartment')}.`),
       footnote: T('Годовые цены пересчитаны в месяц.', 'Yearly prices converted to monthly.'),
     })
   }
@@ -547,10 +552,10 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       const counts = r1 ? Object.entries(r1).filter(([, n]) => n > 0).map(([k, n]) => ({ label: T(BUCKET[k]?.[0] ?? k, BUCKET[k]?.[1] ?? k), n })).sort((a, b) => b.n - a.n) : []
       const totalNear = r1 ? counts.reduce((x, y) => x + y.n, 0) : 0
       const NEARMAP: Viz = { kind: 'map', title: T('Карта: что рядом — 100 м, 500 м, 1 км, 2 км', 'Map: what’s nearby — 100 m, 500 m, 1 km, 2 km'), center, zoom: 15, aspect: 1, base: 'street',
-            rings: [100, 500, 1000, 2000].map(m => ({ m, label: m < 1000 ? `${m} ${T('м', 'm')}` : `${m / 1000} ${T('км', 'km')}` })), credit: 'Esri, Google Maps', alt: T('Карта мест рядом с виллой', 'Map of places near the villa'),
+            rings: [100, 500, 1000, 2000].map(m => ({ m, label: m < 1000 ? `${m} ${T('м', 'm')}` : `${m / 1000} ${T('км', 'km')}` })), credit: 'Esri, Google Maps', alt: T(`Карта мест рядом с ${VA('виллой', 'апартаментами')}`, `Map of places near the ${VA('villa', 'apartment')}`),
             pins: [...inMap.map(p => ({ lat: p.lat, lng: p.lng, color: colorOf(p.cat) })), { ...center, color: '#0F1A15' }],
             tags: tags.map(({ p }) => ({ lat: p!.lat, lng: p!.lng, label: `${p!.name?.slice(0, 22)} · ${dist(p!.distanceKm)}` })),
-            legend: [{ color: GREEN, label: T('Еда и бары', 'Food & bars') }, { color: BLUE, label: T('Пляж', 'Beach') }, { color: PURPLE, label: T('Школы', 'Schools') }, { color: '#C9443A', label: T('Здоровье', 'Health') }, { color: ORANGE, label: T('Другое', 'Other') }, { color: '#0F1A15', label: T('Эта вилла', 'This villa') }] }
+            legend: [{ color: GREEN, label: T('Еда и бары', 'Food & bars') }, { color: BLUE, label: T('Пляж', 'Beach') }, { color: PURPLE, label: T('Школы', 'Schools') }, { color: '#C9443A', label: T('Здоровье', 'Health') }, { color: ORANGE, label: T('Другое', 'Other') }, { color: '#0F1A15', label: T(VA('Эта вилла', 'Эти апартаменты'), VA('This villa', 'This apartment')) }] }
       out.push({
         id: 'nearby', group: G.place, title: T('Что рядом', 'What’s nearby'),
         sub: T('Пляжи, кафе, магазины, школы, клиники', 'Beaches, cafés, shops, schools, clinics'),
@@ -590,7 +595,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       names: [T(`уровень здесь — ${tz.percentile} из 100`, `level here — ${tz.percentile} of 100`), ...(i.touristShare != null ? [T(`заведения для иностранцев — ${Math.round(i.touristShare)}%`, `foreigner-facing venues — ${Math.round(i.touristShare)}%`)] : [])],
       result: T(`Туристов больше, чем в ${tz.percentile}% туристических мест Бали`, `More tourists than ${tz.percentile}% of tourist spots on Bali`) + (i.touristShare != null ? T(` · ${Math.round(i.touristShare)}% заведений рядом — для иностранцев`, ` · ${Math.round(i.touristShare)}% of venues nearby cater to foreigners`) : ''),
       live: { kind: 'map', title: T('Где туристы — тепловая карта, 1 и 2 км', 'Where tourists are — heat map, 1 and 2 km'), center, zoom: 14, aspect: 1, base: 'street', credit: 'Esri, Google Maps',
-        alt: T('Тепловая карта туристов вокруг виллы', 'Tourist heat map around the villa'), heat: tz.cells.map(c => ({ lat: c.lat, lng: c.lng, w: c.weight })), heatMax: tz.heatMax,
+        alt: T(`Тепловая карта туристов вокруг ${VA('виллы', 'апартаментов')}`, `Tourist heat map around the ${VA('villa', 'apartment')}`), heat: tz.cells.map(c => ({ lat: c.lat, lng: c.lng, w: c.weight })), heatMax: tz.heatMax,
         rings: [1000, 2000].map(m => ({ m, label: `${m / 1000} ${T('км', 'km')}` })), pins: [{ ...center, color: '#0F1A15' }] },
     }]
     if (tz.ta.length) {
@@ -684,7 +689,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       const wy = (lat: number, z: number) => { const r = (lat * Math.PI) / 180; return ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * 256 * 2 ** z }
       let zoom = 13
       while (zoom > 8 && (wx(Math.max(...lngs), zoom) - wx(Math.min(...lngs), zoom) > 860 || wy(Math.min(...lats), zoom) - wy(Math.max(...lats), zoom) > 560)) zoom--
-      routeMap = { kind: 'map', title: T('Маршруты на карте', 'Routes on the map'), center: c, zoom, aspect: 1.5, base: 'street', credit: 'Esri, OpenStreetMap', alt: T('Маршруты от виллы', 'Routes from the villa'), lines, pins: [{ ...center, color: '#0F1A15' }], tags: lines.map(l => ({ lat: l.coords[l.coords.length - 1][1], lng: l.coords[l.coords.length - 1][0], label: l.label })) }
+      routeMap = { kind: 'map', title: T('Маршруты на карте', 'Routes on the map'), center: c, zoom, aspect: 1.5, base: 'street', credit: 'Esri, OpenStreetMap', alt: T(`Маршруты от ${VA('виллы', 'апартаментов')}`, `Routes from the ${VA('villa', 'apartment')}`), lines, pins: [{ ...center, color: '#0F1A15' }], tags: lines.map(l => ({ lat: l.coords[l.coords.length - 1][1], lng: l.coords[l.coords.length - 1][0], label: l.label })) }
     }
     if (extra.length) vizs.push({ kind: 'bars', title: T('До пляжа и мест TripAdvisor', 'To the beach and TripAdvisor places'), max: Math.max(...extra.map(e => e.x.meters <= 2500 ? walkMin(e.x.meters) : e.x.minutes)), color: '#C9443A',
       rows: extra.map(e => { const walk = e.x.meters <= 2500; const v = walk ? walkMin(e.x.meters) : e.x.minutes; return { label: e.x.name, value: v, text: walk ? T(`${v} мин пешком`, `${v} min walk`) : `${v} ${T('мин', 'min')}` } }) })
@@ -709,7 +714,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       ],
       vizs,
       bigs: [...(air ? [{ v: `${air.min} ${T('мин', 'min')}`, l: T('до аэропорта', 'to the airport') }] : []), { v: `${legs[0].min} ${T('мин', 'min')}`, l: T(`до: ${lbl[legs[0].k]?.[0] ?? legs[0].k}`, `to ${lbl[legs[0].k]?.[1] ?? legs[0].k}`) }],
-      meaning: air && air.min <= 30 ? T('гостям из аэропорта ехать меньше получаса.', 'guests reach the villa from the airport in under half an hour.') : air ? T(`от аэропорта около ${air.min} минут.`, `about ${air.min} minutes from the airport.`) : T('время в пути до главных районов.', 'drive times to main areas.'),
+      meaning: air && air.min <= 30 ? T('гостям из аэропорта ехать меньше получаса.', `guests reach the ${VA('villa', 'apartment')} from the airport in under half an hour.`) : air ? T(`от аэропорта около ${air.min} минут.`, `about ${air.min} minutes from the airport.`) : T('время в пути до главных районов.', 'drive times to main areas.'),
       footnote: T('На машине, без пробок, до въезда в район, а не до его центра.', 'By car, without traffic, to the edge of each area rather than its centre.'),
     })
   }

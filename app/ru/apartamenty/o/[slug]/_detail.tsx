@@ -24,7 +24,6 @@ import { ZoningCard } from '@/components/ZoningCard'
 import { loadLandmarks } from '@/lib/landmarks'
 import { LandmarksList } from '@/components/NearbyHighlights'
 import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows } from '@/lib/rdtr-zones'
-import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { getDeveloperStats } from '@/lib/developer-stats'
@@ -48,6 +47,13 @@ import { LazyMount } from '@/components/LazyMount'
 import { ManagerContactButtons } from '@/components/ManagerContactButtons'
 import { VillaActions } from '@/components/VillaActions'
 import { VillaChapter } from '@/components/VillaChapter'
+import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
+import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
+import { loadSurroundings } from '@/lib/surroundings'
+import { loadTourism } from '@/lib/analytics-panel/tourism'
+import { BALI_HUBS, loadExtraRoutes, loadTravelTimes, type ExtraDest } from '@/lib/analytics-panel/extra-routes'
+import { loadBookingFit } from '@/lib/analytics-panel/booking-fit'
+import { IncomeCalculator } from '@/components/IncomeCalculator'
 import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
 import { LocationView } from '@/components/LocationView'
 import { managerLanguagesEn } from '@/lib/manager-lang'
@@ -90,7 +96,7 @@ import { loadListingCopy } from '@/lib/listing-copy'
 import { loadComplexMedia } from '@/lib/complex-media'
 import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
-import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
+import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
 import { hreflangMap } from '@/lib/hreflang'
@@ -865,33 +871,6 @@ function findParentComplex(aptTitle: string, complexes: ComplexRow[], complexNam
   return best?.c ?? null
 }
 
-async function loadOtherApartmentsInDistrict(district: string | null, exceptId: string, lang: Lang = 'ru') {
-  if (!district) return []
-  const [idx, manifest] = await Promise.all([_loadApartmentIndex(), _loadAptManifest()])
-  const candidates = idx.filter(e => e.id !== exceptId && e.district === district).slice(0, 4)
-  const rows = await Promise.all(candidates.map(c => _loadApartmentById(c.id)))
-  const out: (ApartmentCardData & { id: string })[] = []
-  for (const r of rows) {
-    if (!r) continue
-    const slug = firstString(r.data['SEO:Slug'])
-    if (!slug) continue
-    // tField returns EN if available (RU fallback after the i18n fix).
-    const titleRaw = tField(r.data, 'SEO:Title', lang) ?? tField(r.data, 'ИИ Имя', lang) ?? slug
-    const title = titleRaw.replace(/\s*\|\s*Balinsky\s*$/i, '').trim()
-    out.push({
-      id: r.airtable_id,
-      slug,
-      title,
-      priceUsd: numberOrNull(r.data['price_usd'] ?? r.data['Цена']),
-      bedrooms: numberOrNull(r.data['Комнаты']),
-      area: numberOrNull(r.data['Площадь']),
-      floor: firstString(r.data['Этаж']),
-      photos: manifest[r.airtable_id] ?? [],
-    })
-  }
-  return out
-}
-
 export async function generateApartmentMetadata(slug: string, lang: Lang) {
   const a = await loadApartmentBySlug(slug)
   if (!a) return { robots: { index: false } }
@@ -1041,8 +1020,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     content: <ZoningMap slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
   }] : []
 
-  const [otherApts, managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps, landmarks] = await Promise.all([
-    loadOtherApartmentsInDistrict(district, a.airtable_id, lang),
+  const [managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps, landmarks] = await Promise.all([
     loadManagersByDeveloperName(devName),
     findActiveReservation('apartment', a.airtable_id),
     loadLandProfile('apartment', a.airtable_id),
@@ -1149,7 +1127,6 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const home = switchLangPath('/ru', lang)
   const apartmentsRoot = switchLangPath('/ru/apartamenty', lang)
   const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
-  const villasRoot = switchLangPath('/ru/villy', lang)
   const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
 
 
@@ -1271,12 +1248,6 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     <>
         <ProPendingNote lang={lang} />
         <div className="bx-auth-block">
-        {/* Заголовок главы «02 Аналитика» — как у виллы; на странице ЖК его нет. */}
-        {!analyticsOnly && (
-          <div className="mb-8 md:mb-10">
-            <VillaChapter id="analitika" no="02" eyebrow={pickCopy({ ru: 'Аналитика', en: 'Analytics', id: 'Analitik', fr: 'Analyse', de: 'Analyse', zh: '分析', nl: 'Analyse', ban: 'Analitik', pl: 'Analityka', uk: 'Аналітика' }, lang)} journal>{null}</VillaChapter>
-          </div>
-        )}
         {analyticsOnly ? liveVerdict : <GoalSwitch lang={lang}
           income={
             <ListingVerdict verdict={verdict} yields={yields} monthly={monthly} saleDiff={null}
@@ -1360,6 +1331,68 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   )
   if (analyticsOnly) return analytics
 
+  // «Проверьте апартаменты с ИИ» — тот же набор анализов, что у виллы
+  // (lib/analytics-panel/villa.ts, kind 'apartment'); продаж вилл рядом и цен
+  // земли у апартаментов нет — эти анализы просто не строятся.
+  const [around, tourism] = await Promise.all([
+    loadSurroundings('apartment', a.airtable_id).catch(() => null),
+    lat != null && lng != null ? loadTourism(lat, lng).catch(e => { console.error(e); return null }) : null,
+  ])
+  const nearestBeach = nearby?.byCategory?.beach?.filter(p => (p.primaryType === 'beach' || p.types?.includes('beach')) && !/warung|уорунг|варунг|caf[eé]|кафе|bar\b|бар\b|restaurant|ресторан|club|клуб/i.test(p.name ?? '')).sort((x, y) => x.distanceKm - y.distanceKm)[0] ?? null
+  const extraDests: ExtraDest[] = [
+    ...(nearestBeach?.name ? [{ key: `b:${nearestBeach.id}`, name: nearestBeach.name, lat: nearestBeach.lat, lng: nearestBeach.lng, kind: 'beach' as const }] : []),
+    ...(tourism?.ta ?? []).filter(p => p.km <= 15).slice(0, 3).map(p => ({ key: `ta:${p.rank}`, name: `#${p.rank} ${p.name}`, lat: p.lat, lng: p.lng, kind: 'ta' as const })),
+  ]
+  const hubDests = lat != null && lng != null ? BALI_HUBS.filter(h => Math.hypot((h.lat - lat) * 111, (h.lng - lng) * 110) > (h.rKm ?? 0) + 0.3) : []
+  const bookingFitP = loadBookingFit('apartment', a.airtable_id).catch(e => { console.error('booking-fit', e); return null })
+  const [extraRoutes, hubRoutes] = lat != null && lng != null ? await Promise.all([
+    extraDests.length ? loadExtraRoutes(lat, lng, extraDests).catch(() => []) : [],
+    hubDests.length ? loadExtraRoutes(lat, lng, hubDests).catch(e => { console.error(e); return [] }) : [],
+  ]) : [[], []]
+  const travelPts = [
+    ...(tourism?.ta ?? []).filter(p => p.km <= 10).map(p => ({ key: `ta:${p.rank}`, lat: p.lat, lng: p.lng })),
+    ...landmarks.filter(l => l.lat != null && l.lng != null).map(l => ({ key: `lm:${l.id}`, lat: l.lat!, lng: l.lng! })),
+  ]
+  const bookingFit = await bookingFitP
+  const travel = lat != null && lng != null && travelPts.length ? await loadTravelTimes(lat, lng, travelPts).catch(e => { console.error(e); return {} }) : {}
+  const analyses = buildVillaAnalyses({
+    kind: 'apartment',
+    lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
+    snap: verdictSnap, airbnb: airbnbComps, sale: null, geo: geoFacts, nearby,
+    around1km: around?.r1 ?? null,
+    landPrices: null, landM2: null, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, hubRoutes, travel, demand, bookingFit,
+    rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
+  })
+  // Калькулятор дохода под «Сдавать посуточно» — как у виллы.
+  const calcBlock = hasYield && verdictSnap && verdictSnap.villa.askingPrice != null ? (
+    <section key="calc" id="kalkulyator" className="scroll-mt-24 rounded-2xl border border-[#E4E9E6] bg-white p-5 lg:p-6">
+      <IncomeCalculator
+        kind="apartment"
+        villa={{
+          askingPrice: verdictSnap.villa.askingPrice,
+          area: verdictSnap.villa.area,
+          bedrooms: verdictSnap.villa.bedrooms,
+          leaseholdYearsLeft: verdictSnap.villa.leaseholdYearsLeft,
+          furnished: verdictSnap.villa.furnished,
+          landRentYear: verdictSnap.villa.landRentYear,
+          district: district ?? verdictSnap.villa.district,
+        }}
+        region={verdictSnap.region}
+        dailyPresets={verdictSnap.scenarios && !verdictSnap.flags.rentalRestricted ? {
+          p25: verdictSnap.scenarios.bad.adrAsking,
+          p50: verdictSnap.scenarios.median.adrAsking,
+          p75: verdictSnap.scenarios.good.adrAsking,
+        } : null}
+        monthlyPresets={monthly ? { p25: monthly.p25, p50: monthly.p50, p75: monthly.p75 } : null}
+        defaultOccupancyPct={Math.round((verdictSnap.ownBooking?.occupancy ?? verdictSnap.region.occupancyByScenario.median) * 100)}
+        dailyCompCount={(verdictSnap.competitors?.length ?? 0) + airbnbComps.length}
+        monthlyCompCount={monthly?.n ?? 0}
+        restricted={!!verdictSnap.flags.rentalRestricted}
+        lang={lang}
+      />
+    </section>
+  ) : null
+
   // «Локация» в окне медиа — как у вилл (владелец 20.11.2026, макет LocA).
   if (lat != null && lng != null) {
     const en = lang !== 'ru'
@@ -1396,16 +1429,16 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const K = (ru: string, en: string) => (lang === 'ru' ? ru : en)
   // Главы страницы — те же, что у виллы (макет «Журнал», 19.11.2026).
   const CH = pickCopy({
-    ru: { obekt: 'Объект', analitika: 'Аналитика', zastroyshchik: 'Застройщик', voprosy: 'Вопросы', others: 'Другие апартаменты', related: 'По теме' },
-    en: { obekt: 'Property', analitika: 'Analytics', zastroyshchik: 'Developer', voprosy: 'FAQ', others: 'Other apartments', related: 'Related' },
-    id: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'FAQ', others: 'Apartemen lain', related: 'Terkait' },
-    fr: { obekt: 'Bien', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'FAQ', others: 'Autres appartements', related: 'À voir aussi' },
-    de: { obekt: 'Objekt', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'FAQ', others: 'Weitere Apartments', related: 'Verwandte Seiten' },
-    zh: { obekt: '房源', analitika: '分析', zastroyshchik: '开发商', voprosy: '常见问题', others: '其他公寓', related: '相关' },
-    nl: { obekt: 'Object', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'FAQ', others: 'Andere appartementen', related: 'Gerelateerd' },
-    ban: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pitaken', others: 'Apartemen lianan', related: 'Terkait' },
-    pl: { obekt: 'Obiekt', analitika: 'Analityka', zastroyshchik: 'Deweloper', voprosy: 'Pytania', others: 'Inne apartamenty', related: 'Powiązane' },
-    uk: { obekt: "Об'єкт", analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Питання', others: 'Інші апартаменти', related: 'За темою' },
+    ru: { obekt: 'Объект', analitika: 'Аналитика', zastroyshchik: 'Застройщик', voprosy: 'Вопросы' },
+    en: { obekt: 'Property', analitika: 'Analytics', zastroyshchik: 'Developer', voprosy: 'FAQ' },
+    id: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'FAQ' },
+    fr: { obekt: 'Bien', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'FAQ' },
+    de: { obekt: 'Objekt', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'FAQ' },
+    zh: { obekt: '房源', analitika: '分析', zastroyshchik: '开发商', voprosy: '常见问题' },
+    nl: { obekt: 'Object', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'FAQ' },
+    ban: { obekt: 'Properti', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pitaken' },
+    pl: { obekt: 'Obiekt', analitika: 'Analityka', zastroyshchik: 'Deweloper', voprosy: 'Pytania' },
+    uk: { obekt: "Об'єкт", analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Питання' },
   }, lang)
   const MGR_ROLE = { ru: 'Менеджер застройщика', en: 'Developer’s manager', id: 'Manajer pengembang', fr: 'Responsable du promoteur', de: 'Ansprechpartner des Bauträgers', zh: '开发商经理', nl: 'Manager van de ontwikkelaar', ban: 'Manajer pengembang', pl: 'Menedżer dewelopera', uk: 'Менеджер забудовника' }
   const PLAN_LABEL = { ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }
@@ -1682,8 +1715,14 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
         <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
         {!leadOn && objektChapter()}
 
-        {/* Аналитика — только Pro (.bx-auth-block); заголовок главы внутри неё. */}
-        {analytics}
+        {/* Аналитика — одна глава «02 Проверьте апартаменты с ИИ», как у виллы. */}
+        {analyses.length > 0 && (
+          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${apartmentsRoot}/o/${slug}`)}`} no="02"
+              heading={lang === 'ru' ? 'Проверьте апартаменты с ИИ' : 'Check the apartment with AI'}
+              extras={{ daily: calcBlock }} />
+          </VillaChapter>
+        )}
 
         {/* Застройщик и вопросы — рядом на компьютере, как у виллы. */}
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
@@ -1792,43 +1831,6 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
         </VillaChapter>
         </div>
 
-        {/* Другие апартаменты района и ссылки «По теме» — главный источник
-            внутренних ссылок для поиска, поэтому остаются (в стиле «Журнал»). */}
-        {otherApts.length > 0 && district && (
-          <VillaChapter id="drugie" no={String(Number(noFaq) + 1).padStart(2, '0')} eyebrow={CH.others}
-            title={pickCopy({ ru: `Другие апартаменты в районе ${district}`, en: `Other apartments in ${district}`, id: `Apartemen lain di ${district}`, fr: `Autres appartements à ${district}`, de: `Weitere Apartments in ${district}`, zh: `${district}的其他公寓`, nl: `Andere appartementen in ${district}`, ban: `Apartemen lianan ring ${district}`, pl: `Inne apartamenty w ${district}`, uk: `Інші апартаменти в ${district}` }, lang)} journal>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {otherApts.map(o => <ApartmentCard key={o.id} a={o} lang={lang} />)}
-            </div>
-          </VillaChapter>
-        )}
-
-        <VillaChapter id="po-teme" no={String(Number(noFaq) + (otherApts.length > 0 && district ? 2 : 1)).padStart(2, '0')} eyebrow={CH.related} title={c.relatedHeading} journal>
-          <ul className="m-0 grid max-w-3xl list-none grid-cols-1 gap-x-12 p-0 md:grid-cols-2">
-            {[
-              // Buy-intent anchors, not «Все апартаменты»: these listing pages
-              // are the site's main internal-link source, so the anchor text is
-              // what tells Google what the hub is for (lib/districts.ts).
-              { href: apartmentsRoot, label: getBuyAnchor('apartment', lang) },
-              ...(district && districtSlug ? [
-                { href: `${apartmentsRoot}/${districtSlug}`, label: getBuyAnchor('apartment', lang, district) },
-              ] : []),
-              { href: villasRoot, label: getBuyAnchor('villa', lang) },
-              { href: complexesRoot, label: c.related.complexes },
-              { href: developersRoot, label: c.related.developers },
-              ...(bedrooms ? [
-                { href: `${apartmentsRoot}/${bedrooms}-spaln${bedrooms === 1 ? 'ya' : 'i'}`, label: pickCopy({ ru: `${bedrooms}-комнатные апартаменты`, en: `${bedrooms}-bedroom apartments`, id: `Apartemen ${bedrooms} kamar`, fr: `Appartements ${bedrooms} chambres`, de: `${bedrooms}-Zimmer-Apartments`, zh: `${bedrooms}居室公寓`, nl: `${bedrooms}-slaapkamerappartementen`, ban: `Apartemen ${bedrooms} kamar`, pl: `Apartamenty ${bedrooms}-sypialniane`, uk: `${bedrooms}-кімнатні апартаменти` }, lang) },
-              ] : []),
-            ].map(l => (
-              <li key={l.href + l.label} className="border-b border-[#ECEFED]">
-                <Link href={l.href} className="flex min-h-12 items-center justify-between gap-4 py-2 text-[15px] text-[#0F1A15] no-underline transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
-                  {l.label}
-                  <span className="shrink-0 text-[20px] leading-none text-[#6B7570]" aria-hidden>›</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </VillaChapter>
         </div>
 
         {/* Emit the Product/merchant-listing schema ONLY when it carries an

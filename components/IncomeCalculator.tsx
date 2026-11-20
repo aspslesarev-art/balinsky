@@ -84,6 +84,8 @@ type CalcProps = {
   restricted: boolean
   lang: Lang
   compareData?: CompareData | null
+  /** Апартаменты: «ставка для апартаментов» вместо «для вилл». По умолчанию вилла. */
+  kind?: 'villa' | 'apartment'
 }
 
 const OCC_PRESETS = [60, 75, 90] as const
@@ -102,7 +104,7 @@ function nearestOcc(pct: number): number {
 export function IncomeCalculator({
   villa, region, dailyPresets, monthlyPresets, defaultOccupancyPct,
   dailyCompCount, monthlyCompCount, restricted, lang,
-  compareData,
+  compareData, kind = 'villa',
 }: CalcProps) {
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
@@ -356,7 +358,9 @@ export function IncomeCalculator({
 
           {monthlyPresets && (
             <span className="text-[14px] text-[#4C5751]">
-              {c.monthlyAvg(villa.bedrooms, villa.district, fmtUsd(monthlyPresets.p50))}
+              {kind === 'apartment'
+                ? c.monthlyAvg(villa.bedrooms, villa.district, fmtUsd(monthlyPresets.p50)).replace('для вилл', 'для апартаментов').replace(' villas', ' apartments')
+                : c.monthlyAvg(villa.bedrooms, villa.district, fmtUsd(monthlyPresets.p50))}
             </span>
           )}
 
