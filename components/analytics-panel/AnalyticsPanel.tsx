@@ -69,6 +69,34 @@ function useAccess(): 'pro' | 'pending' | 'guest' {
   return a
 }
 
+// Аналитика открыта всем (владелец 20.11.2026): без Pro — 50 разных проверок в
+// день на устройстве. Счёт в localStorage; 51-я показывает «Открыть Pro».
+export const FREE_CHECKS_PER_DAY = 50
+const QUOTA_KEY = 'bx-ai-quota'
+const today = () => new Date().toISOString().slice(0, 10)
+function readQuota(): string[] {
+  try {
+    const q = JSON.parse(localStorage.getItem(QUOTA_KEY) ?? 'null') as { d?: string; ids?: string[] } | null
+    return q && q.d === today() && Array.isArray(q.ids) ? q.ids : []
+  } catch { return [] }
+}
+/** Засчитать проверку; false — лимит на сегодня исчерпан. */
+function useQuota(key: string) {
+  const [ids, setIds] = useState<string[]>([])
+  useEffect(() => { setIds(readQuota()) }, [])
+  const has = (id: string) => ids.includes(`${key}:${id}`)
+  const take = (id: string): boolean => {
+    const cur = readQuota(), k = `${key}:${id}`
+    if (cur.includes(k)) return true
+    if (cur.length >= FREE_CHECKS_PER_DAY) { setIds(cur); return false }
+    const next = [...cur, k]
+    try { localStorage.setItem(QUOTA_KEY, JSON.stringify({ d: today(), ids: next })) } catch { /* приватный режим — не считаем */ }
+    setIds(next)
+    return true
+  }
+  return { has, take, used: ids.length }
+}
+
 // Все строки анализа: ⟦usd⟧ → сумма в валюте посетителя.
 export function withMoney<T>(x: T, f: (s: string) => string): T {
   if (typeof x === 'string') return f(x) as T
@@ -106,6 +134,9 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
 }) {
   const c = lang === 'ru' ? COPY.ru : COPY.en
   const access = useAccess()
+  // Ключ квоты — страница: одна и та же проверка на разных объектах считается отдельно.
+  const quota = useQuota(typeof window === 'undefined' ? '' : window.location.pathname)
+  const [overLimit, setOverLimit] = useState<Record<string, boolean>>({})
   const { currency } = useCurrency()
   const analyses = useMemo(() => withMoney(raw, s => s.replace(MONEY_RE, (_, n) => formatMoney(Number(n), currency, lang as Lang))), [raw, currency, lang])
   const [goal, setGoal] = useState<string | null>(null)
@@ -136,6 +167,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   function pick(id: string, replay = false) {
     const a = byId[id]
     if (!a) return
+    if (access !== 'pro' && !quota.has(id)) { const ok = quota.take(id); setOverLimit(o => ({ ...o, [id]: !ok })) }
     if (timer.current) clearInterval(timer.current)
     setIdle(false)
     setGoal(id)
@@ -219,7 +251,8 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   const end = G ? endOf(G) : 0
   const busy = G && !idle && t < end ? G.id : null
   const finished = !!G && !idle && t >= end
-  const locked = access !== 'pro'
+  // Закрыто только сверх бесплатных 50 проверок в день; обложки не размываем.
+  const locked = access !== 'pro' && !!G && !!overLimit[G.id]
   const idx = G ? flat.findIndex(a => a.id === G.id) : -1
   const nextA = G ? flat[(idx + 1) % flat.length] : null
   const gi = Math.max(0, groups.findIndex(g => g.name === G?.group))
@@ -252,7 +285,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {g.items.map(a => {
                   const cover = coverOf(a)
-                  const blur = locked && cover && !cover.open
+                  const blur = false
                   return (
                     <button key={a.id} type="button" onClick={() => pick(a.id)}
                       className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-2.5 text-left shadow-[0_0_0_1px_#DCE7E0] transition-shadow duration-[120ms] hover:shadow-[0_0_0_1px_#0F1A15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1A15]">
@@ -306,7 +339,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                     <span className="relative block aspect-video w-full overflow-hidden rounded-md" style={{ background: COVER[gi % COVER.length].bg, ...(on ? { outline: '2px solid #0F1A15', outlineOffset: 3 } : {}) }}>
                       {/* График рисуем в размере карточки страницы (320×180) и уменьшаем целиком —
                           иначе в узкой колонке подписи налезают друг на друга. */}
-                      {cover && <span className="pointer-events-none absolute left-0 top-0 h-[180px] w-[320px] max-w-none origin-top-left scale-[0.4125] md:scale-[0.6875]" style={{ filter: locked && !cover.open ? 'blur(6px)' : undefined }}><VizCover v={cover.v} lang={lang} accent={COVER[gi % COVER.length].ink} /></span>}
+                      {cover && <span className="pointer-events-none absolute left-0 top-0 h-[180px] w-[320px] max-w-none origin-top-left scale-[0.4125] md:scale-[0.6875]" ><VizCover v={cover.v} lang={lang} accent={COVER[gi % COVER.length].ink} /></span>}
                     </span>
                     <span className={`flex items-center gap-1.5 text-[14px] leading-[1.3] ${on ? 'font-semibold text-[#0F1A15]' : 'text-[#4A5550]'}`}>
                       {busy === a.id ? <span className="ap-spin h-3 w-3 shrink-0 rounded-full border-[1.5px] border-[#0F1A15] border-r-transparent" /> : done[a.id] ? <span aria-label={c.done} className="text-[#1F8B5F]">✓</span> : null}
@@ -337,7 +370,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
               {/* Готовый источник — маленькая карточка, по 2–3 в ряд (владелец 19.11.2026).
                   На всю ширину — тот, что сейчас идёт, и те, где лента фото или карта. */}
               <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 xl:grid-cols-3">
-              {!idle && G.sources.map((s, i) => {
+              {!idle && !locked && G.sources.map((s, i) => {
                 const lt = t - i * STEP
                 if (lt < 0) return null
                 const fin = lt >= 24
@@ -385,7 +418,18 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
               })}
               </div>
 
-              {finished && (
+              {!idle && locked && (
+                <div className="col-span-full">
+                    <div className="flex flex-wrap items-center gap-6 border-y border-[#ECEFED] py-6">
+                      <div className="flex flex-col gap-1.5" style={{ flex: '1 1 260px' }}>
+                        <div className="text-[17px] font-semibold">{lang === 'ru' ? `Бесплатные проверки на сегодня закончились — ${FREE_CHECKS_PER_DAY} из ${FREE_CHECKS_PER_DAY}` : `You’ve used today’s ${FREE_CHECKS_PER_DAY} free checks`}</div>
+                        <div className="text-[15px] leading-[1.5] text-[#4A5550]">{lang === 'ru' ? 'С Pro — без ограничений. Или вернитесь завтра.' : 'Pro has no limits. Or come back tomorrow.'}</div>
+                      </div>
+                      <a href={signInHref} className="flex h-12 items-center rounded-xl bg-[var(--color-primary)] px-6 text-[15px] font-semibold text-white no-underline hover:bg-[var(--color-primary-pressed)]">{lang === 'ru' ? 'Открыть Pro' : 'Get Pro'}</a>
+                    </div>
+                </div>
+              )}
+              {finished && !locked && (
                 <div className="ap-in flex flex-col gap-6 border-t border-[#0F1A15] pt-6">
                   <div className="flex flex-wrap gap-x-16 gap-y-4">
                     {G.bigs.map(b => (
@@ -395,20 +439,10 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                       </div>
                     ))}
                   </div>
-                  {locked ? (
-                    <div className="flex flex-wrap items-center gap-6 border-y border-[#ECEFED] py-6">
-                      <div className="flex flex-col gap-1.5" style={{ flex: '1 1 260px' }}>
-                        <div className="text-[17px] font-semibold">{access === 'pending' ? c.pendingTitle : c.lockTitle(G.vizs.length)}</div>
-                        <div className="text-[15px] leading-[1.5] text-[#4A5550]">{access === 'pending' ? c.pendingText : c.lockText}</div>
-                      </div>
-                      {access === 'guest' && <a href={signInHref} className="flex h-12 items-center rounded-lg bg-[#0F1A15] px-6 text-[15px] font-semibold text-white no-underline hover:bg-[#26312C]">{c.signIn}</a>}
-                    </div>
-                  ) : (
                     <>
                       {G.vizs.map((v, k) => <VizView key={k} v={v} lang={lang} />)}
                       {extras?.[G.id]}
                     </>
-                  )}
                   <p className="m-0 max-w-[64ch] text-[18px] leading-[1.6]"><b className="font-semibold">{c.meaning}</b> {G.meaning}</p>
                   {G.footnote && <div className="text-[13px] text-[#6B7570]">{G.footnote}</div>}
                   <button type="button" onClick={() => pick(G.id, true)} className="self-start cursor-pointer border-0 bg-transparent p-0 text-[15px] text-[#4A5550] underline underline-offset-4 hover:text-[#0F1A15]">{c.again}</button>
@@ -423,7 +457,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
               {inReport.length > 0 && (locked
                 ? <a href={signInHref} className="flex h-12 shrink-0 items-center rounded-xl border border-[var(--color-primary)] px-5 text-[16px] font-semibold text-[var(--color-primary)] no-underline hover:bg-[#E6F2EC]">{c.download(inReport.length)}</a>
                 : <button type="button" onClick={downloadReport} disabled={building === 'busy'} className="flex h-12 shrink-0 cursor-pointer items-center rounded-xl border border-[var(--color-primary)] bg-white px-5 text-[16px] font-semibold text-[var(--color-primary)] hover:bg-[#E6F2EC] disabled:cursor-wait disabled:opacity-60">{building === 'busy' ? c.building : c.download(inReport.length)}</button>)}
-              {idle ? null : inReport.includes(G.id)
+              {idle || locked ? null : inReport.includes(G.id)
                 ? <button type="button" onClick={() => setInReport(r => r.filter(x => x !== G.id))} className="flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[#E6F2EC] px-6 text-[16px] font-semibold text-[#135E40]">✓ {c.added}</button>
                 : <button type="button" onClick={addToReport} className="flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">{c.add}</button>}
             </>) : !idle && nextA && <button type="button" onClick={() => browse(nextA.id)} className="flex h-11 min-w-0 shrink cursor-pointer items-center gap-2 truncate border-0 bg-transparent p-0 text-[15px] font-semibold text-[#0F1A15] hover:underline hover:underline-offset-4">{nextA.title} →</button>}
