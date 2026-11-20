@@ -89,6 +89,8 @@ const DEV_FIELDS = [
   ['Репутация и опыт EN', 'f17'], ['Техника и производство EN', 'f18'], ['Управляющая компания EN', 'f19'],
   ['Команда EN', 'f20'], ['Бизнес и сервисы EN', 'f21'],
   [DEVELOPER_DESCRIPTION_FIELD, 'f22'],
+  // Слаг проекта, чьё фото стоит вверху страницы (выбор владельца, 20.11.2026).
+  ['Главный проект', 'f23'],
 ] as const
 const DEV_SELECT = ['airtable_id, logo_url', ...DEV_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(', ')
 
@@ -800,8 +802,27 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
     districts.length > 0 ? { v: String(districts.length), l: plural(districts.length, c.facts.districts) } : null,
   ].filter((x): x is { v: string; l: string } => x !== null).slice(0, 4)
 
-  const heroPhoto = complexes.find(it => it.coverUrl || it.photos.length > 0)
-  const heroPhotoUrl = heroPhoto ? (heroPhoto.coverUrl ?? heroPhoto.photos[0]) : null
+  // Главное фото — самый «кайфовый» проект застройщика (владелец 20.11.2026):
+  // по разбору фото ИИ выше те, где вид на океан/джунгли/рис и инфинити-бассейн,
+  // затем готовые проекты. Кадр — обложка из фото-аудита (photos[0]), а не
+  // случайный cover_url (у BREIG так попадал вид на бассейн).
+  const visionCx = await loadVisionManifest('complex').catch(() => ({} as Awaited<ReturnType<typeof loadVisionManifest>>))
+  const heroScore = (it: (typeof complexes)[number]) => {
+    const f = visionCx[it.id]?.features
+    const views = f?.view ?? []
+    let sc = 0
+    if (views.some(v => /ocean|sea/i.test(v))) sc += 4
+    if (views.some(v => /jungle|rice|mountain|valley|river/i.test(v))) sc += 2
+    if (f?.pool_type === 'infinity') sc += 3
+    if (f?.condition === 'new') sc += 1
+    if (it.readiness >= 100) sc += 1
+    return sc
+  }
+  const pinned = firstString(dev.data['Главный проект'])?.trim().toLowerCase() || null
+  const withPhoto = complexes.filter(it => it.photos.length > 0 || it.coverUrl)
+  const heroPhoto = (pinned ? withPhoto.find(it => it.slug?.toLowerCase() === pinned || it.name?.toLowerCase() === pinned) : undefined)
+    ?? [...withPhoto].sort((a, b) => (heroScore(b) - heroScore(a)) || (b.photos.length - a.photos.length))[0]
+  const heroPhotoUrl = heroPhoto ? (heroPhoto.photos[0] ?? heroPhoto.coverUrl) : null
 
   const managerRows = managers.map(m => ({
     id: m.id,
