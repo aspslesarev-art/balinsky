@@ -176,7 +176,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const nightly = adrMed ?? abMed
     if (sources.length && nightly != null) {
       out.push({
-        id: 'daily', group: G.money, title: T('Сдавать посуточно', 'Short-term rental'),
+        id: 'daily', group: G.money, title: T('Как сдавать посуточно?', 'How does short-term renting work out?'),
         sub: T('Сколько берут соседи за ночь и как часто у них заняты даты', 'What neighbours charge a night and how often they are booked'),
         sources, vizs,
         bigs: [{ v: usd(nightly), l: T('за ночь у соседей — середина', 'a night, neighbours’ median') }, ...(occAvg != null ? [{ v: `${Math.round(occAvg)}%`, l: T('ночей заняты за месяц', 'nights booked last month') }] : [])],
@@ -251,7 +251,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
         result: [dm.segmentOccupancyPct != null ? T(`загрузка сегмента ${Math.round(dm.segmentOccupancyPct)}%`, `segment occupancy ${Math.round(dm.segmentOccupancyPct)}%`) : null, dm.expectedAdrUsd ? T(`ожидаемая цена ночи ${usd(dm.expectedAdrUsd)}`, `expected nightly rate ${usd(dm.expectedAdrUsd)}`) : null].filter(Boolean).join(' · ') || T('сравнили с соседями', 'compared with neighbours') })
       const best = present.filter(k => bf.adr[k] >= 1.03)
       out.push({
-        id: 'booking', group: G.money, title: T('Оценить для Booking', 'Rate for Booking'),
+        id: 'booking', group: G.money, title: T('Как оценят на Booking?', 'How will Booking guests rate it?'),
         sub: T('Что важно гостям и сколько это даёт к цене ночи', 'What guests value and what it adds per night'),
         sources, vizs,
         bigs: [...(dm ? [{ v: T(`${dm.score} из 100`, `${dm.score} of 100`), l: T('против соседей на Booking', 'vs Booking neighbours') }] : []),
@@ -291,7 +291,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const vals = m.comps.map(c => c.rentMonthUsd).filter(v => v > 0)
     const lo = Math.floor(Math.min(...vals) * 0.9), hi = Math.ceil(Math.max(...vals) * 1.1)
     out.push({
-      id: 'monthly', group: G.money, title: T('Сдавать надолго', 'Long-term rental'),
+      id: 'monthly', group: G.money, title: T('Как сдавать помесячно?', 'How does monthly renting work out?'),
       sub: T(`Сколько просят за месяц и год за похожие ${VA('виллы', 'апартаменты')}`, `Monthly and yearly asking rents for similar ${VA('villas', 'apartments')}`),
       sources,
       vizs: vals.length >= 3 ? [{ kind: 'strip', title: T(`Аренда на месяц: похожие ${VA('виллы', 'апартаменты')}`, `Monthly rent: similar ${VA('villas', 'apartments')}`), points: vals, lo, hi, mark: { value: m.p50, label: T(`середина ${usd(m.p50)}`, `median ${usd(m.p50)}`) }, loLabel: usd(lo), hiLabel: usd(hi) }] : [],
@@ -321,7 +321,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const lo = pts.length ? Math.min(...pts, s.self ?? Infinity) * 0.9 : s.median * 0.5
     const hi = pts.length ? Math.max(...pts, s.self ?? 0) * 1.1 : s.median * 1.5
     out.push({
-      id: 'price', group: G.money, title: T('Не переплатить', 'Don’t overpay'),
+      id: 'price', group: G.money, title: T('Как не переплатить?', 'Am I overpaying?'),
       sub: T('Цена этой виллы против похожих на продаже рядом', 'This villa’s price against similar ones for sale nearby'),
       sources,
       vizs: [{ kind: 'strip', title: T(`Похожие на продаже, ${unitLbl}`, `Similar for sale, ${unitLbl}`), points: pts, lo, hi, mark: { value: s.median, label: T('середина', 'median') }, self: s.self != null ? { value: s.self, label: T('эта вилла', 'this villa') } : null, loLabel: fmt(lo), hiLabel: fmt(hi) }],
@@ -377,7 +377,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       vizs.push({ kind: 'strip', title: T('Аренда земли: сколько осталось', 'Land lease: time left'), points: [], lo: start, hi: end, mark: { value: Math.min(Math.max(nowYear, start), end), label: T('сейчас', 'now') }, loLabel: String(start), hiLabel: String(end), note: T(`Осталось около ${Math.max(0, end - nowYear)} лет`, `About ${Math.max(0, end - nowYear)} years left`) })
     }
     out.push({
-      id: 'docs', group: G.docs, title: T('Проверить документы', 'Check documents'),
+      id: 'docs', group: G.docs, title: T('Что с документами?', 'What about the documents?'),
       sub: T('Разрешения, аренда земли, статус стройки, зона участка', 'Permits, land lease, construction status, plot zone'),
       sources, vizs,
       bigs: [...(i.leaseYears != null ? [{ v: T(`${Math.round(i.leaseYears)} лет`, `${Math.round(i.leaseYears)} yrs`), l: T('аренда земли', 'land lease') }] : []), { v: `${checks.filter(c => c.state === 'ok').length}/${checks.length}`, l: T('пунктов в порядке', 'items in order') }],
@@ -397,7 +397,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const hi = pts.length ? Math.max(...pts, lp.p75) * 1.1 : lp.p75 * 1.2
     const adj = lp.method === 'freehold_adjusted'
     out.push({
-      id: 'landValue', group: G.docs, title: T('Оценить землю', 'Value the land'),
+      id: 'landValue', group: G.docs, title: T('Сколько стоит земля?', 'What is the land worth?'),
       sub: T('Сколько стоит участок под виллой по ценам земли рядом', 'What the plot is worth at nearby land prices'),
       sources: [{
         name: T('Участки на продаже', 'Plots for sale'), fresh: T('rumah123 и ещё 4 сайта', 'rumah123 and 4 more sites'),
@@ -527,7 +527,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       const flat = pl?.slope_pct != null && pl.slope_pct < 5
       const noHz = hz && !['flood', 'tsunami', 'landslide', 'volcano'].some(k => (hz as Record<string, number | null>)[k] != null)
       out.push({
-        id: 'land', group: G.docs, title: T('Проверить участок', 'Check the plot'),
+        id: 'land', group: G.docs, title: T('Что с участком?', 'What about the plot?'),
         sub: T('Зона по госплану, что можно построить, уклон, дорога, природные риски', 'Zoning, what can be built, slope, road, natural hazards'),
         sources, vizs,
         bigs: [...(plot ? [{ v: plot.label.split('·').pop()!.trim(), l: plot.label.split('·')[0].trim() }] : []), ...(sea ? [{ v: `${dec(sea.margin_m)} ${T('м', 'm')}`, l: T('запас над водой к 2050', 'margin above water by 2050') }] : pl ? [{ v: `${num(pl.coast_m)} ${T('м', 'm')}`, l: T('до моря', 'to the sea') }] : [])],
@@ -557,7 +557,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
             tags: tags.map(({ p }) => ({ lat: p!.lat, lng: p!.lng, label: `${p!.name?.slice(0, 22)} · ${dist(p!.distanceKm)}` })),
             legend: [{ color: GREEN, label: T('Еда и бары', 'Food & bars') }, { color: BLUE, label: T('Пляж', 'Beach') }, { color: PURPLE, label: T('Школы', 'Schools') }, { color: '#C9443A', label: T('Здоровье', 'Health') }, { color: ORANGE, label: T('Другое', 'Other') }, { color: '#0F1A15', label: T(VA('Эта вилла', 'Эти апартаменты'), VA('This villa', 'This apartment')) }] }
       out.push({
-        id: 'nearby', group: G.place, title: T('Что рядом', 'What’s nearby'),
+        id: 'nearby', group: G.place, title: T('Что рядом?', 'What’s nearby?'),
         sub: T('Пляжи, кафе, магазины, школы, клиники', 'Beaches, cafés, shops, schools, clinics'),
         sources: [{
           name: 'Google Maps', fresh: T('места с отзывами', 'places with reviews'),
@@ -622,7 +622,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const by = (r: number) => tz.ta.filter(p => p.km <= r).length
     const lvl = tz.percentile >= 70 ? T('высокий', 'high') : tz.percentile >= 40 ? T('средний', 'medium') : T('низкий', 'low')
     out.push({
-      id: 'tourism', group: G.place, title: T('Уровень туризма', 'Tourism level'),
+      id: 'tourism', group: G.place, title: T('Какой уровень туризма?', 'How touristy is it?'),
       sub: T('Сколько туристов вокруг и что посмотреть рядом', 'How touristy it is and what to see nearby'),
       sources,
       vizs: [
@@ -695,7 +695,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
       rows: extra.map(e => { const walk = e.x.meters <= 2500; const v = walk ? walkMin(e.x.meters) : e.x.minutes; return { label: e.x.name, value: v, text: walk ? T(`${v} мин пешком`, `${v} min walk`) : `${v} ${T('мин', 'min')}` } }) })
     vizs.push({ kind: 'bars', title: T('Минут на машине', 'Minutes by car'), max: Math.max(...legs.map(l => l.min)), color: GREEN, rows: legs.map(l => ({ label: T(lbl[l.k]?.[0] ?? l.k, lbl[l.k]?.[1] ?? l.k), value: l.min, text: `${l.min} ${T('мин', 'min')}` })) })
     out.push({
-      id: 'routes', group: G.place, title: T('Как добраться', 'Getting around'),
+      id: 'routes', group: G.place, title: T('Как добраться?', 'How do I get around?'),
       sub: T('Маршруты до аэропорта, Чангу, Убуда, Улувату, Нуса-Дуа и других районов', 'Routes to the airport, Canggu, Ubud, Uluwatu, Nusa Dua and other areas'),
       sources: [{
         name: T('Маршруты по дорогам', 'Road routes'), fresh: T('OpenStreetMap + сверка с Google', 'OpenStreetMap, checked against Google'), live: routeMap,
@@ -748,7 +748,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const MLONG = ru ? ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     if (months.length === 12) vizs.unshift({ kind: 'months', title: yr ? T(`Погода по месяцам · ${yr.sunny} ${plw(yr.sunny, 'солнечный день|солнечных дня|солнечных дней')} в году`, `Weather by month · ${yr.sunny} sunny days a year`) : T('Погода по месяцам', 'Weather by month'), sunnyLbl: T('солнечных', 'sunny'), months: months.map((x, k) => ({ label: MLONG[k], sunny: x.m.sunny, tmax: x.m.t_max, wet: x.m.wet })) })
     out.push({
-      id: 'weather', group: G.life, title: T('Погода и ветер', 'Weather & wind'),
+      id: 'weather', group: G.life, title: T('Какая погода и ветер?', 'What are the weather and wind like?'),
       sub: T('Солнце и дожди по месяцам, откуда дует ветер', 'Sun and rain by month, wind direction'),
       sources, vizs,
       bigs: [...(yr ? [{ v: String(yr.sunny), l: T(`${plw(yr.sunny, 'солнечный день|солнечных дня|солнечных дней')} в году`, 'sunny days a year') }] : []), ...(w ? [{ v: `${dec(w.all.avg_ms)} ${T('м/с', 'm/s')}`, l: T('средний ветер', 'average wind') }] : [])],
@@ -763,7 +763,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const a = aq.uaqi_avg
     const word = a >= 60 ? T('хороший', 'good') : a >= 40 ? T('умеренный', 'moderate') : T('плохой', 'poor')
     out.push({
-      id: 'air', group: G.life, title: T('Воздух', 'Air'),
+      id: 'air', group: G.life, title: T('Какой воздух?', 'How clean is the air?'),
       sub: T('Качество воздуха по часовым замерам', 'Air quality from hourly readings'),
       sources: [{
         name: 'Google Air Quality', fresh: T(`${num(aq.hours)} часов замеров`, `${num(aq.hours)} hours of readings`),
@@ -784,7 +784,7 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
     const t1 = C.t.ssp2_4_5.median, t2 = C.t.ssp5_8_5.median, c1 = Math.round(C.cd.ssp2_4_5.median), c2 = Math.round(C.cd.ssp5_8_5.median)
     const f = (x: number) => x.toFixed(1).replace('.', ru ? ',' : '.')
     out.push({
-      id: 'climate', group: G.life, title: T('Климат к 2050', 'Climate by 2050'),
+      id: 'climate', group: G.life, title: T('Какой климат к 2050?', 'What will the climate be by 2050?'),
       sub: T('Насколько станет теплее и сколько добавится кондиционера', 'How much warmer and how much more air conditioning'),
       sources: [{
         name: 'Copernicus C3S', fresh: T('прогноз на 2041–2060', '2041–2060 projection'),

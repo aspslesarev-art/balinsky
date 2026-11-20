@@ -243,13 +243,15 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                 const blur = locked && cover && !cover.open
                 return (
                   <button key={a.id} type="button" onClick={() => pick(a.id)}
-                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-2.5 text-left shadow-[0_0_0_1px_#DCE7E0] transition-shadow duration-[120ms] hover:shadow-[0_0_0_1px_#0F1A15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1A15]">
+                    className="group relative flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-white p-2.5 text-left shadow-[0_0_0_1px_#DCE7E0] transition-shadow duration-[120ms] hover:shadow-[0_0_0_1px_#0F1A15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1A15]">
                     <span className="relative block aspect-[7/4] w-[84px] shrink-0 overflow-hidden rounded-md" style={{ background: tone.bg }} aria-hidden>
                       {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: blur ? 'blur(4px)' : undefined }}><CoverPlay><VizCover v={cover.v} lang={lang} accent={tone.ink} /></CoverPlay></span>}
                     </span>
-                    <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[15px] font-semibold leading-[1.3] text-[#0F1A15]">
-                      {done[a.id] && <span aria-label={c.done} className="text-[#1F8B5F]">✓</span>}{a.title}
-                    </span>
+                    <span className="min-w-0 flex-1 text-[15px] font-semibold leading-[1.3] text-[#0F1A15]">{a.title}</span>
+                    {/* «Проверено» — значком в правом верхнем углу плитки (владелец 20.11.2026). */}
+                    {done[a.id] && (
+                      <span aria-label={c.done} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#1F8B5F] text-[11px] font-bold text-white shadow-[0_0_0_2px_#F1F7F3]">✓</span>
+                    )}
                     <span className="shrink-0 text-[18px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>
                   </button>
                 )
