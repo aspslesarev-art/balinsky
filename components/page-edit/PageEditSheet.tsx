@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Check, ChevronRight, Eye, ImagePlus, Loader2, Pencil, SlidersHorizontal, Star, Trash2, X } from 'lucide-react'
 import { COLLECTION_OF, KIND_LABEL, NEW_COMPLEX_SECTION, SECTIONS, type EditKind, type EditorRole } from '@/lib/page-edit/schema'
 import { getCollection } from '@/lib/admin/collections'
-import { AddButton, Field, uploadError, type FieldValue } from './fields'
+import { AddButton, Field, uploadError, type BookingHintsView, type FieldValue } from './fields'
 import { editorStore, type View } from './store'
 
 // Редактор страницы: колонка слева, сама страница справа. Поля сохраняются
@@ -33,6 +33,7 @@ type Payload = {
   complex: { id: string; name: string } | null
   children: Child[]
   pagePath: string | null
+  booking: BookingHintsView | null
 }
 
 type NewKind = 'villa' | 'apartment' | 'complex'
@@ -406,7 +407,7 @@ function RecordForm({
           {sections.map(s => (
             <Section key={s.id} title={s.title} hint={s.hint}>
               {s.fields.map(f => (
-                <Field key={f.key} f={f} kind={view.kind} value={values[f.key] ?? null} onChange={v => set(f.key, v)} />
+                <Field key={f.key} f={f} kind={view.kind} value={values[f.key] ?? null} onChange={v => set(f.key, v)} booking={data?.booking} />
               ))}
             </Section>
           ))}

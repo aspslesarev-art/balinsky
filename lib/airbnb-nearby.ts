@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { airbnbPhoto } from '@/lib/photo-cdn'
 
 // Соседи на Airbnb с тем же числом спален — для вкладки «Будет ли спрос? →
 // Посуточно» рядом с карточками Booking (владелец 21.10.2026). SQL —
@@ -47,7 +48,7 @@ export async function loadAirbnbNearby(
           id: r.id,
           name: r.name?.replace(/\s+/g, ' ').trim() || r.title || 'Airbnb',
           url: `https://www.airbnb.com/rooms/${encodeURIComponent(r.id)}`,
-          photo: r.photo ? `${r.photo}?im_w=480` : null,
+          photo: airbnbPhoto(r.photo),
           priceUsd: Number(r.price),
           bedrooms: r.bedrooms,
           rating,

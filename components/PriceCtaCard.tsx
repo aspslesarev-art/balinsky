@@ -1,9 +1,9 @@
 'use client'
 
-import type { ReactNode } from 'react'
-import { detectLang, pickCopy } from '@/lib/i18n'
+import { useEffect, useState, type ReactNode } from 'react'
+import { detectLang, pickCopy, t } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
-import { Send, Lock, Bookmark } from 'lucide-react'
+import { Send, Lock } from 'lucide-react'
 import { ApproxPrice } from './InlinePrice'
 import { useCurrency } from './CurrencyContext'
 import { formatPriceExact } from '@/lib/currency'
@@ -12,6 +12,7 @@ import type { Lang } from '@/lib/i18n'
 const COPY = {
   ru: {
     buyChat: 'Связаться с застройщиком',
+    buyChatBar: 'Написать застройщику',
     buySeller: 'Связаться с продавцом',
     perSqm: '/ м²',
     priceUpdated: (d: string) => `Цена обновлена ${d}`,
@@ -22,6 +23,7 @@ const COPY = {
   },
   en: {
     buyChat: 'Developer contacts',
+    buyChatBar: 'Message the developer',
     buySeller: 'Seller contacts',
     perSqm: '/ m²',
     priceUpdated: (d: string) => `Price updated ${d}`,
@@ -140,6 +142,12 @@ export function PriceCtaCard({
   sidebarExtra = null,
   dealRows = null,
   priceCompDiffPct = null,
+  journal = false,
+  bar = false,
+  links = null,
+  compact = null,
+  hideMain = false,
+  ctaHref = null,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
@@ -158,6 +166,18 @@ export function PriceCtaCard({
   sidebarExtra?: ReactNode
   dealRows?: { label: string; valueUsd?: number; valueText?: string; approx?: boolean }[] | null
   priceCompDiffPct?: number | null
+  /** Стиль «Журнал» (страница виллы, макет владельца 19.11.2026): без рамки,
+   *  крупная цена, одна зелёная кнопка, под ней ссылки `links`. */
+  journal?: boolean
+  /** Журнал, вариант A: одна полоса во всю ширину под фото (цена · за м² · рассрочка · кнопка). */
+  bar?: boolean
+  links?: ReactNode
+  /** Только цена и «обновлена …» — для формы записи (LeadHeroCard) и нижней кнопки на телефоне. */
+  compact?: 'lg' | 'sm' | 'updated' | 'meta' | null
+  /** Полоса без цены и кнопки — их показывает форма записи на созвон (владелец 20.11.2026). */
+  hideMain?: boolean
+  /** Куда ведёт кнопка полосы — к форме записи (#zapis), если она на странице. */
+  ctaHref?: string | null
 }) {
   const { currency } = useCurrency()
   const pathname = usePathname() ?? ''
@@ -167,7 +187,11 @@ export function PriceCtaCard({
   const perSqm = pricePerSqmUsd != null && Number.isFinite(pricePerSqmUsd) && pricePerSqmUsd > 0
     ? formatPriceExact(pricePerSqmUsd, currency, lang)
     : null
-  const updated = updatedAt ? formatUpdated(updatedAt, c.locale) : null
+  // «Сегодня», «вчера», «5 дней назад» вместо даты (владелец 19.11.2026). Считаем после
+  // загрузки у посетителя: у сервера другой часовой пояс — иначе ошибка гидрации.
+  const [relUpdated, setRelUpdated] = useState<string | null>(null)
+  useEffect(() => { setRelUpdated(updatedAt ? relativeDay(updatedAt, c.locale) : null) }, [updatedAt, c.locale])
+  const updated = relUpdated ?? (updatedAt ? formatUpdated(updatedAt, c.locale) : null)
 
   const isResale = !!sellerUrl
   const buyLabel = isResale ? c.buySeller : c.buyChat
@@ -178,6 +202,109 @@ export function PriceCtaCard({
   void listingTitle
   void listingKind
   void listingSlug
+
+  // Вариант A (владелец 19.11.2026): полоса под главным фото — цена и «обновлена»,
+  // за м² и рассрочка столбиками «значение / подпись», справа ссылки и кнопка.
+  if (compact) {
+    // Цена за м² и рассрочка — под ценой в карточке связи (владелец 20.11.2026).
+    if (compact === 'meta') {
+      const rows = [
+        ...(perSqm ? [{ l: t('price.perSqm', lang), v: perSqm }] : []),
+        ...(dealRows ?? []).map(row => ({ l: lang === 'de' ? row.label : row.label.toLowerCase(), v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? '') })),
+      ]
+      if (!rows.length) return null
+      return (
+        <span className="flex flex-wrap gap-x-8 gap-y-2">
+          {rows.map(r => (
+            <span key={r.l} className="flex flex-col gap-0.5">
+              <span className="text-[15px] font-semibold text-[#0F1A15] tabular-nums">{r.v}</span>
+              <span className="text-[13px] text-[#6B7570]">{r.l}</span>
+            </span>
+          ))}
+        </span>
+      )
+    }
+    if (compact === 'updated') return updated ? <span className="text-[12px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</span> : null
+    return compact === 'sm' ? (
+      <span className="text-[18px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
+    ) : (
+      <span className="text-[32px] font-semibold leading-none tracking-[-0.03em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
+    )
+  }
+
+  if (journal && bar) {
+    const barLabel = isResale ? c.buySeller : ((c as { buyChatBar?: string }).buyChatBar ?? c.buyChat)
+    const cols: { v: string; l: string }[] = [
+      ...(perSqm ? [{ v: perSqm, l: t('price.perSqm', lang) }] : []),
+      ...(dealRows ?? []).map(row => ({ v: row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : (row.valueText ?? ''), l: lang === 'de' ? row.label : row.label.toLowerCase() })),
+    ]
+    return (
+      <div className="flex flex-wrap items-center gap-x-12 gap-y-4 border-b border-[#ECEFED] py-5">
+        {!hideMain && <div className="flex flex-col gap-0.5">
+          <div className="text-[32px] font-semibold leading-[1.1] tracking-[-0.03em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</div>
+          {updated && <div className="text-[13px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</div>}
+        </div>}
+        {cols.map(col => (
+          <div key={col.l} className="flex flex-col gap-0.5">
+            <span className="text-[15px] font-semibold text-[#0F1A15] tabular-nums">{col.v}</span>
+            <span className="text-[13px] text-[#6B7570]">{col.l}</span>
+          </div>
+        ))}
+        {note && <div className="text-[14px] text-[#6B7570]">{note}</div>}
+        <div className={`${hideMain ? '' : 'ml-auto '}flex flex-wrap items-center gap-x-6 gap-y-3`}>
+          {links}
+          {hideMain ? null : reservedUntil ? (
+            <span className="flex items-center gap-2 text-[14px] text-[#92400E]"><Lock size={16} strokeWidth={1.6} /><span className="font-semibold">{c.reservedTitle}</span></span>
+          ) : (
+            <a href={isResale ? sellerUrl! : (ctaHref ?? '#kontakty-operatora')} {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+              {barLabel}
+            </a>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (journal) {
+    // Цена за м² и дата обновления — каждая своей строкой (владелец 19.11.2026).
+    const meta = perSqm ? `${perSqm} ${c.perSqm}` : null
+    const updatedLine = updated ? c.priceUpdated(updated) : null
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="text-[36px] md:text-[44px] font-semibold leading-none tracking-[-0.03em] text-[#0F1A15] tabular-nums">
+            {pricePrefix ? `${pricePrefix} ` : ''}{main}
+          </div>
+          <ApproxPrice usd={priceUsd} lang={lang} className="block mt-1 text-[14px] text-[#6B7570]" />
+          {meta && <div className="text-[14px] text-[#6B7570]">{meta}</div>}
+          {updatedLine && <div className="text-[14px] text-[#6B7570]">{updatedLine}</div>}
+          {note && <div className="text-[14px] text-[#6B7570]">{note}</div>}
+          {dealRows && dealRows.map((row, i) => (
+            <div key={i} className="text-[14px] text-[#6B7570]">
+              {row.label}: <span className="text-[#0F1A15]">{row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : row.valueText}</span>
+            </div>
+          ))}
+        </div>
+        {reservedUntil ? (
+          <div className="flex items-start gap-2 text-[14px] leading-snug text-[#92400E]">
+            <Lock size={16} strokeWidth={1.6} className="shrink-0 mt-0.5" />
+            <span><span className="font-semibold">{c.reservedTitle}.</span> {c.reservedUntil(formatUpdated(reservedUntil, c.locale) ?? '')}</span>
+          </div>
+        ) : (
+          <a
+            href={isResale ? sellerUrl! : '#kontakty-operatora'}
+            {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}
+            className="inline-flex h-12 w-full md:w-auto md:self-start items-center justify-center rounded-xl bg-[var(--color-primary)] px-7 text-[16px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            {isResale ? c.buySeller : ((c as { buyChatBar?: string }).buyChatBar ?? c.buyChat)}
+          </a>
+        )}
+        {presentationButton}
+        {links}
+      </div>
+    )
+  }
 
   return (
     <div className={`rounded-2xl bg-white border border-[var(--color-border)] px-5 py-5 md:px-6 md:py-[22px] grid gap-5 md:gap-6 ${sidebar ? 'grid-cols-1 shadow-[0_1px_2px_rgb(0_0_0/.04),0_4px_12px_rgb(0_0_0/.06)]' : 'grid-cols-1 xl:grid-cols-[1fr_auto] xl:items-center'}`}>
@@ -202,16 +329,9 @@ export function PriceCtaCard({
         )}
       </div>
 
-      {sidebar && dealRows && dealRows.length > 0 && (
-        <div className="flex flex-col">
-          {dealRows.map((row, i) => (
-            <div key={i} className="flex justify-between gap-2 py-2 border-b border-dotted border-[#CFD8D3] text-[14px]">
-              <span className="text-[var(--color-text-muted)]">{row.label}</span>
-              <span className="font-medium text-right">{row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : row.valueText}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Шкала «цена для района» — сразу под датой обновления, рассрочка ниже (владелец 18.11.2026).
+          Границы зон (33,3% и 66,6%) — ровно там, где меняется подпись: ±15% от середины рынка.
+          Раньше точка уходила в зелёную зону уже на −11%, а подпись ещё была «обычная». */}
       {sidebar && priceCompDiffPct != null && (
         <div className="flex flex-col gap-1.5">
           <span className="text-[14px] font-semibold">{pickCopy(
@@ -222,8 +342,18 @@ export function PriceCtaCard({
                 : { ru: 'Цена выше рынка', en: 'Above market price', id: 'Harga di atas pasar', fr: 'Prix supérieur au marché', de: 'Über Marktpreis', zh: '高于市场价格', nl: 'Boven marktprijs', ban: 'Aji ring duur pasar', pl: 'Cena powyżej rynku', uk: 'Ціна вища ринку' },
             lang)}</span>
           <div className="relative h-[10px] rounded-[5px]" style={{ background: 'linear-gradient(90deg, #CFE8D9 0% 33.3%, #F6E2BF 33.3% 66.6%, #F4D3CE 66.6% 100%)' }} aria-hidden="true">
-            <div className="absolute top-[-5px] w-5 h-5 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + priceCompDiffPct * 1.5))}%`, marginLeft: '-10px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
+            <div className="absolute top-[-5px] w-5 h-5 rounded-full bg-[#D93025] border-[3px] border-white" style={{ left: `${Math.max(5, Math.min(95, 50 + priceCompDiffPct * (100 / 6 / 15)))}%`, marginLeft: '-10px', boxShadow: '0 0 0 2px #D93025', boxSizing: 'border-box' }} />
           </div>
+        </div>
+      )}
+      {sidebar && dealRows && dealRows.length > 0 && (
+        <div className="flex flex-col">
+          {dealRows.map((row, i) => (
+            <div key={i} className="flex justify-between gap-2 py-2 border-b border-dotted border-[#CFD8D3] text-[14px]">
+              <span className="text-[var(--color-text-muted)]">{row.label}</span>
+              <span className="font-medium text-right">{row.valueUsd != null ? `${row.approx ? '≈ ' : ''}${formatPriceExact(row.valueUsd, currency, lang)}` : row.valueText}</span>
+            </div>
+          ))}
         </div>
       )}
       {sidebar && sidebarExtra}
@@ -258,21 +388,23 @@ export function PriceCtaCard({
               <Send size={18} strokeWidth={1.6} />
               {buyLabel}
             </a>
-            {sidebar && (
-              <button
-                type="button"
-                className="inline-flex w-full items-center justify-center gap-2 min-h-[48px] py-2 px-6 rounded-[10px] bg-[#EEF6F1] hover:bg-[#E0EDE5] text-[#135237] text-[15px] font-semibold text-center leading-tight transition-colors"
-              >
-                <Bookmark size={18} strokeWidth={1.6} />
-                {c.saveCompare}
-              </button>
-            )}
+            {/* «Сохранить и сравнить» убрана: ничего не делала, лишняя кнопка (владелец 18.11.2026). */}
           </div>
         )}
 
       </div>
     </div>
   )
+}
+
+/** «сегодня», «вчера», «5 дней назад» на языке страницы — до месяца; раньше — null (покажем дату). */
+function relativeDay(iso: string, locale: string): string | null {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const diff = Math.round((day(new Date()) - day(d)) / 86_400_000)
+  if (diff < 0 || diff > 30) return null
+  try { return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-diff, 'day') } catch { return null }
 }
 
 function formatUpdated(iso: string, locale: string = 'ru-RU'): string | null {

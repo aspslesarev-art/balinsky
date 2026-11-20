@@ -33,8 +33,8 @@ const COPY = {
     approxYears: (n: number) => `≈ ${n} ${pluralRu(n, ['год', 'года', 'лет'])}`,
     dailyLink: (n: number) => `Соседи, которые уже сдают посуточно: ${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])}`,
     monthlyLink: (n: number) => `Соседи, которые сдают помесячно: ${n} ${pluralRu(n, ['объект', 'объекта', 'объектов'])}`,
-    monthlyAvg: (bedrooms: number | null, district: string | null, price: string) =>
-      `Средняя ставка для вилл${bedrooms ? ` с ${bedrooms} ${pluralRu(bedrooms, ['спальней', 'спальнями', 'спальнями'])}` : ''}${district ? `, район ${district}` : ''} — ${price}/мес.`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Средняя ставка для ${apt ? 'апартаментов' : 'вилл'}${bedrooms ? ` с ${bedrooms} ${pluralRu(bedrooms, ['спальней', 'спальнями', 'спальнями'])}` : ''}${district ? `, район ${district}` : ''} — ${price}/мес.`,
     pctSuffix: '%',
   },
   en: {
@@ -59,8 +59,112 @@ const COPY = {
     approxYears: (n: number) => `≈ ${n} yrs`,
     dailyLink: (n: number) => `Neighbours renting nightly: ${n}`,
     monthlyLink: (n: number) => `Neighbours renting monthly: ${n}`,
-    monthlyAvg: (bedrooms: number | null, district: string | null, price: string) =>
-      `Average rate for${bedrooms ? ` ${bedrooms}-bedroom` : ''} villas${district ? ` in ${district}` : ''} — ${price}/mo.`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Average rate for${bedrooms ? ` ${bedrooms}-bedroom` : ''} ${apt ? 'apartments' : 'villas'}${district ? ` in ${district}` : ''} — ${price}/mo.`,
+    pctSuffix: '%',
+  },
+  id: {
+    title: 'Kalkulator pendapatan', sub: 'Angka berdasarkan tarif tetangga, bukan janji pengembang.',
+    tabDaily: 'Harian', tabMonthly: 'Bulanan', priceNight: 'Harga per malam', occupancy: 'Okupansi', priceMonth: 'Harga per bulan',
+    cheap: 'Seperti yang murah', typical: 'Seperti kebanyakan', expensive: 'Seperti yang mahal',
+    yieldLabel: 'Imbal hasil', yieldUnit: 'per tahun', netMonth: 'Bersih', netMonthUnit: 'per bulan', netYear: 'Per tahun', netYearUnit: 'bersih',
+    paybackLabel: 'Balik modal', noPayback: 'tidak balik modal',
+    approxYears: (n: number) => `≈ ${n} tahun`,
+    dailyLink: (n: number) => `Tetangga yang menyewakan harian: ${n}`,
+    monthlyLink: (n: number) => `Tetangga yang menyewakan bulanan: ${n}`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Tarif rata-rata ${apt ? 'apartemen' : 'vila'}${bedrooms ? ` ${bedrooms} kamar tidur` : ''}${district ? ` di ${district}` : ''} — ${price}/bln.`,
+    pctSuffix: '%',
+  },
+  fr: {
+    title: 'Calculateur de revenus', sub: 'Chiffres basés sur les tarifs des voisins, pas sur les promesses du promoteur.',
+    tabDaily: 'À la nuitée', tabMonthly: 'Au mois', priceNight: 'Prix par nuit', occupancy: 'Taux d’occupation', priceMonth: 'Prix par mois',
+    cheap: 'Comme les moins chers', typical: 'Comme la plupart', expensive: 'Comme les plus chers',
+    yieldLabel: 'Rendement', yieldUnit: 'par an', netMonth: 'Net', netMonthUnit: 'par mois', netYear: 'Par an', netYearUnit: 'net',
+    paybackLabel: 'Retour sur investissement', noPayback: 'non rentabilisé',
+    approxYears: (n: number) => `≈ ${n} ${n > 1 ? 'ans' : 'an'}`,
+    dailyLink: (n: number) => `Voisins qui louent à la nuitée : ${n}`,
+    monthlyLink: (n: number) => `Voisins qui louent au mois : ${n}`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Loyer moyen des ${apt ? 'appartements' : 'villas'}${bedrooms ? ` de ${bedrooms} ${bedrooms > 1 ? 'chambres' : 'chambre'}` : ''}${district ? ` à ${district}` : ''} — ${price}/mois.`,
+    pctSuffix: ' %',
+  },
+  de: {
+    title: 'Einkommensrechner', sub: 'Zahlen nach den Preisen der Nachbarn, nicht nach dem Versprechen des Bauträgers.',
+    tabDaily: 'Pro Nacht', tabMonthly: 'Pro Monat', priceNight: 'Preis pro Nacht', occupancy: 'Auslastung', priceMonth: 'Preis pro Monat',
+    cheap: 'Wie die günstigen', typical: 'Wie die meisten', expensive: 'Wie die teuren',
+    yieldLabel: 'Rendite', yieldUnit: 'pro Jahr', netMonth: 'Netto', netMonthUnit: 'pro Monat', netYear: 'Pro Jahr', netYearUnit: 'netto',
+    paybackLabel: 'Amortisation', noPayback: 'amortisiert sich nicht',
+    approxYears: (n: number) => `≈ ${n} ${n === 1 ? 'Jahr' : 'Jahre'}`,
+    dailyLink: (n: number) => `Nachbarn mit Kurzzeitvermietung: ${n}`,
+    monthlyLink: (n: number) => `Nachbarn mit Monatsvermietung: ${n}`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Durchschnittsmiete für ${apt ? 'Apartments' : 'Villen'}${bedrooms ? ` mit ${bedrooms} ${bedrooms === 1 ? 'Schlafzimmer' : 'Schlafzimmern'}` : ''}${district ? ` in ${district}` : ''} — ${price}/Monat.`,
+    pctSuffix: ' %',
+  },
+  zh: {
+    title: '收益计算器', sub: '数字基于周边房源的价格，而非开发商的承诺。',
+    tabDaily: '按晚出租', tabMonthly: '按月出租', priceNight: '每晚价格', occupancy: '入住率', priceMonth: '每月价格',
+    cheap: '按便宜的', typical: '按大多数', expensive: '按昂贵的',
+    yieldLabel: '收益率', yieldUnit: '每年', netMonth: '净收入', netMonthUnit: '每月', netYear: '每年', netYearUnit: '净收入',
+    paybackLabel: '回本', noPayback: '无法回本',
+    approxYears: (n: number) => `≈ ${n} 年`,
+    dailyLink: (n: number) => `按晚出租的周边房源：${n} 个`,
+    monthlyLink: (n: number) => `按月出租的周边房源：${n} 个`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `${district ? `${district} ` : ''}${bedrooms ? `${bedrooms}间卧室` : ''}${apt ? '公寓' : '别墅'}的平均月租 — ${price}/月。`,
+    pctSuffix: '%',
+  },
+  nl: {
+    title: 'Inkomstencalculator', sub: 'Cijfers op basis van de tarieven van de buren, niet de belofte van de ontwikkelaar.',
+    tabDaily: 'Per nacht', tabMonthly: 'Per maand', priceNight: 'Prijs per nacht', occupancy: 'Bezetting', priceMonth: 'Prijs per maand',
+    cheap: 'Zoals de goedkope', typical: 'Zoals de meeste', expensive: 'Zoals de dure',
+    yieldLabel: 'Rendement', yieldUnit: 'per jaar', netMonth: 'Netto', netMonthUnit: 'per maand', netYear: 'Per jaar', netYearUnit: 'netto',
+    paybackLabel: 'Terugverdientijd', noPayback: 'verdient zich niet terug',
+    approxYears: (n: number) => `≈ ${n} jaar`,
+    dailyLink: (n: number) => `Buren die per nacht verhuren: ${n}`,
+    monthlyLink: (n: number) => `Buren die per maand verhuren: ${n}`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Gemiddelde huur voor ${apt ? 'appartementen' : 'villa’s'}${bedrooms ? ` met ${bedrooms} ${bedrooms === 1 ? 'slaapkamer' : 'slaapkamers'}` : ''}${district ? ` in ${district}` : ''} — ${price}/mnd.`,
+    pctSuffix: '%',
+  },
+  ban: {
+    title: 'Kalkulator pikolih', sub: 'Angka manut aji tetangga, boya janji pengembang.',
+    tabDaily: 'Rahinan', tabMonthly: 'Bulanan', priceNight: 'Aji awengi', occupancy: 'Okupansi', priceMonth: 'Aji asasih',
+    cheap: 'Sakadi sane mudah', typical: 'Sakadi sane akéh', expensive: 'Sakadi sane mahal',
+    yieldLabel: 'Pikolih', yieldUnit: 'atiban', netMonth: 'Bersih', netMonthUnit: 'asasih', netYear: 'Atiban', netYearUnit: 'bersih',
+    paybackLabel: 'Balik modal', noPayback: 'nenten balik modal',
+    approxYears: (n: number) => `≈ ${n} warsa`,
+    dailyLink: (n: number) => `Tetangga sane nyewaang rahinan: ${n}`,
+    monthlyLink: (n: number) => `Tetangga sane nyewaang bulanan: ${n}`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Aji rata-rata ${apt ? 'apartemen' : 'vila'}${bedrooms ? ` ${bedrooms} kamar pules` : ''}${district ? ` ring ${district}` : ''} — ${price}/sasih.`,
+    pctSuffix: '%',
+  },
+  pl: {
+    title: 'Kalkulator dochodu', sub: 'Liczby na podstawie stawek sąsiadów, a nie obietnic dewelopera.',
+    tabDaily: 'Na doby', tabMonthly: 'Na miesiące', priceNight: 'Cena za noc', occupancy: 'Obłożenie', priceMonth: 'Cena za miesiąc',
+    cheap: 'Jak tanie', typical: 'Jak większość', expensive: 'Jak drogie',
+    yieldLabel: 'Rentowność', yieldUnit: 'rocznie', netMonth: 'Na rękę', netMonthUnit: 'miesięcznie', netYear: 'Rocznie', netYearUnit: 'netto',
+    paybackLabel: 'Zwrot', noPayback: 'nie zwróci się',
+    approxYears: (n: number) => `≈ ${n} ${n === 1 ? 'rok' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'lata' : 'lat'}`,
+    dailyLink: (n: number) => `Sąsiedzi wynajmujący na doby: ${n}`,
+    monthlyLink: (n: number) => `Sąsiedzi wynajmujący na miesiące: ${n}`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Średnia stawka za ${apt ? 'apartamenty' : 'wille'}${bedrooms ? ` z ${bedrooms} ${bedrooms === 1 ? 'sypialnią' : 'sypialniami'}` : ''}${district ? `, ${district}` : ''} — ${price}/mies.`,
+    pctSuffix: '%',
+  },
+  uk: {
+    title: 'Калькулятор доходу', sub: 'Цифри — за ставками сусідів, а не обіцянка забудовника.',
+    tabDaily: 'Подобово', tabMonthly: 'Помісячно', priceNight: 'Ціна за ніч', occupancy: 'Завантаження', priceMonth: 'Ціна за місяць',
+    cheap: 'Як дешеві', typical: 'Як більшість', expensive: 'Як дорогі',
+    yieldLabel: 'Дохідність', yieldUnit: 'річних', netMonth: 'На руки', netMonthUnit: 'на місяць', netYear: 'На рік', netYearUnit: 'чистими',
+    paybackLabel: 'Окупність', noPayback: 'не окупиться',
+    approxYears: (n: number) => `≈ ${n} ${n % 10 === 1 && n % 100 !== 11 ? 'рік' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'роки' : 'років'}`,
+    dailyLink: (n: number) => `Сусіди, що здають подобово: ${n}`,
+    monthlyLink: (n: number) => `Сусіди, що здають помісячно: ${n}`,
+    monthlyAvg: (bedrooms: number | null, district: string | null, price: string, apt = false) =>
+      `Середня ставка для ${apt ? 'апартаментів' : 'вілл'}${bedrooms ? ` з ${bedrooms} ${bedrooms === 1 ? 'спальнею' : 'спальнями'}` : ''}${district ? `, район ${district}` : ''} — ${price}/міс.`,
     pctSuffix: '%',
   },
 } as const
@@ -84,6 +188,8 @@ type CalcProps = {
   restricted: boolean
   lang: Lang
   compareData?: CompareData | null
+  /** Апартаменты: «ставка для апартаментов» вместо «для вилл». По умолчанию вилла. */
+  kind?: 'villa' | 'apartment'
 }
 
 const OCC_PRESETS = [60, 75, 90] as const
@@ -102,7 +208,7 @@ function nearestOcc(pct: number): number {
 export function IncomeCalculator({
   villa, region, dailyPresets, monthlyPresets, defaultOccupancyPct,
   dailyCompCount, monthlyCompCount, restricted, lang,
-  compareData,
+  compareData, kind = 'villa',
 }: CalcProps) {
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
@@ -283,7 +389,7 @@ export function IncomeCalculator({
 
           {compareData && compareData.daily.length > 0 ? (
             <CompareButton data={compareData} lang={lang} initialTab="daily" overrideAdr={dailyPrice} overrideOcc={occ}>
-              {pickCopy({ ru: `Соседи посуточно: ${compareData.daily.length} ${pluralRu(compareData.daily.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting nightly: ${compareData.daily.length}` }, lang)}
+              {c.dailyLink(compareData.daily.length)}
             </CompareButton>
           ) : dailyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.dailyLink(dailyCompCount)}</span>
@@ -356,13 +462,13 @@ export function IncomeCalculator({
 
           {monthlyPresets && (
             <span className="text-[14px] text-[#4C5751]">
-              {c.monthlyAvg(villa.bedrooms, villa.district, fmtUsd(monthlyPresets.p50))}
+              {c.monthlyAvg(villa.bedrooms, villa.district, fmtUsd(monthlyPresets.p50), kind === 'apartment')}
             </span>
           )}
 
           {compareData && compareData.monthly.length > 0 ? (
             <CompareButton data={compareData} lang={lang} initialTab="monthly" overrideMonthly={monthlyPrice}>
-              {pickCopy({ ru: `Соседи помесячно: ${compareData.monthly.length} ${pluralRu(compareData.monthly.length, ['объект', 'объекта', 'объектов'])}`, en: `Neighbours renting monthly: ${compareData.monthly.length}` }, lang)}
+              {c.monthlyLink(compareData.monthly.length)}
             </CompareButton>
           ) : monthlyCompCount > 0 && (
             <span className="text-[15px] text-[#1B6E4A]">{c.monthlyLink(monthlyCompCount)}</span>

@@ -1,3 +1,4 @@
+import { parseArea, inArea, type CatalogArea } from '@/lib/catalog-area'
 import { createClient } from '@supabase/supabase-js'
 import type { ComplexYieldRange } from '@/lib/investment/chance'
 import { districtRu } from '@/lib/district-ru'
@@ -50,6 +51,8 @@ export type ComplexFilterState = {
   permit: string[]
   year: string[]
   developer: string[]
+  /** Область карты (?area=w,s,e,n) — см. lib/catalog-area. */
+  area?: CatalogArea | null
 }
 
 export type ComplexFilterOptions = {
@@ -149,6 +152,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Compl
     permit: asArray(sp.permit),
     year: asArray(sp.year),
     developer: asArray(sp.developer),
+    area: parseArea(sp.area),
   }
 }
 
@@ -237,6 +241,7 @@ function enrich(r: Row): EnrichedRow {
 }
 
 export function passes(e: EnrichedRow, f: ComplexFilterState): boolean {
+  if (f.area && !inArea(e.lat, e.lng, f.area)) return false
   if (f.district.length > 0 && (!e.district || !f.district.includes(e.district))) return false
   if (f.types.length > 0 && !e.types.some(t => f.types.includes(t))) return false
   if (f.status.length > 0) {

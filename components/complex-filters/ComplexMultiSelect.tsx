@@ -21,7 +21,7 @@ const COPY = {
 } as const
 
 type StringArrayKey = {
-  [K in keyof ComplexFilterState]: ComplexFilterState[K] extends string[] ? K : never
+  [K in keyof ComplexFilterState]-?: ComplexFilterState[K] extends string[] ? K : never
 }[keyof ComplexFilterState]
 
 export function ComplexMultiSelect({

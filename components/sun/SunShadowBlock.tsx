@@ -79,7 +79,7 @@ export function SunShadowBlock({
   if (inline) {
     return (
       <div className="h-full w-full overflow-hidden bg-[#0e1116]">
-        <SunScene en={en} plan={plan} latitude={latitude} longitude={longitude} placement={placement} heights={heights} wind={wind} />
+        <SunScene en={en} plan={plan} latitude={latitude} longitude={longitude} placement={placement} heights={heights} wind={wind} side />
       </div>
     )
   }

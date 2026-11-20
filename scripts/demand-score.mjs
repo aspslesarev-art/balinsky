@@ -26,6 +26,7 @@ import { loadEnv } from './_kb-build.mjs'
 import {
   FEATURES, extractFeatures, toVector, calibrateFinish, unknownFeatures,
 } from './_demand-features.mjs'
+import { BOOKING_FIELD, applyMarks, readMarks } from '../lib/booking-amenities.ts'
 
 loadEnv()
 
@@ -176,7 +177,24 @@ const segmentDemandPct = (kind, occAvg) => {
 
 const kbRows = await pageAll('assistant_kb', 'kind, ref_id, slug, title, meta', q =>
   q.in('kind', ['villa', 'apartment']))
+// Объекты, добавленные через админку, в базу знаний Балины попадают не сразу —
+// берём их прямо из каталога, иначе у новых вилл не будет балла.
+for (const [kind, table] of [['villa', 'raw_villas'], ['apartment', 'raw_apartments']]) {
+  const inKb = new Set(kbRows.filter(k => k.kind === kind).map(k => k.ref_id))
+  const raw = await pageAll(table, 'airtable_id, slug:data->>"SEO:Slug", title:data->>"SEO:Title", beds:data->>Комнаты, district:data->>"Location 2"')
+  for (const r of raw) {
+    if (inKb.has(r.airtable_id)) continue
+    const beds = Number.parseInt(r.beds, 10)
+    kbRows.push({ kind, ref_id: r.airtable_id, slug: r.slug, title: r.title, meta: { bedrooms: Number.isFinite(beds) ? beds : null, district: r.district } })
+  }
+}
 const geoRows = await pageAll('listing_geo', 'kind, airtable_id, lat, lng')
+const marksBy = new Map()
+for (const [kind, table] of [['villa', 'raw_villas'], ['apartment', 'raw_apartments']]) {
+  const rows = await pageAll(table, `airtable_id, marks:data->"${BOOKING_FIELD}"`)
+  for (const r of rows) if (r.marks) marksBy.set(`${kind}|${r.airtable_id}`, readMarks(r.marks))
+}
+console.log(`Отметки «Для Booking»: ${marksBy.size} юнитов`)
 const visionRows = await pageAll('catalog_product_vision', 'kind, airtable_id, vision', q =>
   q.in('kind', ['villa', 'apartment']))
 const zoneRows = await pageAll('catalog_product_zone', 'kind, airtable_id, zone')
@@ -231,12 +249,21 @@ function scoreUnit(u) {
   if (!st) return null
 
   // Юнит проходит через тот же оценщик, что и его соседи.
-  const feats = extractFeatures(u.vision)
+  const unknown = unknownFeatures(u.vision)
+  // Отметки застройщика/команды («Редактировать → Для Booking») важнее фото:
+  // заданный человеком признак перестаёт быть неизвестным.
+  const { feats, byHuman } = applyMarks(extractFeatures(u.vision), marksBy.get(`${u.kind}|${u.ref_id}`) ?? {})
+  for (const k of byHuman) unknown.delete(k)
+  if (byHuman.some(k => k.startsWith('pool_'))) for (const k of ['pool_infinity', 'pool_private', 'pool_shared', 'pool_none']) unknown.delete(k)
   if (Number.isFinite(u.rawFinish)) {
     feats.finish_tier = (remapFinish(u.rawFinish) - 1) / 4
   }
-  const unknown = unknownFeatures(u.vision)
   const vec = st.impute(toVector(feats), unknown)
+  // Для пересчёта на сайте сразу после правки отметок (lib/unit-demand.ts):
+  // вектор только по фото (без отметок) и распределение индекса соседей.
+  const aiFeats = extractFeatures(u.vision)
+  if (Number.isFinite(u.rawFinish)) aiFeats.finish_tier = feats.finish_tier
+  const aiVec = st.impute(toVector(aiFeats), unknownFeatures(u.vision))
   const adrMult = Math.exp(apply(mAdr, vec))
   const occPct = Math.min(100, Math.max(5, st.occAvg + apply(mOcc, vec) * 100))
   const index = adrMult * (occPct / st.occAvg)
@@ -300,8 +327,27 @@ function scoreUnit(u) {
         expected_adr_usd: st.medianAdr ? Math.round(st.medianAdr * adrMult) : null,
       },
       drivers,
+      live: {
+        base: Object.fromEntries(FEATURES.map((f, j) => [f, Number(aiVec[j].toFixed(4))])),
+        q: quantiles(st.indexSorted),
+        occ_avg: st.occAvg,
+        seg_pct: segPct,
+        seg_weight: SEGMENT_WEIGHT,
+        median_adr_usd: st.medianAdr,
+      },
     },
   }
+}
+
+// Распределение индекса страты — по нему сайт ставит место юнита так же, как
+// здесь (доля соседей ниже). Небольшую страту храним целиком, большую — 201 точкой.
+function quantiles(sorted) {
+  if (sorted.length <= 400) return sorted.map(v => Number(v.toFixed(5)))
+  return Array.from({ length: 201 }, (_, i) => {
+    const x = (i / 200) * (sorted.length - 1)
+    const lo = Math.floor(x), hi = Math.ceil(x)
+    return Number((sorted[lo] + (sorted[hi] - sorted[lo]) * (x - lo)).toFixed(5))
+  })
 }
 
 const scored = units.map(scoreUnit).filter(Boolean)

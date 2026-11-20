@@ -78,7 +78,7 @@ export function VillaInfiniteScrollClient({
   return (
     <>
       {cards.length > 0 && (
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
           {cards.map(c => <VillaCard key={c.id} a={c} lang={lang} />)}
         </div>
       )}

@@ -1,3 +1,4 @@
+import { parseArea, inArea, type CatalogArea } from '@/lib/catalog-area'
 import { pluralRu } from '@/lib/plural-ru'
 import type { YieldRange } from '@/lib/investment/chance'
 import { createClient } from '@supabase/supabase-js'
@@ -74,6 +75,8 @@ export type VillaFilterState = {
   // Не фильтр: hasAnyFilter её не считает, а buildCanonicalPath с ней
   // возвращает null, чтобы ссылка не уводила на чистый ISR-адрес без неё.
   sort?: CatalogSort
+  /** Область карты (?area=w,s,e,n) — см. lib/catalog-area. */
+  area?: CatalogArea | null
 }
 
 export type VillaFilterOptions = {
@@ -222,6 +225,7 @@ export function parseQueryFilters(sp: Record<string, string | undefined>): Villa
     features: asArray(sp.features).filter(v => (FEATURE_FLAGS as readonly string[]).includes(v)),
     goal: sp.goal === 'invest' || sp.goal === 'live' ? sp.goal : null,
     dealType: asArray(sp.deal).filter(v => v === 'primary' || v === 'resale' || v === 'secondary'),
+    area: parseArea(sp.area),
     sort: parseCatalogSort(sp.sort),
   }
 }
@@ -345,6 +349,7 @@ export function enrich(r: Row, styles: StylesMap = {}, featuresMap: Record<strin
 }
 
 export function passes(e: EnrichedRow, f: VillaFilterState): boolean {
+  if (f.area && !inArea(e.lat, e.lng, f.area)) return false
   if (f.priceMin != null && (e.priceUsd == null || e.priceUsd < f.priceMin)) return false
   if (f.priceMax != null && (e.priceUsd == null || e.priceUsd > f.priceMax)) return false
   if (f.district.length > 0 && (!e.district || !f.district.includes(e.district))) return false

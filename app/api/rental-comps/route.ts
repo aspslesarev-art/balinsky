@@ -1,3 +1,4 @@
+import { airbnbPhoto } from '@/lib/photo-cdn'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -206,7 +207,7 @@ export async function GET(req: Request) {
       occupancy: null as number | null,
       price: r.price == null ? null : Number(r.price),
       star: null as number | null,
-      image: r.photo ? `${r.photo}?im_w=480` : null,
+      image: airbnbPhoto(r.photo),
       roomType: null as string | null,
       roomOcc: null as number | null,
       roomPhoto: null as string | null,

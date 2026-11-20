@@ -2,14 +2,16 @@
 
 // Карта зон плана застройки во вкладке «Зоны» окна медиаблока (макет «Зоны
 // вокруг», B, владелец 2026-11-11): спутник на весь экран, поверх зоны RDTR
-// в радиусе, цвета GISTARU. Слева легенда, справа карточка участка; нажатие
-// на участок показывает его зону. Данные - lib/rdtr-zones.ts.
+// в радиусе, цвета GISTARU. На компьютере легенда и карточка участка - в левой
+// колонке окна (2026-11-19), на телефоне - поверх карты; нажатие на участок
+// показывает его зону. Данные - lib/rdtr-zones.ts.
 
 import { useEffect, useRef, useState } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
-import { RDTR_BASE, pctText, plotLabel, zoneKind, zoneRows, zoneRu, type RdtrData, type ZoneGroup } from '@/lib/rdtr-zones'
+import { VIEWER_ASIDE_LG, VIEWER_LABEL } from './media-viewer-aside'
+import { RDTR_BASE, pctText, plotLabel, zoneKind, zoneName, zoneRows, type RdtrData, type ZoneGroup } from '@/lib/rdtr-zones'
 
 const COPY = {
   ru: {
@@ -27,6 +29,70 @@ const COPY = {
     rules: (kdb: string | null, kdh: string | null) => [kdb ? `up to ${kdb} built-up` : null, kdh ? `at least ${kdh} green` : null].filter(Boolean).join(', '),
     tap: 'Tap a plot to see its zone',
     source: 'GISTARU (ATR/BPN) · imagery Esri, Maxar',
+  },
+  id: {
+    title: (r: number) => `Zona dalam radius ${r >= 1000 ? `${r / 1000} km` : `${r} m`}`,
+    build: 'Boleh membangun', nobuild: 'Biasanya tidak untuk hunian', other: 'Lainnya',
+    plot: 'Kavling properti ini', picked: 'Kavling terpilih', back: 'Kembali ke kavling properti',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `terbangun maks. ${kdb}` : null, kdh ? `hijau min. ${kdh}` : null].filter(Boolean).join(', '),
+    tap: 'Ketuk kavling untuk melihat zonanya',
+    source: 'GISTARU (ATR/BPN) · citra Esri, Maxar',
+  },
+  fr: {
+    title: (r: number) => `Zones dans un rayon de ${r >= 1000 ? `${r / 1000} km` : `${r} m`}`,
+    build: 'Constructible', nobuild: 'Logement généralement interdit', other: 'Autre',
+    plot: 'Terrain du bien', picked: 'Parcelle choisie', back: 'Revenir au terrain du bien',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `emprise bâtie jusqu’à ${kdb}` : null, kdh ? `espaces verts dès ${kdh}` : null].filter(Boolean).join(', '),
+    tap: 'Touchez une parcelle pour voir sa zone',
+    source: 'GISTARU (ATR/BPN) · images Esri, Maxar',
+  },
+  de: {
+    title: (r: number) => `Zonen im Umkreis von ${r >= 1000 ? `${r / 1000} km` : `${r} m`}`,
+    build: 'Bebauung erlaubt', nobuild: 'Wohnbau meist nicht erlaubt', other: 'Sonstiges',
+    plot: 'Grundstück des Objekts', picked: 'Gewähltes Grundstück', back: 'Zurück zum Grundstück des Objekts',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `Bebauung bis ${kdb}` : null, kdh ? `Grünfläche ab ${kdh}` : null].filter(Boolean).join(', '),
+    tap: 'Tippen Sie auf ein Grundstück, um seine Zone zu sehen',
+    source: 'GISTARU (ATR/BPN) · Bilder Esri, Maxar',
+  },
+  zh: {
+    title: (r: number) => `半径${r >= 1000 ? `${r / 1000}公里` : `${r}米`}内的分区`,
+    build: '可建设', nobuild: '通常不可建住宅', other: '其他',
+    plot: '本房产地块', picked: '所选地块', back: '返回本房产地块',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `建筑密度不超过${kdb}` : null, kdh ? `绿地不少于${kdh}` : null].filter(Boolean).join('，'),
+    tap: '点击地块查看其分区',
+    source: 'GISTARU (ATR/BPN) · 影像 Esri, Maxar',
+  },
+  nl: {
+    title: (r: number) => `Zones binnen ${r >= 1000 ? `${r / 1000} km` : `${r} m`}`,
+    build: 'Bouwen toegestaan', nobuild: 'Wonen meestal niet toegestaan', other: 'Overig',
+    plot: 'Perceel van dit object', picked: 'Gekozen perceel', back: 'Terug naar het perceel van dit object',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `bebouwing tot ${kdb}` : null, kdh ? `groen vanaf ${kdh}` : null].filter(Boolean).join(', '),
+    tap: 'Tik op een perceel om de zone te zien',
+    source: 'GISTARU (ATR/BPN) · beelden Esri, Maxar',
+  },
+  ban: {
+    title: (r: number) => `Zona ring radius ${r >= 1000 ? `${r / 1000} km` : `${r} m`}`,
+    build: 'Dados ngwangun', nobuild: 'Biasane nenten anggen umah', other: 'Sane lianan',
+    plot: 'Tanah properti puniki', picked: 'Tanah sane kapilih', back: 'Mawali ka tanah properti',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `wangunan kantos ${kdb}` : null, kdh ? `taman paling akidik ${kdh}` : null].filter(Boolean).join(', '),
+    tap: 'Tekan tanah anggen ngantenang zonane',
+    source: 'GISTARU (ATR/BPN) · gambar Esri, Maxar',
+  },
+  pl: {
+    title: (r: number) => `Strefy w promieniu ${r >= 1000 ? `${r / 1000} km` : `${r} m`}`,
+    build: 'Zabudowa dozwolona', nobuild: 'Zabudowa mieszkaniowa zwykle niedozwolona', other: 'Inne',
+    plot: 'Działka obiektu', picked: 'Wybrana działka', back: 'Wróć do działki obiektu',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `zabudowa do ${kdb}` : null, kdh ? `zieleń od ${kdh}` : null].filter(Boolean).join(', '),
+    tap: 'Dotknij działki, aby zobaczyć jej strefę',
+    source: 'GISTARU (ATR/BPN) · zdjęcia Esri, Maxar',
+  },
+  uk: {
+    title: (r: number) => `Зони в радіусі ${r >= 1000 ? `${r / 1000} км` : `${r} м`}`,
+    build: 'Можна будувати', nobuild: 'Житло зазвичай не будують', other: 'Інше',
+    plot: 'Ділянка об’єкта', picked: 'Обрана ділянка', back: 'Повернутися до ділянки об’єкта',
+    rules: (kdb: string | null, kdh: string | null) => [kdb ? `забудова до ${kdb} ділянки` : null, kdh ? `зелень від ${kdh}` : null].filter(Boolean).join(', '),
+    tap: 'Натисніть на ділянку — покажемо її зону',
+    source: 'GISTARU (ATR/BPN) · знімки Esri, Maxar',
   },
 } as const
 
@@ -47,7 +113,6 @@ function circleRing([lon, lat]: [number, number], r: number): [number, number][]
 
 export function ZoningMap({ slug, lang, ver, plotOverride }: { slug: string; lang: Lang; ver?: string; plotOverride?: RdtrData['plot'] }) {
   const c = pickCopy(COPY, lang)
-  const ru = zoneRu(lang)
   const [data, setData] = useState<RdtrData | null>(null)
   const [picked, setPicked] = useState<string | null>(null)
   const [legendOpen, setLegendOpen] = useState(false)
@@ -82,7 +147,7 @@ export function ZoningMap({ slug, lang, ver, plotOverride }: { slug: string; lan
         },
         bounds: [[data.center[0] - dLon, data.center[1] - dLat], [data.center[0] + dLon, data.center[1] + dLat]],
         // Круг - в свободной части: на телефоне сверху карточка участка, снизу легенда.
-        fitBoundsOptions: { padding: narrow ? { top: 130, bottom: 150, left: 12, right: 12 } : { top: 40, bottom: 40, left: 340, right: 340 } },
+        fitBoundsOptions: { padding: narrow ? { top: 130, bottom: 150, left: 12, right: 12 } : { top: 40, bottom: 40, left: 40, right: 40 } },
         // На телефоне подпись источников стоит в легенде, иначе наезжает на неё.
         attributionControl: narrow ? false : { compact: true },
       })
@@ -136,44 +201,62 @@ export function ZoningMap({ slug, lang, ver, plotOverride }: { slug: string; lan
     )
   }
 
-  return (
-    <div className="relative w-full h-full bg-[#1A221E]">
-      <div ref={mapRef} className="w-full h-full" />
-      {data && (
-        <>
-          <div className="absolute left-3 right-3 bottom-3 lg:right-auto lg:bottom-auto lg:left-6 lg:top-6 lg:w-[300px] max-h-[55%] lg:max-h-[calc(100%-48px)] overflow-y-auto p-4 rounded-xl bg-[rgb(12_16_14/0.88)] text-white flex flex-col gap-3.5">
-            <button type="button" onClick={() => setLegendOpen(v => !v)} aria-expanded={legendOpen}
-              className="flex items-center justify-between gap-3 text-left lg:pointer-events-none cursor-pointer">
-              <span className="flex flex-col gap-0.5">
-                <span className="text-[15px] font-semibold">{c.title(data.radius)}</span>
-                <span className="text-[12px] leading-snug text-white/60 lg:hidden">{legendOpen ? c.source : rows.slice(0, 2).map(r => `${r.label} ${pctText(r.share)}`).join(' · ')}</span>
-                <span className="text-[12px] leading-snug text-white/60 hidden lg:inline">{c.source}</span>
-              </span>
-              <span aria-hidden className={`lg:hidden text-[18px] transition-transform duration-200 ${legendOpen ? 'rotate-180' : ''}`}>⌃</span>
-            </button>
-            <div className={`${legendOpen ? 'flex' : 'hidden'} lg:flex flex-col gap-3.5`}>
-              {group('build', c.build, 'text-[#8FD9B3]')}
-              {group('nobuild', c.nobuild, 'text-[#F5C451]')}
-            </div>
-          </div>
-          {plot && (
-            <div className="absolute left-3 top-3 right-3 lg:left-auto lg:right-6 lg:top-6 lg:w-[320px] p-4 rounded-xl bg-white text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.2),0_12px_32px_rgb(0_0_0/.35)] flex flex-col gap-1">
-              {picked && (
-                <button type="button" onClick={() => setPicked(null)} aria-label={c.back}
-                  className="absolute right-1.5 top-1.5 w-9 h-9 rounded-full flex items-center justify-center text-[18px] leading-none text-[var(--color-text-muted)] hover:bg-black/5 cursor-pointer">×</button>
-              )}
-              <span className="text-[12px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] pr-8">{picked ? c.picked : c.plot}</span>
-              <span className="text-[16px] font-semibold inline-flex items-center gap-2">
-                <span className="w-3 h-3 rounded-[3px] shrink-0 border border-black/10" style={{ background: (picked ? pickedColor : plot.color) ?? '#BBB' }} />
-                {picked ? (pickedKind ? (ru ? pickedKind.ru : pickedKind.en) : picked) : plot.label}
-              </span>
-              {!picked && (pct(plotData?.plot?.kdb) || pct(plotData?.plot?.kdh)) && <span className="text-[13px] text-[var(--color-text-muted)]">{c.rules(pct(plotData?.plot?.kdb), pct(plotData?.plot?.kdh))}</span>}
-              {picked && <span className="text-[12px] text-[var(--color-text-muted)]">{picked}</span>}
-            </div>
-          )}
-          <span className="hidden lg:block absolute right-6 bottom-8 px-2.5 py-1.5 rounded-lg bg-[rgb(12_16_14/0.75)] text-white text-[13px]">{c.tap}</span>
-        </>
+  // Карточка участка: на телефоне белая поверх карты, на компьютере - в белой
+  // колонке окна.
+  const plotCard = (inColumn: boolean) => plot && (
+    <div className={inColumn
+      ? 'relative p-4 rounded-xl border border-[#ECEFED] bg-[#F6F7F6] text-[#0F1A15] flex flex-col gap-1'
+      : 'lg:hidden absolute left-3 top-3 right-3 p-4 rounded-xl bg-white text-[var(--color-text)] shadow-[0_1px_2px_rgb(0_0_0/.2),0_12px_32px_rgb(0_0_0/.35)] flex flex-col gap-1'}>
+      {picked && (
+        <button type="button" onClick={() => setPicked(null)} aria-label={c.back}
+          className={`absolute right-1.5 top-1.5 w-9 h-9 rounded-full flex items-center justify-center text-[18px] leading-none cursor-pointer ${inColumn ? 'text-[#6B7570] hover:bg-black/5' : 'text-[var(--color-text-muted)] hover:bg-black/5'}`}>×</button>
       )}
+      <span className={`text-[12px] font-semibold uppercase tracking-wide pr-8 ${inColumn ? 'text-[#6B7570]' : 'text-[var(--color-text-muted)]'}`}>{picked ? c.picked : c.plot}</span>
+      <span className="text-[16px] font-semibold inline-flex items-center gap-2">
+        <span className="w-3 h-3 rounded-[3px] shrink-0 border border-black/10" style={{ background: (picked ? pickedColor : plot.color) ?? '#BBB' }} />
+        {picked ? (pickedKind ? zoneName(pickedKind, lang) : picked) : plot.label}
+      </span>
+      {!picked && (pct(plotData?.plot?.kdb) || pct(plotData?.plot?.kdh)) && <span className={`text-[13px] ${inColumn ? 'text-[#6B7570]' : 'text-[var(--color-text-muted)]'}`}>{c.rules(pct(plotData?.plot?.kdb), pct(plotData?.plot?.kdh))}</span>}
+      {picked && <span className={`text-[12px] ${inColumn ? 'text-[#6B7570]' : 'text-[var(--color-text-muted)]'}`}>{picked}</span>}
+    </div>
+  )
+
+  return (
+    <div className="relative w-full h-full bg-[#1A221E] lg:flex">
+      {data && (
+        <aside className={`hidden ${VIEWER_ASIDE_LG} bg-white text-[#0F1A15]`}>
+          <div className="flex flex-col gap-1">
+            <span className={VIEWER_LABEL}>{c.title(data.radius)}</span>
+            <span className="text-[12px] leading-snug text-[#6B7570]">{c.source}</span>
+          </div>
+          {plotCard(true)}
+          {group('build', c.build, 'text-[#1F8B5F]')}
+          {group('nobuild', c.nobuild, 'text-[#B7791F]')}
+          <span className="text-[13px] text-[#6B7570]">{c.tap}</span>
+        </aside>
+      )}
+      <div className="relative w-full h-full lg:flex-1 lg:min-w-0">
+        <div ref={mapRef} className="w-full h-full" />
+        {data && (
+          <>
+            <div className="lg:hidden absolute left-3 right-3 bottom-3 max-h-[55%] overflow-y-auto p-4 rounded-xl bg-[rgb(12_16_14/0.88)] text-white flex flex-col gap-3.5">
+              <button type="button" onClick={() => setLegendOpen(v => !v)} aria-expanded={legendOpen}
+                className="flex items-center justify-between gap-3 text-left cursor-pointer">
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-[15px] font-semibold">{c.title(data.radius)}</span>
+                  <span className="text-[12px] leading-snug text-white/60">{legendOpen ? c.source : rows.slice(0, 2).map(r => `${r.label} ${pctText(r.share)}`).join(' · ')}</span>
+                </span>
+                <span aria-hidden className={`text-[18px] transition-transform duration-200 ${legendOpen ? 'rotate-180' : ''}`}>⌃</span>
+              </button>
+              <div className={`${legendOpen ? 'flex' : 'hidden'} flex-col gap-3.5`}>
+                {group('build', c.build, 'text-[#8FD9B3]')}
+                {group('nobuild', c.nobuild, 'text-[#F5C451]')}
+              </div>
+            </div>
+            {plotCard(false)}
+          </>
+        )}
+      </div>
     </div>
   )
 }

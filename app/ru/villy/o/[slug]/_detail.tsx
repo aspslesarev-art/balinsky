@@ -46,12 +46,8 @@ import { complexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
 import { VillaChapter, VillaBlock } from '@/components/VillaChapter'
-import { VillaChapterNav } from '@/components/VillaChapterNav'
 import { ZoningMap } from '@/components/ZoningMap'
-import { ZoningCard } from '@/components/ZoningCard'
-import { KeyFactsInline } from '@/components/KeyFactsInline'
-import { Money } from '@/components/Money'
-import { RDTR_BASE, loadRdtr, pctText, plotLabel, zoneRows, type RdtrData } from '@/lib/rdtr-zones'
+import { RDTR_BASE, loadRdtr, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
@@ -80,6 +76,10 @@ import { loadAll as loadVillaCatalog } from '@/app/ru/villy/_lib'
 import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
+import { ManagerContactButtons } from '@/components/ManagerContactButtons'
+import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
+import { LocationView } from '@/components/LocationView'
+import { VillaActions } from '@/components/VillaActions'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { loadLandmarks } from '@/lib/landmarks'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
@@ -88,7 +88,6 @@ import { BeachBlock } from '@/components/BeachBlock'
 import { nearestBeachProfile, nearestBeachProfileByPoint } from '@/lib/beaches'
 import { loadGeoFacts } from '@/lib/complex-access'
 import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
-import { VerifiedYieldBadge } from '@/components/VerifiedYieldBadge'
 import { ClimateBlock } from '@/components/ClimateBlock'
 import { loadVerdictSnapshot, loadComplexFacts, computeYieldFacts, buildVerdict, yieldScenarios } from '@/lib/listing-verdict'
 import { localizeSnapshot } from '@/lib/competitor-names-en'
@@ -97,6 +96,7 @@ import { IncomeCalculator } from '@/components/IncomeCalculator'
 import { BeachWeatherDesign } from '@/components/BeachWeatherDesign'
 import { LocationSection } from '@/components/LocationSection'
 import { PdfDocument, NEAR_COLORS } from '@/components/pdf/PdfDocument'
+import { AnalyticsReport } from '@/components/analytics-panel/AnalyticsReport'
 import type { PdfRequest } from '@/lib/pdf-request'
 import { loadManagersByDeveloperName, loadManagersByDeveloperSlug } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
@@ -114,12 +114,13 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { PageEditButton } from '@/components/page-edit/PageEditButton'
 import { permitLabel } from '@/components/presentation-copy'
 import { VillaPresentationButton } from '@/components/VillaPresentation'
-import { AddToCollection } from '@/components/collections/AddToCollection'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { resolveListingTitle, anonListingTitle } from '@/lib/listing-title'
 import { loadAllTranslations, mergeAllTranslations, loadTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
+import { plural, nPlural, BEDROOMS, BATHROOMS, FLOORS, YEARS, VILLAS, SQM, KM, METERS, MIN, decSep } from '@/lib/l10n-plural'
+import { PAY_UPFRONT, PAY_MONTHS, NEAR, BD_SHORT, COMFORT, COMFORT_OUT, COMFORT_AMEN, TILE, PLACE, RANGE, NEIGHBOURS_SALE, KEYLINE, PROJECTS_GEN, UNITS_IN, DETAIL_LINES } from '@/lib/listing-l10n'
 import { districtRu, districtLatin } from '@/lib/district-ru'
 import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
@@ -136,6 +137,13 @@ import { hreflangMap } from '@/lib/hreflang'
 import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
 import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { metaSnippet } from '@/lib/seo'
+import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
+import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
+import { AddToCollection } from '@/components/collections/AddToCollection'
+import { loadSurroundings } from '@/lib/surroundings'
+import { loadTourism } from '@/lib/analytics-panel/tourism'
+import { BALI_HUBS, loadExtraRoutes, loadTravelTimes, type ExtraDest } from '@/lib/analytics-panel/extra-routes'
+import { loadBookingFit } from '@/lib/analytics-panel/booking-fit'
 
 const COPY = {
   ru: {
@@ -943,6 +951,8 @@ const _loadComplexesIndex = unstable_cache(
   { revalidate: 604800, tags: ['content:complexes'] },
 )
 
+const MGR_ROLE = { ru: 'Менеджер застройщика', en: 'Developer’s manager', id: 'Manajer pengembang', fr: 'Responsable du promoteur', de: 'Ansprechpartner des Bauträgers', zh: '开发商经理', nl: 'Manager van de ontwikkelaar', ban: 'Manajer pengembang', pl: 'Menedżer dewelopera', uk: 'Менеджер забудовника' }
+
 function findParentComplex(villaTitle: string, complexes: ComplexLite[], complexName?: string | null): ComplexLite | null {
   // The «Комплекс 1» field is what the complex page lists its units by, so
   // trust it first — the title match below misses or mislinks units whose
@@ -1174,7 +1184,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   }
 }
 
-export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean }) {
+export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, report }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean; report?: { ids: string[]; autoPrint: boolean } }) {
   const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). resolveVilla finds either form
@@ -1219,24 +1229,16 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const paymentPlanText = (() => {
     const raw = (firstString(complexMedia.data?.['Payment plan,%']) ?? '').replace(/\s+/g, ' ').trim()
     if (!raw || raw.includes('...')) return null
-    const ru = lang === 'ru' || lang === 'uk'
-    if (/^100\s*%?$/.test(raw)) return ru ? 'нет, 100% сразу' : 'no, 100% upfront'
+    if (/^100\s*%?$/.test(raw)) return pickCopy(PAY_UPFRONT, lang)
     const m = raw.match(/^(.*?)\s*\/\s*(\d+)$/)
     const parts = (m ? m[1] : raw).split('+').map(x => x.replace(/[^\d.]/g, '')).filter(Boolean)
     if (parts.length < 2) return null
-    return `${parts.join(' / ')}%${m ? (ru ? ` · на ${m[2]} мес.` : ` · over ${m[2]} mo.`) : ''}`
+    return `${parts.join(' / ')}%${m ? ` · ${pickCopy(PAY_MONTHS, lang)(m[2])}` : ''}`
   })()
   // Зоны плана застройки вокруг (scripts/rdtr_zones.py): карточка в колонке
   // «Участок» и вкладка «Зоны» в окне медиаблока.
   const rdtrHit = await loadRdtr(v.airtable_id, complexMedia.slug)
   const rdtr: RdtrData | null = rdtrHit?.data ?? null
-  const rdtrRows = rdtr ? zoneRows(rdtr, lang) : []
-  const rdtrAround = (() => {
-    const b = rdtrRows.find(r => r.group === 'build')
-    const n = rdtrRows.find(r => r.group === 'nobuild')
-    const parts = [b ? `${pctText(b.share)} ${b.label.toLowerCase()}` : null, n ? `${pctText(n.share)} ${n.label.toLowerCase()}` : null].filter(Boolean)
-    return parts.length ? parts.join(', ') : null
-  })()
   const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
   // Юридическая проверка комплекса (документы застройщика) — тот же блок, что
   // на странице ЖК, и так же только в Pro (bx-auth-block).
@@ -1252,6 +1254,28 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   const buildViewerTabs = (wind: Wind | null): ViewerTab[] => {
     const tabs: ViewerTab[] = []
     const en = lang !== 'ru'
+    // «Локация» (владелец 20.11.2026, макет LocA): карта, спутник, улица Google
+    // (встроенные — бесплатно) и «Рядом». Обложка — спутниковый снимок Esri.
+    if (lat != null && lng != null) {
+      const z = 16, n = 2 ** z
+      const tx = Math.floor(((lng + 180) / 360) * n)
+      const ty = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n)
+      const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${METERS[lang]}` : `${km.toFixed(1).replace('.', decSep(lang))} ${KM[lang]}`
+      const row = (k: string) => livingFacts?.rows.find(r => r.key === k)?.km ?? null
+      const near: { label: string; value: string }[] = []
+      if (beachPick?.km != null) near.push({ label: [pickCopy(NEAR.beach, lang), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
+      if (row('shop') != null) near.push({ label: pickCopy(NEAR.shop, lang), value: dist(row('shop')!) })
+      if (row('school') != null) near.push({ label: pickCopy(NEAR.school, lang), value: dist(row('school')!) })
+      if (livingFacts?.airportMin != null) near.push({ label: pickCopy(NEAR.airport, lang), value: `${livingFacts.airportMin} ${MIN[lang]}` })
+      tabs.push({
+        key: 'location',
+        label: pickCopy({ ru: 'Локация', en: 'Location', id: 'Lokasi', fr: 'Emplacement', de: 'Lage', zh: '位置', nl: 'Locatie', ban: 'Genah', pl: 'Lokalizacja', uk: 'Локація' }, lang),
+        icon: <MapPin size={18} aria-hidden />,
+        cover: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`,
+        bleed: true,
+        content: <LocationView lat={lat} lng={lng} place={district ? `${district}, ${pickCopy(NEAR.bali, lang)}` : null} near={near} lang={lang} />,
+      })
+    }
     if (sunPlan && sunSettings?.enabled) {
       tabs.push({
         key: 'sun',
@@ -1356,7 +1380,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
       .filter(h => { const k = h.label!; if (seen.has(k)) return false; seen.add(k); return true })
       .map(h => {
         const u = h.targetUnitSlug ? unitsBySlug[h.targetUnitSlug] : undefined
-        const sub = u ? [u.area ? `${String(u.area).replace('.', lang === 'ru' ? ',' : '.')} ${lang === 'ru' ? 'м²' : 'm²'}` : null, u.bedrooms ? `${u.bedrooms} ${lang === 'ru' ? 'сп.' : 'bd'}` : null].filter(Boolean).join(' · ') : null
+        const sub = u ? [u.area ? `${String(u.area).replace('.', decSep(lang))} ${SQM[lang]}` : null, u.bedrooms ? `${u.bedrooms} ${pickCopy(BD_SHORT, lang)}` : null].filter(Boolean).join(' · ') : null
         return { label: h.label!, status: h.availability, sub: sub || null, priceUsd: u?.priceUsd ?? null, url: u?.url ?? null, current: h.targetUnitSlug === slug }
       })
     const planNode = (
@@ -1471,7 +1495,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   })()
 
   const facts: { Icon: typeof BedDouble; label: string; value: ReactNode }[] = [
-    bedrooms != null && { Icon: BedDouble, label: c.factBedrooms, value: lang === 'ru' ? String(bedrooms) : `${bedrooms} BR` },
+    bedrooms != null && { Icon: BedDouble, label: c.factBedrooms, value: lang === 'en' ? `${bedrooms} BR` : String(bedrooms) },
     area != null && { Icon: Square, label: c.factHouse, value: `${area} ${c.sqm}` },
     land != null && { Icon: Trees, label: c.factLand, value: `${land} ${c.sqm}` },
     yearRaw && { Icon: Calendar, label: c.factCompletion, value: status?.toLowerCase().includes('построен') ? c.completed : yearShown },
@@ -1507,7 +1531,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     lease ? { label: c.factOwnership, value: c.factOwnershipLease } : null,
     lease ? { label: c.factLeasehold, value: c.factLeaseValue(lease) } : null,
     land != null ? { label: c.factLand, value: `${land} ${c.sqm}` } : null,
-    landPrices && land != null && land > 0 ? { label: pickCopy({ ru: 'Стоимость земли', en: 'Land value', id: 'Nilai tanah', fr: 'Valeur du terrain', de: 'Grundstückswert', zh: '土地价值', nl: 'Grondwaarde', ban: 'Aji tanah', pl: 'Wartość gruntu', uk: 'Вартість землі' }, lang), value: <>≈ <Money usd={Math.round(landPrices.medianPpm * land)} lang={lang} /></> } : null,
+    // Стоимость земли переехала в «Аналитику» → «Оценить землю» (владелец 18.11.2026).
   ] as (KV | null)[]).filter(Boolean) as KV[]
 
   // kb.faq is EN-only (KB stores RU + EN). For non-RU pages prefer the native
@@ -1698,7 +1722,6 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     ? Math.round(saleComps.q.p25 / saleComps.self * priceNum) : null
   const saleCompHigh = saleComps?.q && saleComps.self && saleComps.self > 0 && priceNum
     ? Math.round(saleComps.q.p75 / saleComps.self * priceNum) : null
-  const isRu = lang === 'ru' || lang === 'uk'
 
   const compareData: CompareData | null = (() => {
     const saleSource = (url: string) => {
@@ -1752,19 +1775,90 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
 
   // Главы страницы (макет «Структура страницы», вариант A, владелец 2026-11-11).
   const CH = pickCopy({
-    ru: { obekt: ['Объект', 'Вилла и участок'], proverka: ['Проверка', 'Можно ли доверять', 'Документы, застройщик, участок и природные риски.'], dengi: ['Деньги', 'Цена и доход', 'Сравнение с соседями, а не обещания застройщика.'], mesto: ['Место', 'Что вокруг и какая погода'], zastroyshchik: ['Застройщик'], voprosy: ['Вопросы'] },
-    en: { obekt: ['Property', 'Villa and land'], proverka: ['Checks', 'Can you trust it', 'Documents, developer, plot and natural risks.'], dengi: ['Money', 'Price and income', 'Compared with neighbours, not the developer’s promises.'], mesto: ['Location', 'Surroundings and weather'], zastroyshchik: ['Developer'], voprosy: ['FAQ'] },
+    ru: { analitika: ['Аналитика'], obekt: ['Объект', 'Вилла и участок'], proverka: ['Проверка', 'Можно ли доверять', 'Документы, застройщик, участок и природные риски.'], dengi: ['Деньги', 'Цена и доход', 'Сравнение с соседями, а не обещания застройщика.'], mesto: ['Место', 'Что вокруг и какая погода'], zastroyshchik: ['Застройщик'], voprosy: ['Вопросы'] },
+    en: { analitika: ['Analytics'], obekt: ['Property', 'Villa and land'], proverka: ['Checks', 'Can you trust it', 'Documents, developer, plot and natural risks.'], dengi: ['Money', 'Price and income', 'Compared with neighbours, not the developer’s promises.'], mesto: ['Location', 'Surroundings and weather'], zastroyshchik: ['Developer'], voprosy: ['FAQ'] },
+    id: { analitika: ['Analitik'], obekt: ['Properti', 'Vila dan tanah'], proverka: ['Pemeriksaan', 'Bisakah dipercaya', 'Dokumen, pengembang, tanah, dan risiko alam.'], dengi: ['Keuangan', 'Harga dan pendapatan', 'Dibandingkan dengan properti sekitar, bukan janji pengembang.'], mesto: ['Lokasi', 'Sekitar dan cuaca'], zastroyshchik: ['Pengembang'], voprosy: ['Pertanyaan'] },
+    fr: { analitika: ['Analyse'], obekt: ['Le bien', 'Villa et terrain'], proverka: ['Vérification', 'Peut-on s’y fier', 'Documents, promoteur, terrain et risques naturels.'], dengi: ['Finances', 'Prix et revenus', 'Comparé aux biens voisins, pas aux promesses du promoteur.'], mesto: ['Emplacement', 'Alentours et météo'], zastroyshchik: ['Promoteur'], voprosy: ['Questions'] },
+    de: { analitika: ['Analyse'], obekt: ['Objekt', 'Villa und Grundstück'], proverka: ['Prüfung', 'Ist es vertrauenswürdig', 'Dokumente, Bauträger, Grundstück und Naturrisiken.'], dengi: ['Finanzen', 'Preis und Ertrag', 'Verglichen mit der Nachbarschaft, nicht mit Versprechen des Bauträgers.'], mesto: ['Lage', 'Umgebung und Wetter'], zastroyshchik: ['Bauträger'], voprosy: ['Fragen'] },
+    zh: { analitika: ['分析'], obekt: ['房产', '别墅与土地'], proverka: ['核查', '是否可信', '文件、开发商、土地和自然风险。'], dengi: ['资金', '价格与收益', '与周边房源对比，而非开发商的承诺。'], mesto: ['位置', '周边与天气'], zastroyshchik: ['开发商'], voprosy: ['常见问题'] },
+    nl: { analitika: ['Analyse'], obekt: ['Object', 'Villa en perceel'], proverka: ['Controle', 'Is het betrouwbaar', 'Documenten, ontwikkelaar, perceel en natuurrisico’s.'], dengi: ['Financiën', 'Prijs en rendement', 'Vergeleken met de buren, niet met beloftes van de ontwikkelaar.'], mesto: ['Locatie', 'Omgeving en weer'], zastroyshchik: ['Ontwikkelaar'], voprosy: ['Vragen'] },
+    ban: { analitika: ['Analitik'], obekt: ['Properti', 'Vila lan tanah'], proverka: ['Pamariksan', 'Punapi dados kapercaya', 'Dokumen, pangwangun, tanah miwah risiko alam.'], dengi: ['Jinah', 'Aji lan pikolih', 'Kabandingang sareng tetangga, nenten janji pangwangun.'], mesto: ['Genah', 'Sakiwa-kiwa lan cuaca'], zastroyshchik: ['Pangwangun'], voprosy: ['Pitaken'] },
+    pl: { analitika: ['Analityka'], obekt: ['Obiekt', 'Willa i działka'], proverka: ['Weryfikacja', 'Czy można zaufać', 'Dokumenty, deweloper, działka i ryzyka naturalne.'], dengi: ['Finanse', 'Cena i dochód', 'Porównanie z sąsiadami, a nie obietnice dewelopera.'], mesto: ['Okolica', 'Co jest w pobliżu i jaka pogoda'], zastroyshchik: ['Deweloper'], voprosy: ['Pytania'] },
+    uk: { analitika: ['Аналітика'], obekt: ['Об’єкт', 'Вілла і ділянка'], proverka: ['Перевірка', 'Чи можна довіряти', 'Документи, забудовник, ділянка та природні ризики.'], dengi: ['Гроші', 'Ціна і дохід', 'Порівняння з сусідами, а не обіцянки забудовника.'], mesto: ['Місце', 'Що довкола і яка погода'], zastroyshchik: ['Забудовник'], voprosy: ['Запитання'] },
   }, lang)
   const hasMoney = !!(saleComps && saleComps.diffPct != null && priceNum != null) || !!(!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null)
   const hasMesto = !!(hasPlace && lat != null && lng != null) || !!(beach || geoFacts?.climate)
-  const chapterNav = [
-    (villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && { id: 'obekt', no: '01', label: CH.obekt[0] },
-    hasMesto && { id: 'mesto', no: '02', label: CH.mesto[0] },
-    { id: 'proverka', no: '03', label: CH.proverka[0] },
-    hasMoney && { id: 'dengi', no: '04', label: CH.dengi[0] },
-    (developer || developerName || parentComplex) && { id: 'zastroyshchik', no: '05', label: CH.zastroyshchik[0] },
-    { id: 'voprosy', no: '06', label: CH.voprosy[0] },
-  ].filter((x): x is { id: string; no: string; label: string } => !!x)
+  const [around, tourism] = await Promise.all([
+    loadSurroundings('villa', v.airtable_id).catch(() => null),
+    lat != null && lng != null ? loadTourism(lat, lng).catch(e => { console.error(e); return null }) : null,
+  ])
+  // Маршруты до ближайшего пляжа и мест TripAdvisor (OSRM, кэш 30 дней).
+  // Только сам пляж: в категории «пляж» попадают и кафе на берегу.
+  const nearestBeach = nearby?.byCategory?.beach?.filter(p => (p.primaryType === 'beach' || p.types?.includes('beach')) && !/warung|уорунг|варунг|caf[eé]|кафе|bar\b|бар\b|restaurant|ресторан|club|клуб/i.test(p.name ?? '')).sort((a, b) => a.distanceKm - b.distanceKm)[0] ?? null
+  const extraDests: ExtraDest[] = [
+    ...(nearestBeach?.name ? [{ key: `b:${nearestBeach.id}`, name: nearestBeach.name, lat: nearestBeach.lat, lng: nearestBeach.lng, kind: 'beach' as const }] : []),
+    ...(tourism?.ta ?? []).filter(p => p.km <= 15).slice(0, 3).map(p => ({ key: `ta:${p.rank}`, name: `#${p.rank} ${p.name}`, lat: p.lat, lng: p.lng, kind: 'ta' as const })),
+  ]
+  // И до аэропорта и главных районов — кроме того, внутри которого вилла стоит.
+  const hubDests = lat != null && lng != null ? BALI_HUBS.filter(h => Math.hypot((h.lat - lat) * 111, (h.lng - lng) * 110) > (h.rKm ?? 0) + 0.3) : []
+  const bookingFitP = loadBookingFit('villa', v.airtable_id).catch(e => { console.error('booking-fit', e); return null })
+  const [extraRoutes, hubRoutes] = lat != null && lng != null ? await Promise.all([
+    extraDests.length ? loadExtraRoutes(lat, lng, extraDests).catch(() => []) : [],
+    hubDests.length ? loadExtraRoutes(lat, lng, hubDests).catch(e => { console.error(e); return [] }) : [],
+  ]) : [[], []]
+  // Время в пути до мест TripAdvisor и «что посмотреть» (вместо голых километров).
+  const travelPts = [
+    ...(tourism?.ta ?? []).filter(p => p.km <= 10).map(p => ({ key: `ta:${p.rank}`, lat: p.lat, lng: p.lng })),
+    ...landmarks.filter(l => l.lat != null && l.lng != null).map(l => ({ key: `lm:${l.id}`, lat: l.lat!, lng: l.lng! })),
+  ]
+  const bookingFit = await bookingFitP
+  const travel = lat != null && lng != null && travelPts.length ? await loadTravelTimes(lat, lng, travelPts).catch(e => { console.error(e); return {} }) : {}
+  const analyses = buildVillaAnalyses({
+    lang, lat, lng, bedrooms, priceUsd: priceNum, status, permit, yearRaw, leaseYears,
+    snap: verdictSnap, airbnb: airbnbComps, sale: saleComps, geo: geoFacts, nearby,
+    around1km: around?.r1 ?? null,
+    landPrices, landM2: land, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, hubRoutes, travel, demand, bookingFit,
+    rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
+  })
+  // PDF-отчёт ИИ-аналитика (/ru/villy/o/<slug>/otchet?a=…): только выбранные
+  // в окне аналитики проверки, в том порядке, в каком их добавили.
+  if (report) {
+    const picked = report.ids.map(id => analyses.find(a => a.id === id)).filter((a): a is (typeof analyses)[number] => !!a)
+    const sub = [district, area != null ? `${area} ${c.sqm}` : null, bedrooms != null ? `${c.factBedrooms}: ${bedrooms}` : null].filter(Boolean).join(' · ')
+    return <AnalyticsReport analyses={picked.length ? picked : analyses} lang={lang} title={title} subtitle={sub} photo={photos[0] ?? null} autoPrint={report.autoPrint} />
+  }
+  // «1 · Объект» — основные характеристики списком, как в анкете застройщика
+  // (владелец 18.11.2026). Поля «Ванные», «Этажи», «Продление аренды»,
+  // «Расположение» в базе пока не заведены — показываем, как только появятся.
+  const built = !!status && /построен|сдан|ready|completed/i.test(status)
+  const leaseUntil = firstString(d['Leasehold до'])
+  const ext = firstString(d['Продление аренды']) ?? firstString(d['Продление'])
+  const baths = numberOrNull(d['Ванные'] ?? d['Санузлы'])
+  const floors = numberOrNull(d['Этажи'])
+  const vf = visionRaw?.features
+  const comforts = [
+    vf?.pool ? pickCopy(COMFORT.pool, lang) : null,
+    ...(vf?.outdoor ?? []).map(o => COMFORT_OUT[o] ? pickCopy(COMFORT_OUT[o], lang) : null),
+    ...(vf?.amenities ?? []).map(o => COMFORT_AMEN[o] ? pickCopy(COMFORT_AMEN[o], lang) : null),
+  ].filter(Boolean) as string[]
+  const yearShort = yearRaw && /^\d{4}$/.test(yearRaw.trim()) ? yearRaw.trim() : null
+  // Крупные цифры с короткой подписью (владельцу так нравилось больше, 18.11.2026).
+  const plotZone = rdtr ? plotLabel(rdtr, lang) : null
+  const objTiles = [
+    area != null && { v: `${Math.round(area)} ${SQM[lang]}`, l: pickCopy(TILE.villaArea, lang) },
+    bedrooms != null && { v: String(bedrooms), l: lang === 'en' ? 'bedrooms' : plural(lang, bedrooms, BEDROOMS) },
+    baths != null && { v: String(baths), l: lang === 'en' ? 'bathrooms' : plural(lang, baths, BATHROOMS) },
+    floors != null && { v: String(floors), l: lang === 'en' ? 'floors' : plural(lang, floors, FLOORS) },
+    land != null && land > 0 && { v: `${Math.round(land)} ${SQM[lang]}`, l: pickCopy(TILE.plot, lang) },
+    leaseYears != null && { v: lang === 'ru' ? `${Math.round(leaseYears)} лет` : nPlural(lang, Math.round(leaseYears), YEARS), l: pickCopy(TILE.lease, lang)(leaseUntil ? leaseUntil.slice(0, 4) : null, !!ext) },
+    (built || yearShort) && { v: yearShort ?? '✓', l: built ? pickCopy(TILE.completed, lang) : pickCopy(TILE.completion, lang) },
+    plotZone && { v: plotZone.label.split('·').pop()!.trim(), l: plotZone.label.split('·')[0].trim() },
+  ].filter(Boolean) as { v: string; l: string }[]
+  const beachRoute = extraRoutes.find(r => r.kind === 'beach')
+  const placeNote = firstString(d['Расположение']) ?? [
+    beachRoute ? (beachRoute.meters <= 2500 ? pickCopy(PLACE.walk, lang)(beachRoute.name, Math.max(1, Math.round(beachRoute.meters / 80))) : pickCopy(PLACE.drive, lang)(beachRoute.name, beachRoute.minutes)) : null,
+    tourism ? (tourism.percentile >= 70 ? pickCopy(PLACE.lively, lang) : tourism.percentile >= 40 ? pickCopy(PLACE.moderate, lang) : pickCopy(PLACE.quiet, lang)) : null,
+  ].filter(Boolean).join(', ')
 
   const mestoChapter = hasMesto && (
         <VillaChapter id="mesto" no="02" plain={analyticsOnly} eyebrow={CH.mesto[0]} title={CH.mesto[1]} band>
@@ -1794,18 +1888,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
         </VillaChapter>
         )
 
-  const analytics = (
-    <>
-        <ProPendingNote lang={lang} />
-
-        <VillaChapter id="proverka" no="03" plain={analyticsOnly} eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]}>
-        <section id="uchastok" className="scroll-mt-24">
-          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
-            leaseYears={leaseYears} landYellow={rentalRestricted}
-            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
-            coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
-        </section>
-
+  // Вынесены, чтобы те же блоки показать под итогом анализа в «Аналитике».
+  const legalBlock = (<>
         {villaLegal && complexMedia.slug && (villaLegal.ok.length > 0 || villaLegalQuestions > 0) && (
           <div className="bx-auth-block">
             <LegalAudit
@@ -1820,12 +1904,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             />
           </div>
         )}
-
-        </VillaChapter>
-
-        {/* На странице ЖК «Цена и доход» не показываем (владелец 13.11.2026). */}
-        {hasMoney && !analyticsOnly && (
-        <VillaChapter id="dengi" no="04" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
+  </>)
+  const saleBlock = (<>
         {saleComps && saleComps.diffPct != null && priceNum != null && (
           <VillaBlock><section className="flex flex-col gap-4 scroll-mt-24">
             <h2 className="text-[24px] font-semibold tracking-[-0.01em] m-0">
@@ -1864,9 +1944,9 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               </div>
               {saleCompLow != null && saleCompHigh != null && (
                 <div className="grid grid-cols-3 text-[14px]">
-                  <span className="text-[#1B6E4A] font-semibold">{isRu ? 'Дешевле' : 'Cheaper'}<br /><span className="font-normal text-[#4C5751]">{isRu ? 'до' : 'up to'} {fmtUsd(saleCompLow, lang)}</span></span>
-                  <span className="text-[#9A5A0B] font-semibold text-center">{isRu ? 'Обычная цена' : 'Typical'}<br /><span className="font-normal text-[#4C5751]">{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</span></span>
-                  <span className="text-[#A8362B] font-semibold text-right">{isRu ? 'Дороже' : 'Pricier'}<br /><span className="font-normal text-[#4C5751]">{isRu ? 'от' : 'from'} {fmtUsd(saleCompHigh, lang)}</span></span>
+                  <span className="text-[#1B6E4A] font-semibold">{pickCopy(RANGE, lang).cheaper}<br /><span className="font-normal text-[#4C5751]">{pickCopy(RANGE, lang).upTo} {fmtUsd(saleCompLow, lang)}</span></span>
+                  <span className="text-[#9A5A0B] font-semibold text-center">{pickCopy(RANGE, lang).typical}<br /><span className="font-normal text-[#4C5751]">{fmtUsd(saleCompLow, lang)} – {fmtUsd(saleCompHigh, lang)}</span></span>
+                  <span className="text-[#A8362B] font-semibold text-right">{pickCopy(RANGE, lang).pricier}<br /><span className="font-normal text-[#4C5751]">{pickCopy(RANGE, lang).from} {fmtUsd(saleCompHigh, lang)}</span></span>
                 </div>
               )}
             </div>
@@ -1890,14 +1970,15 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
               {compareData && (
                 <CompareButton data={compareData} lang={lang} initialTab="sale">
                   {compareData.sale.length > 0
-                    ? pickCopy({ ru: `Соседи на продаже: ${compareData.sale.length} ${pluralRu(compareData.sale.length, ['вилла', 'виллы', 'вилл'])}`, en: `Neighbours for sale: ${compareData.sale.length}` }, lang)
+                    ? (lang === 'en' ? `Neighbours for sale: ${compareData.sale.length}` : `${pickCopy(NEIGHBOURS_SALE, lang)}: ${nPlural(lang, compareData.sale.length, VILLAS)}`)
                     : undefined}
                 </CompareButton>
               )}
             </div>
           </section></VillaBlock>
         )}
-
+  </>)
+  const calcBlock = (<>
         {!analyticsOnly && hasYield && verdictSnap && verdictSnap.villa.askingPrice != null && (
           <VillaBlock><section id="kalkulyator" className="scroll-mt-24">
             <IncomeCalculator
@@ -1926,6 +2007,29 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
             />
           </section></VillaBlock>
         )}
+  </>)
+  const analytics = (
+    <>
+        <ProPendingNote lang={lang} />
+
+        <VillaChapter id="proverka" no="03" plain={analyticsOnly} eyebrow={CH.proverka[0]} title={CH.proverka[1]} lead={CH.proverka[2]}>
+        <section id="uchastok" className="scroll-mt-24">
+          <SafetyCards verdict={verdict} permit={permit} status={status} yearRaw={yearRaw} complex={complexFacts}
+            leaseYears={leaseYears} landYellow={rentalRestricted}
+            dev={devStats ? { name: developerName, total: devStats.total, ready: devStats.ready } : null} plot={plotSite}
+            coast={geoFacts ? { coastM: geoFacts.climate?.coast_m ?? null, elevationM: geoFacts.climate?.sea?.elevation_m ?? geoFacts.elevation_m, marginM: geoFacts.climate?.sea?.margin_m ?? null } : null} lang={lang} />
+        </section>
+
+        {legalBlock}
+
+        </VillaChapter>
+
+        {/* На странице ЖК «Цена и доход» не показываем (владелец 13.11.2026). */}
+        {hasMoney && !analyticsOnly && (
+        <VillaChapter id="dengi" no="04" eyebrow={CH.dengi[0]} title={CH.dengi[1]} lead={CH.dengi[2]} band>
+        {saleBlock}
+
+        {calcBlock}
         </VillaChapter>
         )}
 
@@ -1934,9 +2038,10 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
   )
   if (analyticsOnly) return analytics
 
-  const presentationPdf = (
+  const presentationPdf = (variant: 'link' | 'icon') => (
   <VillaPresentationButton
-    variant="outline"
+    key={variant}
+    variant={variant}
     lang={lang}
     villaId={v.airtable_id}
     slug={slug}
@@ -1956,17 +2061,137 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
     seoText={seoText}
   />
   )
-  const presentationBtn = priceNum != null ? (
-    <span className="bx-pro-only">
-    <AddToCollection kind="villa" slug={slug} lang={lang} snapshot={{
-      title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
-      district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
-      leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
-      id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
-    }} />
-    {presentationPdf}
-    </span>
-  ) : null
+  // Строка ключевых цифр под названием: площадь · спальни · участок · аренда земли.
+  const keyLine = [
+    area != null ? `${Math.round(area)} ${SQM[lang]}` : null,
+    bedrooms != null ? nPlural(lang, bedrooms, BEDROOMS) : null,
+    land != null && land > 0 ? pickCopy(KEYLINE.plot, lang)(Math.round(land)) : null,
+    // Сколько лет аренды осталось, а не «до 2054» (владелец 20.11.2026): то же
+    // число, что в фактах «Объекта»; нет его — считаем от года окончания.
+    (() => {
+      const left = leaseYears != null ? Math.round(leaseYears)
+        : leaseUntil && /^\d{4}/.test(leaseUntil) ? Number(leaseUntil.slice(0, 4)) - new Date().getFullYear() : null
+      if (left == null || left <= 0) return null
+      const m10 = left % 10, m100 = left % 100
+      const ru = m10 === 1 && m100 !== 11 ? 'год' : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? 'года' : 'лет'
+      return lang === 'ru' ? `аренда земли ${left} ${ru}` : pickCopy(KEYLINE.lease, lang)(left)
+    })(),
+  ].filter(Boolean).join(' · ')
+  // Цена, «Связаться» и ссылки «В подборку» / «Презентация PDF» (только Pro) —
+  // справа от названия на компьютере и под фото на телефоне (макет «Журнал», 19.11.2026).
+  const priceCard = priceNum != null && (
+    <PriceCtaCard
+      journal
+      priceUsd={priceNum}
+      pricePerSqmUsd={priceM2}
+      updatedAt={priceUpdatedAt}
+      managerId={managers[0]?.id ?? null}
+      sellerUrl={sellerUrl}
+      listingKind="villa"
+      listingId={v.airtable_id}
+      listingSlug={slug}
+      listingTitle={title}
+      reservedUntil={activeReservation?.expires_at ?? null}
+      presentationButton={null}
+      dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null}
+      links={
+        <div className="bx-pro-only">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:justify-start">
+            <AddToCollection asLink kind="villa" slug={slug} lang={lang} snapshot={{
+              title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+              district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null,
+              leaseYears: lease ? Number(lease) || null : null, status: status ?? null,
+              id: v.airtable_id, land: land ?? null, pricePerSqmUsd: priceM2 ?? null, permit: permitLabel(permit, lang) ?? null,
+            }} />
+            {presentationPdf('link')}
+          </div>
+        </div>
+      }
+    />
+  )
+  // Запись на созвон вверху страницы (владелец 20.11.2026, макет HeroA): цена
+  // переезжает в форму. Не для переуступок (продаёт владелец) и не для брони.
+  const leadOn = priceNum != null && !sellerUrl && !activeReservation
+  const leadPrice = (size: 'lg' | 'sm') => priceNum != null && (
+    <PriceCtaCard key={`p-${size}`} compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
+  )
+  const leadCard = (id: string, framed: boolean) => (
+    <LeadHeroCard key={id} id={id} framed={framed} lang={lang} price={leadPrice('lg')} priceNote={priceNum != null && <PriceCtaCard key="upd" compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
+      priceMeta={priceNum != null && <PriceCtaCard key="meta" compact="meta" priceUsd={priceNum} pricePerSqmUsd={priceM2} presentationButton={null}
+        dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null} />}
+      manager={managers[0] ? { photo: managers[0].photo ?? null, name: managerName, langs: managerLangs } : null} developerName={developerName ?? null}
+      managerName={managers[0]?.name ?? null} managerId={managers[0]?.id ?? null} listingTitle={title} />
+  )
+  // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.
+  // Кнопки под фото: сохранить, поделиться, PDF (Pro), сообщить об ошибке.
+  const villaActions = (icons = false) => (
+        <VillaActions key={icons ? 'ai' : 'al'} icons={icons} lang={lang} title={title} item={{
+          kind: 'villa', slug, title, photo: photos[0] ?? null, priceUsd: priceNum ?? null,
+          district: district ?? null, bedrooms: bedrooms ?? null, area: area ?? null, land: land ?? null,
+        }} proLinks={
+          <span key="pro" className="bx-pro-only">
+            {icons ? presentationPdf('icon') : <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">{presentationPdf('link')}</span>}
+          </span>
+        } />
+  )
+  const makePriceBar = () => priceNum != null && (
+    <PriceCtaCard
+      journal
+      bar
+      hideMain={leadOn}
+      priceUsd={priceNum}
+      pricePerSqmUsd={priceM2}
+      updatedAt={priceUpdatedAt}
+      managerId={managers[0]?.id ?? null}
+      sellerUrl={sellerUrl}
+      listingKind="villa"
+      listingId={v.airtable_id}
+      listingSlug={slug}
+      listingTitle={title}
+      reservedUntil={activeReservation?.expires_at ?? null}
+      presentationButton={null}
+      dealRows={paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : null}
+      links={
+        villaActions()
+      }
+    />
+  )
+
+  // Раздел «01 Объект» — при форме связи он стоит слева от неё (в VillaGallery, aside).
+  const objektChapter = () => ((villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
+          <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} journal>
+            {objTiles.length > 0 && (
+              <div className={`grid grid-cols-2 ${leadOn ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
+                {objTiles.map(k => (
+                  <div key={k.l} className="flex min-w-0 flex-col gap-0.5 border-b border-[#ECEFED] py-[14px] pr-3 md:gap-1 md:py-5 md:pr-6">
+                    <div className="text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] text-[#0F1A15] tabular-nums md:text-[32px]">{k.v}</div>
+                    <div className="text-[13px] text-[#6B7570] md:text-[14px]">{k.l}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {seoText && (
+              <section>
+                <p className="m-0 max-w-[68ch] text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">{seoText.split('\n')[0]}</p>
+                {seoText.includes('\n') && (
+                  <ExpandableText className="max-w-[68ch] mt-2" more={c.readMore} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
+                    <div className="prose-balinsky whitespace-pre-line text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">
+                      {seoText.split('\n').slice(1).join('\n')}
+                    </div>
+                  </ExpandableText>
+                )}
+              </section>
+            )}
+            {/* Короткие строки: локация, удобства, расположение. */}
+            {(district || comforts.length > 0 || placeNote) && (
+              <div className="flex max-w-[68ch] flex-col gap-1.5 text-[15px] leading-[1.6] text-[#0F1A15]">
+                {district && <div><span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.location, lang)}</span> {district}</div>}
+                {comforts.length > 0 && <div><span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.amenities, lang)}</span> {comforts.join(', ')} <span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.fromPhotos, lang)}</span></div>}
+                {placeNote && <div><span className="text-[#6B7570]">{pickCopy(DETAIL_LINES.setting, lang)}</span> {placeNote}</div>}
+              </div>
+            )}
+          </VillaChapter>
+        ))
 
   return (
     <>
@@ -1974,48 +2199,34 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
       <PageViewTracker kind="villa" slug={slug} title={title} airtableId={v.airtable_id} lang={lang} />
       <PageEditButton kind="villa" id={v.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs currentUrl={`${villasRoot}/o/${slug}`} items={[
+        <Breadcrumbs hideLast currentUrl={`${villasRoot}/o/${slug}`} items={[
           { label: c.home, href: home },
           { label: c.villasCrumb, href: villasRoot },
           // Regency level dropped: it has no page, so its crumb had no `item`
           // and GSC flagged the whole BreadcrumbList. Chain goes straight to
           // the district (which does have a page).
           ...(district ? [{ label: district, href: districtSlug ? `${villasRoot}/${districtSlug}` : undefined }] : []),
+          // Жилой комплекс виллы — последней видимой ступенью (владелец 20.11.2026).
+          ...(parentComplex ? [{ label: parentComplex.name, href: `${complexesRoot}/o/${parentComplex.slug}` }] : []),
           { label: title },
         ]} />
 
-        <section className="flex flex-col gap-3">
-          <h1 className="text-[18px] sm:text-[24px] md:text-[36px] font-semibold tracking-[-0.02em] text-[var(--color-text)] leading-[1.15] [word-break:break-word] [overflow-wrap:anywhere]">
-            {title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[15px] text-[#36413B]">
-            <span>{district ? `${district}, ${c.bali}` : c.bali}</span>
-            <KeyFactsInline facts={livingFacts} beachKm={beachPick?.km ?? null} lang={lang} />
-          </div>
-          {yields?.ownSource === 'actual' && <a href="#dokhodnost" className="bx-auth-link inline-block"><VerifiedYieldBadge lang={lang} /></a>}
-          {priceNum != null && (
-            <div className="lg:hidden">
-              <PriceCtaCard
-                priceUsd={priceNum}
-                pricePerSqmUsd={priceM2}
-                updatedAt={priceUpdatedAt}
-                managerId={managers[0]?.id ?? null}
-                sellerUrl={sellerUrl}
-                listingKind="villa"
-                listingId={v.airtable_id}
-                listingSlug={slug}
-                listingTitle={title}
-                reservedUntil={activeReservation?.expires_at ?? null}
-                presentationButton={presentationBtn}
-              />
+        {/* Верх — вариант A (макет владельца 19.11.2026): компактно, только
+            название и строка фактов; цена — полосой под фото (на телефоне —
+            после ряда медиа). */}
+        <section className="pb-5 md:pb-6">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
+              {/* Без «— 86 м², 2 спальни…»: эти цифры стоят строкой ниже (владелец 19.11.2026). */}
+              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
+            </h1>
+            {/* Строка фактов, справа на той же строке — сохранить · PDF · поделиться · ошибка
+                (владелец 20.11.2026). Плашку «Подтверждённая доходность» убрали: занимала место. */}
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+              {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
             </div>
-          )}
+          </div>
         </section>
-
-        {/* ═══ Two-column layout: main content + sticky sidebar ═══ */}
-        <div className="flex flex-wrap gap-12 items-start">
-        {/* ── Main column ── */}
-        <div className="min-w-0 flex flex-col gap-12" style={{ flex: '999 1 720px' }}>
 
         <VillaGallery
           photos={photos}
@@ -2030,135 +2241,122 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           tourUrl={complexMedia.tourUrl}
           promo={promoKit}
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
-          belowTiles={priceNum != null ? <span className="bx-pro-only block">{presentationPdf}</span> : null}
+          bleed
+          tilesAs="text"
+          belowHero={!leadOn && priceNum != null ? <div className="hidden lg:block">{makePriceBar()}</div> : null}
+          aside={leadOn ? leadCard('zapis', true) : null}
+          topRight={villaActions(true)}
+          afterTiles={leadOn ? <div key="obj" className="mt-16 lg:mt-20">{objektChapter()}</div> : null}
+          ambient={(() => {
+            // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
+            // или рисовые поля (если вид на рис), остальное — тропический сад.
+            if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
+            const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
+            if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|kedungu|nyanyi|убуд|табанан|менгви/i.test(where)) {
+              return /рис|rice/i.test(firstString(d['Вид']) ?? '') ? '/ambient/ricefield.mp3' : '/ambient/jungle.mp3'
+            }
+            return '/ambient/garden.mp3'
+          })()}
         />
 
-        {seoText && (
-          <section>
-            <p className="text-[16px] leading-[1.65] text-[var(--color-text)] max-w-[68ch] m-0">{seoText.split('\n')[0]}</p>
-            {seoText.includes('\n') && (
-              <ExpandableText className="max-w-[68ch] mt-2" more={c.readMore} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-                <div className="prose-balinsky text-[16px] leading-[1.65] text-[var(--color-text)] whitespace-pre-line">
-                  {seoText.split('\n').slice(1).join('\n')}
-                </div>
-              </ExpandableText>
-            )}
-          </section>
-        )}
+        {leadOn ? <LeadStickyBar lang={lang} targetId="zapis" price={leadPrice('sm')} />
+          : priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
 
-        {chapterNav.length > 1 && <VillaChapterNav items={chapterNav} label={lang === 'ru' ? 'Разделы страницы' : 'Page sections'} />}
+        {/* Разделы 01–04; между ними 64 / 96 px. */}
+        <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
+        {!leadOn && objektChapter()}
 
-        {(villaFacts.length > 0 || landFacts.length > 0 || !!rdtr) && (
-          <VillaChapter id="obekt" no="01" eyebrow={CH.obekt[0]} title={CH.obekt[1]}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-              {villaFacts.length > 0 && (
-                <div>
-                  <h3 className="text-[20px] font-semibold text-[var(--color-text)] mb-2 mt-0">{c.aboutVillaHeading}</h3>
-                  {villaFacts.map(f => (
-                    <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
-                      <span className="shrink-0 text-[var(--color-text-muted)]">{f.label}</span>
-                      <span className="text-right">{f.value}</span>
-                    </div>
-                  ))}
-                  {parentComplex && (
-                    <div className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
-                      <span className="text-[var(--color-text-muted)]">{pickCopy({ ru: 'Часть комплекса', en: 'Part of complex', id: 'Bagian dari kompleks', fr: 'Fait partie du complexe', de: 'Teil der Anlage', zh: '所属项目', nl: 'Onderdeel van complex', ban: 'Bagian saking kompleks', pl: 'Część kompleksu', uk: 'Частина комплексу' }, lang)}</span>
-                      <Link href={`${complexesRoot}/o/${parentComplex.slug}`} className="text-right font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-pressed)] hover:underline">
-                        {parentComplex.name} →
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-              {(landFacts.length > 0 || !!rdtr) && (
-                <div>
-                  <h3 className="text-[20px] font-semibold text-[var(--color-text)] mb-2 mt-0">{c.aboutLandHeading}</h3>
-                  {landFacts.map(f => (
-                    <div key={f.label} className="flex justify-between gap-3 py-3 border-b border-[#EEF2EF] text-[15px]">
-                      <span className="shrink-0 text-[var(--color-text-muted)]">{f.label}</span>
-                      <span className="text-right">{f.value}</span>
-                    </div>
-                  ))}
-                  {rdtr && rdtrHit && (
-                    <ZoningCard thumb={`${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} plot={plotLabel(rdtr, lang)} around={rdtrAround} lang={lang} />
-                  )}
-                </div>
-              )}
-            </div>
+        {/* Аналитика — заголовок «02 Проверьте виллу с ИИ» рисует сама панель. */}
+        {analyses.length > 0 ? (
+          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika[0]}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`} no="02"
+              extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
           </VillaChapter>
-        )}
+        ) : (<>{mestoChapter}{analytics}</>)}
 
-        {mestoChapter}
-
-        {analytics}
-
+        {/* Застройщик и вопросы — рядом на компьютере, как в макете. */}
+        <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
         {(developer || developerName || parentComplex) && (
-          <VillaChapter id="zastroyshchik" no="05" eyebrow={CH.zastroyshchik[0]}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+          <VillaChapter id="zastroyshchik" no={analyses.length > 0 ? '03' : '05'} eyebrow={CH.zastroyshchik[0]} journal>
+            <div className="flex flex-col gap-5 md:gap-6">
               {(developer || developerName) && (
-              <div className="rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4 h-full">
-                <div className="text-[13px] text-[#4C5751]">{c.developerLabel}</div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[24px] font-semibold tracking-[-0.01em] text-[var(--color-text)]">{developer?.name ?? developerName}</span>
-                  {developer?.logoUrl ? (
-                    <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-1">
-                      <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-w-full max-h-full object-contain" />
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[20px] font-semibold tracking-[-0.01em] text-[#0F1A15] md:text-[24px]">{developer?.name ?? developerName}</span>
+                  {developer?.logoUrl && (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#ECEFED] bg-white p-1">
+                      <Image src={developer.logoUrl} alt={developer.name} width={40} height={40} className="max-h-full max-w-full object-contain" />
+                    </div>
+                  )}
+                </div>
+              )}
+              {(devStats || parentComplex?.units) && (
+                <div className="flex flex-wrap gap-x-8 gap-y-4 md:gap-x-12">
+                  {devStats && (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{lang === 'zh' ? '个项目已交付' : `${pickCopy(PROJECTS_GEN, lang)} ${c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}`}</span>
+                    </span>
+                  )}
+                  {devStats && devStats.inProgress > 0 && (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.inProgress}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</span>
+                    </span>
+                  )}
+                  {parentComplex?.units ? (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{parentComplex.units}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{c.units(parentComplex.units).replace(/^\d+\s*/, '')} {pickCopy(UNITS_IN, lang)} {parentComplex.name}</span>
+                    </span>
+                  ) : null}
+                </div>
+              )}
+              {/* Комплекс — карточкой с фото (макет MgrA), нажимается целиком. */}
+              {parentComplex && (
+                <Link href={`${complexesRoot}/o/${parentComplex.slug}`}
+                  className="group flex items-center gap-3 rounded-xl border border-[#ECEFED] p-2 pr-4 text-[#0F1A15] no-underline transition-colors duration-[120ms] hover:border-[#C9D3CE] md:gap-4">
+                  <span className="relative aspect-[16/10] w-[112px] shrink-0 overflow-hidden rounded-lg bg-[#F6F8F7] md:w-[168px]">
+                    {parentComplex.coverUrl && (
+                      <Image src={parentComplex.coverUrl} alt={parentComplex.name} fill sizes="168px" className="object-cover" />
+                    )}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 md:gap-1">
+                    <span className="text-[13px] text-[#6B7570]">{pickCopy({ ru: 'Комплекс', en: 'Complex', id: 'Kompleks', fr: 'Résidence', de: 'Anlage', zh: '项目', nl: 'Complex', ban: 'Kompleks', pl: 'Kompleks', uk: 'Комплекс' }, lang)}</span>
+                    <span className="truncate text-[16px] font-semibold md:text-[17px]">{parentComplex.name}</span>
+                    <span className="text-[13px] leading-[1.4] text-[#4A5550] md:text-[14px]">{pickCopy({ ru: 'Все виллы, генплан и фото комплекса', en: 'All villas, master plan and photos', id: 'Semua vila, rencana induk dan foto', fr: 'Toutes les villas, plan de masse et photos', de: 'Alle Villen, Lageplan und Fotos', zh: '全部别墅、总平面图和照片', nl: 'Alle villa’s, masterplan en foto’s', ban: 'Sami vila, rencana induk lan foto', pl: 'Wszystkie wille, plan zagospodarowania i zdjęcia', uk: 'Усі вілли, генплан і фото комплексу' }, lang)}</span>
+                  </span>
+                  <span className="shrink-0 text-[22px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>
+                </Link>
+              )}
+              {developer && (
+                <Link href={`${developersRoot}/${developer.slug}`} className="self-start py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
+                  {c.openDeveloper}
+                </Link>
+              )}
+              {/* Менеджер застройщика — сюда ведёт зелёная кнопка «Связаться». */}
+              {managers.length > 0 && managers[0] && (
+                <div id="kontakty-operatora" className="flex scroll-mt-[136px] flex-col gap-4 border-t border-[#ECEFED] pt-5">
+                <div className="flex items-center gap-3">
+                  {managers[0].photo ? (
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[#F6F8F7]">
+                      <Image src={managers[0].photo} alt={managerName} fill sizes="48px" className="object-cover" />
                     </div>
                   ) : (
-                    <div className="shrink-0 w-12 h-12 rounded-lg bg-[#2C3B2F] flex items-center justify-center text-[10px] font-semibold text-white tracking-wide">
-                      {(developer?.name ?? developerName ?? '').slice(0, 6).toUpperCase()}
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F6F8F7] text-[18px] text-[#6B7570]">
+                      {managerName.slice(0, 1).toUpperCase()}
                     </div>
                   )}
+                  <div className="min-w-0">
+                    <div className="truncate text-[15px] font-semibold text-[#0F1A15]">
+                      {managerName}{developerName ? `, ${developerName}` : ''}
+                    </div>
+                    <div className="text-[13px] text-[#6B7570]">
+                      {pickCopy(MGR_ROLE, lang)}
+                    </div>
+                  </div>
                 </div>
-                {devStats && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[28px] font-semibold leading-[1.15]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
-                      <span className="text-[14px] text-[#4C5751]">{c.devStatReady(devStats.ready).replace(/^\d+\s*/, '')}</span>
-                    </div>
-                    {devStats.inProgress > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[28px] font-semibold leading-[1.15]">{devStats.inProgress}</span>
-                        <span className="text-[14px] text-[#4C5751]">{c.devStatBuilding(devStats.inProgress).replace(/^\d+\s*/, '')}</span>
-                      </div>
-                    )}
-                    {videos.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[28px] font-semibold leading-[1.15]">{videos.length} {pickCopy({ ru: 'видео', en: 'videos', id: 'video', fr: 'vidéos', de: 'Videos', zh: '视频', nl: 'video\'s', ban: 'vidéo', pl: 'wideo', uk: 'відео' }, lang)}</span>
-                        <span className="text-[14px] text-[#4C5751]">{pickCopy({ ru: 'об объекте', en: 'about the property', id: 'tentang properti', fr: 'sur le bien', de: 'über das Objekt', zh: '关于此物业', nl: 'over het object', ban: 'indik properti', pl: 'o obiekcie', uk: 'про об\'єкт' }, lang)}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {developer && (
-                  <Link href={`${developersRoot}/${developer.slug}`} className="mt-auto text-[15px] text-[var(--color-primary-pressed)] hover:underline">
-                    {c.openDeveloper}
-                  </Link>
-                )}
-              </div>
-              )}
-              {parentComplex && (
-                <Link href={`${complexesRoot}/o/${parentComplex.slug}`} className="group rounded-xl border border-[#E4E9E6] p-6 flex flex-col gap-4 h-full no-underline text-[var(--color-text)] hover:border-[var(--color-primary)] focus-visible:border-[var(--color-primary)] transition-colors duration-[120ms]">
-                  <div className="text-[13px] text-[#4C5751]">{pickCopy({ ru: 'Жилой комплекс', en: 'Residential complex', id: 'Kompleks hunian', fr: 'Résidence', de: 'Wohnanlage', zh: '住宅项目', nl: 'Wooncomplex', ban: 'Kompleks hunian', pl: 'Kompleks mieszkaniowy', uk: 'Житловий комплекс' }, lang)}</div>
-                  {parentComplex.coverUrl && (
-                    <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#EEF2EF]">
-                      <Image src={parentComplex.coverUrl} alt={parentComplex.name} fill sizes="(min-width: 768px) 420px, 100vw" className="object-cover" />
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[24px] font-semibold tracking-[-0.01em]">{parentComplex.name}</span>
-                    {(() => {
-                      const bits = [
-                        lang === 'ru' ? parentComplex.district : districtLatin(parentComplex.district),
-                        parentComplex.units ? c.units(parentComplex.units) : null,
-                      ].filter(Boolean)
-                      return bits.length > 0 ? <span className="text-[14px] text-[#4C5751]">{bits.join(' · ')}</span> : null
-                    })()}
-                  </div>
-                  <span className="mt-auto text-[15px] text-[var(--color-primary-pressed)] group-hover:underline">
-                    {pickCopy({ ru: 'Открыть страницу комплекса →', en: 'Open complex page →', id: 'Buka halaman kompleks →', fr: 'Voir la résidence →', de: 'Zur Anlage →', zh: '查看项目页面 →', nl: 'Naar het complex →', ban: 'Buka halaman kompleks →', pl: 'Otwórz stronę kompleksu →', uk: 'Відкрити сторінку комплексу →' }, lang)}
-                  </span>
-                </Link>
+                <ManagerContactButtons lang={lang} managerId={managers[0].id} managerName={managers[0].name} developerName={developerName ?? null} listingTitle={title} />
+                </div>
               )}
             </div>
           </VillaChapter>
@@ -2168,73 +2366,23 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false }: { 
           <VideoGrid jsonLdOnly videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
         )}
 
-        <VillaChapter id="voprosy" no="06" eyebrow={CH.voprosy[0]} title={c.faqHeading}>
-          <div>
+        <VillaChapter id="voprosy" no={analyses.length > 0 ? '04' : '06'} eyebrow={CH.voprosy[0]} journal>
+          <div className="-mt-2 md:-mt-4">
             {faqItems.map((it, i) => (
-              <details key={i} className="group border-b border-[#E4E9E6]">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 py-4 text-[16px] text-[var(--color-text)]">
+              <details key={i} className="group border-b border-[#ECEFED]">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-[16px] text-[#0F1A15] transition-colors duration-[120ms] hover:text-[var(--color-primary)] md:text-[17px] [&::-webkit-details-marker]:hidden">
                   {it.q}
-                  <span className="text-[#94A29A] text-[20px] leading-none shrink-0"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
+                  <span className="shrink-0 text-[22px] leading-none text-[#6B7570]" aria-hidden><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
                 </summary>
-                <div className="pb-4 text-[15px] leading-[1.6] text-[#4C5751]">{it.a}</div>
+                <div className="max-w-[68ch] pb-4 text-[15px] leading-[1.6] text-[#4A5550]">{it.a}</div>
               </details>
             ))}
           </div>
         </VillaChapter>
+        </div>
 
 
-        </div>{/* ── /Main column ── */}
-
-        {/* ── Sticky sidebar (desktop only) ── */}
-        {priceNum != null && (
-          <aside className="hidden lg:flex flex-col gap-4 sticky top-[88px]" style={{ flex: '1 1 340px' }}>
-            <PriceCtaCard
-              sidebar
-              priceUsd={priceNum}
-              pricePerSqmUsd={priceM2}
-              updatedAt={priceUpdatedAt}
-              managerId={managers[0]?.id ?? null}
-              sellerUrl={sellerUrl}
-              listingKind="villa"
-              listingId={v.airtable_id}
-              listingSlug={slug}
-              listingTitle={title}
-              reservedUntil={activeReservation?.expires_at ?? null}
-              presentationButton={presentationBtn}
-              dealRows={[
-                ...(paymentPlanText ? [{ label: pickCopy({ ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }, lang), valueText: paymentPlanText }] : []),
-                ...(lease ? [{ label: pickCopy({ ru: 'Аренда земли', en: 'Land lease', id: 'Sewa tanah', fr: 'Bail foncier', de: 'Grundstückspacht', zh: '土地租赁', nl: 'Grondpacht', ban: 'Sewa tanah', pl: 'Dzierżawa gruntu', uk: 'Оренда землі' }, lang), valueText: c.factLeaseValue(lease) }] : []),
-              ]}
-              priceCompDiffPct={saleComps?.diffPct ?? null}
-            />
-            {managers.length > 0 && managers[0] && (
-              <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-                <div className="flex items-center gap-3">
-                  {managers[0].photo ? (
-                    <div className="shrink-0 w-[48px] h-[48px] rounded-full overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">
-                      <Image src={managers[0].photo} alt={managerName} fill sizes="48px" className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="shrink-0 w-[48px] h-[48px] rounded-full bg-[var(--color-search-bg)] border border-[var(--color-border)] flex items-center justify-center text-[18px] text-[var(--color-text-muted)]">
-                      {managerName.slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-[var(--color-text)] truncate">
-                      {managerName}{developerName ? `, ${developerName}` : ''}
-                    </div>
-                    <div className="text-[13px] text-[var(--color-text-muted)]">
-                      {managerLangs.length > 0
-                        ? `Telegram, WhatsApp · ${managerLangs.join(', ')}`
-                        : 'Telegram, WhatsApp'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </aside>
-        )}
-        </div>{/* ═══ /Two-column layout ═══ */}
+        </div>
 
         {photos.length > 0 && (
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />

@@ -1,6 +1,4 @@
 import { Header } from '@/components/Header'
-import { PageContainer } from '@/components/PageContainer'
-import { CatalogTabs } from '@/components/CatalogTabs'
 import { ApartmentCard } from '@/components/ApartmentCard'
 import { SeoContent } from '@/components/SeoContent'
 import { DistrictIntroBlock } from '@/components/DistrictIntroBlock'
@@ -13,7 +11,10 @@ import { FiltersBar } from '@/components/filters/FiltersBar'
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
-import { loadCatalogPage, buildHeadingLoc } from './_lib'
+import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString } from './_lib'
+import { normalizeSlug } from '@/lib/slug-normalize'
+import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
+import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
 import { HeadingPrice } from '@/components/Money'
@@ -114,6 +115,7 @@ function toQueryString(f: FilterState): string {
   if (f.dealType.length) sp.set('deal', f.dealType.join(','))
   if (f.goal) sp.set('goal', f.goal)
   if (f.sort) sp.set('sort', f.sort)
+  if (f.area) sp.set('area', f.area.join(','))
   return sp.toString()
 }
 
@@ -162,6 +164,23 @@ export async function ApartamentyCatalog({
   }
   const isSearch = filters.q.trim().length > 0
   const copy = pickCopy(COPY, lang)
+
+  // Карта рядом со списком (владелец 20.11.2026, макет CatB).
+  const mapGroups: CatalogMapGroup[] = await (async () => {
+    const all = await loadAll()
+    let rows = all.enriched.filter(e => passes(e, filters))
+    if (filters.q.trim()) rows = applySearch(rows, filters.q)
+    const by = new globalThis.Map<string, CatalogMapGroup>()
+    for (const e of rows) {
+      const slug = normalizeSlug(firstString(e.data['SEO:Slug']))
+      if (e.lat == null || e.lng == null || !slug || slug.startsWith('-')) continue
+      const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
+      let g = by.get(key)
+      if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
+      g.items.push({ slug, title: (firstString(e.data['SEO:Title']) ?? firstString(e.data['Name']) ?? slug).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim(), href: switchLangPath(`/ru/apartamenty/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: all.manifest[e.id]?.[0] ?? null })
+    }
+    return [...by.values()]
+  })().catch(() => [])
 
   const isSingleDistrictHub = filters.district.length === 1
     && filters.bedrooms.length === 0
@@ -228,8 +247,9 @@ export async function ApartamentyCatalog({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(catalogJsonLd) }} />
       <Header active="apartamenty" />
 
-      <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
+      <CatalogShell
+        lang={lang}
+        heading={<>
           {h1Text}
           {hasPrice && <HeadingPrice min={filters.priceMin} max={filters.priceMax} lang={lang} />}
           {actualPage > 1 && (
@@ -237,37 +257,20 @@ export async function ApartamentyCatalog({
               {' '}— {copy.page} {actualPage}
             </span>
           )}
-        </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
+        </>}
+        count={<>
           {copy.objects(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
-        </div>
-
-        {districtCopy && (
+        </>}
+        mapHref={buildMapHref(filters, lang)}
+        intro={districtCopy && (
           <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
         )}
-
-        <CatalogTabs
-          active="list"
-          listHref={buildListHref(filters, lang)}
-          mapHref={buildMapHref(filters, lang)}
-          lang={lang}
-        />
-
-        <div className="mt-6">
-          <CatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
-        </div>
-
-        <div className="mt-4">
-          <FiltersBar state={filters} options={options} lang={lang} />
-        </div>
-
-        {cards.length > 1 && (
-          <div className="mt-3">
-            <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} />
-          </div>
-        )}
-
+        search={<CatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />}
+        filters={<FiltersBar state={filters} options={options} lang={lang} />}
+        sort={cards.length > 1 ? <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} /> : null}
+        map={mapGroups.length > 0 ? <CatalogMap groups={mapGroups} lang={lang} /> : null}
+      >
         {cards.length === 0 ? (
           alternatives ? (
             <section className="mt-8" aria-labelledby="catalog-alternatives">
@@ -289,7 +292,7 @@ export async function ApartamentyCatalog({
           )
         ) : (
           <>
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
               {cards.map((c, i) => <ApartmentCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
             </div>
 
@@ -331,7 +334,7 @@ export async function ApartamentyCatalog({
         <SeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
-      </PageContainer>
+      </CatalogShell>
     </>
   )
 }

@@ -180,7 +180,8 @@ const ARROW_TONE = {
 
 // max-w-none: сеть «main * { max-width: 100% }» в globals.css иначе обрезает
 // полосу по ширине содержимого, и правый край не доходит до рамки.
-const BAND = 'mx-[-24px] max-w-none px-6 py-5 bg-[rgb(31_139_95/0.07)]'
+// «Журнал» (владелец 20.11.2026): не зелёная плашка во всю ширину, а блок под тонкой линией.
+const BAND = 'border-t border-[#ECEFED] pt-3'
 
 const POP_W = 360
 const GAP = 8
@@ -478,15 +479,9 @@ export function CardYieldPro({ range, pct: legacyPct, lang = 'ru', className = '
         </div>
         )}
       </div>
+      {/* Без Pro — одна строка вместо заглушки-скелета. */}
       <div className={`bx-nopro-block ${BAND}`}>
-        <div className="flex flex-col gap-3">
-          <span className="text-[13px] text-[var(--color-text-muted)]">{range.mode === 'monthly' ? c.monthly : c.daily}</span>
-          <div aria-hidden className="flex flex-col gap-2">
-            <span className="block h-6 w-[168px] rounded-md bg-[#D5E3DB]" />
-            <span className="block h-4 w-[140px] rounded-md bg-[#D5E3DB]" />
-          </div>
-          <span className="text-[14px] leading-[1.5] text-[var(--color-text-muted)]">{c.locked}</span>
-        </div>
+        <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{c.locked}</span>
       </div>
     </div>
   )
@@ -518,11 +513,7 @@ export function ComplexYieldPro({ range, lang = 'ru', className = '' }: { range:
         </div>
       </div>
       <div className={`bx-nopro-block ${BAND}`}>
-        <div className="flex flex-col gap-3">
-          <span className="text-[13px] text-[var(--color-text-muted)]">{c.units}</span>
-          <span aria-hidden className="block h-6 w-[168px] rounded-md bg-[#D5E3DB]" />
-          <span className="text-[14px] leading-[1.5] text-[var(--color-text-muted)]">{c.locked}</span>
-        </div>
+        <span className="text-[13px] leading-[1.5] text-[var(--color-text-muted)]">{c.locked}</span>
       </div>
     </div>
   )

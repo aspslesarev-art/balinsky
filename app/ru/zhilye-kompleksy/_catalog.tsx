@@ -1,6 +1,4 @@
 import { Header } from '@/components/Header'
-import { PageContainer } from '@/components/PageContainer'
-import { CatalogTabs } from '@/components/CatalogTabs'
 import { ComplexCard } from '@/components/ComplexCard'
 import { ComplexesSeoContent } from '@/components/ComplexesSeoContent'
 import { ComplexCatalogSearchBar } from '@/components/ComplexCatalogSearchBar'
@@ -12,7 +10,9 @@ import { DistrictRelatedLinks } from '@/components/DistrictRelatedLinks'
 import { getDistrictCopy, getDistrictCommercialMeta } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { buildListHref, buildMapHref } from '@/lib/complex-filter-href'
-import { loadCatalogPage, buildHeading, buildHeadingLocalized, type ComplexFilterState } from './_lib'
+import { loadCatalogPage, buildHeading, buildHeadingLocalized, loadAll, passes, applySearch, type ComplexFilterState } from './_lib'
+import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
+import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { pluralRu } from '@/lib/plural-ru'
 
@@ -98,6 +98,7 @@ function toQueryString(f: ComplexFilterState): string {
   if (f.permit.length) sp.set('permit', f.permit.join(','))
   if (f.year.length) sp.set('year', f.year.join(','))
   if (f.developer.length) sp.set('developer', f.developer.join(','))
+  if (f.area) sp.set('area', f.area.join(','))
   return sp.toString()
 }
 
@@ -116,8 +117,24 @@ export async function ComplexesCatalog({
   const isSearch = filters.q.trim().length > 0
   const copy = pickCopy(COPY, lang)
 
+  // Карта рядом со списком (владелец 20.11.2026, макет CatB).
+  const mapGroups: CatalogMapGroup[] = await (async () => {
+    const all = await loadAll()
+    let rows = all.enriched.filter(e => passes(e, filters))
+    if (filters.q.trim()) rows = applySearch(rows, filters.q)
+    const by = new globalThis.Map<string, CatalogMapGroup>()
+    for (const e of rows) {
+      const slug = e.slug
+      if (e.lat == null || e.lng == null || !slug || slug.startsWith('-')) continue
+      const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
+      let g = by.get(key)
+      if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
+      g.items.push({ slug, title: e.name ?? slug, href: switchLangPath(`/ru/zhilye-kompleksy/o/${slug}`, lang), priceUsd: null, thumb: all.manifest[e.id]?.[0] ?? e.coverUrl ?? null })
+    }
+    return [...by.values()]
+  })().catch(() => [])
+
   // Use complex tab hrefs (not the apartments ones from CatalogTabs defaults).
-  const listTabHref = buildListHref(filters, lang)
   const mapTabHref = buildMapHref(filters, lang)
 
   const isSingleDistrictHub = filters.district.length === 1
@@ -138,41 +155,36 @@ export async function ComplexesCatalog({
     <>
       <Header active="zhilye-kompleksy" />
 
-      <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
+      <CatalogShell
+        lang={lang}
+        heading={<>
           {heading}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]">
               {' '}— {copy.page} {actualPage}
             </span>
           )}
-        </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
+        </>}
+        count={<>
           {copy.complexes(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
-        </div>
-
-        {districtCopy && (
+        </>}
+        mapHref={mapTabHref}
+        intro={districtCopy && (
           <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
         )}
-
-        <CatalogTabs active="list" listHref={listTabHref} mapHref={mapTabHref} lang={lang} />
-
-        <div className="mt-6">
-          <ComplexCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
-        </div>
-
-        <div className="mt-4">
-          <ComplexFiltersBar state={filters} options={options} view="list" lang={lang} />
-        </div>
-
+        search={<ComplexCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />}
+        filters={<ComplexFiltersBar state={filters} options={options} view="list" lang={lang} />}
+        
+        map={mapGroups.length > 0 ? <CatalogMap groups={mapGroups} lang={lang} /> : null}
+      >
         {cards.length === 0 ? (
           <div className="py-16 text-center text-[var(--color-text-muted)]">
             {isSearch ? copy.emptySearch(filters.q) : copy.emptyFilters}
           </div>
         ) : (
           <>
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
               {cards.map((c, i) => <ComplexCard key={c.id} c={c} lang={lang} priority={i < 2} />)}
             </div>
 
@@ -209,7 +221,7 @@ export async function ComplexesCatalog({
         <ComplexesSeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
-      </PageContainer>
+      </CatalogShell>
     </>
   )
 }

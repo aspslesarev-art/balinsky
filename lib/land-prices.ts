@@ -17,6 +17,10 @@ export type LandPriceBundle = {
   p25: number
   p75: number
   method: 'leasehold' | 'freehold_adjusted'
+  /** Участки, по которым посчитана медиана (ближние первыми) — для ленты в «Аналитике». */
+  comps?: { lat: number; lng: number; priceUsd: number; landM2: number; ppm: number; url: string; district: string | null; distanceKm: number }[]
+  /** Сколько участков всего в соседних клетках (до фильтра по радиусу). */
+  scanned?: number
 }
 
 let _index: { ts: number; data: Index | null } | null = null
@@ -66,6 +70,14 @@ function quantile(xs: number[], p: number): number {
   return s[Math.min(s.length - 1, Math.floor((s.length - 1) * p))]
 }
 
+function compsOf(rows: RawLand[], lat: number, lng: number, k: number): NonNullable<LandPriceBundle['comps']> {
+  return rows
+    .map(r => ({ lat: r[0], lng: r[1], priceUsd: r[2], landM2: r[3], ppm: (r[2] / r[3]) * k, url: r[6], district: r[7], distanceKm: km(lat, lng, r[0], r[1]) }))
+    .filter(c => c.ppm >= 10 * k && c.ppm <= 5000 * k)
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, 40)
+}
+
 const RADII_KM = [2, 3, 5] as const
 const MIN_PLOTS = 5
 const FREEHOLD_TO_LEASEHOLD = 0.35
@@ -88,6 +100,7 @@ export async function landPricesNear(lat: number, lng: number): Promise<LandPric
     const ppms = nearby.map(r => r[2] / r[3]).filter(v => v >= 10 && v <= 5000)
     if (ppms.length >= MIN_PLOTS) {
       return {
+        comps: compsOf(nearby, lat, lng, 1), scanned: raw.length,
         medianPpm: Math.round(median(ppms)),
         n: ppms.length,
         radiusKm: radius,
@@ -104,6 +117,7 @@ export async function landPricesNear(lat: number, lng: number): Promise<LandPric
     const ppms = nearby.map(r => r[2] / r[3]).filter(v => v >= 10 && v <= 5000)
     if (ppms.length >= MIN_PLOTS) {
       return {
+        comps: compsOf(nearby, lat, lng, FREEHOLD_TO_LEASEHOLD), scanned: raw.length,
         medianPpm: Math.round(median(ppms) * FREEHOLD_TO_LEASEHOLD),
         n: ppms.length,
         radiusKm: radius,

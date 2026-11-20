@@ -60,3 +60,10 @@ export function cdnRewriteManifest(
   }
   return out
 }
+
+/** Фото соседа с Airbnb: наша копия в хранилище (через CDN) или картинка Airbnb уменьшенная до 480 px. */
+export function airbnbPhoto(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (SUPABASE_URL && url.startsWith(SUPABASE_URL + '/')) return cdnRewrite(url)
+  return `${url}?im_w=480`
+}

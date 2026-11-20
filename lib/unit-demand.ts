@@ -9,6 +9,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
+import { BOOKING_FIELD, applyMarks, readMarks } from '@/lib/booking-amenities'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,6 +29,16 @@ export type DemandDriver = {
   occ_effect_pp: number
 }
 
+/** Данные для пересчёта балла на лету (scripts/demand-score.mjs → facts.live). */
+type Live = {
+  base: Record<string, number>
+  q: number[]
+  occ_avg: number
+  seg_pct: number
+  seg_weight: number
+  median_adr_usd: number | null
+}
+
 export type UnitDemand = {
   kind: UnitKind
   airtableId: string
@@ -43,6 +54,7 @@ export type UnitDemand = {
   /** Доля объектов сегмента с загрузкой ниже 70%. */
   segmentIdlePct: number | null
   drivers: DemandDriver[]
+  live: Live | null
   why: string | null
 }
 
@@ -68,6 +80,7 @@ type Row = {
     predicted?: { adr_vs_neighbours?: number; expected_adr_usd?: number | null }
     market?: { mean_occupancy_pct?: number; idle_share_pct?: number }
     drivers?: DemandDriver[]
+    live?: Live
   } | null
   why_ru: string | null
   why_en: string | null
@@ -128,6 +141,7 @@ function toDemand(row: Row, lang: string): UnitDemand | null {
     drivers: f.drivers ?? [],
     // Пояснение живёт на двух языках; остальные локали получают английское,
     // а не машинный перевод на лету — он тут дороже пользы.
+    live: f.live ?? null,
     why: withoutOccupancy((lang === 'ru' ? row.why_ru : row.why_en) ?? row.why_en ?? null),
   }
 }
@@ -159,8 +173,58 @@ export const loadUnitDemand = unstable_cache(
   { revalidate: 604800, tags: ['unit-demand'] },
 )
 
-/** Балл одного юнита — для его собственной страницы. */
-export const loadOneUnitDemand = unstable_cache(
+const loadDemandModel = unstable_cache(async () => {
+  const { data, error } = await sb.from('demand_model').select('target, coef, intercept').eq('version', 1)
+  if (error) throw new Error(`demand_model: ${error.message}`)
+  const pick = (t: string) => {
+    const r = data?.find(m => m.target === t)
+    return r ? { coef: r.coef as Record<string, number>, intercept: Number(r.intercept) } : null
+  }
+  return { adr: pick('adr'), occ: pick('occ') }
+}, ['unit-demand-model-v1'], { revalidate: 86400 })
+
+const TABLE: Record<UnitKind, string> = { villa: 'raw_villas', apartment: 'raw_apartments' }
+
+/**
+ * Отметки «Редактировать → Для Booking» меняют балл сразу, без ночного
+ * пересчёта: тот же оценщик, что в scripts/demand-score.mjs, применяется к
+ * вектору «только по фото» с текущими отметками, место — по распределению
+ * соседей, которое скрипт сохранил.
+ */
+async function withLiveMarks(d: UnitDemand): Promise<UnitDemand> {
+  const live = d.live
+  if (!live?.base || !Array.isArray(live.q) || live.q.length < 2) return d
+  const [model, raw] = await Promise.all([
+    loadDemandModel(),
+    sb.from(TABLE[d.kind]).select(`marks:data->"${BOOKING_FIELD}"`).eq('airtable_id', d.airtableId).maybeSingle(),
+  ])
+  if (!model.adr || !model.occ) return d
+  if (raw.error) throw new Error(`${TABLE[d.kind]}: ${raw.error.message}`)
+  const marks = readMarks((raw.data as { marks?: unknown } | null)?.marks)
+  const { feats } = applyMarks(live.base as Record<string, 0 | 1 | null>, marks)
+  const lin = (m: { coef: Record<string, number>; intercept: number }) =>
+    m.intercept + Object.keys(live.base).reduce((s, k) => s + Number(feats[k] ?? 0) * Number(m.coef[k] ?? 0), 0)
+  const adrMult = Math.exp(lin(model.adr))
+  const occPct = Math.min(100, Math.max(5, live.occ_avg + lin(model.occ) * 100))
+  const index = adrMult * (occPct / live.occ_avg)
+  const pct = (100 * live.q.filter(v => v < index).length) / live.q.length
+  const score = Math.min(100, Math.max(1, Math.round((1 - live.seg_weight) * pct + live.seg_weight * live.seg_pct)))
+  return {
+    ...d,
+    score,
+    adrVsNeighbours: Number(adrMult.toFixed(2)),
+    expectedAdrUsd: live.median_adr_usd ? Math.round(live.median_adr_usd * adrMult) : d.expectedAdrUsd,
+  }
+}
+
+/** Балл одного юнита — для его собственной страницы, с текущими отметками. */
+export async function loadOneUnitDemand(kind: UnitKind, airtableId: string, lang: string): Promise<UnitDemand | null> {
+  const d = await loadOneUnitDemandCached(kind, airtableId, lang)
+  if (!d) return null
+  return withLiveMarks(d).catch(e => { console.error('[unit-demand] live marks:', e); return d })
+}
+
+const loadOneUnitDemandCached = unstable_cache(
   async (kind: UnitKind, airtableId: string, lang: string) => {
     const { data, error } = await sb
       .from('unit_demand_score')
@@ -171,6 +235,8 @@ export const loadOneUnitDemand = unstable_cache(
     if (error || !data) return null
     return toDemand(data as Row, lang)
   },
-  ['unit-demand-one'],
-  { revalidate: 604800, tags: ['unit-demand'] },
+  ['unit-demand-one-v2'],
+  // Сутки, а не неделя: балл пересчитывается каждую ночь (.github/workflows/demand-score.yml),
+  // в том числе после отметок «Для Booking».
+  { revalidate: 86400, tags: ['unit-demand'] },
 )

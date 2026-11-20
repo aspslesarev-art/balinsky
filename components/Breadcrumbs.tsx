@@ -9,7 +9,7 @@ const abs = (u: string) => (u.startsWith('http') ? u : `${SITE_URL}${u}`)
 // `currentUrl` (path or absolute) is the canonical URL of the page itself —
 // used to give the LAST crumb a non-empty `item`, which Google Search Console
 // requires on every BreadcrumbList ListItem.
-export function Breadcrumbs({ items, currentUrl }: { items: Crumb[]; currentUrl?: string }) {
+export function Breadcrumbs({ items, currentUrl, hideLast = false }: { items: Crumb[]; currentUrl?: string; /** Не показывать последнюю крошку (название страницы и так в заголовке под ней); в разметке для Google она остаётся. */ hideLast?: boolean }) {
   // Drop page-less intermediate crumbs (e.g. a regency geo level that has no
   // page): a ListItem without `item` is a GSC "missing field 'item'" error,
   // and an unlinkable middle crumb has no SEO value. Dropped from BOTH the
@@ -56,11 +56,11 @@ export function Breadcrumbs({ items, currentUrl }: { items: Crumb[]; currentUrl?
           gone. flex-wrap keeps earlier items on their own line. */}
       <nav aria-label="Breadcrumbs" className="mt-4 mb-2 min-w-0">
         <ol className="flex items-start flex-wrap gap-x-1.5 gap-y-1 text-[13px] text-[var(--color-text-muted)] min-w-0">
-          {visible.map((c, i) => {
-            const last = i === visible.length - 1
+          {(hideLast && visible.length > 1 ? visible.slice(0, -1) : visible).map((c, i, shown) => {
+            const last = i === shown.length - 1
             return (
               <li key={i} className={`inline-flex items-start gap-1.5 ${last ? 'min-w-0 basis-full sm:basis-auto max-w-full' : ''}`}>
-                {c.href && !last ? (
+                {c.href && (!last || hideLast) ? (
                   <Link href={c.href} className="hover:text-[var(--color-primary-pressed)] no-underline">
                     {c.label}
                   </Link>

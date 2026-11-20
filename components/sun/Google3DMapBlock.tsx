@@ -14,6 +14,7 @@ import { Globe } from 'lucide-react'
 
 import type { Google3DView } from '@/lib/complex-sun-plan'
 import { loadGoogleMaps } from '@/lib/google-maps-loader'
+import { VIEWER_ASIDE_LG, VIEWER_LABEL } from '@/components/media-viewer-aside'
 
 type Status = 'idle' | 'checking' | 'open' | 'limit' | 'error'
 
@@ -261,8 +262,11 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
       />
     </div>
 
-    <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
-      <p className="text-xs text-white/50">
+    {/* Во вкладке окна медиаблока - белая панель (окно «Журнал»), на компьютере
+        левая колонка (2026-11-19). Своё окно карты остаётся тёмным. */}
+    <div className={`flex items-center justify-between gap-3 border-t px-4 py-3 ${inline ? `border-[#ECEFED] bg-white ${VIEWER_ASIDE_LG} lg:items-start lg:justify-start lg:border-t-0` : 'border-white/10'}`}>
+      {inline && <span className={`hidden lg:block ${VIEWER_LABEL}`}>{en ? '3D map' : '3D-карта'}</span>}
+      <p className={`text-xs ${inline ? 'text-[#6B7570] lg:text-[14px] lg:leading-[1.55] lg:text-[#4A5550]' : 'text-white/50'}`}>
         <span className="hidden sm:inline">
           {en ? 'Drag to rotate · wheel to zoom · right button to pan' : 'Тяните — вращать · колесо — приблизить · правая кнопка — сдвинуть'}
         </span>
@@ -272,10 +276,10 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
         type="button"
         onClick={() => setTopView((v) => !v)}
         aria-pressed={topView}
-        className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs ${
+        className={`shrink-0 border ${inline ? 'h-11 rounded-xl px-4 text-[14px]' : 'rounded-lg px-3 py-1.5 text-xs'} ${
           topView
             ? 'border-transparent bg-amber-400 font-semibold text-[#191308]'
-            : 'border-white/15 text-white hover:bg-white/10'
+            : inline ? 'border-[#0F1A15] text-[#0F1A15] hover:bg-[#F1F3F2]' : 'border-white/15 text-white hover:bg-white/10'
         }`}
       >
         {en ? 'Top view' : 'Вид сверху'}
@@ -286,16 +290,17 @@ export function Google3DMapBlock({ apiKey, view, title, en = false, chip = false
 
   if (inline) {
     return (
-      <div className="flex h-full w-full flex-col overflow-hidden bg-[#0e1116]">
-        {status === 'open' ? body : (
-          <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-white/70">
+      <div className="flex h-full w-full flex-col lg:flex-row-reverse overflow-hidden bg-[#0e1116]">
+        {status === 'open' ? body : <>
+          <div className="flex flex-1 items-center justify-center bg-[#F6F7F6] px-6 text-center text-sm text-[#4A5550]">
             {status === 'limit'
               ? (en ? 'The 3D map is unavailable for today — try again tomorrow.' : '3D-карта на сегодня недоступна — загляните завтра.')
               : status === 'error'
                 ? (en ? 'Could not open the 3D map. Check your connection and try again.' : 'Не получилось открыть 3D-карту. Проверьте интернет и попробуйте ещё раз.')
                 : (en ? 'Opening the 3D map…' : 'Открываю 3D-карту…')}
           </div>
-        )}
+          <div className={`hidden bg-white ${VIEWER_ASIDE_LG}`}><span className={VIEWER_LABEL}>{en ? '3D map' : '3D-карта'}</span></div>
+        </>}
       </div>
     )
   }

@@ -140,12 +140,7 @@ export function Header({ active }: { active?: NavKey }) {
           >
             <UserRound size={16} strokeWidth={2} aria-hidden />
           </Link>
-          <Link
-            href={`/pro?next=${encodeURIComponent(pathname)}`}
-            className="bx-anon-only rounded-full bg-[var(--color-primary-hover)] px-3.5 py-1.5 text-[12px] font-semibold tracking-wide text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-          >
-            Pro
-          </Link>
+          {/* Кнопку «Pro» для не вошедших убрали (владелец 20.11.2026): аналитика открыта всем, лимит 50 в день. */}
         </div>
       </div>
 

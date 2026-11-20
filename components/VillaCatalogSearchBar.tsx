@@ -55,7 +55,7 @@ export function VillaCatalogSearchBar({
 
   return (
     <div className="relative">
-      <Search size={20} strokeWidth={2} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
+      <Search size={20} strokeWidth={2} className="absolute left-0 top-1/2 -translate-y-1/2 text-[#6B7570] pointer-events-none" />
       <input
         ref={inputRef}
         type="text"
@@ -70,14 +70,14 @@ export function VillaCatalogSearchBar({
           }
         }}
         placeholder={placeholder}
-        className="w-full h-14 pl-[52px] pr-12 rounded-xl bg-[var(--color-search-bg)] text-[15px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40"
+        className="w-full h-11 pl-8 pr-9 rounded-none border-0 border-b-[1.5px] border-[#0F1A15] bg-transparent text-[15px] text-[#0F1A15] placeholder:text-[#9AA39E] focus:outline-none focus:border-[var(--color-primary)]"
       />
       {value && (
         <button
           type="button"
           onClick={onClear}
           aria-label="Очистить"
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 inline-flex items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-white/60 hover:text-[var(--color-text)]"
+          className="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 inline-flex items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-white/60 hover:text-[var(--color-text)]"
         >
           <X size={16} strokeWidth={2.5} />
         </button>

@@ -9,13 +9,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
-import { HardHat, Building2, Award, Wrench, Users, Briefcase, ChevronRight } from 'lucide-react'
+import { HardHat } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
 import { ComplexCard, type ComplexCardData } from '@/components/ComplexCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { ManagerCard } from '@/components/ManagerCard'
+import { ManagerContactButtons } from '@/components/ManagerContactButtons'
+import { VillaChapter } from '@/components/VillaChapter'
 import { EcoWoodChessBoard, type VillaUnit } from '@/components/EcoWoodChessBoard'
 import { asList } from '@/lib/as-list'
 import { loadManagersByDeveloperSlug } from '@/lib/managers'
@@ -88,29 +89,31 @@ const DEV_FIELDS = [
   ['Репутация и опыт EN', 'f17'], ['Техника и производство EN', 'f18'], ['Управляющая компания EN', 'f19'],
   ['Команда EN', 'f20'], ['Бизнес и сервисы EN', 'f21'],
   [DEVELOPER_DESCRIPTION_FIELD, 'f22'],
+  // Слаг проекта, чьё фото стоит вверху страницы (выбор владельца, 20.11.2026).
+  ['Главный проект', 'f23'],
 ] as const
 const DEV_SELECT = ['airtable_id, logo_url', ...DEV_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(', ')
 
 export const _loadAllDevelopers = unstable_cache(
   async (): Promise<DeveloperRow[]> => {
-    const [{ data, error }, enCache] = await Promise.all([
-      sb.from('raw_developers').select(DEV_SELECT).limit(500),
-      loadAllTranslations('developers'),
-    ])
+    const { data, error } = await sb.from('raw_developers').select(DEV_SELECT).limit(500)
     if (error) throw new Error(`raw_developers: ${error.message}`)
     const raw = (data ?? []) as unknown as Record<string, unknown>[]
     if (raw.length === 0) throw new Error('raw_developers returned 0 rows — refusing to cache empty')
+    // Translations are merged per developer in loadDeveloper, not here: with
+    // all eight languages merged in, the cached list grew to ~3.3MB and
+    // unstable_cache refused to store it (6 console errors on every dev page).
     return raw.map(rr => {
       const d: Record<string, unknown> = {}
       for (const [k, a] of DEV_FIELDS) d[k] = rr[a]
       return {
         airtable_id: rr.airtable_id as string,
         logo_url: (rr.logo_url ?? null) as string | null,
-        data: mergeAllTranslations(d, rr.airtable_id as string, enCache),
+        data: d,
       }
     })
   },
-  ['developers-all-v5'],
+  ['developers-all-v6'],
   // Tagged so the Airtable webhook / sync revalidation (revalidateTag
   // 'content:developers') actually busts this cache — otherwise edits sat
   // stale until the 1h TTL.
@@ -127,8 +130,10 @@ export async function loadDeveloper(slug: string): Promise<DeveloperRow | null> 
       ?? all.find(r => firstString(r.data['SEO:Slug']) === slug)
       ?? null
   // Hidden developers (lib/hidden-developers) must 404 even on a direct URL.
-  if (found && isHiddenDeveloper(firstString(found.data['Developer']))) return null
-  return found
+  if (!found || isHiddenDeveloper(firstString(found.data['Developer']))) return null
+  // loadTranslations keeps its own in-process cache, so this stays cheap.
+  const tr = await loadAllTranslations('developers')
+  return { ...found, data: mergeAllTranslations(found.data, found.airtable_id, tr) }
 }
 
 // Slim projection — full `data` was ~8.4MB (over the 2MB cache ceiling, so it
@@ -289,6 +294,10 @@ const COPY = {
     newsHeading: (name: string) => `Новости ${name}`,
     promoHeading: (name: string) => `Акции ${name}`,
     eventsHeading: (name: string) => `Мероприятия ${name}`,
+    managersHeading: 'Менеджеры застройщика',
+    projectsChapter: 'Проекты',
+    questionsChapter: 'Вопросы',
+    facts: { projects: ['проект', 'проекта', 'проектов'], ready: 'сдано', building: 'в стройке', unitsBuilding: ['юнит в стройке', 'юнита в стройке', 'юнитов в стройке'], districts: ['район', 'района', 'районов'] },
     faqHeading: 'Часто задаваемые вопросы',
     dim: { construction: 'Строительство и недвижимость', reputation: 'Репутация и опыт', equipment: 'Техника и производство', management: 'Управляющая компания' },
     extras: { team: 'Команда', business: 'Бизнес и сервисы' },
@@ -320,6 +329,10 @@ const COPY = {
     newsHeading: (name: string) => `News from ${name}`,
     promoHeading: (name: string) => `Promotions from ${name}`,
     eventsHeading: (name: string) => `Events with ${name}`,
+    managersHeading: 'Developer’s managers',
+    projectsChapter: 'Projects',
+    questionsChapter: 'Questions',
+    facts: { projects: ['project', 'projects', 'projects'], ready: 'completed', building: 'under construction', unitsBuilding: ['unit under construction', 'units under construction', 'units under construction'], districts: ['district', 'districts', 'districts'] },
     faqHeading: 'Frequently asked questions',
     dim: { construction: 'Construction & real estate', reputation: 'Reputation & experience', equipment: 'Equipment & production', management: 'Management company' },
     extras: { team: 'Team', business: 'Business & services' },
@@ -351,6 +364,10 @@ const COPY = {
     newsHeading: (name: string) => `Berita dari ${name}`,
     promoHeading: (name: string) => `Promo dari ${name}`,
     eventsHeading: (name: string) => `Acara bersama ${name}`,
+    managersHeading: 'Manajer pengembang',
+    projectsChapter: 'Proyek',
+    questionsChapter: 'Pertanyaan',
+    facts: { projects: ['proyek', 'proyek', 'proyek'], ready: 'selesai', building: 'dalam pembangunan', unitsBuilding: ['unit dalam pembangunan', 'unit dalam pembangunan', 'unit dalam pembangunan'], districts: ['wilayah', 'wilayah', 'wilayah'] },
     faqHeading: 'Pertanyaan yang sering diajukan',
     dim: { construction: 'Konstruksi & properti', reputation: 'Reputasi & pengalaman', equipment: 'Peralatan & produksi', management: 'Perusahaan pengelola' },
     extras: { team: 'Tim', business: 'Bisnis & layanan' },
@@ -382,6 +399,10 @@ const COPY = {
     newsHeading: (name: string) => `Actualités de ${name}`,
     promoHeading: (name: string) => `Promotions de ${name}`,
     eventsHeading: (name: string) => `Événements avec ${name}`,
+    managersHeading: 'Conseillers du promoteur',
+    projectsChapter: 'Projets',
+    questionsChapter: 'Questions',
+    facts: { projects: ['projet', 'projets', 'projets'], ready: 'livrés', building: 'en construction', unitsBuilding: ['logement en construction', 'logements en construction', 'logements en construction'], districts: ['quartier', 'quartiers', 'quartiers'] },
     faqHeading: 'Questions fréquentes',
     dim: { construction: 'Construction & immobilier', reputation: 'Réputation & expérience', equipment: 'Équipement & production', management: 'Société de gestion' },
     extras: { team: 'Équipe', business: 'Activités & services' },
@@ -413,6 +434,10 @@ const COPY = {
     newsHeading: (name: string) => `Neuigkeiten von ${name}`,
     promoHeading: (name: string) => `Aktionen von ${name}`,
     eventsHeading: (name: string) => `Veranstaltungen mit ${name}`,
+    managersHeading: 'Ansprechpartner des Bauträgers',
+    projectsChapter: 'Projekte',
+    questionsChapter: 'Fragen',
+    facts: { projects: ['Projekt', 'Projekte', 'Projekte'], ready: 'fertiggestellt', building: 'im Bau', unitsBuilding: ['Einheit im Bau', 'Einheiten im Bau', 'Einheiten im Bau'], districts: ['Gegend', 'Gegenden', 'Gegenden'] },
     faqHeading: 'Häufig gestellte Fragen',
     dim: { construction: 'Bau & Immobilien', reputation: 'Reputation & Erfahrung', equipment: 'Technik & Produktion', management: 'Verwaltungsgesellschaft' },
     extras: { team: 'Team', business: 'Geschäft & Services' },
@@ -444,6 +469,10 @@ const COPY = {
     newsHeading: (name: string) => `${name} 的新闻`,
     promoHeading: (name: string) => `${name} 的优惠`,
     eventsHeading: (name: string) => `${name} 的活动`,
+    managersHeading: '开发商经理',
+    projectsChapter: '项目',
+    questionsChapter: '问题',
+    facts: { projects: ['个项目', '个项目', '个项目'], ready: '已交付', building: '在建', unitsBuilding: ['套在建单元', '套在建单元', '套在建单元'], districts: ['个地区', '个地区', '个地区'] },
     faqHeading: '常见问题',
     dim: { construction: '建筑与房产', reputation: '声誉与经验', equipment: '设备与生产', management: '管理公司' },
     extras: { team: '团队', business: '业务与服务' },
@@ -475,6 +504,10 @@ const COPY = {
     newsHeading: (name: string) => `Nieuws van ${name}`,
     promoHeading: (name: string) => `Aanbiedingen van ${name}`,
     eventsHeading: (name: string) => `Evenementen met ${name}`,
+    managersHeading: 'Managers van de ontwikkelaar',
+    projectsChapter: 'Projecten',
+    questionsChapter: 'Vragen',
+    facts: { projects: ['project', 'projecten', 'projecten'], ready: 'opgeleverd', building: 'in aanbouw', unitsBuilding: ['unit in aanbouw', 'units in aanbouw', 'units in aanbouw'], districts: ['gebied', 'gebieden', 'gebieden'] },
     faqHeading: 'Veelgestelde vragen',
     dim: { construction: 'Bouw & vastgoed', reputation: 'Reputatie & ervaring', equipment: 'Techniek & productie', management: 'Beheermaatschappij' },
     extras: { team: 'Team', business: 'Zaken & diensten' },
@@ -506,6 +539,10 @@ const COPY = {
     newsHeading: (name: string) => `Orti saking ${name}`,
     promoHeading: (name: string) => `Promo saking ${name}`,
     eventsHeading: (name: string) => `Acara sareng ${name}`,
+    managersHeading: 'Manajer pangwangun',
+    projectsChapter: 'Proyek',
+    questionsChapter: 'Patakon',
+    facts: { projects: ['proyek', 'proyek', 'proyek'], ready: 'puput', building: 'kantun kakaryanin', unitsBuilding: ['unit kantun kakaryanin', 'unit kantun kakaryanin', 'unit kantun kakaryanin'], districts: ['wewidangan', 'wewidangan', 'wewidangan'] },
     faqHeading: 'Patakon sane sering katakenang',
     dim: { construction: 'Konstruksi & properti', reputation: 'Reputasi & pengalaman', equipment: 'Peralatan & produksi', management: 'Pausahaan pangelola' },
     extras: { team: 'Tim', business: 'Bisnis & layanan' },
@@ -537,6 +574,10 @@ const COPY = {
     newsHeading: (name: string) => `Aktualności od ${name}`,
     promoHeading: (name: string) => `Promocje od ${name}`,
     eventsHeading: (name: string) => `Wydarzenia z ${name}`,
+    managersHeading: 'Menedżerowie dewelopera',
+    projectsChapter: 'Projekty',
+    questionsChapter: 'Pytania',
+    facts: { projects: ['projekt', 'projekty', 'projektów'], ready: 'ukończone', building: 'w budowie', unitsBuilding: ['lokal w budowie', 'lokale w budowie', 'lokali w budowie'], districts: ['rejon', 'rejony', 'rejonów'] },
     faqHeading: 'Najczęściej zadawane pytania',
     dim: { construction: 'Budownictwo i nieruchomości', reputation: 'Reputacja i doświadczenie', equipment: 'Wyposażenie i produkcja', management: 'Firma zarządzająca' },
     extras: { team: 'Zespół', business: 'Biznes i usługi' },
@@ -568,6 +609,10 @@ const COPY = {
     newsHeading: (name: string) => `Новини від ${name}`,
     promoHeading: (name: string) => `Акції від ${name}`,
     eventsHeading: (name: string) => `Події з ${name}`,
+    managersHeading: 'Менеджери забудовника',
+    projectsChapter: 'Проєкти',
+    questionsChapter: 'Питання',
+    facts: { projects: ['проєкт', 'проєкти', 'проєктів'], ready: 'здано', building: 'у будівництві', unitsBuilding: ['юніт у будівництві', 'юніти у будівництві', 'юнітів у будівництві'], districts: ['район', 'райони', 'районів'] },
     faqHeading: 'Часті запитання',
     dim: { construction: 'Будівництво та нерухомість', reputation: 'Репутація та досвід', equipment: 'Обладнання та виробництво', management: 'Керуюча компанія' },
     extras: { team: 'Команда', business: 'Бізнес та послуги' },
@@ -667,20 +712,21 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
   // Editorial bullets: drop AI meta-commentary junk and de-Cyrillic any RU
   // last-resort text (cleanDeveloperBullets handles both).
   const dimensions = [
-    { title: c.dim.construction, bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Строительство и недвижимость', lang)), lang), Icon: Building2 },
-    { title: c.dim.reputation,   bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Репутация и опыт',             lang)), lang), Icon: Award },
-    { title: c.dim.equipment,    bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Техника и производство',       lang)), lang), Icon: Wrench },
-    { title: c.dim.management,   bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Управляющая компания',         lang)), lang), Icon: Users },
+    { title: c.dim.construction, bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Строительство и недвижимость', lang)), lang) },
+    { title: c.dim.reputation,   bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Репутация и опыт',             lang)), lang) },
+    { title: c.dim.equipment,    bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Техника и производство',       lang)), lang) },
+    { title: c.dim.management,   bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Управляющая компания',         lang)), lang) },
   ].filter(d => d.bullets.length > 0)
 
   const extras = [
-    { title: c.extras.team,     bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Команда',           lang)), lang), Icon: Users },
-    { title: c.extras.business, bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Бизнес и сервисы',  lang)), lang), Icon: Briefcase },
+    { title: c.extras.team,     bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Команда',           lang)), lang) },
+    { title: c.extras.business, bullets: cleanDeveloperBullets(parseBullets(tField(dev.data, 'Бизнес и сервисы',  lang)), lang) },
   ].filter(d => d.bullets.length > 0)
 
-  const [{ complexes, apartmentCount }, managers] = await Promise.all([
+  const [{ complexes }, managers, devStats] = await Promise.all([
     loadProjectsByDeveloper(name),
     loadManagersByDeveloperSlug(slug),
+    getDeveloperStats(name).catch(() => null),
   ])
   const chessBoardVillas = await loadChessBoardVillas(complexes.map(c => c.id))
   const districts = [...new Set(complexes.map(c => lang === 'ru' ? c.location : districtLatin(c.location)).filter(Boolean) as string[])]
@@ -722,12 +768,86 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
 
   const home = switchLangPath('/ru', lang)
   const devsRoot = switchLangPath('/ru/zastrojshhiki', lang)
-  const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
-  const apartmentsRoot = switchLangPath('/ru/apartamenty', lang)
-  const villasRoot = switchLangPath('/ru/villy', lang)
   const newsBase = switchLangPath('/ru/novosti', lang)
   const promoBase = switchLangPath('/ru/akcii', lang)
   const eventsBase = switchLangPath('/ru/meropriyatiya', lang)
+
+  // «Журнал» (макет DevA, владелец 20.11.2026): шапка с логотипом, фото
+  // первого проекта во всю ширину, слева «01 О застройщике», справа —
+  // менеджеры с формой заявки, ниже «02 Проекты» и вопросы.
+  const plural = (n: number, f: readonly [string, string, string]) => {
+    if (lang === 'ru' || lang === 'uk') return pluralRu(n, [f[0], f[1], f[2]])
+    if (lang === 'pl') {
+      if (n === 1) return f[0]
+      const m10 = n % 10, m100 = n % 100
+      return m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? f[1] : f[2]
+    }
+    return n === 1 ? f[0] : f[2]
+  }
+  const districtLine = districts.length > 0
+    ? `${districts.slice(0, 3).join(', ')}${districts.length > 3 ? ` +${districts.length - 3}` : ''}`
+    : null
+  const keyLine = [
+    complexes.length > 0 ? `${complexes.length} ${plural(complexes.length, c.facts.projects)}` : null,
+    districtLine,
+  ].filter(Boolean).join(' · ')
+
+  // Только цифры, которые у страницы уже есть: проекты на сайте и статистика
+  // сданного/строящегося по базе комплексов. Нули не показываем.
+  const factTiles = [
+    complexes.length > 0 ? { v: String(complexes.length), l: plural(complexes.length, c.facts.projects) } : null,
+    devStats && devStats.ready > 0 ? { v: String(devStats.ready), l: c.facts.ready } : null,
+    devStats && devStats.inProgress > 0 ? { v: String(devStats.inProgress), l: c.facts.building } : null,
+    devStats && devStats.unitsInProgress > 0 ? { v: String(devStats.unitsInProgress), l: plural(devStats.unitsInProgress, c.facts.unitsBuilding) } : null,
+    districts.length > 0 ? { v: String(districts.length), l: plural(districts.length, c.facts.districts) } : null,
+  ].filter((x): x is { v: string; l: string } => x !== null).slice(0, 4)
+
+  // Главное фото — самый «кайфовый» проект застройщика (владелец 20.11.2026):
+  // по разбору фото ИИ выше те, где вид на океан/джунгли/рис и инфинити-бассейн,
+  // затем готовые проекты. Кадр — обложка из фото-аудита (photos[0]), а не
+  // случайный cover_url (у BREIG так попадал вид на бассейн).
+  const visionCx = await loadVisionManifest('complex').catch(() => ({} as Awaited<ReturnType<typeof loadVisionManifest>>))
+  const heroScore = (it: (typeof complexes)[number]) => {
+    const f = visionCx[it.id]?.features
+    const views = f?.view ?? []
+    let sc = 0
+    if (views.some(v => /ocean|sea/i.test(v))) sc += 4
+    if (views.some(v => /jungle|rice|mountain|valley|river/i.test(v))) sc += 2
+    if (f?.pool_type === 'infinity') sc += 3
+    if (f?.condition === 'new') sc += 1
+    if (it.readiness >= 100) sc += 1
+    return sc
+  }
+  const pinned = firstString(dev.data['Главный проект'])?.trim().toLowerCase() || null
+  const withPhoto = complexes.filter(it => it.photos.length > 0 || it.coverUrl)
+  const heroPhoto = (pinned ? withPhoto.find(it => it.slug?.toLowerCase() === pinned || it.name?.toLowerCase() === pinned) : undefined)
+    ?? [...withPhoto].sort((a, b) => (heroScore(b) - heroScore(a)) || (b.photos.length - a.photos.length))[0]
+  const heroPhotoUrl = heroPhoto ? (heroPhoto.photos[0] ?? heroPhoto.coverUrl) : null
+
+  const managerRows = managers.map(m => ({
+    id: m.id,
+    photo: m.photo,
+    name: lang === 'ru' ? m.name : (m.nameEn || (hasCyrillic(m.name) ? translitPreserveCase(m.name) : m.name)),
+  }))
+
+  // Бывшие карточки «Дополнительно» и «Справка по направлениям» — журнальными списками.
+  const infoLists = [...extras, ...dimensions]
+
+  let chapterNo = complexes.length > 0 ? 2 : 1
+  const nextNo = () => String(++chapterNo).padStart(2, '0')
+
+  const linkList = (items: { id: string; slug: string; title: string }[], base: string) => (
+    <ul className="m-0 list-none border-t border-[#ECEFED] p-0">
+      {items.map(it => (
+        <li key={it.id} className="border-b border-[#ECEFED]">
+          <Link href={`${base}/${it.slug}`} className="group flex min-h-14 items-center justify-between gap-4 py-3 text-[16px] text-[#0F1A15] no-underline transition-colors duration-[120ms] hover:text-[var(--color-primary)] md:text-[17px]">
+            <span className="line-clamp-2">{it.title}</span>
+            <span className="shrink-0 text-[22px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
 
   return (
     <>
@@ -735,193 +855,147 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
       <PageViewTracker kind="developer" slug={slug} title={name} airtableId={dev.airtable_id} lang={lang} />
       <PageEditButton kind="developer" id={dev.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs currentUrl={`${devsRoot}/${slug}`} items={[
+        <Breadcrumbs hideLast currentUrl={`${devsRoot}/${slug}`} items={[
           { label: c.home, href: home },
           { label: c.devsCrumb, href: devsRoot },
           { label: name },
         ]} />
 
-        {/* HERO */}
-        <section className="bg-white rounded-3xl border border-[var(--color-border)] p-6 md:p-10 mb-10 mt-2">
-          <div className="flex items-start gap-6 flex-wrap md:flex-nowrap">
-            <div className="shrink-0 w-[120px] h-[120px] md:w-[160px] md:h-[160px] rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-4">
+        <section className="pb-6 md:pb-8">
+          <div className="flex min-w-0 items-center gap-4 md:gap-6">
+            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#ECEFED] bg-white p-2">
               {logoUrl ? (
-                <Image src={logoUrl} alt={name} width={160} height={160} className="max-w-full max-h-full object-contain" />
+                <Image src={logoUrl} alt={name} width={56} height={56} className="max-h-full max-w-full object-contain" />
               ) : (
-                <HardHat size={48} className="text-[var(--color-text-muted)]" />
+                <HardHat size={28} strokeWidth={1.5} className="text-[#6B7570]" aria-hidden />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[13px] text-[var(--color-text-muted)] mb-2">{c.devSubtitle}</div>
-              <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-4">
+            <div className="flex min-w-0 flex-col gap-2">
+              <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
                 {name}
               </h1>
-              <div className="flex items-center flex-wrap gap-x-6 gap-y-2">
-                {complexes.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Building2 size={18} className="text-[var(--color-primary)]" />
-                    <span className="text-[15px] font-medium text-[var(--color-text)]">{complexes.length}</span>
-                    <span className="text-[13px] text-[var(--color-text-muted)]">{c.projects}</span>
-                  </div>
-                )}
-                {districts.length > 0 && (
-                  <div className="text-[14px] text-[var(--color-text-muted)]">
-                    {c.districts}: <span className="text-[var(--color-text)]">{districts.slice(0, 4).join(', ')}{districts.length > 4 ? ` +${districts.length - 4}` : ''}</span>
-                  </div>
-                )}
-              </div>
+              <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine || c.devSubtitle}</p>
             </div>
           </div>
         </section>
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={name} inquiry={{ kind: 'developer', name }} />}
+        {heroPhotoUrl && (
+          <div className="relative ml-[calc(50%-50vw)] h-[240px] w-screen max-w-none overflow-hidden bg-[#F6F8F7] md:h-[380px]">
+            <Image src={heroPhotoUrl} alt={heroPhoto ? `${name} — ${heroPhoto.name}` : name} fill priority sizes="100vw" className="object-cover" />
+          </div>
+        )}
 
-        {extras.length > 0 && (
-          <section className="mt-10 mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">{c.extrasHeading}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {extras.map(({ title, bullets, Icon }) => (
-                <div key={title} className="bg-white rounded-2xl border border-[var(--color-border)] p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Icon size={18} className="text-[var(--color-primary)]" />
-                    <h3 className="text-[15px] font-semibold text-[var(--color-text)]">{title}</h3>
-                  </div>
-                  <ul className="space-y-2 text-[14px] text-[var(--color-text)] leading-relaxed list-disc pl-5">
-                    {bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
+        <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
+          <div className={`grid grid-cols-1 gap-16 lg:items-start lg:gap-16 ${managerRows.length > 0 ? 'lg:grid-cols-[minmax(0,1fr)_392px]' : ''}`}>
+            <VillaChapter id="o-zastrojshhike" no="01" eyebrow={c.aboutHeading} journal>
+              {factTiles.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4">
+                  {factTiles.map(k => (
+                    <div key={k.l} className="flex min-w-0 flex-col gap-0.5 border-b border-[#ECEFED] py-[14px] pr-3 md:gap-1 md:py-5 md:pr-6">
+                      <div className="text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] text-[#0F1A15] tabular-nums md:text-[32px]">{k.v}</div>
+                      <div className="text-[13px] text-[#6B7570] md:text-[14px]">{k.l}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {dimensions.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-5">{c.sectionsHeading}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {dimensions.map(({ title, bullets, Icon }) => (
-                <div key={title} className="bg-white rounded-2xl border border-[var(--color-border)] p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Icon size={18} className="text-[var(--color-primary)]" />
-                    <h3 className="text-[16px] font-semibold text-[var(--color-text)]">{title}</h3>
+              )}
+              {aiText && (
+                <ExpandableText className="max-w-[68ch]" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
+                  <div className="prose-balinsky whitespace-pre-line text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">
+                    {aiText}
                   </div>
-                  <ul className="space-y-2 text-[14px] text-[var(--color-text)] leading-relaxed list-disc pl-5">
-                    {bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
+                </ExpandableText>
+              )}
+              {infoLists.length > 0 && (
+                <div className="mt-4 flex max-w-[68ch] flex-col gap-10 md:mt-6 md:gap-12">
+                  {infoLists.map(({ title, bullets }) => (
+                    <section key={title} className="flex flex-col gap-3">
+                      <h3 className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#6B7570]">{title}</h3>
+                      <ul className="m-0 list-none border-t border-[#ECEFED] p-0">
+                        {bullets.map((b, i) => (
+                          <li key={i} className="border-b border-[#ECEFED] py-3 text-[15px] leading-[1.6] text-[#0F1A15] md:text-[16px]">{b}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              )}
+            </VillaChapter>
 
-        {aiText && (
-          <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.aboutHeading}</h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-              <div className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-                {aiText}
-              </div>
-            </ExpandableText>
-          </section>
-        )}
-
-        {complexes.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-2">{c.projectsHeading}</h2>
-            <div className="text-[14px] text-[var(--color-text-muted)] mb-5">{c.projectsSubLine(complexes.length, apartmentCount)}</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {complexes.map(it => <ComplexCard key={it.id} c={it} lang={lang} />)}
-            </div>
-            {chessBoardVillas.length > 0 && (
-              <EcoWoodChessBoard
-                villas={chessBoardVillas}
-                masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/render.jpg"
-                lang={lang}
-              />
+            {managerRows.length > 0 && managers[0] && (
+              <aside className="lg:sticky lg:top-[96px]">
+                <div id="kontakty-operatora" className="flex scroll-mt-[136px] flex-col gap-5 rounded-md bg-white p-6 shadow-[0_1px_2px_rgb(0_0_0/.05),0_12px_32px_rgb(0_0_0/.12)]">
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#6B7570]">{c.managersHeading}</div>
+                  <ul className="m-0 flex list-none flex-col gap-4 p-0">
+                    {managerRows.map(m => (
+                      <li key={m.id} className="flex items-center gap-3">
+                        {m.photo ? (
+                          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#F6F8F7]">
+                            <Image src={m.photo} alt={m.name} fill sizes="44px" className="object-cover" />
+                          </div>
+                        ) : (
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F6F8F7] text-[17px] text-[#6B7570]" aria-hidden>
+                            {m.name.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="truncate text-[15px] font-semibold text-[#0F1A15]">{m.name}</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <ManagerContactButtons lang={lang} managerId={managers[0].id} managerName={managers[0].name} developerName={name} listingTitle={null} />
+                </div>
+              </aside>
             )}
-          </section>
-        )}
-
-        <section className="mb-10">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.relatedHeading}</h2>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
-            {[
-              { href: devsRoot, label: c.related.allDevs },
-              { href: complexesRoot, label: c.related.complexes },
-              { href: apartmentsRoot, label: c.related.apartments },
-              { href: villasRoot, label: c.related.villas },
-              ...districts.slice(0, 4).map(d => ({ href: apartmentsRoot, label: c.related.aptsIn(d) })),
-            ].map(l => (
-              <li key={l.href + l.label}>
-                <Link href={l.href} className="inline-flex items-center gap-1 text-[14px] text-[var(--color-text)] hover:text-[var(--color-primary-pressed)]">
-                  <ChevronRight size={14} className="text-[var(--color-primary)]" /> {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {devVideos.length > 0 && <VideoGrid videos={devVideos} title={c.videosTitle(name)} />}
-
-        {devNews.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.newsHeading(name)}</h2>
-            <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {devNews.map(n => (
-                <li key={n.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${newsBase}/${n.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
-                    <div className="p-4 text-[14px] font-medium leading-snug line-clamp-4">{n.title}</div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {devPromo.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.promoHeading(name)}</h2>
-            <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {devPromo.map(p => (
-                <li key={p.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${promoBase}/${p.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
-                    <div className="p-4 text-[14px] font-medium leading-snug line-clamp-4">{p.title}</div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {devEvents.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.eventsHeading(name)}</h2>
-            <ul className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-6 px-6 max-w-none md:max-w-full md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {devEvents.map(e => (
-                <li key={e.id} className="snap-start shrink-0 w-[280px] md:w-auto">
-                  <Link href={`${eventsBase}/${e.slug}`} className="block h-full rounded-2xl border border-[var(--color-border)] bg-white no-underline text-[var(--color-text)] hover:border-[var(--color-primary)]">
-                    <div className="p-4 text-[14px] font-medium leading-snug line-clamp-4">{e.title}</div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <section className="mb-10">
-          <h2 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">{c.faqHeading}</h2>
-          <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
-            {faqItems.map((item, i) => (
-              <details key={i} className="group py-4">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
-                  {item.q}
-                  <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-[14px] text-[var(--color-text-muted)] leading-relaxed">{item.a}</p>
-              </details>
-            ))}
           </div>
-        </section>
+
+          {complexes.length > 0 && (
+            <VillaChapter id="proekty" no="02" eyebrow={`${c.projectsChapter} · ${complexes.length}`} journal>
+              <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
+                {complexes.map(it => <ComplexCard key={it.id} c={it} lang={lang} />)}
+              </div>
+              {chessBoardVillas.length > 0 && (
+                <EcoWoodChessBoard
+                  villas={chessBoardVillas}
+                  masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/render.jpg"
+                  lang={lang}
+                />
+              )}
+            </VillaChapter>
+          )}
+
+          {devNews.length > 0 && (
+            <VillaChapter id="novosti" no={nextNo()} eyebrow={c.newsHeading(name)} journal>
+              {linkList(devNews, newsBase)}
+            </VillaChapter>
+          )}
+          {devPromo.length > 0 && (
+            <VillaChapter id="akcii" no={nextNo()} eyebrow={c.promoHeading(name)} journal>
+              {linkList(devPromo, promoBase)}
+            </VillaChapter>
+          )}
+          {devEvents.length > 0 && (
+            <VillaChapter id="meropriyatiya" no={nextNo()} eyebrow={c.eventsHeading(name)} journal>
+              {linkList(devEvents, eventsBase)}
+            </VillaChapter>
+          )}
+
+          <VillaChapter id="voprosy" no={nextNo()} eyebrow={c.questionsChapter} journal>
+            <div className="-mt-2 max-w-[880px] md:-mt-4">
+              {faqItems.map((it, i) => (
+                <details key={i} className="group border-b border-[#ECEFED]">
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-[16px] text-[#0F1A15] transition-colors duration-[120ms] hover:text-[var(--color-primary)] md:text-[17px] [&::-webkit-details-marker]:hidden">
+                    {it.q}
+                    <span className="shrink-0 text-[22px] leading-none text-[#6B7570]" aria-hidden><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
+                  </summary>
+                  <div className="max-w-[68ch] pb-4 text-[15px] leading-[1.6] text-[#4A5550]">{it.a}</div>
+                </details>
+              ))}
+            </div>
+          </VillaChapter>
+        </div>
+
+        {devVideos.length > 0 && <VideoGrid jsonLdOnly videos={devVideos} title={c.videosTitle(name)} />}
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />

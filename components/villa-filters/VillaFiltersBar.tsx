@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
+import { MoreFilters } from '@/components/filters/MoreFilters'
 import { VillaMultiSelect } from './VillaMultiSelect'
 import { VillaPriceRange } from './VillaPriceRange'
 import { VillaGoalFilter } from './VillaGoalFilter'
@@ -109,11 +110,12 @@ export function VillaFiltersBar({
 
   return (
     <Suspense fallback={null}>
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         <VillaGoalFilter current={state} view={view} lang={lang} />
         <VillaPriceRange label={c.price} min={state.priceMin} max={state.priceMax} current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable groups={buildDistrictGroups(options.district, lang)} />
         <VillaMultiSelect stateKey="bedrooms"  label={c.bedrooms}  options={options.bedrooms}  selected={state.bedrooms}  current={state} view={view} lang={lang} />
+        <MoreFilters lang={lang} count={7} active={[state.status, state.dealType, state.style, state.features, state.year, state.developer, state.permit].filter(x => x.length > 0).length}>
         <VillaMultiSelect stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="dealType"  label={c.dealType}  options={options.dealType}  selected={state.dealType}  current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="style"     label={c.style}     options={options.style}     selected={state.style}     current={state} view={view} lang={lang} />
@@ -121,6 +123,7 @@ export function VillaFiltersBar({
         <VillaMultiSelect stateKey="year"      label={c.year}      options={options.year}      selected={state.year}      current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="developer" label={c.developer} options={options.developer} selected={state.developer} current={state} view={view} lang={lang} searchable />
         <VillaMultiSelect stateKey="permit"    label={c.permit}    options={options.permit}    selected={state.permit}    current={state} view={view} lang={lang} />
+        </MoreFilters>
         <ResetAll activeCount={activeCount} current={state} view={view} lang={lang} />
       </div>
     </Suspense>

@@ -1,6 +1,4 @@
 import { Header } from '@/components/Header'
-import { PageContainer } from '@/components/PageContainer'
-import { CatalogTabs } from '@/components/CatalogTabs'
 import { VillaCard } from '@/components/VillaCard'
 import { VillasSeoContent } from '@/components/VillasSeoContent'
 import { RelatedVillaFilters } from '@/components/RelatedVillaFilters'
@@ -13,7 +11,9 @@ import { getDistrictCopy, getBuyHeading } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
-import { loadCatalogPage, buildHeadingLoc, type VillaFilterState } from './_lib'
+import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString, type VillaFilterState } from './_lib'
+import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
+import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
 import { HeadingPrice } from '@/components/Money'
@@ -116,6 +116,7 @@ function toQueryString(f: VillaFilterState): string {
   if (f.goal) sp.set('goal', f.goal)
   if (f.dealType.length) sp.set('deal', f.dealType.join(','))
   if (f.sort) sp.set('sort', f.sort)
+  if (f.area) sp.set('area', f.area.join(','))
   return sp.toString()
 }
 
@@ -164,6 +165,25 @@ export async function VillasCatalog({
   }
   const isSearch = filters.q.trim().length > 0
   const copy = pickCopy(COPY, lang)
+
+  // Карта рядом со списком (владелец 20.11.2026, макет CatB): все объекты
+  // под текущими фильтрами, юниты одного места — одной точкой.
+  const mapGroups: CatalogMapGroup[] = await (async () => {
+    const { enriched, manifest } = await loadAll()
+    let rows = enriched.filter(e => passes(e, filters))
+    if (filters.q.trim()) rows = applySearch(rows, filters.q)
+    const by = new globalThis.Map<string, CatalogMapGroup>()
+    for (const e of rows) {
+      const slug = e.slug ?? firstString(e.data['SEO:Slug'])
+      if (e.lat == null || e.lng == null || !slug || slug.startsWith('-')) continue
+      const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
+      const title = (firstString(e.data['SEO:Title']) ?? slug).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim()
+      let g = by.get(key)
+      if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
+      g.items.push({ slug, title, href: switchLangPath(`/ru/villy/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: manifest[e.id]?.[0] ?? null })
+    }
+    return [...by.values()]
+  })().catch(() => [])
 
   // Single-district filter with no other narrowing → show the rich
   // SEO intro block for that district above the grid. Strict check
@@ -246,39 +266,28 @@ export async function VillasCatalog({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(catalogJsonLd) }} />
       <Header active="villy" />
 
-      <PageContainer>
-        <h1 className="pt-8 mb-2 text-[28px] md:text-[36px] font-semibold tracking-tight text-[var(--color-text)]">
+      <CatalogShell
+        lang={lang}
+        heading={<>
           {h1Text}
           {hasPrice && <HeadingPrice min={filters.priceMin} max={filters.priceMax} lang={lang} />}
           {actualPage > 1 && (
             <span className="text-[var(--color-text-muted)] font-normal text-[20px] md:text-[24px]"> — {copy.page} {actualPage}</span>
           )}
-        </h1>
-        <div className="text-[14px] text-[var(--color-text-muted)] mb-6">
+        </>}
+        count={<>
           {copy.objects(totalCount)}
           {totalPages > 1 && ` · ${copy.page} ${actualPage} ${copy.of} ${totalPages}`}
-        </div>
-
-        {districtCopy && (
+        </>}
+        mapHref={buildMapHref(filters, lang)}
+        intro={districtCopy && (
           <DistrictIntroBlock copy={districtCopy} lang={lang} totalCount={totalCount} sectionRoot={sectionRoot} />
         )}
-
-        <CatalogTabs active="list" listHref={buildListHref(filters, lang)} mapHref={buildMapHref(filters, lang)} lang={lang} />
-
-        <div className="mt-6">
-          <VillaCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />
-        </div>
-
-        <div className="mt-4">
-          <VillaFiltersBar state={filters} options={options} view="list" lang={lang} />
-        </div>
-
-        {cards.length > 1 && (
-          <div className="mt-3">
-            <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} />
-          </div>
-        )}
-
+        search={<VillaCatalogSearchBar initial={filters.q} current={filters} view="list" placeholder={copy.searchPlaceholder} />}
+        filters={<VillaFiltersBar state={filters} options={options} view="list" lang={lang} />}
+        sort={cards.length > 1 ? <CatalogSortSelect current={filters.sort} hrefs={sortHrefs(filters, lang)} lang={lang} /> : null}
+        map={mapGroups.length > 0 ? <CatalogMap groups={mapGroups} lang={lang} /> : null}
+      >
         {cards.length === 0 ? (
           alternatives ? (
             <section className="mt-8" aria-labelledby="catalog-alternatives">
@@ -300,7 +309,7 @@ export async function VillasCatalog({
           )
         ) : (
           <>
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
               {cards.map((c, i) => <VillaCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
             </div>
             <VillaInfiniteScrollClient
@@ -346,7 +355,7 @@ export async function VillasCatalog({
         <VillasSeoContent filters={filters} variant="list" lang={lang} />
 
         <div className="h-16" />
-      </PageContainer>
+      </CatalogShell>
     </>
   )
 }

@@ -4,7 +4,7 @@
 // без горизонтальной прокрутки). Строка глав сверху - VillaChapterNav.
 import type { ReactNode } from 'react'
 
-export function VillaChapter({ id, no, eyebrow, title, lead, band = false, plain = false, children }: {
+export function VillaChapter({ id, no, eyebrow, title, lead, band = false, plain = false, journal = false, children }: {
   id: string
   no: string
   eyebrow: string
@@ -13,8 +13,21 @@ export function VillaChapter({ id, no, eyebrow, title, lead, band = false, plain
   band?: boolean
   /** Без строки «03 · Проверка» — на странице ЖК, где глав-разделов нет. */
   plain?: boolean
+  /** Стиль «Журнал» (макет владельца 19.11.2026): мелкий номер «01», крупный
+   *  заголовок и тёмная линия 1px снизу. Заголовок — `title`, иначе `eyebrow`. */
+  journal?: boolean
   children: ReactNode
 }) {
+  if (journal) return (
+    <section id={id} data-chapter={id} className="scroll-mt-[136px] flex flex-col gap-5 md:gap-8">
+      <div className="flex items-baseline gap-4 border-b border-[#0F1A15] pb-4">
+        <span className="text-[13px] tabular-nums text-[#6B7570]">{no}</span>
+        <h2 className="m-0 font-display text-[26px] md:text-[32px] font-bold tracking-[-0.02em] leading-[1.15] text-[#0F1A15]">{title ?? eyebrow}</h2>
+      </div>
+      {lead && <p className="m-0 text-[15px] leading-[1.55] text-[#4A5550]">{lead}</p>}
+      {children}
+    </section>
+  )
   return (
     <section id={id} data-chapter={id}
       className={`scroll-mt-[136px] flex flex-col gap-8 ${band ? 'py-12 lg:py-16 bg-[#F6F8F7] shadow-[0_0_0_100vmax_#F6F8F7] [clip-path:inset(0_-100vmax)]' : 'py-4'}`}>

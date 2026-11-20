@@ -10,20 +10,14 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import { contentRev } from '@/lib/content-version'
-import {
-  Building2, MapPin, Calendar, FileCheck2, Lock, Home, Plane,
-  ChevronRight, Map as MapIcon, BedDouble,
-} from 'lucide-react'
+import { MapPin, Sun, Globe, Layers } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
 import { COMPLEX_DESCRIPTION_FIELD } from '@/lib/complex-description'
-import { VillaGallery } from '@/components/VillaGallery'
+import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { curatePhotos } from '@/lib/listing-photos'
-import { NeighborhoodHeatMap } from '@/components/NeighborhoodHeatMap'
-import { parseGeoOverlay } from '@/lib/geo-placement'
 import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCard'
-import { ManagerCard } from '@/components/ManagerCard'
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
@@ -33,7 +27,6 @@ import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { loadVideosByComplexSlug } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
-import { NearbyPlaces } from '@/components/NearbyPlaces'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { getSitePlan } from '@/lib/complex-sun-plan'
 import { embeddableTourUrl } from '@/lib/tour3d'
@@ -41,37 +34,20 @@ import { loadPromoKit } from '@/lib/promo-kits'
 import { loadSunSettings } from '@/lib/complex-sun'
 import dynamic from 'next/dynamic'
 // Heavy client widgets — code-split off the initial JS bundle.
-// ComplexVisualizationViewer = layers/hotspots, LandProfileBlock = charts.
-// Both render below the fold on complex detail pages.
 const ComplexVisualizationViewer = dynamic(
   () => import('@/components/ComplexVisualizationViewer').then(m => ({ default: m.ComplexVisualizationViewer })),
 )
-const LandProfileBlock = dynamic(
-  () => import('@/components/LandProfileBlock').then(m => ({ default: m.LandProfileBlock })),
-)
-// SunShadowBlock = кнопка + модалка с 3D-инсоляцией. Сам блок почти невесом;
-// three.js и спутниковая подложка грузятся отдельным чанком только по клику.
+// SunShadowBlock / Google3DMapBlock — вкладки окна медиа; three.js и SDK карты
+// грузятся отдельным чанком только при открытии вкладки.
 const SunShadowBlock = dynamic(
   () => import('@/components/sun/SunShadowBlock').then(m => ({ default: m.SunShadowBlock })),
 )
-// Google3DMapBlock = кнопка + модалка с 3D-картой Google; SDK карты грузится
-// только по клику и после проверки суточного лимита.
 const Google3DMapBlock = dynamic(
   () => import('@/components/sun/Google3DMapBlock').then(m => ({ default: m.Google3DMapBlock })),
 )
-import { LazyMount } from '@/components/LazyMount'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
-import { loadLandProfile, landAllowsBuilding } from '@/lib/land-profile'
-import { loadComplexMarketStats } from '@/lib/complex-market-stats'
 import { loadUnitDemand, type UnitDemand } from '@/lib/unit-demand'
-import { DataChapter, type ChapterId } from '@/components/DataChapters'
-import { GatedBlock } from '@/components/GatedBlock'
-import { loadComplexAccess, loadGeoFacts, type RouteLeg } from '@/lib/complex-access'
-import { ClimateBlock } from '@/components/ClimateBlock'
-import { AreaBlock } from '@/components/AreaBlock'
-import { PlotSiteBlock, plotChapterHint } from '@/components/PlotSiteBlock'
-import { ComplexAccessBlock } from '@/components/ComplexAccessBlock'
-import { computeComplexSignals, loadDistrictOccupancyMedians, hasAnySignal } from '@/lib/complex-signals'
+import { loadGeoFacts } from '@/lib/complex-access'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { PageEditButton } from '@/components/page-edit/PageEditButton'
 import { tField, pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
@@ -79,51 +55,43 @@ import { facetLabel } from '@/lib/filter-i18n'
 import { hasCyrillic, translitPreserveCase, completionLabel } from '@/lib/translit'
 import { loadAllTranslations, mergeAllTranslations } from '@/lib/en-translations'
 import { pluralRu } from '@/lib/plural-ru'
+import { KM, METERS, MIN, decSep } from '@/lib/l10n-plural'
+import { CX_AI_HEADING, MONTHS_SHORT, NEAR } from '@/lib/listing-l10n'
 import { districtRu, districtLatin } from '@/lib/district-ru'
-import { geoChainString } from '@/lib/regency'
 import { loadKbPageContent } from '@/lib/kb-page-content'
 import { loadListingVision, loadVisionManifest, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { curateManifest } from '@/lib/listing-photos'
 import { commercialComplexTitle } from '@/lib/listing-meta'
-import { DistrictAboutCard } from '@/components/DistrictAboutCard'
-import { getDistrictCopy } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { cdnManifestUrl } from '@/lib/photo-cdn'
-import { LegalAudit } from '@/components/LegalAudit'
 import { PriceCtaCard } from '@/components/PriceCtaCard'
-import { VillaDetail } from '@/app/ru/villy/o/[slug]/_detail'
-import { ApartmentDetail } from '@/app/ru/apartamenty/o/[slug]/_detail'
-import {
-  LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD,
-  parseAuditItems, parseBalance,
-} from '@/lib/legal-audit'
-import { loadComplexAudit } from '@/lib/complex-legal-i18n'
-import { hasProjectPermits } from '@/lib/project-permits'
-import { loadProjectPermits } from '@/lib/project-permits-i18n'
 import { isAirtableAttachment } from '@/lib/admin/fields'
 import { hreflangMap } from '@/lib/hreflang'
 import { metaSnippet } from '@/lib/seo'
+import { VillaChapter } from '@/components/VillaChapter'
+import { VillaActions } from '@/components/VillaActions'
+import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
+import { ManagerContactButtons } from '@/components/ManagerContactButtons'
+import { LocationView } from '@/components/LocationView'
+import { ZoningMap } from '@/components/ZoningMap'
+import { RDTR_BASE, loadRdtr } from '@/lib/rdtr-zones'
+import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
+import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
+import { loadSurroundings } from '@/lib/surroundings'
+import { loadTourism } from '@/lib/analytics-panel/tourism'
+import { BALI_HUBS, loadExtraRoutes, loadTravelTimes, type ExtraDest } from '@/lib/analytics-panel/extra-routes'
+import { loadLandmarks } from '@/lib/landmarks'
+import { computeLivingFacts } from '@/lib/living'
+import { nearestBeachProfile, nearestBeachProfileByPoint } from '@/lib/beaches'
 
 const AIRPORT_LAT = -8.7467
 const AIRPORT_LNG = 115.1667
 function fmtAirportDistance(lat: number | null, lng: number | null, lang: Lang): string | null {
   if (lat == null || lng == null) return null
   const km = haversineKm(lat, lng, AIRPORT_LAT, AIRPORT_LNG)
-  if (lang !== 'ru') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
-  return km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(km < 10 ? 1 : 0).replace(".", ",")} км`
-}
-
-// Маршрут Google (дорога, без пробок и в пробку) точнее прямой: у BIOM по
-// прямой 15 км, а ехать 27 км и больше часа. Прямая — только если маршрута нет.
-function fmtAirportRoute(leg: RouteLeg | undefined, lang: Lang): string | null {
-  if (!leg?.m || !leg.s) return null
-  const km = Math.round(leg.m / 1000)
-  const peak = Math.round(leg.s / 60)
-  const free = leg.static_s ? Math.round(leg.static_s / 60) : null
-  // Неразрывные пробелы и склейка у тире: на телефоне строка не рвётся внутри «65–74 мин».
-  const min = free != null && free < peak ? `${free}\u2060–\u2060${peak}` : String(peak)
-  return lang === 'ru' ? `${km}\u00a0км · ${min}\u00a0мин` : `${km}\u00a0km · ${min}\u00a0min`
+  if (lang === 'en') return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`
+  return km < 1 ? `${Math.round(km * 1000)} ${METERS[lang]}` : `${km.toFixed(km < 10 ? 1 : 0).replace('.', decSep(lang))} ${KM[lang]}`
 }
 
 const COPY = {
@@ -1236,33 +1204,6 @@ async function loadComplexBySlug(slug: string): Promise<ComplexRow | null> {
   return _loadComplexById(entry.id)
 }
 
-async function loadOtherComplexesInDistrict(district: string | null, exceptId: string, lang: Lang = 'ru') {
-  if (!district) return []
-  const [idx, manifest] = await Promise.all([_loadComplexIndex(), _loadComplexPhotos()])
-  const candidates = idx.filter(c => c.id !== exceptId && c.district === district).slice(0, 4)
-  const rows = await Promise.all(candidates.map(c => _loadComplexById(c.id)))
-  return rows
-    .filter((c): c is ComplexRow => c != null)
-    .map(c => {
-      const photos = manifest[c.airtable_id] ?? []
-      const typesRaw = strList(c.data['Типы юнитов'])
-      // Localize unit-type labels via the central facetLabel map (all 8 langs
-      // + translit fallback) so no Cyrillic type ever leaks on a non-RU page.
-      const types = lang === 'ru' ? typesRaw : typesRaw.map(t => facetLabel('type', t, lang))
-      return {
-        slug: c.slug as string,
-        name: firstString(c.data['Project']) as string,
-        location: firstString(c.data['Location 2']) ?? firstString(c.data['Location']),
-        types: types.join(', ') || null,
-        // Prefer the synced complex-photos manifest; raw_complexes.cover_url
-        // points at the dead complex-covers/* path (404), so it must be the
-        // last-resort fallback, not the first choice.
-        coverUrl: photos[0] ?? c.cover_url ?? null,
-      }
-    })
-    .filter(c => c.slug && c.name)
-}
-
 // Villas — тот же подход, что и для apartments выше: DB-фильтр по
 // SEO:Title + slim projection. Maison Boheme и подобные комплексы
 // держат юниты в raw_villas — это нужно догрузить рядом.
@@ -1496,15 +1437,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   if (!name) notFound()
   // Hidden developers must not appear anywhere (lib/hidden-developers.ts).
   if (isHiddenDeveloper(firstString(d['Developer1']), firstString(d['Варианты поиска застройщика']))) notFound()
-
-  const [photoManifest, units, landProfile, marketStats, access, geoFacts, chessBoardVillas] = await Promise.all([
+  const [photoManifest, units, geoFacts, chessBoardVillas, rdtrHit] = await Promise.all([
     _loadComplexPhotos(),
     loadUnitsInComplex(name, lang),
-    loadLandProfile('complex', c.airtable_id),
-    loadComplexMarketStats(c.airtable_id),
-    loadComplexAccess(c.airtable_id),
-    loadGeoFacts('complex', c.airtable_id),
+    loadGeoFacts('complex', c.airtable_id).catch(() => null),
     loadChessBoardVillas(c.airtable_id),
+    // Зоны плана застройки вокруг — вкладка «Зоны» и проверка участка, как у вилл.
+    loadRdtr(c.airtable_id, slug).catch(() => null),
   ])
 
   // Балл востребованности грузится после units, а не в общем Promise.all:
@@ -1518,10 +1457,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const slidesPhotos = photos.length > 0 ? photos : c.cover_url ? [c.cover_url] : []
   const districtRaw = firstString(d['Location 2']) ?? firstString(d['Location'])
   const district = lang === 'ru' ? districtRu(districtRaw) : districtLatin(districtRaw)
-  // District orientation card: only when the district maps to a real hub
-  // slug (DISTRICT_TO_SLUG) AND we have editorial copy for it.
   const districtSlug = districtRaw ? DISTRICT_TO_SLUG[districtRaw] ?? null : null
-  const districtCopy = districtSlug ? getDistrictCopy(districtSlug, lang) : null
   // Status / permits are stored as RU labels in Airtable — translate them to
   // localized labels for the non-RU tree so we don't print «Строится» on /en/.
   // Unit types go through the central facetLabel map (see below).
@@ -1546,7 +1482,15 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     'Под заказ': 'Sur demande',
     'Готов': 'Prêt',
   }
-  const STATUS_MAP = lang === 'id' ? STATUS_ID : lang === 'fr' ? STATUS_FR : STATUS_EN
+  const STATUS_MORE: Partial<Record<Lang, Record<string, string>>> = {
+    de: { 'Строится': 'Im Bau', 'Построен': 'Fertiggestellt', 'Сдан': 'Fertiggestellt', 'Под заказ': 'Auf Anfrage', 'Готов': 'Bezugsfertig' },
+    zh: { 'Строится': '在建', 'Построен': '已竣工', 'Сдан': '已竣工', 'Под заказ': '按需定制', 'Готов': '现房' },
+    nl: { 'Строится': 'In aanbouw', 'Построен': 'Opgeleverd', 'Сдан': 'Opgeleverd', 'Под заказ': 'Op aanvraag', 'Готов': 'Gereed' },
+    ban: { 'Строится': 'Kantun kabangun', 'Построен': 'Sampun puput', 'Сдан': 'Sampun puput', 'Под заказ': 'Manut pangidih', 'Готов': 'Sampun sayaga' },
+    pl: { 'Строится': 'W budowie', 'Построен': 'Oddany', 'Сдан': 'Oddany', 'Под заказ': 'Na zamówienie', 'Готов': 'Gotowy' },
+    uk: { 'Строится': 'Будується', 'Построен': 'Збудовано', 'Сдан': 'Здано', 'Под заказ': 'Під замовлення', 'Готов': 'Готовий' },
+  }
+  const STATUS_MAP = lang === 'id' ? STATUS_ID : lang === 'fr' ? STATUS_FR : STATUS_MORE[lang] ?? STATUS_EN
   const enLabelFor = (map: Record<string, string>, v: string | null): string | null => v ? (lang === 'ru' ? v : (map[v] ?? v)) : null
   const typesRaw = strList(d['Типы юнитов'])
   // Central facetLabel covers all 8 langs + translit fallback → never Cyrillic on non-RU.
@@ -1557,53 +1501,38 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   const isSold = salesStatus === 'Продано'
   // Permit is a free-text combo of Russian status words + acronyms (PBG/SLF/
   // RDTR). Translate the Russian tokens for non-RU; acronyms pass through.
-  const PERMIT_TOKENS: Record<'en' | 'id' | 'fr', Record<string, string>> = {
+  const PERMIT_TOKENS: Partial<Record<Lang, Record<string, string>>> & { en: Record<string, string> } = {
     en: { 'Заявка': 'Applied', 'заявка': 'applied', 'Подано': 'Submitted', 'подано': 'submitted', 'Получено': 'Obtained', 'получено': 'obtained', 'В процессе': 'In progress', 'в процессе': 'in progress', 'Оформляется': 'In progress', 'оформляется': 'in progress', 'Есть': 'Yes', 'есть': 'yes', 'нет': 'none' },
     id: { 'Заявка': 'Diajukan', 'заявка': 'diajukan', 'Подано': 'Diajukan', 'подано': 'diajukan', 'Получено': 'Diterima', 'получено': 'diterima', 'В процессе': 'Dalam proses', 'в процессе': 'dalam proses', 'Оформляется': 'Dalam proses', 'оформляется': 'dalam proses', 'Есть': 'Ada', 'есть': 'ada', 'нет': 'tidak ada' },
     fr: { 'Заявка': 'Demande déposée', 'заявка': 'demande déposée', 'Подано': 'Déposé', 'подано': 'déposé', 'Получено': 'Obtenu', 'получено': 'obtenu', 'В процессе': 'En cours', 'в процессе': 'en cours', 'Оформляется': 'En cours', 'оформляется': 'en cours', 'Есть': 'Oui', 'есть': 'oui', 'нет': 'aucun' },
+    de: { 'Заявка': 'Beantragt', 'заявка': 'beantragt', 'Подано': 'Eingereicht', 'подано': 'eingereicht', 'Получено': 'Erteilt', 'получено': 'erteilt', 'В процессе': 'In Bearbeitung', 'в процессе': 'in Bearbeitung', 'Оформляется': 'In Bearbeitung', 'оформляется': 'in Bearbeitung', 'Есть': 'Vorhanden', 'есть': 'vorhanden', 'нет': 'keine' },
+    zh: { 'Заявка': '已申请', 'заявка': '已申请', 'Подано': '已提交', 'подано': '已提交', 'Получено': '已取得', 'получено': '已取得', 'В процессе': '办理中', 'в процессе': '办理中', 'Оформляется': '办理中', 'оформляется': '办理中', 'Есть': '有', 'есть': '有', 'нет': '无' },
+    nl: { 'Заявка': 'Aangevraagd', 'заявка': 'aangevraagd', 'Подано': 'Ingediend', 'подано': 'ingediend', 'Получено': 'Verkregen', 'получено': 'verkregen', 'В процессе': 'In behandeling', 'в процессе': 'in behandeling', 'Оформляется': 'In behandeling', 'оформляется': 'in behandeling', 'Есть': 'Aanwezig', 'есть': 'aanwezig', 'нет': 'geen' },
+    ban: { 'Заявка': 'Sampun kaajuang', 'заявка': 'sampun kaajuang', 'Подано': 'Sampun kaaturang', 'подано': 'sampun kaaturang', 'Получено': 'Sampun kapolihang', 'получено': 'sampun kapolihang', 'В процессе': 'Kantun kaproses', 'в процессе': 'kantun kaproses', 'Оформляется': 'Kantun kaproses', 'оформляется': 'kantun kaproses', 'Есть': 'Wenten', 'есть': 'wenten', 'нет': 'nenten wenten' },
+    pl: { 'Заявка': 'Złożony wniosek', 'заявка': 'złożony wniosek', 'Подано': 'Złożono', 'подано': 'złożono', 'Получено': 'Uzyskano', 'получено': 'uzyskano', 'В процессе': 'W trakcie', 'в процессе': 'w trakcie', 'Оформляется': 'W trakcie', 'оформляется': 'w trakcie', 'Есть': 'Jest', 'есть': 'jest', 'нет': 'brak' },
+    uk: { 'Заявка': 'Заявка', 'заявка': 'заявка', 'Подано': 'Подано', 'подано': 'подано', 'Получено': 'Отримано', 'получено': 'отримано', 'В процессе': 'У процесі', 'в процессе': 'у процесі', 'Оформляется': 'Оформлюється', 'оформляется': 'оформлюється', 'Есть': 'Є', 'есть': 'є', 'нет': 'немає' },
   }
   const translatePermit = (v: string | null): string | null => {
     if (!v || lang === 'ru') return v
     let out = v
-    const tokens = PERMIT_TOKENS[lang as 'en' | 'id' | 'fr'] ?? PERMIT_TOKENS.en
+    const tokens = PERMIT_TOKENS[lang] ?? PERMIT_TOKENS.en
     for (const [ru, tr] of Object.entries(tokens)) out = out.split(ru).join(tr)
     return out
   }
   const permitRaw = firstString(d['Разрешительные документы'])
   const permit = translatePermit(permitRaw)
+  const hasPermit = !!permitRaw && permitRaw.toLowerCase() !== 'нет'
   const yearRaw = firstString(d['Year of completion ']) ?? firstString(d['Year of completion'])
   const totalUnits = numberOrNull(d['Total quantity of units'])
   const lease = firstString(d['Leasehold']) ?? firstString(d['Leashold'])
+  const leaseYears = lease != null && Number.isFinite(Number(lease)) && Number(lease) > 0 ? Number(lease) : null
   const developerName = firstString(d['Developer1']) ?? firstString(d['Варианты поиска застройщика'])
   const managers = await loadManagersByDeveloperName(developerName)
   const devStats = await getDeveloperStats(developerName)
-  // Plain portfolio counts under the developer name — facts only, no
-  // reliability score (ratings removed 2026-09-27).
-  const devPortfolio = devStats && (devStats.ready > 0 || devStats.inProgress > 0)
-    ? { completed: devStats.ready, active: devStats.inProgress }
-    : null
   // Resolve the developer by name → slug + logo so we can link to
   // /ru/zastrojshhiki/<slug> directly instead of just to the
-  // developers index. Mirrors the lookup the villa detail page
-  // uses; cached for an hour to avoid hammering raw_developers
-  // on every complex render.
+  // developers index.
   const developerLink = await findDeveloperLink(developerName)
-
-  // Legal due-diligence. The "в порядке" items render publicly (translated for
-  // the current language); the "вопросы" items stay gated — only their count
-  // ships here, the items themselves come from /api/complex/[slug]/legal after
-  // the visitor leaves a lead.
-  // Баланс договора: число публично, из обоснования публична только первая
-  // строка (итог), остальные строки уезжают под тот же лид, что и вопросы.
-  const ruBalanceNotes = firstString(d[LEGAL_BALANCE_NOTES_FIELD])
-  const { ok: legalOkItems, balance: legalBalanceItems } = await loadComplexAudit(
-    c.airtable_id, lang, firstString(d[LEGAL_OK_FIELD]), null, ruBalanceNotes,
-  )
-  const legalQuestionsCount = parseAuditItems(firstString(d[LEGAL_QUESTIONS_FIELD])).length
-  // Разрешения самого проекта (KKKPR / PBG / KBLI) — второй уровень блока
-  // зонирования. Пусто у большинства объектов: тогда блок как раньше.
-  const projectPermits = await loadProjectPermits(c.airtable_id, lang, d)
-  const legalBalanceBuyer = parseBalance(firstString(d[LEGAL_BALANCE_FIELD]))
 
   // On-page admin editing: tag a field so components/InlineEditor turns it into
   // a click-to-edit target for a logged-in admin. Only on RU — RU is the source
@@ -1636,73 +1565,21 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // (они на страницах юнитов; владелец 2026-11-10).
   const complexPlans = curatePhotos(photoManifest[c.airtable_id] ?? [], vision).masterplans
 
-  const gmap = firstString(d['Link from Google maps on location'] ?? d['Google maps'] ?? d['Google map'])
-
-  // Key facts
-  const airportFact = fmtAirportRoute(geoFacts?.routes?.airport, lang) ?? fmtAirportDistance(lat, lng, lang)
-  const facts: { Icon: typeof Building2; label: string; value: string }[] = [
-    types.length > 0 && { Icon: Home, label: copy.factType, value: types.join(', ') },
-    yearRaw && { Icon: Calendar, label: copy.factCompletion, value: status?.toLowerCase().includes('построен') ? copy.factCompletionDone : completionLabel(yearRaw, lang) },
-    permitRaw && permitRaw.toLowerCase() !== 'нет' && { Icon: FileCheck2, label: copy.factPermits, value: permit },
-    lease && { Icon: Lock, label: copy.factLeasehold, value: copy.factLeaseValue(lease) },
-    totalUnits != null && { Icon: BedDouble, label: copy.factUnits, value: String(totalUnits) },
-    lang === 'ru' && firstString(d['Payment plan,%']) && { Icon: Calendar, label: 'Рассрочка', value: firstString(d['Payment plan,%'])!.replace(/%/g, '').replace(/\s*\+\s*/g, ' / ') + '%' },
-    district && { Icon: MapPin, label: copy.factDistrict, value: district },
-    airportFact && { Icon: Plane, label: copy.factAirport, value: airportFact },
-  ].filter(Boolean) as { Icon: typeof Building2; label: string; value: string }[]
-
   const ready = readiness(d)
-  // Инвест-сигналы: доходность
-  // аренды, пляжная зона, загрузка vs район, срок сдачи. Синтез из уже
-  // загруженных units/marketStats/access + кэшированной медианы по району.
-  const districtMediansMap = await loadDistrictOccupancyMedians().catch(() => null)
-  const yearNum = yearRaw != null ? Number(yearRaw) : null
-  // Доходность юнитов — та же, что на их страницах (listing_yields).
-  const unitCaps = new Map<string, number>()
-  if (units.length) {
-    const { data: ly, error: lyErr } = await sb.from('listing_yields')
-      .select('kind, airtable_id, cap_before').eq('mode', 'daily').in('airtable_id', units.map(u => u.id))
-    if (lyErr) console.error('[complex] listing_yields:', lyErr.message)
-    for (const r of ly ?? []) if (r.cap_before != null) unitCaps.set(`${r.kind}:${r.airtable_id}`, Number(r.cap_before))
-  }
-  const signals = computeComplexSignals({
-    units: units.map((u) => ({
-      kind: u.kind,
-      priceUsd: u.priceUsd != null && Number.isFinite(Number(u.priceUsd)) ? Number(u.priceUsd) : null,
-      capBefore: unitCaps.get(`${u.kind}:${u.id}`) ?? null,
-    })),
-    marketStats,
-    access,
-    districtMedians: districtRaw ? districtMediansMap?.get(districtRaw) ?? null : null,
-    readinessPct: ready,
-    year: yearNum != null && Number.isFinite(yearNum) ? yearNum : null,
-    status: statusRaw,
-    currentYear: CURRENT_YEAR,
-  })
-  const otherComplexes = await loadOtherComplexesInDistrict(district, c.airtable_id, lang)
   const complexVideos = await loadVideosByComplexSlug(slug, 6, lang).catch(() => [])
 
-  // Nearby places — keyed by villa airtable_id in the manifest. The
-  // user pointed out that villas in a complex inherit the complex's
-  // geo, so the first villa unit's nearby data is a faithful proxy
-  // for "what's around this complex". Fall through silently when no
-  // villa unit has nearby data populated yet.
-  let nearby: Awaited<ReturnType<typeof loadNearbyPlaces>> = null
-  for (const u of units) {
-    if (u.kind !== 'villa') continue
+  // Nearby places — по id комплекса, иначе по первому юниту с данными: юниты
+  // комплекса стоят на его же участке, их окружение — окружение комплекса.
+  let nearby: Awaited<ReturnType<typeof loadNearbyPlaces>> = await loadNearbyPlaces(c.airtable_id).catch(() => null)
+  for (const u of nearby ? [] : units) {
     const data = await loadNearbyPlaces(u.id).catch(() => null)
     if (data) { nearby = data; break }
   }
 
   // Interactive visualisation — if the admin built one for this
   // complex, load its layer tree + hotspots and the unit info bag
-  // hotspots can point at. unitInfoBySlug is built from the
-  // already-loaded units array so the viewer can render rich popups
-  // without an extra round-trip.
-  // listLayers / listHotspots already swallow the migration-missing
-  // case server-side (lib/complex-visualizations) — extra .catch
-  // here as belt-and-suspenders so a transient PG error never takes
-  // out the public detail page.
+  // hotspots can point at. listLayers / listHotspots already swallow the
+  // migration-missing case server-side — extra .catch as belt-and-suspenders.
   const vizLayers = await listLayers(c.airtable_id).catch(() => [] as Awaited<ReturnType<typeof listLayers>>)
   const vizHotspots = vizLayers.length > 0
     ? await listHotspots(vizLayers.map(l => l.id)).catch(() => [] as Awaited<ReturnType<typeof listHotspots>>)
@@ -1710,55 +1587,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
   // Солнечно-теневая модель. Обмер генплана лежит в коде, ориентация и
   // высоты — в БД, их выставляет админ в /admin/sun/<slug>. Пока он не
-  // включил `enabled`, блока на странице нет вовсе.
+  // включил `enabled`, вкладки нет вовсе.
   const sunPlan = getSitePlan(slug)
   const sunSettings = sunPlan
     ? await loadSunSettings(slug).catch(() => null)
     : null
-  const showSunBlock = Boolean(sunPlan && sunSettings?.enabled)
-  // Солнце и 3D-карта Google — плитками в ряду «фишек» под главным фото
-  // (макет «Медиаблок виллы», вариант A). Окна открываются поверх страницы.
-  const sunChips = showSunBlock ? (
-    <>
-      <SunShadowBlock
-        tile={{ cover: slidesPhotos[1] ?? slidesPhotos[0] ?? null }}
-        wind={geoFacts?.climate?.wind ?? null}
-        plan={sunPlan!}
-        latitude={sunSettings!.latitude}
-        longitude={sunSettings!.longitude}
-        placement={{
-          rowAzimuth: sunSettings!.rowAzimuth,
-          modelScale: sunSettings!.modelScale,
-          offsetX: sunSettings!.offsetX,
-          offsetZ: sunSettings!.offsetZ,
-          basemapOffsetX: sunSettings!.basemapOffsetX,
-          basemapOffsetZ: sunSettings!.basemapOffsetZ,
-          basemapScale: sunSettings!.basemapScale,
-        }}
-        heights={{
-          eaveHeight: sunSettings!.eaveHeight,
-          ridgeRise: sunSettings!.ridgeRise,
-          yardWall: sunSettings!.yardWall,
-        }}
-        title={sunPlan!.title}
-        en={lang !== 'ru'}
-      />
-      {sunPlan!.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-        <Google3DMapBlock
-          tile={{ cover: sunPlan!.basemap?.url ?? null }}
-          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-          view={sunPlan!.google3d}
-          title={sunPlan!.title}
-          en={lang !== 'ru'}
-        />
-      )}
-    </>
-  ) : null
   // For the popup we prefer the optimised single-image attachment
-  // (`Image Opt` in Airtable — a pre-compressed thumbnail) over the
-  // full-quality first photo from the manifest. The interactive plan
-  // shows at most one unit popup at a time, so this trims ~80% of the
-  // bytes vs the raw photo and keeps tap-to-open snappy on mobile.
+  // (`Opt photos` / `Image Opt`) over the full-quality first photo.
   function attachmentUrl(v: unknown): string | null {
     if (!Array.isArray(v) || v.length === 0) return null
     const first = v[0]
@@ -1791,11 +1626,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       ? switchLangPath(`/ru/villy/o/${u.slug}`, lang)
       : switchLangPath(`/ru/apartamenty/o/${u.slug}`, lang)
     const row = (u.kind === 'villa' ? vilRowsById : aptRowsById).get(u.id)
-    // Preference order for the popup hero: `Opt photos[0]` is the
-    // truly compressed variant (~140 KB, 800 px wide). `Image Opt`
-    // is misleadingly named — for many rows it holds the raw 4-7 MB
-    // master, not a thumbnail. Manifest is the bucket-cached
-    // fallback when neither attachment field is filled.
     const optUrl = row
       ? (attachmentUrl(row.opt_photos) ?? attachmentUrl(row.image_opt))
       : null
@@ -1829,8 +1659,6 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // Locale-aware path roots used in breadcrumbs / internal links.
   const home = switchLangPath('/ru', lang)
   const complexesRoot = switchLangPath('/ru/zhilye-kompleksy', lang)
-  const apartmentsRoot = switchLangPath('/ru/apartamenty', lang)
-  const villasRoot = switchLangPath('/ru/villy', lang)
   const developersRoot = switchLangPath('/ru/zastrojshhiki', lang)
   const detailUrl = `${SITE_URL}${switchLangPath(`/ru/zhilye-kompleksy/o/${slug}`, lang)}`
 
@@ -1854,18 +1682,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   }
   if (totalUnits != null) placeJsonLd.numberOfAccommodationUnits = totalUnits
 
-  const minPrice = units.length > 0 ? units.find(u => u.priceUsd != null)?.priceUsd ?? null : null
-  // Юнит, чью аналитику показываем в Pro: самый дешёвый с ценой, иначе первый.
-  const repUnit = [...units].filter(u => u.priceUsd != null && Number.isFinite(Number(u.priceUsd)))
-    .sort((a, b) => Number(a.priceUsd) - Number(b.priceUsd))[0] ?? units[0] ?? null
-
-  // Price markup for the complex. Villa and apartment detail pages have shipped
-  // Product + Offer for a while; complexes carried only ApartmentComplex, which
-  // has no `offers` property at all — so the page that actually ranks for brand
-  // queries («surfside bali», «amani melasti», «swoi loft umalas» — all on page
-  // one, all at zero clicks) stated a price in its title and nothing machine-
-  // readable anywhere. AggregateOffer is the honest shape here: one complex,
-  // many priced units, a low/high band rather than a single price.
+  // Price markup for the complex: AggregateOffer over the priced units
+  // (one complex, many priced units, a low/high band rather than one price).
   const complexPrices = units
     .map(u => Number(u.priceUsd))
     .filter(n => Number.isFinite(n) && n > 0)
@@ -1892,18 +1710,373 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       }
     : null
 
+  // ── Макет CxA (владелец 20.11.2026): страница ЖК в стиле «Журнал», как вилла ──
+  const lower = (s: string) => (lang === 'de' ? s : s.toLowerCase())
+  const minOf = (kind: 'villa' | 'apartment') => {
+    const xs = units.filter(u => u.kind === kind).map(u => Number(u.priceUsd)).filter(n => Number.isFinite(n) && n > 0)
+    return xs.length ? Math.min(...xs) : null
+  }
+  const aptFrom = minOf('apartment')
+  const villaFrom = minOf('villa')
+  const minPrice = complexPrices.length ? Math.min(...complexPrices) : null
+  const FROM = pickCopy({ ru: 'от', en: 'from', id: 'mulai', fr: 'dès', de: 'ab', zh: '起', nl: 'vanaf', ban: 'ngawit', pl: 'od', uk: 'від' }, lang)
+  const PRICE_ROWS = pickCopy({
+    ru: { apt: 'Апартаменты', villa: 'Виллы', label: 'Цены' },
+    en: { apt: 'Apartments', villa: 'Villas', label: 'Prices' },
+    id: { apt: 'Apartemen', villa: 'Vila', label: 'Harga' },
+    fr: { apt: 'Appartements', villa: 'Villas', label: 'Prix' },
+    de: { apt: 'Apartments', villa: 'Villen', label: 'Preise' },
+    zh: { apt: '公寓', villa: '别墅', label: '价格' },
+    nl: { apt: 'Appartementen', villa: "Villa's", label: 'Prijzen' },
+    ban: { apt: 'Apartemen', villa: 'Vila', label: 'Aji' },
+    pl: { apt: 'Apartamenty', villa: 'Wille', label: 'Ceny' },
+    uk: { apt: 'Апартаменти', villa: 'Вілли', label: 'Ціни' },
+  }, lang)
+  const priceRowsData = [
+    aptFrom != null && { key: 'apt', label: PRICE_ROWS.apt, usd: aptFrom },
+    villaFrom != null && { key: 'villa', label: PRICE_ROWS.villa, usd: villaFrom },
+  ].filter(Boolean) as { key: string; label: string; usd: number }[]
+  // Строки «Апартаменты — от X» / «Виллы — от Y»: цена в валюте посетителя (клиент).
+  const priceRows = () => priceRowsData.length > 0 && (
+    <span key="rows" className="flex flex-col">
+      {priceRowsData.map(r => (
+        <span key={r.key} className="flex items-baseline justify-between gap-4 border-b border-[#ECEFED] py-2 last:border-b-0">
+          <span className="text-[15px] text-[#4A5550]">{r.label}</span>
+          <PriceCtaCard compact="sm" priceUsd={r.usd} pricePrefix={FROM} presentationButton={null} />
+        </span>
+      ))}
+    </span>
+  )
+  const m0 = managers[0]
+  // Языки менеджера не показываем (владелец убрал).
+  const leadManager = m0 ? {
+    photo: m0.photo ?? null,
+    name: lang === 'ru' ? m0.name : (m0.nameEn || (hasCyrillic(m0.name) ? translitPreserveCase(m0.name) : m0.name)),
+    langs: [] as string[],
+  } : null
+  const leadOn = !isSold && (priceRowsData.length > 0 || !!m0)
+  const leadCard = (id: string, framed: boolean) => (
+    <LeadHeroCard key={id} id={id} framed={framed} lang={lang} price={priceRows()} priceLabel={PRICE_ROWS.label}
+      manager={leadManager} developerName={developerName ?? null} managerName={m0?.name ?? null} managerId={m0?.id ?? null} listingTitle={name} />
+  )
+  const stickyPrice = () => minPrice != null && (
+    <PriceCtaCard key="p-sm" compact="sm" priceUsd={minPrice} pricePrefix={FROM} presentationButton={null} />
+  )
 
-  const landOk = !!landProfile && (landAllowsBuilding(landProfile, 'complex') || hasProjectPermits(projectPermits))
-  const plotSite = geoFacts?.climate?.plot ?? null
-  const hasPlace = !!((lat != null && lng != null) || nearby || (districtCopy && districtSlug) || hasAnySignal(signals))
-  // «Аренда рядом» — только когда есть ставки соседей. Без них инвест-
-  // сигналы (пляж, срок сдачи) уходят в конец раздела «Место».
-  // Блок «Почём сдают соседи» убран — глава про аренду держится на инвест-сигналах.
-  const hasRent = hasAnySignal(signals)
-  const chapters: ChapterId[] = []
-  if (hasPlace) chapters.push('mesto')
-  if (hasRent) chapters.push('arenda')
-  if (landOk || plotSite) chapters.push('uchastok')
+  // Сохранить (ЖК в избранном), поделиться, сообщить об ошибке — значками на фото.
+  const complexWishlist = {
+    kind: 'complex' as const, slug, title: name,
+    photo: slidesPhotos[0] ?? null,
+    priceUsd: null,
+    district: district ?? null,
+    bedrooms: null,
+    completionYear: yearRaw ?? null,
+    status: status ?? null,
+    readinessPct: ready,
+    developerName: developerName ?? null,
+    developerCompletedCount: devStats?.ready ?? null,
+    developerInProgressCount: devStats?.inProgress ?? null,
+  }
+  const complexActions = () => (
+    <VillaActions key="ca" icons lang={lang} title={name} item={complexWishlist} />
+  )
+
+  // Строка под названием: типы · юниты · сдача · аренда земли.
+  const built = !!statusRaw && /построен|сдан|готов/i.test(statusRaw)
+  const yearLabel = yearRaw ? completionLabel(yearRaw, lang) : null
+  const BUILT_IN = pickCopy({
+    ru: (y: string) => `сдан в ${y}`, en: (y: string) => `completed ${y}`, id: (y: string) => `selesai ${y}`,
+    fr: (y: string) => `livré en ${y}`, de: (y: string) => `fertiggestellt ${y}`, zh: (y: string) => `${y} 已交付`,
+    nl: (y: string) => `opgeleverd ${y}`, ban: (y: string) => `puput ${y}`, pl: (y: string) => `ukończony ${y}`, uk: (y: string) => `зданий у ${y}`,
+  }, lang)
+  const LEASE_LINE = pickCopy({
+    ru: (n: number) => `аренда земли ${n} ${pluralRu(n, ['год', 'года', 'лет'])}`, en: (n: number) => `${n}-year land lease`,
+    id: (n: number) => `sewa tanah ${n} tahun`, fr: (n: number) => `bail de ${n} ans`, de: (n: number) => `${n} Jahre Landpacht`,
+    zh: (n: number) => `土地租期 ${n} 年`, nl: (n: number) => `grondpacht ${n} jaar`, ban: (n: number) => `sewa tanah ${n} warsa`,
+    pl: (n: number) => `dzierżawa gruntu ${n} lat`, uk: (n: number) => `оренда землі ${n} років`,
+  }, lang)
+  // Подпись плитки — «аренда земли», как у виллы, а не «лизхолд».
+  const LEASE_LBL = { ru: 'аренда земли', en: 'land lease', id: 'sewa tanah', fr: 'bail du terrain', de: 'Landpacht', zh: '土地租期', nl: 'grondpacht', ban: 'sewa tanah', pl: 'dzierżawa gruntu', uk: 'оренда землі' }
+  const typesPhrase = unitTypesPhrase(d['Типы юнитов'], lang)
+  const keyLine = [
+    typesPhrase ? typesPhrase.charAt(0).toUpperCase() + typesPhrase.slice(1) : null,
+    totalUnits != null ? copy.units(totalUnits) : null,
+    built ? (yearLabel ? BUILT_IN(yearLabel) : copy.completed) : yearLabel ? copy.completion(yearLabel) : null,
+    leaseYears != null ? LEASE_LINE(Math.round(leaseYears)) : null,
+    isSold ? lower(copy.sold) : null,
+  ].filter(Boolean).join(' · ')
+
+  // Рассрочка («Payment plan,%») — как у виллы: «30 / 20 / 50%», срок отдельно.
+  const PLAN_LABEL = { ru: 'Рассрочка', en: 'Payment plan', id: 'Cicilan', fr: 'Échéancier', de: 'Ratenplan', zh: '分期付款', nl: 'Betaalplan', ban: 'Cicilan', pl: 'Raty', uk: 'Розстрочка' }
+  const plan = (() => {
+    const raw = (firstString(d['Payment plan,%']) ?? '').replace(/\s+/g, ' ').trim()
+    if (!raw || raw.includes('...') || /^100\s*%?$/.test(raw)) return null
+    const m = raw.match(/^(.*?)\s*\/\s*(\d+)$/)
+    // Доли в процентах; бронь суммой («1500$ + 35% + 65%») в строку не берём.
+    const parts = (m ? m[1] : raw).split('+').map(x => x.replace(/[^\d.]/g, '')).filter(x => x && Number(x) <= 100)
+    if (parts.length < 2) return null
+    return { v: `${parts.join(' / ')}%`, months: m ? Number(m[2]) : null }
+  })()
+  const airportMin = geoFacts?.routes?.airport?.s ? Math.round(geoFacts.routes.airport.s / 60) : null
+  const airportText = airportMin != null ? null : fmtAirportDistance(lat, lng, lang)
+  const permitShort = hasPermit && permit && permit.length <= 14
+  // «01 Комплекс» — крупные цифры с подписью, как «Объект» у виллы.
+  const objTiles = [
+    totalUnits != null && { v: String(totalUnits), l: lower(copy.factUnits) },
+    (built || yearLabel) && { v: yearLabel ?? '✓', l: lower(built ? copy.factCompletionDone : copy.factCompletion) },
+    leaseYears != null && { v: copy.factLeaseValue(String(Math.round(leaseYears))), l: pickCopy(LEASE_LBL, lang) },
+    permitShort && { v: permit!, l: lower(copy.factPermits) },
+    plan && { v: plan.v, l: `${lower(pickCopy(PLAN_LABEL, lang))}${plan.months ? ` · ${plan.months} ${pickCopy(MONTHS_SHORT, lang)}` : ''}` },
+    airportMin != null && { v: `${airportMin} ${MIN[lang]}`, l: lower(copy.factAirport) },
+  ].filter(Boolean) as { v: string; l: string }[]
+  const shortRows = [
+    types.length > 0 && { k: copy.factType, v: types.join(', ') },
+    district && { k: copy.factDistrict, v: district },
+    hasPermit && !permitShort && permit && { k: copy.factPermits, v: permit },
+    airportText && { k: copy.factAirport, v: airportText },
+  ].filter(Boolean) as { k: string; v: string }[]
+
+  const CH = pickCopy({
+    ru: { kompleks: 'Комплекс', yunity: 'Юниты в продаже', shakhmatka: 'Шахматка', analitika: 'Аналитика', zastroyshchik: 'Застройщик', voprosy: 'Вопросы', planHint: 'Нажмите на подсвеченную зону — откроется юнит или следующий план.' },
+    en: { kompleks: 'Complex', yunity: 'Units for sale', shakhmatka: 'Availability plan', analitika: 'Analytics', zastroyshchik: 'Developer', voprosy: 'FAQ', planHint: 'Tap a highlighted area to open the unit or the next plan.' },
+    id: { kompleks: 'Kompleks', yunity: 'Unit dijual', shakhmatka: 'Denah ketersediaan', analitika: 'Analitik', zastroyshchik: 'Pengembang', voprosy: 'Pertanyaan', planHint: 'Ketuk area yang disorot untuk membuka unit atau denah berikutnya.' },
+    fr: { kompleks: 'Résidence', yunity: 'Unités en vente', shakhmatka: 'Plan des disponibilités', analitika: 'Analyse', zastroyshchik: 'Promoteur', voprosy: 'Questions', planHint: 'Touchez une zone en surbrillance pour ouvrir l’unité ou le plan suivant.' },
+    de: { kompleks: 'Anlage', yunity: 'Einheiten im Verkauf', shakhmatka: 'Verfügbarkeitsplan', analitika: 'Analyse', zastroyshchik: 'Bauträger', voprosy: 'Fragen', planHint: 'Tippen Sie auf eine markierte Fläche, um die Einheit oder den nächsten Plan zu öffnen.' },
+    zh: { kompleks: '项目', yunity: '在售单元', shakhmatka: '房源平面图', analitika: '分析', zastroyshchik: '开发商', voprosy: '常见问题', planHint: '点击高亮区域可打开单元或下一张平面图。' },
+    nl: { kompleks: 'Complex', yunity: 'Units te koop', shakhmatka: 'Beschikbaarheidsplan', analitika: 'Analyse', zastroyshchik: 'Ontwikkelaar', voprosy: 'Vragen', planHint: 'Tik op een gemarkeerd vlak om de unit of het volgende plan te openen.' },
+    ban: { kompleks: 'Kompleks', yunity: 'Unit kaadol', shakhmatka: 'Denah unit', analitika: 'Analitik', zastroyshchik: 'Pangwangun', voprosy: 'Pitaken', planHint: 'Tekan wewidangan sane kasorot anggen ngungkab unit utawi denah salanturnyane.' },
+    pl: { kompleks: 'Kompleks', yunity: 'Lokale na sprzedaż', shakhmatka: 'Plan dostępności', analitika: 'Analityka', zastroyshchik: 'Deweloper', voprosy: 'Pytania', planHint: 'Dotknij podświetlonego obszaru, aby otworzyć lokal lub kolejny plan.' },
+    uk: { kompleks: 'Комплекс', yunity: 'Юніти в продажу', shakhmatka: 'Шахматка', analitika: 'Аналітика', zastroyshchik: 'Забудовник', voprosy: 'Запитання', planHint: 'Натисніть на підсвічену зону — відкриється юніт або наступний план.' },
+  }, lang)
+  const MGR_ROLE = { ru: 'Менеджер застройщика', en: 'Developer’s manager', id: 'Manajer pengembang', fr: 'Responsable du promoteur', de: 'Ansprechpartner des Bauträgers', zh: '开发商经理', nl: 'Manager van de ontwikkelaar', ban: 'Manajer pengembang', pl: 'Menedżer dewelopera', uk: 'Менеджер забудовника' }
+  const OPEN_DEV = { ru: 'Открыть страницу застройщика', en: 'Open developer page', id: 'Buka halaman pengembang', fr: 'Ouvrir la page du promoteur', de: 'Zur Seite des Bauträgers', zh: '打开开发商页面', nl: 'Open pagina ontwikkelaar', ban: 'Bukak kaca pangwangun', pl: 'Otwórz stronę dewelopera', uk: 'Відкрити сторінку забудовника' }
+  const MORE = pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)
+  const LESS = pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)
+
+  // «Проверьте комплекс с ИИ» — тот же набор анализов, что у виллы
+  // (lib/analytics-panel/villa.ts, kind 'complex'). Денег (цены соседей, доход)
+  // у комплекса нет — они на страницах юнитов; остаются документы, место, жизнь.
+  const [around, tourism, landmarks] = await Promise.all([
+    loadSurroundings('complex', c.airtable_id).catch(() => null),
+    lat != null && lng != null ? loadTourism(lat, lng).catch(e => { console.error(e); return null }) : null,
+    lat != null && lng != null ? loadLandmarks(lat, lng).catch(e => { console.error(e); return [] }) : [],
+  ])
+  const nearestBeach = nearby?.byCategory?.beach?.filter(p => (p.primaryType === 'beach' || p.types?.includes('beach')) && !/warung|уорунг|варунг|caf[eé]|кафе|bar\b|бар\b|restaurant|ресторан|club|клуб/i.test(p.name ?? '')).sort((x, y) => x.distanceKm - y.distanceKm)[0] ?? null
+  const extraDests: ExtraDest[] = [
+    ...(nearestBeach?.name ? [{ key: `b:${nearestBeach.id}`, name: nearestBeach.name, lat: nearestBeach.lat, lng: nearestBeach.lng, kind: 'beach' as const }] : []),
+    ...(tourism?.ta ?? []).filter(p => p.km <= 15).slice(0, 3).map(p => ({ key: `ta:${p.rank}`, name: `#${p.rank} ${p.name}`, lat: p.lat, lng: p.lng, kind: 'ta' as const })),
+  ]
+  const hubDests = lat != null && lng != null ? BALI_HUBS.filter(h => Math.hypot((h.lat - lat) * 111, (h.lng - lng) * 110) > (h.rKm ?? 0) + 0.3) : []
+  const [extraRoutes, hubRoutes] = lat != null && lng != null ? await Promise.all([
+    extraDests.length ? loadExtraRoutes(lat, lng, extraDests).catch(() => []) : [],
+    hubDests.length ? loadExtraRoutes(lat, lng, hubDests).catch(e => { console.error(e); return [] }) : [],
+  ]) : [[], []]
+  const travelPts = [
+    ...(tourism?.ta ?? []).filter(p => p.km <= 10).map(p => ({ key: `ta:${p.rank}`, lat: p.lat, lng: p.lng })),
+    ...landmarks.filter(l => l.lat != null && l.lng != null).map(l => ({ key: `lm:${l.id}`, lat: l.lat!, lng: l.lng! })),
+  ]
+  const travel = lat != null && lng != null && travelPts.length ? await loadTravelTimes(lat, lng, travelPts).catch(e => { console.error(e); return {} }) : {}
+  const rdtr = rdtrHit?.data ?? null
+  const analyses = buildVillaAnalyses({
+    kind: 'complex',
+    lang, lat, lng, bedrooms: null, priceUsd: minPrice,
+    status: lang === 'ru' ? statusRaw : status, permit: hasPermit ? permit : null, yearRaw, leaseYears,
+    snap: null, airbnb: [], sale: null, geo: geoFacts, nearby,
+    around1km: around?.r1 ?? null,
+    landPrices: null, landM2: null, tourism, landmarks, touristShare: around?.touristShare ?? null, aroundTop: around?.top ?? [], extraRoutes, hubRoutes, travel, demand: null, bookingFit: null,
+    rdtr: rdtrHit && rdtr ? { data: rdtr, image: `${RDTR_BASE}/${rdtrHit.key}.jpg?ver=${rdtr.fetchedAt ?? ''}-${rdtr.radius}` } : null,
+  })
+
+  // Вкладки окна медиа — как у виллы: локация, солнце и ветер, 3D-карта, зоны.
+  const livingFacts = computeLivingFacts({
+    byCategory: nearby?.byCategory ?? null,
+    routes: geoFacts?.routes ?? null,
+    leaseYears,
+    bedrooms: null,
+    climate: geoFacts?.climate ?? null,
+    point: { lat, lng },
+  })
+  const beachPick = nearestBeachProfile(nearby?.byCategory?.beach) ?? nearestBeachProfileByPoint(lat, lng)
+  const buildViewerTabs = (): ViewerTab[] => {
+    const tabs: ViewerTab[] = []
+    const en = lang !== 'ru'
+    if (lat != null && lng != null) {
+      const z = 16, n2 = 2 ** z
+      const tx = Math.floor(((lng + 180) / 360) * n2)
+      const ty = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n2)
+      const dist = (km: number) => km < 1 ? `${Math.round(km * 1000)} ${METERS[lang]}` : `${km.toFixed(1).replace('.', decSep(lang))} ${KM[lang]}`
+      const row = (k: string) => livingFacts?.rows.find(r => r.key === k)?.km ?? null
+      const beach = beachPick?.beach ?? null
+      const near: { label: string; value: string }[] = []
+      if (beachPick?.km != null) near.push({ label: [pickCopy(NEAR.beach, lang), (en ? (beach?.name_en ?? beach?.name_ru) : (beach?.name_ru ?? beach?.name_en))?.replace(/^(Пляж|Beach|Pantai)\s+/i, '')].filter(Boolean).join(' '), value: dist(beachPick.km) })
+      if (row('shop') != null) near.push({ label: pickCopy(NEAR.shop, lang), value: dist(row('shop')!) })
+      if (row('school') != null) near.push({ label: pickCopy(NEAR.school, lang), value: dist(row('school')!) })
+      if (livingFacts?.airportMin != null) near.push({ label: pickCopy(NEAR.airport, lang), value: `${livingFacts.airportMin} ${MIN[lang]}` })
+      tabs.push({
+        key: 'location',
+        label: pickCopy({ ru: 'Локация', en: 'Location', id: 'Lokasi', fr: 'Emplacement', de: 'Lage', zh: '位置', nl: 'Locatie', ban: 'Genah', pl: 'Lokalizacja', uk: 'Локація' }, lang),
+        icon: <MapPin size={18} aria-hidden />,
+        cover: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`,
+        bleed: true,
+        content: <LocationView key="loc" lat={lat} lng={lng} place={district ? `${district}, ${pickCopy(NEAR.bali, lang)}` : null} near={near} lang={lang} />,
+      })
+    }
+    if (sunPlan && sunSettings?.enabled) {
+      tabs.push({
+        key: 'sun',
+        label: en ? 'Sun & wind' : 'Солнце и ветер',
+        icon: <Sun size={18} aria-hidden />,
+        cover: slidesPhotos[1] ?? slidesPhotos[0] ?? null,
+        bleed: true,
+        content: (
+          <SunShadowBlock
+            key="sun"
+            inline
+            wind={geoFacts?.climate?.wind ?? null}
+            plan={sunPlan}
+            latitude={sunSettings.latitude}
+            longitude={sunSettings.longitude}
+            placement={{
+              rowAzimuth: sunSettings.rowAzimuth,
+              modelScale: sunSettings.modelScale,
+              offsetX: sunSettings.offsetX,
+              offsetZ: sunSettings.offsetZ,
+              basemapOffsetX: sunSettings.basemapOffsetX,
+              basemapOffsetZ: sunSettings.basemapOffsetZ,
+              basemapScale: sunSettings.basemapScale,
+            }}
+            heights={{ eaveHeight: sunSettings.eaveHeight, ridgeRise: sunSettings.ridgeRise, yardWall: sunSettings.yardWall }}
+            title={sunPlan.title}
+            en={en}
+          />
+        ),
+      })
+      if (sunPlan.google3d && process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) {
+        tabs.push({
+          key: 'map3d',
+          label: en ? '3D map' : '3D-карта',
+          icon: <Globe size={18} aria-hidden />,
+          cover: sunPlan.basemap?.url ?? null,
+          bleed: true,
+          content: (
+            <Google3DMapBlock
+              key="map3d"
+              inline
+              apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
+              view={sunPlan.google3d}
+              title={sunPlan.title}
+              en={en}
+            />
+          ),
+        })
+      }
+    }
+    if (rdtr && rdtrHit) {
+      tabs.push({
+        key: 'zones',
+        label: pickCopy({ ru: 'Зоны', en: 'Zoning', id: 'Zonasi', fr: 'Zonage', de: 'Zonen', zh: '规划分区', nl: 'Bestemming', ban: 'Zonasi', pl: 'Strefy', uk: 'Зони' }, lang),
+        icon: <Layers size={18} aria-hidden />,
+        hideTile: true,
+        bleed: true,
+        content: <ZoningMap key="zones" slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
+      })
+    }
+    return tabs
+  }
+
+  // Номера глав — по порядку тех, что есть на странице.
+  const hasKompleks = objTiles.length > 0 || !!pageBody || shortRows.length > 0
+  const hasUnits = units.length > 0
+  const hasPlan = vizLayers.length > 0 || chessBoardVillas.length > 0
+  const hasDev = !!(developerName || m0)
+  const order = [
+    hasKompleks && 'kompleks', hasUnits && 'yunity', hasPlan && 'shakhmatka',
+    analyses.length > 0 && 'analitika', hasDev && 'zastroyshchik', 'voprosy',
+  ].filter(Boolean) as string[]
+  const no = (id: string) => String(order.indexOf(id) + 1).padStart(2, '0')
+
+  const unitCard = (u: Unit) => {
+    const demand = demandByUnit[`${u.kind}|${u.id}`]
+    return u.kind === 'villa'
+      ? <VillaCard key={u.id} a={{ ...u, demand }} lang={lang} />
+      : <ApartmentCard key={u.id} a={{ ...u, demand }} lang={lang} />
+  }
+  const kompleksChapter = () => hasKompleks && (
+    <VillaChapter key="kompleks" id="kompleks" no={no('kompleks')} eyebrow={CH.kompleks} journal>
+      {objTiles.length > 0 && (
+        <div className={`grid grid-cols-2 ${leadOn ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
+          {objTiles.map(k => (
+            <div key={k.l} className="flex min-w-0 flex-col gap-0.5 border-b border-[#ECEFED] py-[14px] pr-3 md:gap-1 md:py-5 md:pr-6">
+              <div className="text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] text-[#0F1A15] tabular-nums md:text-[32px]">{k.v}</div>
+              <div className="text-[13px] text-[#6B7570] md:text-[14px]">{k.l}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {pageBody && (
+        <section {...edit(COMPLEX_DESCRIPTION_FIELD, 'longtext', 'Описание ЖК')}>
+          <p className="m-0 max-w-[68ch] text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">{pageBody.split('\n')[0]}</p>
+          {pageBody.trim().includes('\n') && (
+            <ExpandableText className="max-w-[68ch] mt-2" more={MORE} less={LESS}>
+              <div className="prose-balinsky whitespace-pre-line text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">
+                {pageBody.split('\n').slice(1).join('\n')}
+              </div>
+            </ExpandableText>
+          )}
+        </section>
+      )}
+      {shortRows.length > 0 && (
+        <div className="flex max-w-[68ch] flex-col gap-1.5 text-[15px] leading-[1.6] text-[#0F1A15]">
+          {shortRows.map(r => <div key={r.k}><span className="text-[#6B7570]">{r.k}:</span> {r.v}</div>)}
+        </div>
+      )}
+    </VillaChapter>
+  )
+  const unitsChapter = () => hasUnits && (
+    <VillaChapter key="yunity" id="yunity" no={no('yunity')} eyebrow={CH.yunity} title={`${CH.yunity} · ${units.length}`} journal>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {units.slice(0, 12).map(unitCard)}
+      </div>
+      {/* Остальные юниты — под раскрытием, без клиентского кода (у Elysium 29). */}
+      {units.length > 12 && (
+        <details className="group">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] group-open:hidden [&::-webkit-details-marker]:hidden">
+            {pickCopy({ ru: `Показать ещё ${units.length - 12}`, en: `Show ${units.length - 12} more`, id: `Tampilkan ${units.length - 12} lagi`, fr: `Afficher ${units.length - 12} de plus`, de: `${units.length - 12} weitere anzeigen`, zh: `再显示 ${units.length - 12} 个`, nl: `Toon ${units.length - 12} meer`, ban: `Tampilang ${units.length - 12} malih`, pl: `Pokaż jeszcze ${units.length - 12}`, uk: `Показати ще ${units.length - 12}` }, lang)}
+          </summary>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {units.slice(12).map(unitCard)}
+          </div>
+        </details>
+      )}
+    </VillaChapter>
+  )
+  const planChapter = () => hasPlan && (
+    <VillaChapter key="shakhmatka" id="shakhmatka" no={no('shakhmatka')} eyebrow={CH.shakhmatka} lead={vizLayers.length > 0 ? CH.planHint : undefined} journal>
+      {vizLayers.length > 0 && (
+        // Журнал: тонкая рамка и малый радиус, без «плашки» (как фото в главах).
+        <div className="[&>section>div.rounded-2xl]:rounded-md [&>section>div.rounded-2xl]:border-[#ECEFED]">
+        <ComplexVisualizationViewer
+          layers={vizLayers.map(l => ({
+            id: l.id, parentLayerId: l.parentLayerId,
+            title: l.title, photoUrl: l.photoUrl,
+          }))}
+          hotspots={vizHotspots}
+          unitsBySlug={unitInfoBySlug}
+          lang={lang}
+          bare
+        />
+        </div>
+      )}
+      {chessBoardVillas.length > 0 && (
+        <EcoWoodChessBoard
+          villas={chessBoardVillas}
+          masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/render.jpg"
+          lang={lang}
+        />
+      )}
+    </VillaChapter>
+  )
+  const leftChapters = () => [kompleksChapter(), unitsChapter(), planChapter()]
 
   return (
     <>
@@ -1911,7 +2084,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       <PageViewTracker kind="complex" slug={slug} title={name} airtableId={c.airtable_id} lang={lang} />
       <PageEditButton kind="complex" id={c.airtable_id} lang={lang} />
       <PageContainer>
-        <Breadcrumbs currentUrl={`${complexesRoot}/o/${slug}`} items={[
+        <Breadcrumbs hideLast currentUrl={`${complexesRoot}/o/${slug}`} items={[
           { label: copy.home, href: home },
           { label: copy.crumbComplexes, href: complexesRoot },
           // Regency crumb dropped (no page → no `item` → GSC error).
@@ -1919,452 +2092,136 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           { label: name },
         ]} />
 
-        {/* PHOTO GALLERY */}
-        <section className="mb-6 mt-2">
-          <VillaGallery
-            photos={slidesPhotos}
-            alts={photoAlts}
-            plans={complexPlans}
-            plan3dUrl={null}
-            videos={complexVideos.map(vd => ({ url: vd.url, name: vd.name }))}
-            title={name}
-            lang={lang}
-            extraTiles={sunChips}
-            plansAreMasterplan
-            promo={await loadPromoKit(c.airtable_id)}
-            tourUrl={embeddableTourUrl(c.data['3D tours'])}
-            wishlistItem={{
-              kind: 'complex', slug, title: name,
-              photo: slidesPhotos[0] ?? null,
-              priceUsd: null,
-              district: district ?? null,
-              bedrooms: null,
-              completionYear: yearRaw ?? null,
-              status: status ?? null,
-              readinessPct: ready,
-              developerName: developerName ?? null,
-              developerCompletedCount: devStats?.ready ?? null,
-              developerInProgressCount: devStats?.inProgress ?? null,
-            }}
-          />
+        {/* Верх — как у виллы (макет «Журнал»): название и строка фактов. */}
+        <section className="pb-5 md:pb-6">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 {...edit('Project', 'text', 'Название ЖК')} className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
+              {name}
+            </h1>
+            {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
+          </div>
         </section>
 
-        {/* HERO */}
-        <section className="mb-10">
-          <div className="text-[13px] text-[var(--color-text-muted)] mb-2">
-            <Link href={complexesRoot} className="hover:text-[var(--color-text)]">{copy.backToComplexes}</Link>
-            {district && <> · <span>{district}</span></>}
-          </div>
-          <h1 {...edit('Project', 'text', 'Название ЖК')} className="text-[18px] sm:text-[24px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.25] md:leading-[1.1] mb-3 [word-break:break-word] [overflow-wrap:anywhere]">
-            {name}
-          </h1>
-          {isSold && (
-            <div className="mb-3 sm:mb-4 inline-flex items-center px-3 py-1.5 rounded-full bg-[#DC2626] text-white text-[13px] sm:text-[14px] font-semibold tracking-wide shadow-sm">
-              {copy.sold}
-            </div>
-          )}
-          {/* Строка фактов и плашка застройщика — как у виллы (макет 06.11.2026). */}
-          <div className="text-[15px] text-[var(--color-text-muted)] leading-relaxed mb-4 flex items-center flex-wrap gap-x-5 gap-y-1">
-            {types.length > 0 && <span>{types.join(', ')}</span>}
-            {totalUnits != null && <span>{copy.units(totalUnits)}</span>}
-            {yearRaw && <span>{status?.toLowerCase().includes('построен') ? copy.completed : copy.completion(completionLabel(yearRaw, lang)!)}</span>}
-            {district && <span>{district}, {copy.bali}</span>}
-          </div>
-          {developerLink && (
-            <div className="mb-4">
-              <Link
-                href={`${developersRoot}/${developerLink.slug}`}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-soft)] px-3 py-1.5 text-[13.5px] font-medium text-[var(--color-primary-pressed)] no-underline hover:opacity-80 transition-opacity"
-              >
-                {lang === 'ru' ? `Застройщик ${developerLink.name} →` : `Developer ${developerLink.name} →`}
-              </Link>
-            </div>
-          )}
-          {minPrice != null && (
-            <PriceCtaCard
-              priceUsd={Number(minPrice)}
-              pricePrefix={lang === 'ru' ? 'от' : lang === 'en' ? 'from' : null}
-              managerId={managers[0]?.id ?? null}
-              presentationButton={null}
-            />
-          )}
-        </section>
-
-        {/* Владелец 13.11.2026: план и юниты — сразу под шапкой, остальное ниже. */}
-        {/* Interactive plan — sits ABOVE the units list because the
-            visitor drills from the panorama → highlighted hotspot →
-            specific unit, so the natural reading flow is plan first,
-            full unit grid second. Renders only when the admin has
-            built at least one layer in /admin/visualizations/<id>. */}
-        {vizLayers.length > 0 && (
-          <ComplexVisualizationViewer
-            layers={vizLayers.map(l => ({
-              id: l.id, parentLayerId: l.parentLayerId,
-              title: l.title, photoUrl: l.photoUrl,
-            }))}
-            hotspots={vizHotspots}
-            unitsBySlug={unitInfoBySlug}
-            lang={lang}
-          />
-        )}
-
-
-        {/* UNITS in this complex */}
-        {units.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-2">
-              {copy.availableUnits}
-            </h2>
-            <div className="text-[14px] text-[var(--color-text-muted)] mb-5">
-              {(() => {
-                const hasA = units.some(u => u.kind === 'apartment')
-                const hasV = units.some(u => u.kind === 'villa')
-                const k = hasA && hasV ? 'mixed' : hasV ? 'villa' : 'apartment'
-                return copy.publishedSuffix(units.length, k)
-              })()} {name}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {units.slice(0, 12).map(u => {
-                const demand = demandByUnit[`${u.kind}|${u.id}`]
-                return u.kind === 'villa'
-                  ? <VillaCard key={u.id} a={{ ...u, demand }} lang={lang} />
-                  : <ApartmentCard key={u.id} a={{ ...u, demand }} lang={lang} />
-              })}
-            </div>
-            {/* Остальные юниты — под раскрытием, без клиентского кода: раньше
-                страница показывала 12 и молчала про остальные (у Elysium 29). */}
-            {units.length > 12 && (
-              <details className="mt-6 group">
-                <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full border border-[var(--color-border)] px-4 py-2 text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] group-open:hidden">
-                  {pickCopy({ ru: `Показать ещё ${units.length - 12}`, en: `Show ${units.length - 12} more`, id: `Tampilkan ${units.length - 12} lagi`, fr: `Afficher ${units.length - 12} de plus`, de: `${units.length - 12} weitere anzeigen`, zh: `再显示 ${units.length - 12} 个`, nl: `Toon ${units.length - 12} meer`, ban: `Tampilang ${units.length - 12} malih`, pl: `Pokaż jeszcze ${units.length - 12}`, uk: `Показати ще ${units.length - 12}` }, lang)}
-                </summary>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {units.slice(12).map(u => {
-                    const demand = demandByUnit[`${u.kind}|${u.id}`]
-                    return u.kind === 'villa'
-                      ? <VillaCard key={u.id} a={{ ...u, demand }} lang={lang} />
-                      : <ApartmentCard key={u.id} a={{ ...u, demand }} lang={lang} />
-                  })}
-                </div>
-              </details>
-            )}
-          </section>
-        )}
-
-        {chessBoardVillas.length > 0 && (
-          <EcoWoodChessBoard
-            villas={chessBoardVillas}
-            masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/render.jpg"
-            lang={lang}
-          />
-        )}
-
-        {/* KEY FACTS */}
-        {facts.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {copy.keyFacts}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {facts.map(({ Icon, label, value }) => (
-                <div key={label} className="bg-white rounded-2xl border border-[var(--color-border)] p-5">
-                  <div className="flex items-center gap-2 mb-2 text-[var(--color-text-muted)]">
-                    <Icon size={16} className="shrink-0" />
-                    <span className="min-w-0 text-[12px] uppercase tracking-wide [overflow-wrap:normal]">{label}</span>
-                  </div>
-                  <div className="text-[16px] font-semibold text-[var(--color-text)]">{value}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ABOUT (unique AI write-up, falls back to SEO Text) */}
-        {pageBody && (
-          <section className="mb-10">
-            <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {lang === 'ru' ? 'Описание' : `${copy.aboutPrefix} ${name}`}
-            </h2>
-            <ExpandableText className="max-w-3xl" more={pickCopy({ ru: 'Подробнее', en: 'Read more', id: 'Selengkapnya', fr: 'En savoir plus', de: 'Mehr anzeigen', zh: '展开', nl: 'Meer', ban: 'Selengkapnya', pl: 'Więcej', uk: 'Докладніше' }, lang)} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
-              <div {...edit(COMPLEX_DESCRIPTION_FIELD, 'longtext', 'Описание ЖК')} className="prose-balinsky text-[15px] leading-relaxed text-[var(--color-text)] whitespace-pre-line">
-                {pageBody}
-              </div>
-            </ExpandableText>
-          </section>
-        )}
-
-        {/* Pro-аналитика как у виллы: тот же код страницы юнита, на примере
-            самого доступного юнита комплекса (макет 06.11.2026). Без Pro
-            скрыта (.bx-auth-block внутри). Нет юнитов - старые разделы ниже. */}
-        {repUnit && (repUnit.kind === 'villa'
-          ? <VillaDetail slug={repUnit.slug} lang={lang} analyticsOnly />
-          : <ApartmentDetail slug={repUnit.slug} lang={lang} analyticsOnly />)}
-
-        {/* Аналитика — те же разделы, что на странице виллы: место → аренда
-            рядом → участок. Калькулятора у комплекса нет — он на страницах
-            юнитов. Перед разделами — «карта страницы». */}
-        {/* Нет юнитов - старые разделы ЖК, только Pro и без аренды/дохода (владелец 06.11.2026). */}
-        {!repUnit && <div className="bx-auth-block">
-
-        {hasPlace && (
-          <DataChapter id="mesto" n={chapters.indexOf('mesto') + 1} lang={lang}>
-          {/* LOCATION */}
-          {lat != null && lng != null && (
-            <section className="mb-10">
-              <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-                {copy.location}
-              </h2>
-              <div className="text-[14px] text-[var(--color-text)] mb-3">
-                {/* TASK-13d: full geo chain (area → kecamatan → regency → island)
-                    so "Badung Regency" is present on the page, fixing the
-                    "Missing: badung regency" flag in our snippets. */}
-                {districtRaw ? geoChainString(districtRaw) : copy.locationLine(district)}
-              </div>
-              {/* Слева дорога и район одной колонкой, справа солнце и погода.
-                  Объёмная модель солнца широкая — она идёт отдельной карточкой ниже. */}
-              <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start [&>*]:mb-0">
-                {/* Нет погоды (блок справа пуст) — дорога и район встают рядом. */}
-                <div className={geoFacts?.climate?.year?.sunny ? 'flex flex-col gap-4 [&>*]:mb-0' : 'contents [&>*]:mb-0'}>
-                  {access && (
-                    <ComplexAccessBlock
-                      access={access}
-                      lang={lang}
-                      elevationM={geoFacts?.elevation_m ?? null}
-                      routes={geoFacts?.routes ?? null}
-                    />
-                  )}
-                  <AreaBlock climate={geoFacts?.climate ?? null} lang={lang} />
-                </div>
-                <ClimateBlock
-                  climate={geoFacts?.climate ?? null}
-                  air={geoFacts?.air ?? null}
-                  lang={lang}
-                  lat={lat}
-                  lng={lng}
-                />
-              </div>
-              {process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY && (
-                <GatedBlock kind="heatmap" lang={lang}>
-                  <div className="mb-4">
-                    <LazyMount fallback={<div className="h-[420px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                    <NeighborhoodHeatMap
-                      apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
-                      lat={lat}
-                      lng={lng}
-                      title={name}
-                      lang={lang}
-                      overlay={parseGeoOverlay(d['Geo Overlay'])}
-                    />
-                    </LazyMount>
-                  </div>
-                </GatedBlock>
-              )}
-              <a
-                href={gmap ?? `https://www.google.com/maps?q=${lat},${lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[var(--color-border)] text-[14px] font-medium text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
-              >
-                <MapIcon size={16} className="text-[var(--color-primary)]" />
-                {copy.openInMaps}
-              </a>
-            </section>
-          )}
-            {nearby && (
-              <GatedBlock kind="nearby" lang={lang}>
-                <NearbyPlaces categories={nearby.categories} byCategory={nearby.byCategory} lang={lang} />
-              </GatedBlock>
-            )}
-            {districtCopy && districtSlug && (
-              <DistrictAboutCard copy={districtCopy} lang={lang} kind="complex" hubHref={`${complexesRoot}/${districtSlug}`} />
-            )}
-          </DataChapter>
-        )}
-
-        {(landOk || plotSite) && (
-          <DataChapter id="uchastok" n={chapters.indexOf('uchastok') + 1} lang={lang} hint={!plotSite ? undefined : plotChapterHint(lang, landOk)}>
-            <div className={landOk && plotSite ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 [&>section]:h-full [&>div>section]:h-full' : 'max-w-[760px]'}>
-              {landOk && (
-                <LazyMount fallback={<div className="min-h-[480px] rounded-2xl bg-[var(--color-search-bg)]" />}>
-                  <LandProfileBlock data={landProfile!} permits={projectPermits} lang={lang} />
-                </LazyMount>
-              )}
-              <PlotSiteBlock plot={plotSite} hazards={geoFacts?.climate?.hazards} lang={lang} />
-            </div>
-          </DataChapter>
-        )}
-
-        </div>}
-
-        {/* LEGAL AUDIT — what's in order (public) + questions (lead-gated).
-            Замыкает инвест-обвязку: посетитель уже посмотрел объект и юниты,
-            прикинул зонирование и доход соседей — и здесь получает вердикт
-            «безопасно ли», пока ещё в этом настроении. */}
-        <div className="bx-auth-block">
-        <LegalAudit
+        <VillaGallery
+          photos={slidesPhotos}
+          alts={photoAlts}
+          plans={complexPlans}
+          plan3dUrl={null}
+          videos={complexVideos.map(vd => ({ url: vd.url, name: vd.name }))}
+          title={name}
           lang={lang}
-          slug={slug}
-          okItems={legalOkItems}
-          questionsCount={legalQuestionsCount}
-          balanceBuyer={legalBalanceBuyer}
-          balanceSummary={legalBalanceItems[0] ?? null}
-          balanceNotesCount={legalBalanceItems.length}
-          developerName={developerName}
-          developerSlug={developerLink?.slug ?? null}
-          editId={c.airtable_id}
-          editable={lang === 'ru'}
+          plansAreMasterplan
+          promo={await loadPromoKit(c.airtable_id)}
+          tourUrl={embeddableTourUrl(c.data['3D tours'])}
+          viewerTabs={buildViewerTabs()}
+          bleed
+          tilesAs="text"
+          aside={leadOn ? leadCard('zapis', true) : null}
+          topRight={complexActions()}
+          afterTiles={leadOn ? <div key="obj" className="mt-16 flex flex-col gap-16 lg:mt-20 lg:gap-24">{leftChapters()}</div> : null}
+          ambient={(() => {
+            // Звук под слайд-шоу — как у вилл: у моря волны, в глубине острова джунгли, иначе сад.
+            if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
+            const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
+            if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|убуд|табанан|менгви/i.test(where)) return '/ambient/jungle.mp3'
+            return '/ambient/garden.mp3'
+          })()}
         />
-        </div>
 
-        {/* DEVELOPER — links straight to /ru/zastrojshhiki/<slug>
-            when we resolved one by name; falls back to the index
-            otherwise. Logo + name is clickable, mirrors the villa
-            detail page so visitors get the same affordance. */}
-        {developerName && (
-          <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {copy.developer}
-            </h2>
-            {developerLink ? (
-              <Link
-                href={`${developersRoot}/${developerLink.slug}`}
-                className="group flex items-center gap-4 bg-white rounded-2xl border border-[var(--color-border)] p-5 max-w-3xl hover:border-[var(--color-primary)] transition-colors"
-              >
-                <div className="shrink-0 w-[72px] h-[72px] rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center p-2">
-                  {developerLink.logoUrl ? (
-                    <Image src={developerLink.logoUrl} alt={developerLink.name} width={56} height={56} className="max-w-full max-h-full object-contain" />
-                  ) : (
-                    <Building2 size={28} className="text-[var(--color-text-muted)]" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[12px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
-                  <div className="text-[19px] font-semibold text-[var(--color-text)] truncate">{developerLink.name}</div>
-                  {devPortfolio && (
-                    <div className="mt-1.5 text-[13px] text-[var(--color-text-muted)]">
-                      {pickCopy({
-                        ru: `Сдано проектов: ${devPortfolio.completed} · строится: ${devPortfolio.active}`,
-                        en: `Completed projects: ${devPortfolio.completed} · under construction: ${devPortfolio.active}`,
-                        id: `Proyek selesai: ${devPortfolio.completed} · dalam pembangunan: ${devPortfolio.active}`,
-                        fr: `Projets livrés : ${devPortfolio.completed} · en construction : ${devPortfolio.active}`,
-                        de: `Fertige Projekte: ${devPortfolio.completed} · im Bau: ${devPortfolio.active}`,
-                        zh: `已完成项目：${devPortfolio.completed} · 在建：${devPortfolio.active}`,
-                        nl: `Opgeleverde projecten: ${devPortfolio.completed} · in aanbouw: ${devPortfolio.active}`,
-                        ban: `Proyek puput: ${devPortfolio.completed} · kantun kakaryanin: ${devPortfolio.active}`,
-                        pl: `Ukończone projekty: ${devPortfolio.completed} · w budowie: ${devPortfolio.active}`,
-                        uk: `Зданих проєктів: ${devPortfolio.completed} · будується: ${devPortfolio.active}`,
-                      }, lang)}
+        {leadOn && <LeadStickyBar lang={lang} targetId="zapis" price={stickyPrice()} />}
+
+        {/* Разделы; между ними 64 / 96 px. */}
+        <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
+        {!leadOn && leftChapters()}
+
+        {/* Аналитика — одна глава «Проверьте комплекс с ИИ», как у виллы. */}
+        {analyses.length > 0 && (
+          <VillaChapter id="analitika" no={no('analitika')} plain eyebrow={CH.analitika}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${complexesRoot}/o/${slug}`)}`} no={no('analitika')}
+              heading={pickCopy(CX_AI_HEADING, lang)} />
+          </VillaChapter>
+        )}
+
+        {/* Застройщик и вопросы — рядом на компьютере, как у виллы. */}
+        <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
+        {hasDev && (
+          <VillaChapter id="zastroyshchik" no={no('zastroyshchik')} eyebrow={CH.zastroyshchik} journal>
+            <div className="flex flex-col gap-5 md:gap-6">
+              {(developerLink || developerName) && (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[20px] font-semibold tracking-[-0.01em] text-[#0F1A15] md:text-[24px]">{developerLink?.name ?? developerName}</span>
+                  {developerLink?.logoUrl && (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#ECEFED] bg-white p-1">
+                      <Image src={developerLink.logoUrl} alt={developerLink.name} width={40} height={40} className="max-h-full max-w-full object-contain" />
                     </div>
                   )}
-                  <div className="mt-1 text-[13px] text-[var(--color-primary-pressed)] font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                    {copy.developer} <ChevronRight size={14} />
-                  </div>
                 </div>
+              )}
+              {devStats && devStats.total > 0 && (
+                <div className="flex flex-wrap gap-x-8 gap-y-4 md:gap-x-12">
+                  <span className="flex flex-col gap-0.5 md:gap-1">
+                    <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.ready} {pickCopy({ ru: 'из', en: 'of', id: 'dari', fr: 'sur', de: 'von', zh: '/', nl: 'van', ban: 'saking', pl: 'z', uk: 'з' }, lang)} {devStats.total}</span>
+                    <span className="text-[13px] text-[#6B7570] md:text-[14px]">{pickCopy({ ru: 'проектов сдано', en: 'projects completed', id: 'proyek selesai', fr: 'projets livrés', de: 'Projekte fertiggestellt', zh: '个项目已交付', nl: 'projecten opgeleverd', ban: 'proyek sampun puput', pl: 'projektów ukończonych', uk: 'проєктів здано' }, lang)}</span>
+                  </span>
+                  {devStats.inProgress > 0 && (
+                    <span className="flex flex-col gap-0.5 md:gap-1">
+                      <span className="text-[24px] font-semibold leading-[1.15] tabular-nums md:text-[28px]">{devStats.inProgress}</span>
+                      <span className="text-[13px] text-[#6B7570] md:text-[14px]">{pickCopy({ ru: 'строится', en: 'under construction', id: 'sedang dibangun', fr: 'en construction', de: 'im Bau', zh: '在建', nl: 'in aanbouw', ban: 'kantun kabangun', pl: 'w budowie', uk: 'будується' }, lang)}</span>
+                    </span>
+                  )}
+                </div>
+              )}
+              <Link href={developerLink ? `${developersRoot}/${developerLink.slug}` : developersRoot} className="self-start py-1 text-[15px] text-[#0F1A15] underline underline-offset-4 transition-colors duration-[120ms] hover:text-[var(--color-primary)]">
+                {developerLink ? pickCopy(OPEN_DEV, lang) : copy.allDevelopers}
               </Link>
-            ) : (
-              <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 max-w-3xl">
-                <div className="text-[13px] text-[var(--color-text-muted)] mb-1">{copy.builtBy}</div>
-                <div className="text-[20px] font-semibold text-[var(--color-text)] mb-3">{developerName}</div>
-                <Link
-                  href={developersRoot}
-                  className="inline-flex items-center gap-1 text-[14px] text-[var(--color-primary-pressed)] hover:text-[var(--color-primary)]"
-                >
-                  {copy.allDevelopers} <ChevronRight size={14} />
-                </Link>
-              </div>
-            )}
-          </section>
+              {/* Менеджер застройщика — сюда ведут кнопки связи. */}
+              {m0 && leadManager && (
+                <div id="kontakty-operatora" className="flex scroll-mt-[136px] flex-col gap-4 border-t border-[#ECEFED] pt-5">
+                  <div className="flex items-center gap-3">
+                    {m0.photo ? (
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[#F6F8F7]">
+                        <Image src={m0.photo} alt={leadManager.name} fill sizes="48px" className="object-cover" />
+                      </div>
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F6F8F7] text-[18px] text-[#6B7570]">
+                        {leadManager.name.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="truncate text-[15px] font-semibold text-[#0F1A15]">
+                        {leadManager.name}{developerName ? `, ${developerLink?.name ?? developerName}` : ''}
+                      </div>
+                      <div className="text-[13px] text-[#6B7570]">{pickCopy(MGR_ROLE, lang)}</div>
+                    </div>
+                  </div>
+                  <ManagerContactButtons lang={lang} managerId={m0.id} managerName={m0.name} developerName={developerName ?? null} listingTitle={name} />
+                </div>
+              )}
+            </div>
+          </VillaChapter>
         )}
 
-        {managers.length > 0 && <ManagerCard managers={managers} developerName={developerName} inquiry={{ kind: 'complex', name, priceUsd: minPrice }} />}
+        <VillaChapter id="voprosy" no={no('voprosy')} eyebrow={CH.voprosy} journal>
+          <div className="-mt-2 md:-mt-4">
+            {faqItems.map((it, i) => (
+              <details key={i} className="group border-b border-[#ECEFED]">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-[16px] text-[#0F1A15] transition-colors duration-[120ms] hover:text-[var(--color-primary)] md:text-[17px] [&::-webkit-details-marker]:hidden">
+                  {it.q}
+                  <span className="shrink-0 text-[22px] leading-none text-[#6B7570]" aria-hidden><span className="group-open:hidden">+</span><span className="hidden group-open:inline">&minus;</span></span>
+                </summary>
+                <div className="max-w-[68ch] pb-4 text-[15px] leading-[1.6] text-[#4A5550]">{it.a}</div>
+              </details>
+            ))}
+          </div>
+        </VillaChapter>
+        </div>
 
+        </div>
 
-        {/* Блок «Документы и материалы» убран: ссылки вели во внутренние
-            папки застройщика (презентации, рендеры, мастерплан, 3D-туры),
-            публиковать их на странице не нужно. Поля в базе остались. */}
-
-        {/* VIDEOS */}
+        {/* VIDEOS — только разметка VideoObject; сами видео во вкладке галереи. */}
         {complexVideos.length > 0 && (
           <VideoGrid jsonLdOnly videos={complexVideos} title={copy.videosTitle(name)} />
         )}
-
-        {/* OTHER COMPLEXES */}
-        {otherComplexes.length > 0 && district && (
-          <section className="mb-10">
-            <h2 className="text-[18px] sm:text-[22px] md:text-[26px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-              {copy.otherProjectsIn(district)}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {otherComplexes.map(o => (
-                <Link
-                  key={o.slug}
-                  href={`${complexesRoot}/o/${o.slug}`}
-                  className="group block bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-primary)] transition-colors"
-                >
-                  <div className="relative h-[160px] bg-[var(--color-search-bg)]">
-                    {o.coverUrl ? (
-                      <Image src={o.coverUrl} alt={o.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-3xl text-[#B8C3BC]">🏝️</div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="text-[14px] font-semibold text-[var(--color-text)] mb-1 truncate">{o.name}</div>
-                    {o.types && (
-                      <div className="text-[12px] text-[var(--color-text-muted)] truncate">{o.types}</div>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* INTERNAL LINKS */}
-        <section className="mb-10">
-          <h2 className="text-[20px] md:text-[24px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-            {copy.relatedHeading}
-          </h2>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 max-w-3xl">
-            {[
-              { href: complexesRoot, label: copy.related.allComplexes },
-              { href: apartmentsRoot, label: copy.related.apartments },
-              { href: villasRoot, label: copy.related.villas },
-              { href: developersRoot, label: copy.related.developers },
-              ...(district && districtSlug ? [
-                { href: `${complexesRoot}/${districtSlug}`, label: copy.related.complexesIn(district) },
-                { href: `${apartmentsRoot}/${districtSlug}`, label: copy.related.apartmentsIn(district) },
-              ] : []),
-            ].map(l => (
-              <li key={l.href + l.label}>
-                <Link
-                  href={l.href}
-                  className="inline-flex items-center gap-1 text-[14px] text-[var(--color-text)] hover:text-[var(--color-primary-pressed)]"
-                >
-                  <ChevronRight size={14} className="text-[var(--color-primary)]" /> {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* FAQ */}
-        <section className="mb-10">
-          <h2 className="text-[19px] sm:text-[24px] md:text-[28px] font-semibold tracking-tight text-[var(--color-text)] mb-4">
-            {copy.faqHeading}
-          </h2>
-          <div className="max-w-3xl divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)]">
-            {faqItems.map((it, i) => (
-              <details key={i} className="group py-4">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-[15px] font-medium text-[var(--color-text)]">
-                  {it.q}
-                  <span className="text-[var(--color-text-muted)] text-[20px] leading-none transition-transform group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-[14px] text-[var(--color-text-muted)] leading-relaxed">{it.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(placeJsonLd) }} />
         {productJsonLd && (

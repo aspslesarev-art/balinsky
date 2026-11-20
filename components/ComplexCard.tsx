@@ -3,7 +3,6 @@
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
 import { ProgressBar } from './ProgressBar'
-import { ComplexYieldPro } from './CardYieldPro'
 import type { ComplexYieldRange } from '@/lib/investment/chance'
 import { PhotoSlider } from './PhotoSlider'
 import { useCurrency } from './CurrencyContext'
@@ -95,10 +94,13 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
   return (
     <Link
       href={detailHref}
-      className="magic-card group flex h-full flex-col bg-[var(--color-card-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden"
+      // Подсветка точки на карте каталога (components/CatalogMap.tsx).
+      onMouseEnter={() => window.dispatchEvent(new CustomEvent('bx-cat-hover', { detail: c.slug }))}
+      onMouseLeave={() => window.dispatchEvent(new CustomEvent('bx-cat-hover', { detail: null }))}
+      className="group flex h-full flex-col gap-3 text-[#0F1A15] no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]"
     >
-      <div className="relative">
-        <PhotoSlider photos={slides} alt={c.name} heightClass="h-[240px] md:h-[360px]" trackingId={`complex:${c.slug}`} priority={priority} />
+      <div className="relative overflow-hidden rounded-md">
+        <PhotoSlider photos={slides} alt={c.name} heightClass="aspect-[4/3]" trackingId={`complex:${c.slug}`} priority={priority} />
         {c.verifiedYield && <VerifiedYieldBadge lang={lang} onPhoto className="absolute bottom-3 left-3 z-10" />}
         {c.isSold && (
           <div className="absolute top-3 left-3 z-10 inline-flex items-center px-2.5 py-1 rounded-full bg-[#DC2626] text-white text-[12px] font-semibold tracking-wide shadow-md">
@@ -117,40 +119,22 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
         />
       </div>
 
-      <div className="flex flex-1 flex-col p-6">
-        <h3 className="text-[24px] font-semibold text-[var(--color-text)] mb-3 truncate">{c.name}</h3>
-        {location && (
-          <div className="text-[15px] text-[var(--color-text)] mb-3">{location}</div>
-        )}
+      {/* «Журнал» (владелец 20.11.2026, макет CatAComplex). */}
+      <div className="flex flex-1 flex-col gap-1.5">
+        {location && <span className="text-[12px] uppercase tracking-[0.06em] text-[#6B7570]">{location}</span>}
+        <h3 className="m-0 truncate text-[20px] font-semibold leading-[1.25] transition-colors duration-[120ms] group-hover:text-[var(--color-primary)]">{c.name}</h3>
         {(villaRange || aptRange) && (
-          <div className="space-y-1 mb-4 text-[14px]">
-            {villaRange && (
-              <div className="text-[var(--color-text)]">
-                <span className="text-[var(--color-text-muted)]">{copy.villas} </span>
-                <span className="font-medium">{villaRange}</span>
-              </div>
-            )}
-            {aptRange && (
-              <div className="text-[var(--color-text)]">
-                <span className="text-[var(--color-text-muted)]">{copy.apartments} </span>
-                <span className="font-medium">{aptRange}</span>
-              </div>
-            )}
+          <div className="flex flex-col gap-0.5 text-[14px] text-[#4A5550]">
+            {villaRange && <span>{copy.villas} <span className="font-semibold text-[#0F1A15]">{villaRange}</span></span>}
+            {aptRange && <span>{copy.apartments} <span className="font-semibold text-[#0F1A15]">{aptRange}</span></span>}
           </div>
         )}
-        {c.yieldRange && <ComplexYieldPro range={c.yieldRange} lang={lang} className="mb-4" />}
-        <div className="text-[14px] text-[var(--color-text-muted)]">
-          {permitLine(c.permit, copy, lang)}
-        </div>
-
-        {/* mt-auto pins the readiness block to the bottom of the card so
-            cards in the same row line up by their progress bar regardless
-            of how much content sits above. */}
-        <div className="mt-auto pt-5">
-          <div className="text-[14px] font-medium text-[var(--color-text)] mb-2">
-            {copy.readiness}
+        <span className="text-[13px] text-[#6B7570]">{permitLine(c.permit, copy, lang)}</span>
+        <div className="mt-auto flex flex-col gap-3 pt-1">
+          <div className="flex items-center gap-3">
+            <span className="shrink-0 text-[13px] text-[#6B7570]">{copy.readiness}</span>
+            <div className="flex-1"><ProgressBar inline value={c.readiness} /></div>
           </div>
-          <ProgressBar value={c.readiness} />
         </div>
       </div>
     </Link>

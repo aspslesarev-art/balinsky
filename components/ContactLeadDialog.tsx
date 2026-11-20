@@ -14,6 +14,8 @@ import { createPortal } from 'react-dom'
 import { X, Send, MessageCircle, MessagesSquare } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { reportLeadFormEvent } from '@/lib/contact-click'
+import { PhoneField, phoneE164, defaultCountry, ipCountry } from '@/components/PhoneField'
+import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/min'
 
 export type LeadChannel = 'telegram' | 'whatsapp' | 'other'
 
@@ -22,7 +24,7 @@ export type LeadChannel = 'telegram' | 'whatsapp' | 'other'
 export const OTHER_MESSENGERS = ['WeChat', 'LINE', 'Viber', 'KakaoTalk', 'Zalo', 'Signal'] as const
 export type OtherMessenger = typeof OTHER_MESSENGERS[number]
 
-// Тексты пока RU + EN; остальные языки берут EN (pickCopy) до согласования.
+// Тексты на всех десяти языках.
 const COPY = {
   ru: {
     title: (dev: string | null) => dev ? `Связаться с ${dev}` : 'Связаться с застройщиком',
@@ -30,6 +32,7 @@ const COPY = {
     name: 'Имя',
     namePh: 'Как к вам обращаться',
     phone: 'Номер WhatsApp',
+    search: 'Поиск страны',
     tg: 'Номер или ник в Telegram',
     tgPh: '+62 812 3456 7890 или @username',
     messenger: 'Мессенджер',
@@ -51,6 +54,7 @@ const COPY = {
     name: 'Name',
     namePh: 'Your name',
     phone: 'WhatsApp number',
+    search: 'Search country',
     tg: 'Telegram number or username',
     tgPh: '+62 812 3456 7890 or @username',
     messenger: 'Messenger',
@@ -65,6 +69,182 @@ const COPY = {
     errPhone: 'Enter a number with country code, e.g. +62…',
     errTg: 'Enter a number with country code or a @username',
     errOther: 'Please enter your ID or number',
+  },
+  id: {
+    title: (dev: string | null) => dev ? `Hubungi ${dev}` : 'Hubungi pengembang',
+    lead: (ch: LeadChannel, m: string) => `Tinggalkan nama dan ${ch === 'telegram' ? 'kontak Telegram' : ch === 'whatsapp' ? 'nomor WhatsApp' : `kontak ${m}`} - manajer akan menghubungi Anda.`,
+    name: 'Nama',
+    namePh: 'Nama Anda',
+    phone: 'Nomor WhatsApp',
+    search: 'Cari negara',
+    tg: 'Nomor atau username Telegram',
+    tgPh: '+62 812 3456 7890 atau @username',
+    messenger: 'Messenger',
+    other: (m: string) => `ID atau nomor ${m} Anda`,
+    otherPh: 'ID, username, atau nomor dengan kode negara',
+    submit: 'Kirim',
+    note: 'Kami meneruskan kontak Anda ke manajer pengembang. Balinsky tidak terlibat dalam negosiasi maupun transaksi.',
+    close: 'Tutup',
+    doneTitle: 'Selesai',
+    done: (m: string) => `Manajer akan menghubungi Anda lewat ${m} pada jam kerja Bali (UTC+8).`,
+    errName: 'Tuliskan nama Anda',
+    errPhone: 'Masukkan nomor dengan kode negara, mis. +62…',
+    errTg: 'Masukkan nomor dengan kode negara atau @username',
+    errOther: 'Tuliskan ID atau nomor Anda',
+  },
+  fr: {
+    title: (dev: string | null) => dev ? `Contacter ${dev}` : 'Contacter le promoteur',
+    lead: (ch: LeadChannel, m: string) => `Laissez votre nom et ${ch === 'telegram' ? 'votre contact Telegram' : ch === 'whatsapp' ? 'votre numéro WhatsApp' : `votre contact ${m}`} - le responsable vous écrira.`,
+    name: 'Nom',
+    namePh: 'Votre nom',
+    phone: 'Numéro WhatsApp',
+    search: 'Rechercher un pays',
+    tg: 'Numéro ou pseudo Telegram',
+    tgPh: '+62 812 3456 7890 ou @username',
+    messenger: 'Messagerie',
+    other: (m: string) => `Votre identifiant ou numéro ${m}`,
+    otherPh: 'Identifiant, pseudo ou numéro avec indicatif',
+    submit: 'Envoyer',
+    note: 'Nous transmettons votre contact au responsable du promoteur. Balinsky ne participe ni aux négociations ni à la transaction.',
+    close: 'Fermer',
+    doneTitle: 'C’est fait',
+    done: (m: string) => `Le responsable vous écrira sur ${m} aux heures de bureau de Bali (UTC+8).`,
+    errName: 'Indiquez votre nom',
+    errPhone: 'Indiquez un numéro avec indicatif, p. ex. +62…',
+    errTg: 'Indiquez un numéro avec indicatif ou un @username',
+    errOther: 'Indiquez votre identifiant ou numéro',
+  },
+  de: {
+    title: (dev: string | null) => dev ? `${dev} kontaktieren` : 'Bauträger kontaktieren',
+    lead: (ch: LeadChannel, m: string) => `Hinterlassen Sie Ihren Namen und ${ch === 'telegram' ? 'Ihren Telegram-Kontakt' : ch === 'whatsapp' ? 'Ihre WhatsApp-Nummer' : `Ihren ${m}-Kontakt`} - der Ansprechpartner meldet sich bei Ihnen.`,
+    name: 'Name',
+    namePh: 'Ihr Name',
+    phone: 'WhatsApp-Nummer',
+    search: 'Land suchen',
+    tg: 'Telegram-Nummer oder Benutzername',
+    tgPh: '+62 812 3456 7890 oder @username',
+    messenger: 'Messenger',
+    other: (m: string) => `Ihre ${m}-ID oder Nummer`,
+    otherPh: 'ID, Benutzername oder Nummer mit Ländervorwahl',
+    submit: 'Senden',
+    note: 'Wir geben Ihren Kontakt an den Ansprechpartner des Bauträgers weiter. Balinsky ist an Verhandlungen und am Kauf nicht beteiligt.',
+    close: 'Schließen',
+    doneTitle: 'Fertig',
+    done: (m: string) => `Der Ansprechpartner schreibt Ihnen über ${m} während der Geschäftszeiten auf Bali (UTC+8).`,
+    errName: 'Bitte geben Sie Ihren Namen ein',
+    errPhone: 'Nummer mit Ländervorwahl eingeben, z. B. +62…',
+    errTg: 'Nummer mit Ländervorwahl oder @username eingeben',
+    errOther: 'Bitte geben Sie Ihre ID oder Nummer ein',
+  },
+  zh: {
+    title: (dev: string | null) => dev ? `联系${dev}` : '联系开发商',
+    lead: (ch: LeadChannel, m: string) => `留下您的姓名和${ch === 'telegram' ? 'Telegram 联系方式' : ch === 'whatsapp' ? 'WhatsApp 号码' : `${m} 联系方式`}，经理会主动联系您。`,
+    name: '姓名',
+    namePh: '怎么称呼您',
+    phone: 'WhatsApp 号码',
+    search: '搜索国家/地区',
+    tg: 'Telegram 号码或用户名',
+    tgPh: '+62 812 3456 7890 或 @username',
+    messenger: '通讯软件',
+    other: (m: string) => `您的 ${m} ID 或号码`,
+    otherPh: 'ID、用户名或带国家区号的号码',
+    submit: '发送',
+    note: '我们会把您的联系方式转交给开发商经理。Balinsky 不参与洽谈和交易。',
+    close: '关闭',
+    doneTitle: '已提交',
+    done: (m: string) => `经理会在巴厘岛工作时间（UTC+8）通过 ${m} 联系您。`,
+    errName: '请填写姓名',
+    errPhone: '请输入带国家区号的号码，例如 +62…',
+    errTg: '请输入带国家区号的号码或 @username',
+    errOther: '请填写您的 ID 或号码',
+  },
+  nl: {
+    title: (dev: string | null) => dev ? `Contact met ${dev}` : 'Contact met de ontwikkelaar',
+    lead: (ch: LeadChannel, m: string) => `Laat je naam en ${ch === 'telegram' ? 'Telegram-contact' : ch === 'whatsapp' ? 'WhatsApp-nummer' : `${m}-contact`} achter - de manager neemt contact met je op.`,
+    name: 'Naam',
+    namePh: 'Je naam',
+    phone: 'WhatsApp-nummer',
+    search: 'Land zoeken',
+    tg: 'Telegram-nummer of gebruikersnaam',
+    tgPh: '+62 812 3456 7890 of @username',
+    messenger: 'Messenger',
+    other: (m: string) => `Je ${m}-ID of nummer`,
+    otherPh: 'ID, gebruikersnaam of nummer met landcode',
+    submit: 'Versturen',
+    note: 'We geven je contact door aan de manager van de ontwikkelaar. Balinsky neemt geen deel aan de onderhandelingen of de transactie.',
+    close: 'Sluiten',
+    doneTitle: 'Klaar',
+    done: (m: string) => `De manager stuurt je een bericht via ${m} tijdens de werkuren op Bali (UTC+8).`,
+    errName: 'Vul je naam in',
+    errPhone: 'Vul een nummer met landcode in, bijv. +62…',
+    errTg: 'Vul een nummer met landcode of een @username in',
+    errOther: 'Vul je ID of nummer in',
+  },
+  ban: {
+    title: (dev: string | null) => dev ? `Ngubungin ${dev}` : 'Ngubungin pangwangun',
+    lead: (ch: LeadChannel, m: string) => `Tinggalang wasta lan ${ch === 'telegram' ? 'kontak Telegram' : ch === 'whatsapp' ? 'nomor WhatsApp' : `kontak ${m}`} - manajer jagi ngubungin ragane.`,
+    name: 'Wasta',
+    namePh: 'Wasta ragane',
+    phone: 'Nomor WhatsApp',
+    search: 'Rereh negara',
+    tg: 'Nomor utawi username Telegram',
+    tgPh: '+62 812 3456 7890 utawi @username',
+    messenger: 'Messenger',
+    other: (m: string) => `ID utawi nomor ${m} ragane`,
+    otherPh: 'ID, username utawi nomor sareng kode negara',
+    submit: 'Kirim',
+    note: 'Kontak ragane kateruskan ka manajer pangwangun. Balinsky nenten nyarengin ring negosiasi miwah transaksi.',
+    close: 'Tutup',
+    doneTitle: 'Sampun',
+    done: (m: string) => `Manajer jagi ngubungin ragane ring ${m} ring galah makarya Bali (UTC+8).`,
+    errName: 'Tulis wasta ragane',
+    errPhone: 'Tulis nomor sareng kode negara, conto +62…',
+    errTg: 'Tulis nomor sareng kode negara utawi @username',
+    errOther: 'Tulis ID utawi nomor ragane',
+  },
+  pl: {
+    title: (dev: string | null) => dev ? `Kontakt z ${dev}` : 'Kontakt z deweloperem',
+    lead: (ch: LeadChannel, m: string) => `Zostaw imię i ${ch === 'telegram' ? 'kontakt w Telegramie' : ch === 'whatsapp' ? 'numer WhatsApp' : `kontakt w ${m}`} - menedżer sam do Ciebie napisze.`,
+    name: 'Imię',
+    namePh: 'Jak się do Ciebie zwracać',
+    phone: 'Numer WhatsApp',
+    search: 'Szukaj kraju',
+    tg: 'Numer lub nazwa użytkownika w Telegramie',
+    tgPh: '+62 812 3456 7890 lub @username',
+    messenger: 'Komunikator',
+    other: (m: string) => `Twój identyfikator lub numer w ${m}`,
+    otherPh: 'ID, nazwa użytkownika lub numer z kierunkowym',
+    submit: 'Wyślij',
+    note: 'Przekażemy Twój kontakt menedżerowi dewelopera. Balinsky nie uczestniczy w negocjacjach ani w transakcji.',
+    close: 'Zamknij',
+    doneTitle: 'Gotowe',
+    done: (m: string) => `Menedżer napisze do Ciebie w ${m} w godzinach pracy na Bali (UTC+8).`,
+    errName: 'Wpisz imię',
+    errPhone: 'Podaj numer z kierunkowym, np. +62…',
+    errTg: 'Podaj numer z kierunkowym lub @username',
+    errOther: 'Wpisz swój identyfikator lub numer',
+  },
+  uk: {
+    title: (dev: string | null) => dev ? `Зв’язатися з ${dev}` : 'Зв’язатися із забудовником',
+    lead: (ch: LeadChannel, m: string) => `Залиште ім’я та ${ch === 'telegram' ? 'контакт у Telegram' : ch === 'whatsapp' ? 'номер WhatsApp' : `контакт у ${m}`} - менеджер напише вам сам.`,
+    name: 'Ім’я',
+    namePh: 'Як до вас звертатися',
+    phone: 'Номер WhatsApp',
+    search: 'Пошук країни',
+    tg: 'Номер або нік у Telegram',
+    tgPh: '+62 812 3456 7890 або @username',
+    messenger: 'Месенджер',
+    other: (m: string) => `Ваш ID або номер у ${m}`,
+    otherPh: 'ID, нік або номер з кодом країни',
+    submit: 'Надіслати',
+    note: 'Передамо ваш контакт менеджеру забудовника. Balinsky не бере участі в переговорах і угоді.',
+    close: 'Закрити',
+    doneTitle: 'Готово',
+    done: (m: string) => `Менеджер напише вам у ${m} у робочий час Балі (UTC+8).`,
+    errName: 'Напишіть ім’я',
+    errPhone: 'Потрібен номер з кодом країни, наприклад +62…',
+    errTg: 'Потрібен номер з кодом країни або нік на кшталт @username',
+    errOther: 'Напишіть ваш ID або номер',
   },
 } as const
 
@@ -109,6 +289,8 @@ export function ContactLeadDialog({
   const c = pickCopy(COPY, lang)
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
+  // WhatsApp — номер с кодом страны, как в Telegram (владелец 20.11.2026).
+  const [wa, setWa] = useState<{ country: CountryCode; national: string }>({ country: 'ID', national: '' })
   const [messenger, setMessenger] = useState<OtherMessenger>(initialMessenger)
   const [website, setWebsite] = useState('') // honeypot
   const [error, setError] = useState<string | null>(null)
@@ -123,6 +305,12 @@ export function ContactLeadDialog({
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') as
         { name?: string; phone?: string; telegram?: string; other?: string } | null
+      const p = saved?.phone ? parsePhoneNumberFromString(saved.phone) : undefined
+      if (p?.country) setWa({ country: p.country, national: p.formatNational() })
+      else {
+        setWa({ country: defaultCountry(lang), national: '' })
+        void ipCountry().then(cc => { if (cc) setWa(v => (v.national ? v : { ...v, country: cc })) })
+      }
       if (saved) {
         setName(saved.name ?? '')
         setContact((channel === 'telegram' ? saved.telegram || saved.phone
@@ -139,7 +327,7 @@ export function ContactLeadDialog({
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
     }
-  }, [open, channel, initialMessenger, onClose])
+  }, [open, channel, initialMessenger, onClose, lang])
 
   if (!open || typeof document === 'undefined') return null
 
@@ -155,8 +343,9 @@ export function ContactLeadDialog({
       if (raw.length < 3) { setError(c.errOther); return }
       other = raw
     } else if (channel === 'whatsapp') {
-      if (!isPhone(raw)) { setError(c.errPhone); return }
-      phone = raw
+      const e164 = phoneE164(wa.country, wa.national)
+      if (!e164) { setError(c.errPhone); return }
+      phone = e164
     } else if (isPhone(raw)) {
       phone = raw
     } else {
@@ -277,19 +466,21 @@ export function ContactLeadDialog({
             <span className="mb-2 block text-[14px] font-medium text-[var(--color-text)]">
               {channel === 'telegram' ? c.tg : channel === 'other' ? c.other(messenger) : c.phone}
             </span>
-            <input
+            {channel === 'whatsapp' ? (
+              <PhoneField id="lead-dialog-wa" lang={lang} variant="box" value={wa} onChange={v => { setWa(v); setError(null) }} invalid={!!error} placeholder={c.phone} search={c.search} />
+            ) : <input
               className={inputCls}
               value={contact}
               onChange={e => { setContact(e.target.value); setError(null) }}
               placeholder={channel === 'telegram' ? c.tgPh : channel === 'other' ? c.otherPh : '+62 812 3456 7890'}
-              type={channel === 'whatsapp' ? 'tel' : 'text'}
-              inputMode={channel === 'whatsapp' ? 'tel' : 'text'}
-              autoComplete={channel === 'whatsapp' ? 'tel' : 'off'}
+              type="text"
+              inputMode="text"
+              autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
               maxLength={60}
-            />
+            />}
           </label>
           {/* honeypot */}
           <input

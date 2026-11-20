@@ -101,6 +101,8 @@ export function RootShell({
     <html
       lang={HTML_LANG[lang]}
       className={`${geistMono.variable} ${typography ? "site " : ""}h-full antialiased`}
+      // data-auth / data-pro ставит скрипт ниже до гидрации — это не расхождение.
+      suppressHydrationWarning
     >
       <head>
         {/* Preconnect to the photo bucket — every card's first image fetch
