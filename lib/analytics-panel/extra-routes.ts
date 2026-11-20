@@ -30,6 +30,7 @@ async function build(lat: number, lng: number, destsJson: string): Promise<Extra
 
 export function loadExtraRoutes(lat: number, lng: number, dests: ExtraDest[]): Promise<ExtraRoute[]> {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}:${dests.map(d => d.key).join('|')}`
+  // isr-ttl-ok: 30 дней (30 * 24 * 3600), проверка читает только первое число
   return unstable_cache(() => build(lat, lng, JSON.stringify(dests)), ['analytics-extra-routes-v1', key], { revalidate: 30 * 24 * 3600 })()
 }
 
@@ -69,5 +70,6 @@ export const BALI_HUBS: ExtraDest[] = [
 
 export function loadTravelTimes(lat: number, lng: number, pts: { key: string; lat: number; lng: number }[]): Promise<Travel> {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}:${pts.map(p => p.key).join('|')}`
+  // isr-ttl-ok: 30 дней (30 * 24 * 3600), проверка читает только первое число
   return unstable_cache(() => buildTable(lat, lng, JSON.stringify(pts.slice(0, 90))), ['analytics-travel-v1', key], { revalidate: 30 * 24 * 3600 })()
 }
