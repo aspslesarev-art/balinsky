@@ -247,7 +247,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
         {overHero && (
-          <div className="pointer-events-none absolute inset-y-0 left-1/2 z-20 hidden w-full max-w-[1280px] -translate-x-1/2 px-6 lg:block">
+          <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[11] hidden w-full max-w-[1280px] -translate-x-1/2 px-6 lg:block">
             <div className="pointer-events-auto ml-auto mt-6 w-[392px]">{overHero}</div>
           </div>
         )}
