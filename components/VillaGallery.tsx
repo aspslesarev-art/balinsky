@@ -40,7 +40,7 @@ const COPY = {
 } as const
 
 // Used by both the villa and the apartment detail pages.
-export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero }: {
+export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero, overHero }: {
   photos: string[]
   alts?: (string | undefined)[]
   plans: string[]
@@ -76,6 +76,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   ambient?: string | null
   /** Сразу под главным фото, до ряда медиа (полоса цены, вариант A). */
   belowHero?: ReactNode
+  /** Поверх фото справа, по сетке страницы (только компьютер) — форма записи на созвон. */
+  overHero?: ReactNode
 }) {
   const base = pickCopy(COPY, lang)
   const c = plansAreMasterplan ? { ...base, plans: base.master } : base
@@ -181,7 +183,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
       className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
       style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }} />
   )
-  const heroH = bleed ? 'h-[260px] sm:h-[360px] md:h-[440px] lg:h-[480px]' : 'h-[300px] sm:h-[400px] md:h-[480px]'
+  const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[600px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
   const arrow = 'absolute top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[rgb(16_24_20/0.55)] hover:bg-[rgb(16_24_20/0.75)] text-white flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-white'
   const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.some(v => !v.hideTile)
@@ -248,6 +250,11 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           <button type="button" onClick={() => step(1)} aria-label={c.next} className={`${arrow} right-3 hidden sm:flex`}><ChevronRight size={22} /></button>
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
+        {overHero && (
+          <div className="pointer-events-none absolute inset-y-0 left-1/2 z-20 hidden w-full max-w-[1280px] -translate-x-1/2 px-6 lg:block">
+            <div className="pointer-events-auto ml-auto mt-6 w-[392px]">{overHero}</div>
+          </div>
+        )}
       </div>
       {belowHero}
 

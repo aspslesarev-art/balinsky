@@ -145,6 +145,8 @@ export function PriceCtaCard({
   journal = false,
   bar = false,
   links = null,
+  compact = null,
+  hideMain = false,
 }: {
   priceUsd: number
   pricePerSqmUsd?: number | null
@@ -169,6 +171,10 @@ export function PriceCtaCard({
   /** Журнал, вариант A: одна полоса во всю ширину под фото (цена · за м² · рассрочка · кнопка). */
   bar?: boolean
   links?: ReactNode
+  /** Только цена и «обновлена …» — для формы записи (LeadHeroCard) и нижней кнопки на телефоне. */
+  compact?: 'lg' | 'sm' | null
+  /** Полоса без цены и кнопки — их показывает форма записи на созвон (владелец 20.11.2026). */
+  hideMain?: boolean
 }) {
   const { currency } = useCurrency()
   const pathname = usePathname() ?? ''
@@ -196,6 +202,17 @@ export function PriceCtaCard({
 
   // Вариант A (владелец 19.11.2026): полоса под главным фото — цена и «обновлена»,
   // за м² и рассрочка столбиками «значение / подпись», справа ссылки и кнопка.
+  if (compact) {
+    return compact === 'sm' ? (
+      <span className="text-[18px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
+    ) : (
+      <span className="flex flex-col gap-1">
+        <span className="text-[32px] font-semibold leading-none tracking-[-0.03em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</span>
+        {updated && <span className="text-[13px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</span>}
+      </span>
+    )
+  }
+
   if (journal && bar) {
     const barLabel = isResale ? c.buySeller : ((c as { buyChatBar?: string }).buyChatBar ?? c.buyChat)
     const cols: { v: string; l: string }[] = [
@@ -204,10 +221,10 @@ export function PriceCtaCard({
     ]
     return (
       <div className="flex flex-wrap items-center gap-x-12 gap-y-4 border-b border-[#ECEFED] py-5">
-        <div className="flex flex-col gap-0.5">
+        {!hideMain && <div className="flex flex-col gap-0.5">
           <div className="text-[32px] font-semibold leading-[1.1] tracking-[-0.03em] text-[#0F1A15] tabular-nums">{pricePrefix ? `${pricePrefix} ` : ''}{main}</div>
           {updated && <div className="text-[13px] text-[#6B7570]">{c.priceUpdated(updated).replace(/^./, ch => (lang === 'de' ? ch : ch.toLowerCase()))}</div>}
-        </div>
+        </div>}
         {cols.map(col => (
           <div key={col.l} className="flex flex-col gap-0.5">
             <span className="text-[15px] font-semibold text-[#0F1A15] tabular-nums">{col.v}</span>
@@ -217,7 +234,7 @@ export function PriceCtaCard({
         {note && <div className="text-[14px] text-[#6B7570]">{note}</div>}
         <div className="ml-auto flex flex-wrap items-center gap-x-6 gap-y-3">
           {links}
-          {reservedUntil ? (
+          {hideMain ? null : reservedUntil ? (
             <span className="flex items-center gap-2 text-[14px] text-[#92400E]"><Lock size={16} strokeWidth={1.6} /><span className="font-semibold">{c.reservedTitle}</span></span>
           ) : (
             <a href={isResale ? sellerUrl! : '#kontakty-operatora'} {...(isResale ? { target: '_blank', rel: 'noopener nofollow' } : {})}

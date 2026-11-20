@@ -62,6 +62,10 @@ type Body = {
   // Real page path (e.g. /ru/villy/o/some-villa), used to link the lead
   // back to its exact source page.
   pagePath?: string
+  // Форма записи вверху страницы (LeadHeroCard): созвон на выбранное время
+  // или «перезвоните мне». Имя там не спрашиваем — меньше полей, больше заявок.
+  request?: string
+  slot?: string
 }
 
 // Те же, что OTHER_MESSENGERS в components/ContactLeadDialog.tsx.
@@ -131,7 +135,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, leadId: 'spam-trap' })
   }
 
-  const name = (body.name ?? '').trim()
+  const isCallRequest = body.page === 'call-request'
+  const name = (body.name ?? '').trim() || (isCallRequest ? 'не указано' : '')
+  const slot = isCallRequest ? (body.slot ?? '').trim().slice(0, 120) : ''
   const email = (body.email ?? '').trim()
   const phone = (body.phone ?? '').trim()
   const telegram = (body.telegram ?? '').trim()
@@ -187,12 +193,13 @@ export async function POST(req: Request) {
   }
   // Форма у карточки менеджера (ContactLeadDialog) — заявки только владельцу
   // в админ-чат, застройщику он передаёт сам.
-  const ownerOnly = isResale || body.page === 'manager-card'
+  const ownerOnly = isResale || body.page === 'manager-card' || isCallRequest
   const devChat = ownerOnly ? null : await developerChatId({ name: developerName, slug: developerSlug })
 
   const lines: string[] = [
-    '🆕 <b>Новая заявка с сайта</b>',
+    isCallRequest ? (slot ? '📅 <b>Запись на созвон</b>' : '📞 <b>Просит перезвонить</b>') : '🆕 <b>Новая заявка с сайта</b>',
     '',
+    ...(slot ? [`<b>Когда:</b> ${escapeHtml(slot)}`] : []),
     `<b>Имя:</b> ${escapeHtml(name)}`,
   ]
   if (phone) lines.push(`<b>Телефон:</b> ${escapeHtml(phone)}`)

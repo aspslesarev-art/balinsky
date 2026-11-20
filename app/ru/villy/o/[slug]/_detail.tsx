@@ -77,6 +77,7 @@ import { SaleCompsBlock } from '@/components/SaleCompsBlock'
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
 import { ManagerContactButtons } from '@/components/ManagerContactButtons'
+import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { loadLandmarks } from '@/lib/landmarks'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
@@ -2070,11 +2071,23 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
         </div>
       }
     />
-  )  // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.
-  const priceBar = priceNum != null && (
+  )
+  // Запись на созвон вверху страницы (владелец 20.11.2026, макет HeroA): цена
+  // переезжает в форму. Не для переуступок (продаёт владелец) и не для брони.
+  const leadOn = priceNum != null && !sellerUrl && !activeReservation
+  const leadPrice = (size: 'lg' | 'sm') => priceNum != null && (
+    <PriceCtaCard compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
+  )
+  const leadCard = (id: string, framed: boolean) => (
+    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')} developerName={developerName ?? null}
+      managerName={managers[0]?.name ?? null} managerId={managers[0]?.id ?? null} listingTitle={title} />
+  )
+  // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.
+  const makePriceBar = () => priceNum != null && (
     <PriceCtaCard
       journal
       bar
+      hideMain={leadOn}
       priceUsd={priceNum}
       pricePerSqmUsd={priceM2}
       updatedAt={priceUpdatedAt}
@@ -2148,7 +2161,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           viewerTabs={buildViewerTabs(geoFacts?.climate?.wind ?? null)}
           bleed
           tilesAs="text"
-          belowHero={priceBar ? <div className="hidden lg:block">{priceBar}</div> : null}
+          belowHero={priceNum != null ? <div className="hidden lg:block">{makePriceBar()}</div> : null}
+          overHero={leadOn ? leadCard('zapis', true) : null}
           ambient={(() => {
             // Звук под слайд-шоу: у моря — волны, в глубине острова — джунгли
             // или рисовые поля (если вид на рис), остальное — тропический сад.
@@ -2161,7 +2175,13 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           })()}
         />
 
-        {priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
+        {leadOn ? (
+          <div className="mt-6 flex flex-col gap-2 lg:hidden">
+            {leadCard('zapis-m', false)}
+            {makePriceBar()}
+            <LeadStickyBar lang={lang} targetId="zapis-m" price={leadPrice('sm')} />
+          </div>
+        ) : priceCard && <div className="mt-8 lg:hidden">{priceCard}</div>}
 
         {/* Разделы 01–04; между ними 64 / 96 px. */}
         <div className="mt-16 flex flex-col gap-16 lg:mt-24 lg:gap-24">
