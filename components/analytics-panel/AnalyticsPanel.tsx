@@ -425,7 +425,9 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
  *  подложка), и проигрывается заново при наведении на карточку. */
 function CoverPlay({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLSpanElement>(null)
-  const [seen, setSeen] = useState(false)
+  // Картинка видна сразу: раньше она ждала IntersectionObserver и в части
+  // браузеров плитки оставались пустыми (владелец 20.11.2026).
+  const [seen, setSeen] = useState(true)
   const [round, setRound] = useState(0)
   useEffect(() => {
     const el = ref.current
