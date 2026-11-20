@@ -731,7 +731,7 @@ const NO_FILTERS: VillaFilterState = {
   district: [], bedrooms: [], status: [], permit: [], year: [], developer: [], style: [], features: [], goal: null, dealType: [],
 }
 
-async function loadTopVillas(lang: Lang): Promise<VillaCardData[]> {
+export async function loadTopVillas(lang: Lang): Promise<VillaCardData[]> {
   try {
     const [{ enriched, manifest }, scores] = await Promise.all([
       loadAllVillas(),
@@ -744,7 +744,7 @@ async function loadTopVillas(lang: Lang): Promise<VillaCardData[]> {
     //   SLF = Sertifikat Laik Fungsi      — сертификат пригодности (получен, выше PBG)
     const filters: VillaFilterState = { ...NO_FILTERS, permit: ['PBG', 'SLF'] }
     const cards = buildAllVillaCards(enriched, manifest, filters, scores, 'investment-desc', undefined, lang)
-    return cards.slice(0, 6)
+    return cards.slice(0, 40)
   } catch { return [] }
 }
 
@@ -775,6 +775,8 @@ export async function loadStats() {
   const [v, a, k, d] = await Promise.all([loadAllVillas(), loadAllApartments(), loadAllComplexes(), loadPublicDevelopers()])
   return {
     objects: v.enriched.length + a.enriched.length,
+    villas: v.enriched.length,
+    apartments: a.enriched.length,
     complexes: k.enriched.length,
     developers: d.length,
   }
@@ -973,7 +975,7 @@ export async function HomeLanding({ lang }: { lang: Lang }) {
         <SectionWrap className="border-t border-[var(--color-border)] bg-[var(--color-surface-alt)]">
           <SectionHead title={c.villas.heading} />
           <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-            {topVillas.map(v => <VillaCard key={v.slug} a={v} lang={lang} />)}
+            {topVillas.slice(0, 6).map(v => <VillaCard key={v.slug} a={v} lang={lang} />)}
           </div>
           <div className="mt-10">
             <Link href={villasHref} className="inline-flex items-center gap-1.5 text-[15px] font-medium text-[var(--color-primary)] hover:gap-2.5 transition-all no-underline">

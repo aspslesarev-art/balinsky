@@ -1,165 +1,149 @@
-// Главная (русская версия, 17.10.2026) — по согласованному макету в Claude Design
-// «как сервис»: светло, по центру, главная картинка — сама страница объекта.
-//   1. Обещание + цель (жить / сдавать / и то, и другое) + страница объекта с плашками
-//   2. Три пути
-//   3. Четыре ответа — плитки с кусками настоящей страницы (public/home/*.webp,
-//      сняты со страницы MAISON BOHEME)
-//   4. «Без проверки легко ошибиться»
-//   5. Бесплатно, без регистрации
+// Главная (русская версия, 20.11.2026) — макет HomeB в Claude Design:
+// «маркетплейс недвижимости Бали для иностранцев». Вся недвижимость здесь в
+// лизхолде — то, что законно может купить человек без индонезийского паспорта.
+//   1. Фото на весь экран, заголовок и поиск поверх
+//   2. Цифры каталога
+//   3. 01 Почему здесь всё в лизхолде
+//   4. 02 Виллы с лучшей доходностью
+//   5. 03 Для тех, кто покупает издалека
+// Balinsky в сделке не участвует (project_balinsky_info_only) — это сказано внизу.
 // Остальные языки пока на HomeLanding — переводы по готовности русского.
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Check, Home, TrendingUp, Repeat, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Header } from '@/components/Header'
-import { HomeGoalPicker } from '@/components/HomeGoalPicker'
-import { loadStats } from '@/components/HomeLanding'
+import { HomeSearch } from '@/components/HomeSearch'
+import { VillaCard } from '@/components/VillaCard'
+import { loadStats, loadTopVillas } from '@/components/HomeLanding'
 
-// Пример объекта: с его страницы сняты все картинки главной.
-const DEMO_HREF = '/ru/villy/o/maison-boheme-sanur-108m2-2-bedroom'
-const BEACH_THUMB = 'https://images.balinsky.info/storage/v1/object/public/villa-photos/_beaches/19-pantai-segera-ayu.jpg'
-
-const PATHS = [
-  { label: 'Жить', note: 'Тихий район, пляж и школа рядом, нормальная дорога.', href: '/ru/villy?goal=live', Icon: Home },
-  { label: 'Сдавать', note: 'Можно сдавать посуточно, и рядом это хорошо сдаётся.', href: '/ru/villy?goal=invest', Icon: TrendingUp },
-  { label: 'И то, и другое', note: 'Живёте сами, а когда уезжаете - дом приносит деньги.', href: '/ru/villy?goal=invest', Icon: Repeat },
-]
-
-const ANSWERS = [
-  { q: 'Безопасно ли?', a: 'Документы, стройка, земля, застройщик и природные риски - одним списком.', img: '/home/safety-2.webp', w: 1208, h: 755 },
-  { q: 'Удобно ли жить?', a: 'Пляж с фото и отзывами, школа, магазин, тишина, погода.', img: '/home/beach-2.webp', w: 1300, h: 812 },
-  { q: 'Будет ли спрос?', a: 'Что и почём сдают соседи, за сколько продают похожие дома.', img: '/home/demand-2.webp', w: 1300, h: 812 },
-  { q: 'Сколько принесёт?', a: 'Плохой, средний и хороший год. Калькулятор с налогами.', img: '/home/calc-2.webp', w: 1105, h: 690 },
-]
-
-const MISTAKES = [
-  ['Купили дом, который нельзя сдавать посуточно', 'Статус документов и зону участка'],
-  ['Поверили доходности из рекламы', 'Почём реально сдают соседи'],
-  ['Переплатили за дом', 'Цены похожих домов рядом'],
-  ['Под окном бар, стройка или трасса', 'Тихо ли вокруг - до покупки'],
-  ['Земля в аренде меньше, чем думали', 'Сколько лет аренды осталось'],
-]
-
-const H2 = 'mx-auto max-w-[760px] text-center text-[32px] md:text-[48px] leading-[1.08] font-bold tracking-[-0.03em] text-[#1D1D1F] [text-wrap:balance]'
-const CHIP = 'flex items-center gap-2.5 rounded-2xl bg-white/95 px-4 py-3 text-left shadow-[0_2px_4px_rgb(0_0_0/.04),0_12px_32px_rgb(0_0_0/.12)]'
 const fmt = (n: number) => n.toLocaleString('ru-RU')
+const CAP = 'text-[12px] uppercase tracking-[0.08em]'
+const H2 = 'text-[28px] md:text-[36px] font-semibold leading-[1.15] tracking-[-0.02em] text-[#0F1A15]'
+const plural = (n: number, f: [string, string, string]) => {
+  const m10 = n % 10, m100 = n % 100
+  return f[m10 === 1 && m100 !== 11 ? 0 : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? 1 : 2]
+}
+
+const WHY = [
+  { t: 'Это может купить иностранец', d: 'Землю в собственность на Бали иностранцу оформить нельзя. Долгая аренда земли — лизхолд — законный путь, и на сайте только он.' },
+  { t: 'Срок аренды у каждого дома', d: 'Сколько лет аренды земли осталось и до какого года — прямо в карточке объекта.' },
+  { t: 'Как купить — по шагам', d: 'Договор, нотариус, проверка документов и налоги — понятным языком.', href: '/ru/kak-kupit' },
+]
+
+const LANGS = [
+  ['🇬🇧', 'English'], ['🇫🇷', 'Français'], ['🇩🇪', 'Deutsch'], ['🇳🇱', 'Nederlands'], ['🇵🇱', 'Polski'],
+  ['🇷🇺', 'Русский'], ['🇺🇦', 'Українська'], ['🇨🇳', '中文'], ['🇮🇩', 'Indonesia'],
+] as const
+
+function Head({ no, title, link }: { no: string; title: string; link?: { href: string; label: string } }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+      <h2 className="flex items-baseline gap-4"><span className="text-[13px] font-normal tabular-nums text-[#6B7570]">{no}</span><span className={H2}>{title}</span></h2>
+      {link && <Link href={link.href} className="text-[15px] text-[#0F1A15] underline underline-offset-4 hover:text-[var(--color-primary)]">{link.label}</Link>}
+    </div>
+  )
+}
 
 export async function HomeRu() {
-  const stats = await loadStats().catch(() => null)
+  const [stats, villas] = await Promise.all([
+    loadStats().catch(() => null),
+    loadTopVillas('ru').catch(() => []),
+  ])
+  const hero = villas.find(v => v.photos[0])?.photos[0] ?? null
+  // По одной вилле от комплекса — иначе витрина из четырёх одинаковых таунхаусов.
+  const seen = new Set<string>()
+  const picks = villas.filter(v => {
+    const key = v.title.split(/\s[-—–]\s/)[0].replace(/^(Вилла|Таунхаус|Villa|Townhouse)\s+/i, '').trim().toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 
   return (
-    <div className="min-h-screen bg-white text-[#1D1D1F]">
+    <div className="min-h-screen bg-white text-[#0F1A15]">
       <Header />
 
-      {/* 1. Обещание + цель + страница объекта */}
-      <section className="mx-auto max-w-[1240px] px-6 pt-16 text-center md:pt-24">
-        <p className="text-[15px] font-semibold text-[var(--color-primary)]">Виллы и квартиры на Бали - для жизни и для сдачи</p>
-        <h1 className="mx-auto mt-4 max-w-[900px] text-[38px] md:text-[64px] lg:text-[76px] leading-[1.03] font-bold tracking-[-0.04em] [text-wrap:balance]">
-          Вся правда о доме - до того, как вы его купите
-        </h1>
-        <p className="mx-auto mt-6 max-w-[620px] text-[18px] md:text-[21px] leading-[1.5] text-[#6E6E73]">
-          Документы, пляж, соседи и реальный доход по каждому объекту. Мы уже всё проверили.
-        </p>
-        <HomeGoalPicker />
-
-        <div className="relative mx-auto mt-14 max-w-[1080px] md:mt-[72px]">
-          <Link href={DEMO_HREF} aria-label="Открыть пример: вилла MAISON BOHEME в Сануре" className="block">
-            <Image src="/home/product.webp" alt="Страница виллы MAISON BOHEME на Balinsky" width={1800} height={1048} priority
-              sizes="(min-width: 1128px) 1080px, 100vw"
-              className="h-auto w-full rounded-[20px] border border-[#ECECEE] shadow-[0_2px_4px_rgb(0_0_0/.04),0_24px_64px_rgb(0_0_0/.10)]" />
-          </Link>
-          {/* Плашки: на компьютере — поверх картинки, на телефоне — под ней. */}
-          <div className="mt-4 flex flex-wrap justify-center gap-2 lg:contents">
-            <div className={`${CHIP} lg:absolute lg:-left-10 lg:top-[14%]`}>
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#E8F4EE] text-[var(--color-primary)]"><Check size={16} strokeWidth={2.4} aria-hidden /></span>
-              <span><span className="block text-[13px] text-[#6E6E73]">Земля в аренде</span><span className="block text-[16px] font-semibold">ещё 29 лет</span></span>
-            </div>
-            <div className={`${CHIP} !py-2.5 !pl-2.5 lg:absolute lg:-right-10 lg:top-[34%]`}>
-              <Image src={BEACH_THUMB} alt="" width={48} height={48} className="h-12 w-12 rounded-[10px] object-cover" />
-              <span><span className="block text-[13px] text-[#6E6E73]">Пляж в 450 м</span><span className="block text-[16px] font-semibold">★ 4,5 · 1 924 отзыва</span></span>
-            </div>
-            <div className={`${CHIP} flex-col !items-start !gap-0.5 lg:absolute lg:-left-10 lg:top-[50%]`}>
-              <span className="text-[13px] text-[#6E6E73]">Если сдавать посуточно</span>
-              <span className="text-[22px] font-bold tracking-[-0.02em]">≈ 17,8% в год</span>
-            </div>
-          </div>
+      {/* 1. Фото на весь экран, заголовок и поиск поверх */}
+      <section className="relative flex min-h-[640px] items-end overflow-hidden bg-[#1B211E] md:min-h-[680px]">
+        {hero && <Image src={hero} alt="Вилла на Бали из каталога Balinsky" fill priority sizes="100vw" className="object-cover" />}
+        <span className="absolute inset-0 bg-[linear-gradient(180deg,rgb(15_26_21/.25),rgb(15_26_21/.7))]" aria-hidden />
+        <div className="relative mx-auto flex w-full max-w-[1280px] flex-col gap-5 px-6 pb-10 pt-24 text-white md:gap-6 md:pb-16">
+          <p className={`${CAP} text-white/85`}>Маркетплейс недвижимости Бали для иностранцев</p>
+          <h1 className="w-full min-w-0 max-w-[980px] text-[29px] font-semibold leading-[1.1] tracking-[-0.03em] [overflow-wrap:normal] [word-break:normal] sm:text-[40px] md:text-[60px] md:leading-[1.06] md:tracking-[-0.035em] md:[text-wrap:balance]">
+            Недвижимость на Бали для тех, у кого нет индонезийского паспорта
+          </h1>
+          <p className="max-w-[720px] text-[17px] leading-[1.5] text-white/90 md:text-[19px]">
+            Всё в лизхолде. Цены, документы и доход — по каждому объекту.
+          </p>
+          <div className="mt-2 max-w-[880px]"><HomeSearch /></div>
         </div>
       </section>
 
-      {/* 2. Три пути */}
-      <section className="mx-auto max-w-[1240px] px-6 pt-24 pb-24 md:pt-[120px] md:pb-[104px]">
-        <h2 className={H2}>Скажите, зачем вам дом. <span className="text-[#6E6E73]">Подходящие покажем первыми.</span></h2>
-        <div className="mt-14 grid grid-cols-1 gap-12 md:mt-16 md:grid-cols-3">
-          {PATHS.map(({ label, note, href, Icon }) => (
-            <Link key={label} href={href}
-              className="group flex flex-col items-center gap-3 rounded-2xl text-center text-[#1D1D1F] no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary)]">
-              <span className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#F5F5F7] text-[var(--color-primary)]"><Icon size={28} strokeWidth={1.7} aria-hidden /></span>
-              <span className="mt-2 text-[24px] font-bold tracking-[-0.02em]">{label}</span>
-              <span className="max-w-[300px] text-[17px] leading-[1.5] text-[#6E6E73]">{note}</span>
-              <span className="mt-1 text-[17px] font-semibold text-[var(--color-primary)] group-hover:underline">Подобрать ›</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* 3. Четыре ответа */}
-      <section className="bg-[#F5F5F7]">
-        <div className="mx-auto max-w-[1240px] px-6 py-24 md:py-28">
-          <h2 className={H2}>Четыре ответа на странице каждого дома</h2>
-          <div className="mt-14 grid grid-cols-1 gap-5 md:mt-16 lg:grid-cols-2">
-            {ANSWERS.map(({ q, a, img, w, h }) => (
-              <Link key={q} href={DEMO_HREF} className="group flex flex-col overflow-hidden rounded-[28px] bg-white text-[#1D1D1F] no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-                <div className="px-7 pt-8 md:px-10 md:pt-10">
-                  <div className="text-[24px] md:text-[28px] font-bold tracking-[-0.02em]">{q}</div>
-                  <p className="mt-2.5 text-[16px] md:text-[17px] leading-[1.5] text-[#6E6E73]">{a}</p>
-                </div>
-                <div className="mt-8 h-[220px] overflow-hidden pl-7 md:h-[280px] md:pl-10">
-                  <Image src={img} alt={`Пример: ${q}`} width={w} height={h} sizes="(min-width: 1024px) 640px, 110vw"
-                    className="h-auto w-[115%] max-w-none rounded-tl-[14px] border border-[#ECECEE] shadow-[0_12px_32px_rgb(0_0_0/.08)] transition-transform duration-[320ms] [transition-timing-function:cubic-bezier(.2,.8,.2,1)] group-hover:-translate-y-1" />
-                </div>
-              </Link>
+      {/* 2. Цифры каталога */}
+      {stats && (
+        <section className="border-b border-[#ECEFED]">
+          <div className="mx-auto grid max-w-[1280px] grid-cols-2 gap-6 px-6 py-8 md:flex md:gap-14 md:py-10">
+            {[
+              [stats.villas, plural(stats.villas, ['вилла', 'виллы', 'вилл'])],
+              [stats.apartments, plural(stats.apartments, ['апартамент', 'апартамента', 'апартаментов'])],
+              [stats.developers, plural(stats.developers, ['застройщик', 'застройщика', 'застройщиков'])],
+              [10, 'языков сайта'],
+            ].map(([v, l]) => (
+              <span key={String(l)} className="flex flex-col gap-0.5">
+                <span className="text-[28px] font-semibold leading-[1.1] tracking-[-0.03em] tabular-nums md:text-[32px]">{fmt(Number(v))}</span>
+                <span className="text-[14px] text-[#6B7570]">{l}</span>
+              </span>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* 4. Без проверки */}
-      <section className="mx-auto max-w-[1040px] px-6 py-24 md:py-[120px]">
-        <h2 className={H2}>Без проверки <span className="text-[#6E6E73]">легко ошибиться</span></h2>
-        <div className="mt-14 md:mt-16">
-          <div className="grid grid-cols-2 gap-6 border-b border-[#ECECEE] pb-3.5 text-[14px] font-semibold text-[#6E6E73] md:gap-8">
-            <span>Частая ошибка</span><span>Что вы видите у нас</span>
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-16 px-6 py-16 md:gap-24 md:py-24">
+        {/* 3. Почему лизхолд */}
+        <section className="flex flex-col gap-8">
+          <Head no="01" title="Почему здесь всё в лизхолде" />
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-12">
+            {WHY.map(w => (
+              <div key={w.t} className="flex flex-col gap-2.5 border-t-2 border-[#0F1A15] pt-4">
+                <span className="text-[20px] font-semibold tracking-[-0.01em]">{w.t}</span>
+                <span className="max-w-[68ch] text-[16px] leading-[1.6] text-[#4A5550]">{w.d}</span>
+                {w.href && <Link href={w.href} className="mt-1 inline-flex items-center gap-1.5 self-start text-[15px] font-semibold text-[var(--color-primary)] no-underline hover:underline">Читать гид <ArrowRight size={15} aria-hidden /></Link>}
+              </div>
+            ))}
           </div>
-          {MISTAKES.map(([bad, good], i) => (
-            <div key={bad} className={`grid grid-cols-2 gap-6 py-6 text-[16px] md:gap-8 md:text-[18px] leading-[1.45] ${i < MISTAKES.length - 1 ? 'border-b border-[#ECECEE]' : ''}`}>
-              <span className="flex gap-3"><span className="font-bold text-[#C2410C]" aria-hidden>×</span>{bad}</span>
-              <span className="flex gap-3"><span className="font-bold text-[var(--color-primary)]" aria-hidden>✓</span>{good}</span>
+        </section>
+
+        {/* 4. Виллы */}
+        {picks.length > 0 && (
+          <section className="flex flex-col gap-8">
+            <Head no="02" title="Виллы с лучшей доходностью" link={{ href: '/ru/villy', label: 'Весь каталог' }} />
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
+              {picks.slice(0, 6).map(v => <VillaCard key={v.slug} a={v} lang="ru" />)}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* 5. Начать */}
-      <section className="bg-[#F5F5F7]">
-        <div className="mx-auto max-w-[1240px] px-6 py-24 text-center md:py-28">
-          <h2 className={H2}>Бесплатно. Без регистрации.</h2>
-          {stats && (
-            <p className="mx-auto mt-4 text-[17px] md:text-[19px] text-[#6E6E73]">
-              {fmt(stats.objects)} вилл и квартир · {fmt(stats.complexes)} жилых комплексов · цены аренды каждый день
+        {/* 5. Издалека */}
+        <section className="grid grid-cols-1 items-center gap-8 border-t border-[#ECEFED] pt-16 md:grid-cols-2 md:gap-16 md:pt-24">
+          <div className="flex flex-col gap-4">
+            <Head no="03" title="Для тех, кто покупает издалека" />
+            <p className="max-w-[60ch] text-[17px] leading-[1.6] text-[#4A5550]">
+              Сайт на 10 языках, цены в вашей валюте. Созвониться с застройщиком по видео можно из любой страны — запись прямо на странице объекта.
             </p>
-          )}
-          <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link href="/ru/villy"
-              className="inline-flex min-h-14 items-center gap-2.5 rounded-full bg-[var(--color-primary)] px-7 text-[17px] font-semibold text-white no-underline transition-colors duration-[120ms] hover:bg-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-              Подобрать дом <ArrowRight size={18} aria-hidden />
-            </Link>
-            <Link href={DEMO_HREF}
-              className="inline-flex min-h-14 items-center rounded-full px-7 text-[17px] font-semibold text-[var(--color-primary)] no-underline hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-              Посмотреть пример ›
-            </Link>
+            <p className="max-w-[60ch] text-[14px] leading-[1.6] text-[#6B7570]">
+              Balinsky — каталог и аналитика. Мы не продаём объекты и не участвуем в сделке: договор вы заключаете с застройщиком.
+            </p>
           </div>
-        </div>
-      </section>
+          <div className="flex flex-wrap gap-2.5">
+            {LANGS.map(([f, n]) => (
+              <span key={n} className="inline-flex items-center gap-2.5 rounded-full border border-[#ECEFED] px-4 py-2 text-[15px]">
+                <span aria-hidden className="text-[20px] leading-none">{f}</span>{n}
+              </span>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
