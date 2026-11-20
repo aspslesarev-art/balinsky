@@ -248,11 +248,10 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                       {cover && <span className="pointer-events-none absolute inset-0" style={{ filter: blur ? 'blur(4px)' : undefined }}><CoverPlay><VizCover v={cover.v} lang={lang} accent={tone.ink} /></CoverPlay></span>}
                     </span>
                     <span className="min-w-0 flex-1 text-[15px] font-semibold leading-[1.3] text-[#0F1A15]">{a.title}</span>
-                    {/* «Проверено» — значком в правом верхнем углу плитки (владелец 20.11.2026). */}
-                    {done[a.id] && (
-                      <span aria-label={c.done} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#1F8B5F] text-[11px] font-bold text-white shadow-[0_0_0_2px_#F1F7F3]">✓</span>
-                    )}
-                    <span className="shrink-0 text-[18px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>
+                    {/* «Проверено» — зелёный кружок вместо стрелки, внутри плитки (владелец 20.11.2026). */}
+                    {done[a.id]
+                      ? <span aria-label={c.done} className="flex h-5 w-5 shrink-0 items-center justify-center self-start rounded-full bg-[#1F8B5F] text-[11px] font-bold leading-none text-white">✓</span>
+                      : <span className="shrink-0 text-[18px] leading-none text-[#6B7570] transition-transform duration-[120ms] group-hover:translate-x-0.5" aria-hidden>›</span>}
                   </button>
                 )
               })}
