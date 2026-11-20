@@ -2080,7 +2080,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
     <PriceCtaCard compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
   )
   const leadCard = (id: string, framed: boolean) => (
-    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')} priceNote={priceNum != null && <PriceCtaCard compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />} developerName={developerName ?? null}
+    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')} priceNote={priceNum != null && <PriceCtaCard compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
+      manager={managers[0] ? { photo: managers[0].photo ?? null, name: managerName, langs: managerLangs } : null} developerName={developerName ?? null}
       managerName={managers[0]?.name ?? null} managerId={managers[0]?.id ?? null} listingTitle={title} />
   )
   // Вариант A (владелец 19.11.2026): на компьютере цена — полосой под фото.

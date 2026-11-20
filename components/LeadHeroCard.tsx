@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import Image from 'next/image'
 import { Send, MessageCircle, Check } from 'lucide-react'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { ContactLeadDialog, type LeadChannel } from '@/components/ContactLeadDialog'
@@ -43,11 +44,13 @@ function tgHandle(s: string) {
 const baliDayStart = (t: number) => Math.floor((t + BALI_MS) / 86400_000) * 86400_000 - BALI_MS
 const slotAt = (day: number, h: number) => day + h * 3600_000
 
-export function LeadHeroCard({ lang, price, priceNote, developerName, managerName, managerId, listingTitle, id, framed = true }: {
+export function LeadHeroCard({ lang, price, priceNote, manager, developerName, managerName, managerId, listingTitle, id, framed = true }: {
   lang: Lang
   price?: ReactNode
   /** «обновлена вчера» — справа от подписи «Цена», как в макете. */
   priceNote?: ReactNode
+  /** Кто ответит — фото, имя на языке страницы и языки (вкладка «Написать»). */
+  manager?: { photo: string | null; name: string; langs: string[] } | null
   developerName: string | null
   managerName: string | null
   managerId: string | null
@@ -171,6 +174,17 @@ export function LeadHeroCard({ lang, price, priceNote, developerName, managerNam
         </div>
       ) : tab === 2 ? (
         <div className="flex flex-col gap-3">
+          {manager && (
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#E8F1EC] text-[18px] font-semibold text-[var(--color-primary)]">
+                {manager.photo ? <Image src={manager.photo} alt={manager.name} fill sizes="48px" className="object-cover" /> : manager.name.slice(0, 1).toUpperCase()}
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate text-[15px] font-semibold text-[#0F1A15]">{manager.name}{developerName ? `, ${developerName}` : ''}</span>
+                {manager.langs.length > 0 && <span className="truncate text-[13px] text-[#6B7570]">{manager.langs.join(', ')}</span>}
+              </span>
+            </div>
+          )}
           <p className="text-[14px] leading-[1.55] text-[#4A5550]">{c.writeLead}</p>
           <div className="grid grid-cols-2 gap-3">
             {([['telegram', 'Telegram', Send], ['whatsapp', 'WhatsApp', MessageCircle]] as const).map(([ch, label, Icon]) => (
