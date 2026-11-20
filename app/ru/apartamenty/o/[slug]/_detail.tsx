@@ -47,6 +47,8 @@ const LandProfileBlock = dynamic(
 )
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerCard } from '@/components/ManagerCard'
+import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
+import { managerLanguagesEn } from '@/lib/manager-lang'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { computeLivingFacts, loadLivingNoise } from '@/lib/living'
 import { LivingList } from '@/components/LivingVerdict'
@@ -1352,6 +1354,22 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   )
   if (analyticsOnly) return analytics
 
+  // Форма записи и «Написать менеджеру» поверх фото — как на странице виллы
+  // (владелец 20.11.2026). Не для переуступок и не для брони.
+  const leadOn = priceNum != null && !sellerUrl && !activeReservation
+  const m0 = managers[0]
+  const leadManager = m0 ? {
+    photo: m0.photo ?? null,
+    name: lang === 'ru' ? m0.name : (m0.nameEn || (hasCyrillic(m0.name) ? translitPreserveCase(m0.name) : m0.name)),
+    langs: lang === 'ru' ? m0.languages : managerLanguagesEn(m0.languages, m0.languagesEn),
+  } : null
+  const leadPrice = (size: 'lg' | 'sm') => priceNum != null && <PriceCtaCard compact={size} priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />
+  const leadCard = (id: string, framed: boolean) => (
+    <LeadHeroCard id={id} framed={framed} lang={lang} price={leadPrice('lg')}
+      priceNote={priceNum != null && <PriceCtaCard compact="updated" priceUsd={priceNum} updatedAt={priceUpdatedAt} presentationButton={null} />}
+      manager={leadManager} developerName={devName ?? null} managerName={m0?.name ?? null} managerId={m0?.id ?? null} listingTitle={title} />
+  )
+
   return (
     <>
       <Header active="apartamenty" />
@@ -1377,6 +1395,16 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             viewerTabs={aptViewerTabs}
             title={title}
             lang={lang}
+            bleed
+            tilesAs="text"
+            overHero={leadOn ? leadCard('zapis', true) : null}
+            ambient={(() => {
+              // Звук под слайд-шоу — как у вилл: у моря волны, в глубине острова джунгли, иначе сад.
+              if ((beachPick?.km ?? 99) <= 1) return '/ambient/ocean.mp3'
+              const where = `${firstString(d['Location']) ?? ''} ${districtRaw ?? ''}`
+              if (/ubud|tabanan|mengwi|payangan|gianyar|tegal|sidemen|munduk|bedugul|убуд|табанан|менгви/i.test(where)) return '/ambient/jungle.mp3'
+              return '/ambient/garden.mp3'
+            })()}
             wishlistItem={{
               kind: 'apartment', slug, title,
               photo: photos[0] ?? null,
@@ -1402,6 +1430,13 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
             }}
           />
         </section>
+
+        {leadOn && (
+          <div className="mb-8 lg:hidden">
+            {leadCard('zapis-m', false)}
+            <LeadStickyBar lang={lang} targetId="zapis-m" price={leadPrice('sm')} />
+          </div>
+        )}
 
         <section className="mb-10">
           <div className="text-[13px] text-[var(--color-text-muted)] mb-2">

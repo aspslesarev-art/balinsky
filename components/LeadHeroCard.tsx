@@ -54,7 +54,8 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
 }) {
   const c = pickCopy(COPY, lang)
   const loc = LOCALE[lang] ?? 'en-GB'
-  const [tab, setTab] = useState(0)
+  // Первой открывается «Написать» с менеджером (владелец 20.11.2026), созвон — вкладкой рядом.
+  const [tab, setTab] = useState(2)
   // Дни и часы зависят от «сейчас» — считаем только у посетителя, иначе ошибка гидрации.
   const [now, setNow] = useState<number | null>(null)
   const [day, setDay] = useState<number | null>(null)
@@ -152,7 +153,7 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
       {price && <div className="flex flex-col gap-2"><span className="flex items-baseline justify-between gap-3"><span className={cap}>{c.price}</span>{priceNote}</span>{price}</div>}
       <div className={`flex flex-col gap-3 ${price ? 'border-t border-[#ECEFED] pt-4' : ''}`}>
         <div role="tablist" className="flex gap-5 text-[14px]">
-          {c.tabs.map((t, i) => (
+          {[2, 0, 1].map(i => [c.tabs[i], i] as const).map(([t, i]) => (
             <button key={t} type="button" role="tab" aria-selected={tab === i} onClick={() => { setTab(i); setState('idle'); setErr(null) }}
               className={`cursor-pointer border-0 bg-transparent px-0 pb-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${tab === i ? 'font-semibold text-[#0F1A15] shadow-[inset_0_-2px_0_#0F1A15]' : 'text-[#6B7570] hover:text-[#0F1A15]'}`}>{t}</button>
           ))}
@@ -228,7 +229,7 @@ export function LeadHeroCard({ lang, price, priceNote, manager, developerName, m
           </button>
         </form>
       )}
-      <p className="text-center text-[12px] leading-[1.5] text-[#6B7570]">{c.note}</p>
+      <p className="text-center text-[12px] leading-[1.5] text-[#6B7570]">{tab === 2 ? (c.note.split(/(?<=\.)\s/).slice(1).join(' ') || c.note) : c.note}</p>
       {tab !== 2 && (
         <div className="-mt-1 flex justify-center gap-5 text-[14px]">
           {([['telegram', 'Telegram', Send], ['whatsapp', 'WhatsApp', MessageCircle]] as const).map(([ch, label, Icon]) => (
