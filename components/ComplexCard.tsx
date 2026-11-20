@@ -130,7 +130,7 @@ export function ComplexCard({ c, lang = 'ru', priority = false }: { c: ComplexCa
         <div className="mt-auto flex flex-col gap-3 pt-1">
           <div className="flex items-center gap-3">
             <span className="shrink-0 text-[13px] text-[#6B7570]">{copy.readiness}</span>
-            <div className="flex-1"><ProgressBar value={c.readiness} /></div>
+            <div className="flex-1"><ProgressBar inline value={c.readiness} /></div>
           </div>
         </div>
       </div>
