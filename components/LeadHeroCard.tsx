@@ -37,9 +37,11 @@ const STORE_KEY = 'bx_lead_contact'
 const baliDayStart = (t: number) => Math.floor((t + BALI_MS) / 86400_000) * 86400_000 - BALI_MS
 const slotAt = (day: number, h: number) => day + h * 3600_000
 
-export function LeadHeroCard({ lang, price, priceNote, priceMeta, manager, developerName, managerName, managerId, listingTitle, id, framed = true }: {
+export function LeadHeroCard({ lang, price, priceLabel, priceNote, priceMeta, manager, developerName, managerName, managerId, listingTitle, id, framed = true }: {
   lang: Lang
   price?: ReactNode
+  /** Подпись над ценой вместо «Цена» (страница ЖК: «Цены»). */
+  priceLabel?: string
   /** «обновлена вчера» — справа от подписи «Цена», как в макете. */
   priceNote?: ReactNode
   /** Цена за м² и рассрочка — строкой под ценой. */
@@ -152,7 +154,7 @@ export function LeadHeroCard({ lang, price, priceNote, priceMeta, manager, devel
 
   return (
     <div id={id} className={`flex scroll-mt-[136px] flex-col gap-4 bg-white ${framed ? 'rounded-md p-6 shadow-[0_1px_2px_rgb(0_0_0/.05),0_12px_32px_rgb(0_0_0/.14)]' : ''}`}>
-      {price && <div className="flex flex-col gap-2"><span className="flex items-baseline justify-between gap-3"><span className={cap}>{c.price}</span>{priceNote}</span>{price}{priceMeta && <span className="mt-2">{priceMeta}</span>}</div>}
+      {price && <div className="flex flex-col gap-2"><span className="flex items-baseline justify-between gap-3"><span className={cap}>{priceLabel ?? c.price}</span>{priceNote}</span>{price}{priceMeta && <span className="mt-2">{priceMeta}</span>}</div>}
       <div className={`flex flex-col gap-3 ${price ? 'border-t border-[#ECEFED] pt-4' : ''}`}>
         <div role="tablist" className="flex gap-5 text-[14px]">
           {[2, 0, 1].map(i => [c.tabs[i], i] as const).map(([t, i]) => (

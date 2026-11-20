@@ -58,8 +58,15 @@ export type VillaAnalyticsInput = {
   demand: UnitDemand | null
   /** Признаки с фото и их вклад в цену ночи на Booking (lib/analytics-panel/booking-fit). */
   bookingFit: BookingFit | null
-  /** Чей это объект: подписи «вилла» / «апартаменты». По умолчанию вилла. */
-  kind?: 'villa' | 'apartment'
+  /** Чей это объект: подписи «вилла» / «апартаменты» / «комплекс». По умолчанию вилла. */
+  kind?: 'villa' | 'apartment' | 'complex'
+}
+
+// Подписи апартаментов → комплекс (те же места, что VA(…) ниже).
+const COMPLEX_WORDS: Record<string, string> = {
+  'Апартаменты': 'Комплекс', 'апартаменты': 'комплекс', 'апартаментов': 'комплекса', 'апартаментами': 'комплексом',
+  'Эти апартаменты': 'Этот комплекс', 'похожие апартаменты': 'похожий комплекс',
+  apartment: 'complex', apartments: 'complexes', 'This apartment': 'This complex',
 }
 
 const GREEN = '#1F8B5F'
@@ -78,8 +85,10 @@ export function buildVillaAnalyses(i: VillaAnalyticsInput): Analysis[] {
   const ru = i.lang === 'ru'
   const T = (r: string, e: string) => (ru ? r : e)
   // Апартаменты (страница апартаментов, 20.11.2026): свои слова вместо «вилла».
-  const apt = i.kind === 'apartment'
-  const VA = (villa: string, apartment: string) => (apt ? apartment : villa)
+  // Жилой комплекс (страница ЖК, 20.11.2026): слова апартаментов, заменённые на «комплекс».
+  const cx = i.kind === 'complex'
+  const apt = i.kind === 'apartment' || cx
+  const VA = (villa: string, apartment: string) => (cx ? (COMPLEX_WORDS[apartment] ?? apartment) : apt ? apartment : villa)
   const loc = ru ? 'ru-RU' : 'en-US'
   const num = (n: number) => Math.round(n).toLocaleString(loc)
   // Деньги — меткой ⟦usd⟧: панель на клиенте подставит валюту посетителя.
