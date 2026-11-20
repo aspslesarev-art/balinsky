@@ -259,6 +259,11 @@ function scoreUnit(u) {
     feats.finish_tier = (remapFinish(u.rawFinish) - 1) / 4
   }
   const vec = st.impute(toVector(feats), unknown)
+  // Для пересчёта на сайте сразу после правки отметок (lib/unit-demand.ts):
+  // вектор только по фото (без отметок) и распределение индекса соседей.
+  const aiFeats = extractFeatures(u.vision)
+  if (Number.isFinite(u.rawFinish)) aiFeats.finish_tier = feats.finish_tier
+  const aiVec = st.impute(toVector(aiFeats), unknownFeatures(u.vision))
   const adrMult = Math.exp(apply(mAdr, vec))
   const occPct = Math.min(100, Math.max(5, st.occAvg + apply(mOcc, vec) * 100))
   const index = adrMult * (occPct / st.occAvg)
@@ -322,8 +327,27 @@ function scoreUnit(u) {
         expected_adr_usd: st.medianAdr ? Math.round(st.medianAdr * adrMult) : null,
       },
       drivers,
+      live: {
+        base: Object.fromEntries(FEATURES.map((f, j) => [f, Number(aiVec[j].toFixed(4))])),
+        q: quantiles(st.indexSorted),
+        occ_avg: st.occAvg,
+        seg_pct: segPct,
+        seg_weight: SEGMENT_WEIGHT,
+        median_adr_usd: st.medianAdr,
+      },
     },
   }
+}
+
+// Распределение индекса страты — по нему сайт ставит место юнита так же, как
+// здесь (доля соседей ниже). Небольшую страту храним целиком, большую — 201 точкой.
+function quantiles(sorted) {
+  if (sorted.length <= 400) return sorted.map(v => Number(v.toFixed(5)))
+  return Array.from({ length: 201 }, (_, i) => {
+    const x = (i / 200) * (sorted.length - 1)
+    const lo = Math.floor(x), hi = Math.ceil(x)
+    return Number((sorted[lo] + (sorted[hi] - sorted[lo]) * (x - lo)).toFixed(5))
+  })
 }
 
 const scored = units.map(scoreUnit).filter(Boolean)
