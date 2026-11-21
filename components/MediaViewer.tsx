@@ -11,6 +11,7 @@ import { ChevronLeft, ChevronRight, X, Play, Box, Download, Minus, Plus } from '
 import type { PromoKit } from '@/lib/promo-kits'
 import { pickCopy, type Lang } from '@/lib/i18n'
 import { VIEWER_ASIDE, VIEWER_LABEL } from './media-viewer-aside'
+import { useScrollLock } from '@/lib/use-scroll-lock'
 
 export type GalleryVideo = { url: string; name: string | null }
 export type BaseTab = 'photos' | 'videos' | 'plans' | 'master' | 'tour' | 'promo'
@@ -112,10 +113,9 @@ export function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lan
       else if (tab === 'photos' && e.key === 'ArrowLeft') go(-1)
     }
     window.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
+    return () => window.removeEventListener('keydown', onKey)
   }, [go, onClose, tab])
+  useScrollLock(true)
 
   const mobileNav = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -136,7 +136,7 @@ export function MediaViewer({ photos, plans, plan3dUrl, videos, alts, title, lan
   )
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[100] bg-white text-[#0F1A15] flex flex-col">
+    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-x-0 top-0 z-[100] h-[100dvh] overscroll-none bg-white text-[#0F1A15] flex flex-col">
       <header className="h-16 shrink-0 flex items-center gap-6 pl-4 pr-2 lg:px-6 border-b border-[#ECEFED]">
         <div className="flex-1 lg:flex-none lg:w-[260px] min-w-0 flex flex-col gap-0.5">
           <span className="text-[15px] font-semibold truncate">{head}</span>

@@ -144,9 +144,13 @@ export function ComplexVisualizationViewer({
     setStack([layer])
     setPopup(null)
   }
-  // Телефон: шахматка высокая и листается пальцем — открываем с середины.
+  // Телефон: шахматка высокая и листается пальцем — открываем там, где зоны юнитов.
   const scroller = useRef<HTMLDivElement>(null)
-  const centerPlan = () => { const el = scroller.current; if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2 }
+  const focusX = useRef(0.5)
+  const centerPlan = () => {
+    const el = scroller.current
+    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = Math.max(0, Math.min(el.scrollWidth - el.clientWidth, focusX.current * el.scrollWidth - el.clientWidth / 2))
+  }
   const [popup, setPopup] = useState<{ clientX: number; clientY: number; unit: UnitInfo; availability: 'free' | 'reserved' | 'sold' | null } | null>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -169,6 +173,13 @@ export function ComplexVisualizationViewer({
   if (!root || stack.length === 0) return null
   const currentLayer = stack[stack.length - 1]
   const currentHotspots = hotspots.filter(h => h.layerId === currentLayer.id)
+  {
+    // Середина по ширине между крайними зонами слоя (а если подсвечена «эта вилла» — она).
+    const xs = currentHotspots.flatMap(h => h.polygon.map(([x]) => x))
+    const mine = currentHotspots.find(h => h.targetUnitSlug && h.targetUnitSlug === highlightSlug)
+    const mx = mine?.polygon.length ? mine.polygon.reduce((a, [x]) => a + x, 0) / mine.polygon.length : null
+    focusX.current = mx ?? (xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0.5)
+  }
 
   function onPolygonClick(h: Hotspot, ev: React.MouseEvent<SVGElement>) {
     ev.stopPropagation()
@@ -248,7 +259,7 @@ export function ComplexVisualizationViewer({
         )
       })()}
 
-      <div className="rounded-2xl overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative max-sm:ml-[calc(50%-50vw)] max-sm:w-screen max-sm:max-w-none max-sm:rounded-none max-sm:border-x-0">
+      <div className="rounded-2xl overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative max-sm:ml-[calc(50%-50vw)] max-sm:w-screen max-sm:max-w-none max-sm:!rounded-none max-sm:border-x-0">
         {stack.length > 1 && (
           <div className="absolute top-3 left-3 z-10">
             <button

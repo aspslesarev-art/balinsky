@@ -104,6 +104,16 @@ export function PhotoSlider({
   const [everActivated, setEverActivated] = useState(false)
   useEffect(() => { if (active) setEverActivated(true) }, [active])
 
+  // Какие фото слоёв уже догрузились. Белые вспышки (владелец 21.11.2026):
+  // кадр показывали раньше, чем он загрузился, а предзагрузка ниже качала
+  // исходник, тогда как next/image берёт другой, оптимизированный адрес.
+  // Теперь кадр сменяется, только когда следующий уже на месте.
+  const [loaded, setLoaded] = useState<ReadonlySet<string>>(() => new Set())
+  const loadedRef = useRef(loaded)
+  loadedRef.current = loaded
+  const markLoaded = (src: string) => setLoaded(prev => (prev.has(src) ? prev : new Set(prev).add(src)))
+  const stepRef = useRef(0)
+
   // Preload all photos in the auto window so swaps never flash.
   useEffect(() => {
     if (!active) return
@@ -121,9 +131,11 @@ export function PhotoSlider({
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const fadeTimers: ReturnType<typeof setTimeout>[] = []
     const interval = setInterval(() => {
+      // Следующий кадр ещё не загрузился — ждём, а не показываем пустоту.
+      if (!loadedRef.current.has(photos[(stepRef.current + 1) % autoCount])) return
       setFading(true)
       fadeTimers.push(setTimeout(() => {
-        setStep(s => s + 1)
+        setStep(s => { stepRef.current = s + 1; return s + 1 })
         setFading(false)
       }, FADE_MS))
     }, ADVANCE_MS)
@@ -131,7 +143,7 @@ export function PhotoSlider({
       clearInterval(interval)
       fadeTimers.forEach(clearTimeout)
     }
-  }, [active, autoCount])
+  }, [active, autoCount, photos])
 
   if (count === 0) {
     return (
@@ -214,7 +226,7 @@ export function PhotoSlider({
         loading={priority ? 'eager' : 'lazy'}
         {...(priority ? { fetchPriority: 'high' as const } : {})}
         className={`object-cover transition-opacity duration-[600ms] ${
-          everActivated && autoCount > 1 ? 'opacity-0' : 'opacity-100'
+          everActivated && autoCount > 1 && loaded.has(photos[topPhotoIdx]) ? 'opacity-0' : 'opacity-100'
         }`}
       />
 
@@ -226,6 +238,7 @@ export function PhotoSlider({
             src={photos[aPhotoIdx]}
             alt=""
             aria-hidden="true"
+            onLoad={() => markLoaded(photos[aPhotoIdx])}
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
             className={`object-cover photo-motion-${aPreset} ${
@@ -241,6 +254,7 @@ export function PhotoSlider({
             src={photos[bPhotoIdx]}
             alt=""
             aria-hidden="true"
+            onLoad={() => markLoaded(photos[bPhotoIdx])}
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
             className={`object-cover photo-motion-${bPreset} ${

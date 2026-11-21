@@ -2,6 +2,8 @@
 
 import { ICON_BTN, IconTip } from './VillaActions'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useScrollLock } from '@/lib/use-scroll-lock'
 import NextImage from 'next/image'
 import { X, ChevronLeft, ChevronRight, Play, Star, MapPin, BedDouble, Square, Trees, Calendar, FileCheck2, Lock, ArrowUpRight, Download, Loader2, UserRound, FileText, Check, Coffee, Image as ImageIcon, LayoutGrid, ListChecks } from 'lucide-react'
 import type { Snapshot as BaseSnapshot } from '@/components/InvestmentWidget/types'
@@ -67,6 +69,7 @@ export function VillaPresentationButton({
   ...props
 }: VillaPresentationData & { variant?: 'primary' | 'outline' | 'compact' | 'link' | 'icon'; lang?: Lang }) {
   const [open, setOpen] = useState(false)
+  useScrollLock(open)
   const t = lang === 'ru'
     ? { outline: 'Скачать презентацию PDF', compact: 'Презентация PDF', primary: 'Презентация',  aria: 'Открыть презентацию виллы' }
     : { outline: 'PDF presentation', compact: 'PDF presentation', primary: 'Presentation', aria: 'Open villa presentation' }
@@ -95,9 +98,11 @@ export function VillaPresentationButton({
         {variant === 'icon' ? null : variant === 'compact' || variant === 'link' ? t.compact : variant === 'outline' ? t.outline : t.primary}
       </button>
       {/* «Скачать PDF» сразу открывает окно выбора блоков, без слайдов. */}
-      {open && (variant !== 'primary'
+      {/* В body, а не рядом с кнопкой: на телефоне кнопка живёт внутри блока
+          с transform/sticky, и fixed-окно оказывалось под ним — его не было видно. */}
+      {open && createPortal(variant !== 'primary'
         ? <DirectDownload data={{ ...props, lang }} onClose={() => setOpen(false)} />
-        : <VillaPresentation data={{ ...props, lang }} onClose={() => setOpen(false)} />)}
+        : <VillaPresentation data={{ ...props, lang }} onClose={() => setOpen(false)} />, document.body)}
     </>
   )
 }
@@ -193,7 +198,7 @@ function VillaPresentation({ data, onClose }: { data: VillaPresentationData; onC
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-white"
+      className="fixed inset-x-0 top-0 z-[100] flex h-[100dvh] flex-col overscroll-none bg-white"
       role="dialog"
       aria-modal="true"
       aria-label={c.dialog}
