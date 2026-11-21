@@ -907,8 +907,18 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   const isDataless = !firstString(d['Location filter'])
     && numberOrNull(d['Площадь']) == null
     && firstString(d['Комнаты']) == null
+  // EN (21.11.2026): заголовок в форме запроса — «<Название> for Sale in <Район>, Bali — $цена».
+  const dashPrice = price ? ` — ${price}` : ''
+  const enTitle = lang === 'en' && district ? (() => {
+    const esc = district.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const base = (title.split(/\s[-—–]\s(?=\d)/)[0] || title)
+      .replace(new RegExp(`\\s+(in|on|at)\\s+${esc}(,?\\s*Bali)?\\s*$`, 'i'), '')
+      .trim()
+    const t = `${base} for Sale in ${district}, Bali`
+    return `${t}${price && (t + dashPrice).length <= 70 ? dashPrice : ''} | Balinsky`
+  })() : null
   return {
-    title: `${title} | Balinsky`,
+    title: enTitle ?? `${title} | Balinsky`,
     description,
     ...(isDataless ? { robots: { index: false, follow: true } } : {}),
     alternates: {
@@ -1680,7 +1690,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
           <div className="flex min-w-0 flex-col gap-2">
             <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
               {/* Без «— 62 м² с 1 спальней»: эти цифры стоят строкой ниже. */}
-              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
+              {(() => { const h = title.split(/\s[-—–]\s(?=\d)/)[0] || title; return lang === 'en' ? h.replace(/\son\s(?=[A-Z][\w'’\- ]*$)/, ' in ') : h })()}
             </h1>
             {keyLine && <p className="m-0 text-[15px] leading-[1.5] text-[#4A5550] md:text-[18px]">{keyLine}</p>}
           </div>

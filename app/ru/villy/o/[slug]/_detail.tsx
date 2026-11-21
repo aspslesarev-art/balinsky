@@ -1172,8 +1172,19 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
     && numberOrNull(d['Площадь']) == null
     && firstString(d['Комнаты']) == null
 
+  // EN (21.11.2026, разбор Yolla Bali в AI Overview): заголовок в форме
+  // запроса — «<Название> for Sale in <Район>, Bali — $цена».
+  const enTitle = lang === 'en' && district ? (() => {
+    const esc = district.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const base = (title.split(/\s[-—–]\s(?=\d)/)[0] || title)
+      .replace(new RegExp(`\\s+(in|on|at)\\s+${esc}(,?\\s*Bali)?\\s*$`, 'i'), '')
+      .trim()
+    const t = `${base} for Sale in ${district}, Bali`
+    return `${t}${price && (t + dashPrice).length <= 70 ? dashPrice : ''} | Balinsky`
+  })() : null
+
   return {
-    title: seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle,
+    title: enTitle ?? (seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle),
     description,
     ...(isDataless ? { robots: { index: false, follow: true } } : {}),
     alternates: {
@@ -2218,7 +2229,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           <div className="flex min-w-0 flex-col gap-2">
             <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
               {/* Без «— 86 м², 2 спальни…»: эти цифры стоят строкой ниже (владелец 19.11.2026). */}
-              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
+              {/* EN: «Complex on Pandawa» → «in Pandawa» (район в конце названия). */}
+              {(() => { const h = title.split(/\s[-—–]\s(?=\d)/)[0] || title; return lang === 'en' ? h.replace(/\son\s(?=[A-Z][\w'’\- ]*$)/, ' in ') : h })()}
             </h1>
             {/* Строка фактов, справа на той же строке — сохранить · PDF · поделиться · ошибка
                 (владелец 20.11.2026). Плашку «Подтверждённая доходность» убрали: занимала место. */}
