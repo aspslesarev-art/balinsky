@@ -1,10 +1,10 @@
-// Документы комплекса (lib/complex-docs.ts) из закрытого бакета complex-docs.
+// Документы комплекса (site_content 'complex-docs', запасные — lib/complex-docs.ts) из закрытого бакета complex-docs.
 // Открываются только вошедшим с Pro (isProSession, решение владельца 2026-11-11).
 //   ?check=1          → { unlocked } — показать файлы или форму
 //   ?f=<file>[&dl=1]  → редирект на подписанную ссылку на 5 минут
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { complexDocFile } from '@/lib/complex-docs'
+import { loadComplexDocFile } from '@/lib/complex-docs'
 import { isProSession } from '@/lib/site-auth'
 import { clientIp, rateLimit } from '@/lib/rate-limit'
 
@@ -27,7 +27,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     return NextResponse.json({ unlocked }, { headers: NO_INDEX })
   }
 
-  const doc = complexDocFile(slug, url.searchParams.get('f') ?? '')
+  const doc = await loadComplexDocFile(slug, url.searchParams.get('f') ?? '')
   if (!doc) return NextResponse.json({ error: 'not_found' }, { status: 404, headers: NO_INDEX })
   if (!unlocked) return NextResponse.json({ error: 'pro_required' }, { status: 403, headers: NO_INDEX })
   if (!SUPABASE_URL || !SERVICE_KEY) {

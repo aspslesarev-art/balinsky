@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { YieldRange } from '@/lib/investment/chance'
 import { districtRu } from '@/lib/district-ru'
 import { searchCatalog } from '@/lib/catalog-search'
-import { hasVerifiedYield } from '@/lib/verified-yield'
+import { hasVerifiedYield, primeVerifiedYield } from '@/lib/verified-yield'
 import type { ApartmentCardData } from '@/components/ApartmentCard'
 import type { FilterOptions, FilterState } from '@/components/filters/FiltersBar'
 import { loadFeatureFlagsMap, FEATURE_FLAGS, FEATURE_LABELS, loadVisionManifest } from '@/lib/listing-features'
@@ -584,6 +584,8 @@ async function loadAptRows() {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
+  // Список «подтверждённая доходность» из базы (site_content) — до сборки строк.
+  await primeVerifiedYield()
   const [rowsRes, manifestRaw, devMap, enCache, viewCounts, featuresMap, visionMap, livingMap] = await Promise.all([
     loadAptRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:apartments']),

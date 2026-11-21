@@ -1,3 +1,5 @@
+import { loadSiteSection } from './site-content'
+
 // Knowledge articles kept for readers but excluded from search.
 //
 // The EN knowledge pool is the site's biggest source of impressions (4667 in
@@ -39,4 +41,19 @@ const NOINDEX_SLUGS = new Set([
 /** @param ruSlug the Russian slug — the key both locales are indexed by. */
 export function isNoindexKnowledge(ruSlug: string): boolean {
   return NOINDEX_SLUGS.has(ruSlug)
+}
+
+// Рабочий список — в базе: site_content, раздел 'knowledge-noindex', элемент =
+// русский слаг статьи. Добавил/убрал строку — статья и карта сайта
+// перестраиваются сами, без выкладки. Список выше — запасной.
+const FALLBACK: Record<string, unknown> = Object.fromEntries([...NOINDEX_SLUGS].map(s => [s, {}]))
+
+/** Слаги статей вне индекса: база, запасной вариант — список выше. */
+export async function loadNoindexKnowledge(): Promise<Set<string>> {
+  return new Set(Object.keys(await loadSiteSection('knowledge-noindex', FALLBACK)))
+}
+
+/** Все слаги из кода — для заливки в site_content. */
+export function noindexKnowledgeFallback(): string[] {
+  return [...NOINDEX_SLUGS]
 }

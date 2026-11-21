@@ -457,6 +457,9 @@ const SITE_PLANS: Record<string, SitePlan> = {
   'edem-ii': EDEM_II,
 }
 
+/** Запасные планы из кода. Рабочие — в базе, см. lib/complex-sun-plan-load.ts. */
+export const SITE_PLANS_FALLBACK: Readonly<Record<string, SitePlan>> = SITE_PLANS
+
 export function getSitePlan(slug: string): SitePlan | null {
   return SITE_PLANS[slug] ?? null
 }

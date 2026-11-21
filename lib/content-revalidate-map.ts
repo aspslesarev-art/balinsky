@@ -16,6 +16,7 @@ export const KIND_TO_TAGS: Record<string, string> = {
   apartments: 'content:apartments',
   complexes: 'content:complexes',
   videos: 'content:videos',
+  districts: 'content:districts',
 }
 
 type RevalidateRoute = { path: string; type?: 'page' | 'layout' }
@@ -83,6 +84,14 @@ const RU_PATHS: Record<string, RevalidateRoute[]> = {
     { path: '/ru/zhilye-kompleksy/o/[slug]', type: 'page' },
     { path: '/ru/villy/o/[slug]', type: 'page' },
     { path: '/ru/apartamenty/o/[slug]', type: 'page' },
+  ],
+  // Районы из /admin/data (манифест districts/_districts.json). Сайт сейчас
+  // берёт тексты районов из кода (lib/district-copy), так что правка там
+  // видна только на страницах «инвестиции в район». Хабы каталогов
+  // (/ru/villy/[...slug] и т.п.) сюда сознательно не входят: это тысячи
+  // путей, а их данные района не читают.
+  districts: [
+    { path: '/ru/investicii/[district]', type: 'page' },
   ],
 }
 

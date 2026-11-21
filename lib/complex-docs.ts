@@ -6,6 +6,8 @@
 // Пункты «что проверено» — из юр-проверки комплекса (raw_complexes,
 // «Юр-проверка: в порядке»), каждый со ссылками на свои документы.
 
+import { loadSiteSection } from './site-content'
+
 type Copy = { ru: string; en: string }
 
 export type ComplexDoc = { file: string; name: Copy; what: Copy; mb: number }
@@ -176,10 +178,30 @@ const BAMBOOLINA: ComplexDocs = {
 
 const BY_SLUG: Record<string, ComplexDocs> = { citrine: CITRINE, ecowood: ECOWOOD, 'maison-boheme': MAISON_BOHEME, bamboolina: BAMBOOLINA }
 
+// Значения в коде — запасные. Рабочие данные лежат в базе: site_content,
+// раздел 'complex-docs', элемент = slug ЖК (миграция 147, заливка —
+// scripts/site-content.mjs seed). Правка строки сама перестраивает страницы ЖК
+// и его юнитов. Новый ЖК с документами = новая строка в базе + PDF в бакете
+// complex-docs/<slug>/, выкладка сайта не нужна.
+export const COMPLEX_DOCS_FALLBACK: Readonly<Record<string, ComplexDocs>> = BY_SLUG
+
+/** Запасной синхронный доступ к значениям из кода. На страницах — loadComplexDocs. */
 export function complexDocs(slug: string | null | undefined): ComplexDocs | null {
   return slug ? BY_SLUG[slug] ?? null : null
 }
 
-export function complexDocFile(slug: string, file: string): ComplexDoc | null {
-  return complexDocs(slug)?.docs.find(d => d.file === file) ?? null
+/** Документы ЖК: база, а если там пусто или сбой — значения из кода. */
+export async function loadComplexDocs(
+  slug: string | null | undefined,
+  opts: { fresh?: boolean } = {},
+): Promise<ComplexDocs | null> {
+  if (!slug) return null
+  const all = await loadSiteSection<ComplexDocs>('complex-docs', BY_SLUG, opts)
+  const docs = all[slug]
+  return docs && Array.isArray(docs.docs) ? { ...docs, slug } : null
+}
+
+/** Один файл ЖК. `fresh` — для API выдачи файла: без кэша, новый PDF виден сразу. */
+export async function loadComplexDocFile(slug: string, file: string): Promise<ComplexDoc | null> {
+  return (await loadComplexDocs(slug, { fresh: true }))?.docs.find(d => d.file === file) ?? null
 }

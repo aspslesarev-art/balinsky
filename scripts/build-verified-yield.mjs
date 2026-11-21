@@ -3,9 +3,8 @@
 // (complex_booking_match) отметку не даёт: там собрано лишь с 05.08.2026,
 // в сезон, и закрытый календарь выглядит как брони (решение владельца 15.10.2026).
 //
-// Пишет lib/verified-yield.json { complexes, villas, apartments } — список
-// маленький и меняется только с таблицей совпадений, поэтому лежит в коде:
-// каталог читает его без запросов к базе.
+// Пишет список в базу (site_content 'verified-yield') — сайт подхватывает его
+// без выкладки — и в lib/verified-yield.json как запасной вариант в коде.
 //
 //   node scripts/build-verified-yield.mjs
 import fs from 'node:fs'
@@ -61,3 +60,28 @@ async function units(table) {
 const out = { complexes: complexIds.sort(), villas: await units('raw_villas'), apartments: await units('raw_apartments') }
 fs.writeFileSync('lib/verified-yield.json', JSON.stringify(out, null, 1) + '\n')
 console.log(`complexes ${out.complexes.length}, villas ${out.villas.length}, apartments ${out.apartments.length}`)
+
+// Рабочий список — в базе (site_content 'verified-yield', см. lib/verified-yield.ts):
+// новые строки и снятые отметки сами перестраивают страницы объектов, выкладка
+// не нужна. JSON выше остаётся запасным списком в коде.
+const want = new Set([
+  ...out.complexes.map(id => `complexes:${id}`),
+  ...out.villas.map(id => `villas:${id}`),
+  ...out.apartments.map(id => `apartments:${id}`),
+])
+const have = new Set((await all('site_content?select=item&section=eq.verified-yield')).map(r => r.item))
+const add = [...want].filter(k => !have.has(k))
+const drop = [...have].filter(k => !want.has(k))
+if (add.length) {
+  const r = await fetch(`${URL}/rest/v1/site_content`, {
+    method: 'POST',
+    headers: { ...H, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify(add.map(item => ({ section: 'verified-yield', item, data: {} }))),
+  })
+  if (!r.ok) throw new Error(`site_content insert: ${r.status} ${await r.text()}`)
+}
+for (const item of drop) {
+  const r = await fetch(`${URL}/rest/v1/site_content?section=eq.verified-yield&item=eq.${encodeURIComponent(item)}`, { method: 'DELETE', headers: H })
+  if (!r.ok) throw new Error(`site_content delete: ${r.status} ${await r.text()}`)
+}
+console.log(`site_content: +${add.length} -${drop.length}`)

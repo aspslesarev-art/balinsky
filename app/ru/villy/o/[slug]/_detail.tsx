@@ -42,7 +42,7 @@ import dynamic from 'next/dynamic'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
 import { loadComplexMedia } from '@/lib/complex-media'
 import { loadPromoKit } from '@/lib/promo-kits'
-import { complexDocs } from '@/lib/complex-docs'
+import { loadComplexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
 import { VillaChapter, VillaBlock, ProNo } from '@/components/VillaChapter'
@@ -52,7 +52,7 @@ import { LegalAudit } from '@/components/LegalAudit'
 import { LEGAL_OK_FIELD, LEGAL_QUESTIONS_FIELD, LEGAL_BALANCE_FIELD, LEGAL_BALANCE_NOTES_FIELD, parseAuditItems, parseBalance } from '@/lib/legal-audit'
 import { loadComplexAudit } from '@/lib/complex-legal-i18n'
 import type { Wind } from '@/lib/complex-access'
-import { getSitePlan } from '@/lib/complex-sun-plan'
+import { loadSitePlan } from '@/lib/complex-sun-plan-load'
 import { loadSunSettings } from '@/lib/complex-sun'
 const SunShadowBlock = dynamic(() => import('@/components/sun/SunShadowBlock').then(m => ({ default: m.SunShadowBlock })))
 const Google3DMapBlock = dynamic(() => import('@/components/sun/Google3DMapBlock').then(m => ({ default: m.Google3DMapBlock })))
@@ -134,7 +134,7 @@ import { getDistrictCopy, getBuyAnchor } from '@/lib/districts'
 import { DISTRICT_TO_SLUG, BEDROOM_TO_SLUG } from '@/lib/seo-routes'
 import { facetLabel } from '@/lib/filter-i18n'
 import { hreflangMap } from '@/lib/hreflang'
-import { getVilla3DPlanUrl } from '@/lib/villa-3d-plans'
+import { loadVilla3DPlanUrl } from '@/lib/villa-3d-plans'
 import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { metaSnippet } from '@/lib/seo'
 import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
@@ -1208,7 +1208,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
   }
   const v = resolved.row
   // Реестр по каноническому slug: у большинства вилл модели нет и секция не рендерится.
-  const plan3dUrl = getVilla3DPlanUrl(resolved.canonicalSlug)
+  const plan3dUrl = await loadVilla3DPlanUrl(resolved.canonicalSlug)
 
   const d = v.data
   const manifest = await _loadManifest()
@@ -1234,7 +1234,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
   // Медиа комплекса для ряда «фишек» под фото: 3D-тур, солнце и 3D-карта.
   const promoKit = await loadPromoKit(firstString(d['Комплекс']))
   const complexMedia = await loadComplexMedia(firstString(d['Комплекс']), firstString(d['Комплекс 1'])).catch(() => ({ id: null, slug: null, tourUrl: null, data: null }))
-  const docsForTile = complexDocs(complexMedia.slug)
+  const docsForTile = await loadComplexDocs(complexMedia.slug)
   // Рассрочка комплекса («Payment plan,%»): «30%+20%+20%+20%+10%» ->
   // «30 / 20 / 20 / 20 / 10%», хвост «/12» - число месяцев, «100%» - без рассрочки.
   const paymentPlanText = (() => {
@@ -1250,7 +1250,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
   // «Участок» и вкладка «Зоны» в окне медиаблока.
   const rdtrHit = await loadRdtr(v.airtable_id, complexMedia.slug)
   const rdtr: RdtrData | null = rdtrHit?.data ?? null
-  const sunPlan = complexMedia.slug ? getSitePlan(complexMedia.slug) : null
+  const sunPlan = complexMedia.slug ? await loadSitePlan(complexMedia.slug) : null
   // Юридическая проверка комплекса (документы застройщика) — тот же блок, что
   // на странице ЖК, и так же только в Pro (bx-auth-block).
   const cd = complexMedia.data ?? {}

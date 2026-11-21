@@ -11,7 +11,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { loadAllKnowledge, loadKnowledgeBySlug } from '@/lib/knowledge'
 import { enKnowledgeSlug } from '@/lib/knowledge-en-slugs'
-import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
+import { loadNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { ArticleCover } from '@/components/ArticleCover'
 import { ArticleBody, plainArticleText } from '@/components/ArticleBody'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
@@ -110,7 +110,7 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
     description: metaSnippet(plainArticleText(k.body)),
     // Tourist trivia stays readable but out of the index — see
     // lib/knowledge-noindex.ts for why, and for what stays indexed.
-    ...(isNoindexKnowledge(k.slug) ? { robots: { index: false, follow: true } } : {}),
+    ...((await loadNoindexKnowledge()).has(k.slug) ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: path,
       // RU/EN-only guides have no page in the other locales.

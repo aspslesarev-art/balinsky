@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/admin-auth'
-import { getSitePlan } from '@/lib/complex-sun-plan'
+import { loadSitePlan } from '@/lib/complex-sun-plan-load'
 import { loadSunSettings } from '@/lib/complex-sun'
 import { SunSettingsEditor } from './_editor'
 
@@ -13,7 +13,7 @@ export default async function Page({ params }: { params: Params }) {
   if (!(await requireAdmin())) redirect('/admin')
   const { slug } = await params
 
-  const plan = getSitePlan(slug)
+  const plan = await loadSitePlan(slug)
   if (!plan) {
     return (
       <main className="mx-auto max-w-3xl p-6">

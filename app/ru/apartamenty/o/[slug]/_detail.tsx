@@ -1,7 +1,7 @@
 // Shared apartment-detail renderer for both /ru/apartamenty/o/[slug]
 // and /en/apartments/o/[slug]. Layout / data fetching live here only.
 
-import { getApartment3DPlanUrl } from '@/lib/villa-3d-plans'
+import { loadApartment3DPlanUrl } from '@/lib/villa-3d-plans'
 import { TouristHeatMap } from '@/components/TouristHeatMap'
 import { ProPendingNote } from '@/components/ProPendingNote'
 import type { ReactNode } from 'react'
@@ -96,7 +96,7 @@ import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { loadComplexMedia } from '@/lib/complex-media'
-import { complexDocs } from '@/lib/complex-docs'
+import { loadComplexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
@@ -1037,7 +1037,8 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     content: <ZoningMap slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
   }] : []
   // Документы комплекса (только Pro) — плиткой, как на странице виллы.
-  const aptDocs = complexDocs(aptComplex.slug)
+  const aptDocs = await loadComplexDocs(aptComplex.slug)
+  const apt3dPlanUrl = await loadApartment3DPlanUrl(slug)
   if (aptDocs) {
     aptViewerTabs.push({
       key: 'docs',
@@ -1715,7 +1716,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
           photos={photos}
           alts={photoAlts}
           plans={curated.plans}
-          plan3dUrl={getApartment3DPlanUrl(slug)}
+          plan3dUrl={apt3dPlanUrl}
           videos={aptVideos.map(vd => ({ url: vd.url, name: vd.name }))}
           tourUrl={aptTourUrl}
           viewerTabs={aptViewerTabs}

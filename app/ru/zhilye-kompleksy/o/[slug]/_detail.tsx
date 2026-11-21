@@ -11,7 +11,7 @@ import { unstable_cache } from 'next/cache'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import { contentRev } from '@/lib/content-version'
 import { MapPin, Sun, Globe, Layers, FileText } from 'lucide-react'
-import { complexDocs } from '@/lib/complex-docs'
+import { loadComplexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
@@ -30,7 +30,7 @@ import { loadVideosByComplexSlug } from '@/lib/videos'
 import { VideoGrid } from '@/components/VideoGrid'
 import { loadNearbyPlaces } from '@/lib/nearby-places'
 import { listLayers, listHotspots } from '@/lib/complex-visualizations'
-import { getSitePlan } from '@/lib/complex-sun-plan'
+import { loadSitePlan } from '@/lib/complex-sun-plan-load'
 import { embeddableTourUrl } from '@/lib/tour3d'
 import { loadPromoKit } from '@/lib/promo-kits'
 import { loadSunSettings } from '@/lib/complex-sun'
@@ -1590,7 +1590,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   // Солнечно-теневая модель. Обмер генплана лежит в коде, ориентация и
   // высоты — в БД, их выставляет админ в /admin/sun/<slug>. Пока он не
   // включил `enabled`, вкладки нет вовсе.
-  const sunPlan = getSitePlan(slug)
+  const sunPlan = await loadSitePlan(slug)
+  // Документы ЖК — из базы (site_content), запасные значения в коде.
+  const complexDocsData = await loadComplexDocs(slug)
   const sunSettings = sunPlan
     ? await loadSunSettings(slug).catch(() => null)
     : null
@@ -1984,7 +1986,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       })
     }
     // Документы комплекса — та же плитка, что на странице виллы (файлы только Pro).
-    const docs = complexDocs(slug)
+    const docs = complexDocsData
     if (docs) {
       tabs.push({
         key: 'docs',

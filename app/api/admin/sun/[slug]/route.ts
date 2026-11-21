@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin-auth'
-import { getSitePlan, type SunSettingsInput } from '@/lib/complex-sun-plan'
+import { type SunSettingsInput } from '@/lib/complex-sun-plan'
+import { loadSitePlan } from '@/lib/complex-sun-plan-load'
 import { loadSunSettings, saveSunSettings } from '@/lib/complex-sun'
 
 export const runtime = 'nodejs'
@@ -12,7 +13,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   if (!(await requireAdmin())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { slug } = await params
 
-  const plan = getSitePlan(slug)
+  const plan = await loadSitePlan(slug)
   if (!plan) return NextResponse.json({ error: 'no_plan' }, { status: 404 })
 
   return NextResponse.json({ plan, settings: await loadSunSettings(slug) })
@@ -68,7 +69,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
   if (!(await requireAdmin())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { slug } = await params
 
-  if (!getSitePlan(slug)) return NextResponse.json({ error: 'no_plan' }, { status: 404 })
+  if (!(await loadSitePlan(slug))) return NextResponse.json({ error: 'no_plan' }, { status: 404 })
 
   let body: unknown
   try {

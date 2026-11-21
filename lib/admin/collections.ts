@@ -577,6 +577,7 @@ const districts: CollectionConfig = {
   caps: { create: true, update: true, delete: true },
   titleField: 'name',
   defaultSort: { field: 'name', dir: 'asc' },
+  revalidateKind: 'districts',
   fields: [
     { key: 'name', label: 'Район', type: 'text', showInGrid: true, width: 200 },
     { key: 'source', label: 'Источник', type: 'text', readOnly: true, showInGrid: true, width: 220 },

@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { ComplexYieldRange } from '@/lib/investment/chance'
 import { districtRu } from '@/lib/district-ru'
 import { searchCatalog } from '@/lib/catalog-search'
-import { hasVerifiedYield } from '@/lib/verified-yield'
+import { hasVerifiedYield, primeVerifiedYield } from '@/lib/verified-yield'
 import { unstable_cache } from 'next/cache'
 import type { ComplexCardData } from '@/components/ComplexCard'
 import type { Option } from '@/components/filters/MultiSelectFilter'
@@ -673,6 +673,8 @@ function buildYieldIndex(rows: UnitYieldRow[]): Map<string, ComplexYieldRange> {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
+  // Список «подтверждённая доходность» из базы (site_content) — до сборки строк.
+  await primeVerifiedYield()
   const [rows, manifestRaw, villas, apts, enCache, viewCounts, visionMap, unitYields] = await Promise.all([
     _loadComplexCardRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:complexes']),

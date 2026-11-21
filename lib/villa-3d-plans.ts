@@ -1,3 +1,5 @@
+import { loadSiteSection } from './site-content'
+
 /**
  * Виллы, для которых в `public/models/` лежит самодостаточная HTML-страница с
  * 3D-планировкой.
@@ -221,4 +223,45 @@ const APARTMENT_3D_PLANS: Readonly<Record<string, string>> = {
 /** Публичный URL 3D-планировки апартаментов либо null, если модели нет. */
 export function getApartment3DPlanUrl(slug: string): string | null {
   return APARTMENT_3D_PLANS[slug] ?? null
+}
+
+// ---------------------------------------------------------------------------
+// Рабочий реестр — в базе: site_content, раздел '3d-plans', элемент
+// 'villa:<slug>' или 'apartment:<slug>', данные { "url": "…" } (миграция 147,
+// заливка — scripts/site-content.mjs seed). Таблицы выше — запасные значения.
+//
+// Новая модель без выкладки: HTML кладётся в Storage site-assets/models/
+// (scripts/site-assets.mjs), строка в базе получает url '/m3d/<файл>.html' —
+// его отдаёт app/m3d/[...path]/route.ts. Страница объекта перестроится сама.
+
+type PlanRow = { url?: unknown }
+
+let _fallback: Record<string, PlanRow> | null = null
+function fallbackRows(): Record<string, PlanRow> {
+  if (_fallback) return _fallback
+  const out: Record<string, PlanRow> = {}
+  for (const [slug, url] of Object.entries(VILLA_3D_PLANS)) out[`villa:${slug}`] = { url }
+  for (const [slug, url] of Object.entries(APARTMENT_3D_PLANS)) out[`apartment:${slug}`] = { url }
+  return (_fallback = out)
+}
+
+/** Все 3D-планировки в виде строк базы — для заливки в site_content. */
+export function plan3dFallbackRows(): Record<string, PlanRow> {
+  return fallbackRows()
+}
+
+async function load3DPlanUrl(key: string): Promise<string | null> {
+  const rows = await loadSiteSection<PlanRow>('3d-plans', fallbackRows())
+  const url = rows[key]?.url
+  return typeof url === 'string' && url ? url : null
+}
+
+/** URL 3D-планировки виллы: база, запасной вариант — реестр выше. */
+export function loadVilla3DPlanUrl(slug: string): Promise<string | null> {
+  return load3DPlanUrl(`villa:${slug}`)
+}
+
+/** URL 3D-планировки апартаментов: база, запасной вариант — реестр выше. */
+export function loadApartment3DPlanUrl(slug: string): Promise<string | null> {
+  return load3DPlanUrl(`apartment:${slug}`)
 }

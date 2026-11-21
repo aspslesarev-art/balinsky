@@ -4,7 +4,7 @@ import type { YieldRange } from '@/lib/investment/chance'
 import { createClient } from '@supabase/supabase-js'
 import { districtRu } from '@/lib/district-ru'
 import { searchCatalog } from '@/lib/catalog-search'
-import { hasVerifiedYield } from '@/lib/verified-yield'
+import { hasVerifiedYield, primeVerifiedYield } from '@/lib/verified-yield'
 import type { Option } from '@/components/filters/MultiSelectFilter'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { loadVillaStyles } from '@/lib/villa-styles'
@@ -724,6 +724,8 @@ async function loadVillaRows() {
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
+  // Список «подтверждённая доходность» из базы (site_content) — до сборки строк.
+  await primeVerifiedYield()
   const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap, visionMap, livingMap] = await Promise.all([
     loadVillaRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:villas']),
