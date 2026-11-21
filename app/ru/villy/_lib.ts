@@ -711,9 +711,21 @@ function reassembleVilla(raw: Record<string, unknown>): Row {
   return { airtable_id: raw.airtable_id as string, data }
 }
 
+// Сборка открывает сотни страниц параллельно, и база под этой нагрузкой
+// иногда обрывает запрос каталога по statement timeout (21.11.2026: 2 сборки
+// из 3 упали на /en/villas). Повторяем до трёх раз с паузой; прочие ошибки
+// отдаём как есть.
+async function loadVillaRows() {
+  for (let attempt = 1; ; attempt++) {
+    const res = await sb.from('raw_villas').select(VILLA_SELECT).limit(1000)
+    if (!res.error || attempt >= 3 || !/statement timeout/i.test(res.error.message)) return res
+    await new Promise(r => setTimeout(r, 1500 * attempt))
+  }
+}
+
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap, visionMap, livingMap] = await Promise.all([
-    sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
+    loadVillaRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:villas']),
     loadVillaStyles(),
     loadAllTranslations('villas'),
