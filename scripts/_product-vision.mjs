@@ -19,6 +19,12 @@ export const VOCAB = {
   rooms: ['bedroom', 'bathroom', 'kitchen', 'living', 'dining', 'workspace', 'pool_area', 'exterior', 'garden', 'lobby', 'restaurant', 'gym', 'spa', 'coworking', 'rooftop'],
   space: ['cramped', 'compact', 'comfortable', 'spacious', 'grand'],
   segment: ['couples', 'families', 'digital_nomads', 'surfers', 'groups', 'wellness', 'budget_backpackers', 'luxury_travellers'],
+  // v2 (21.11.2026): признаки, важные покупателю, а не гостю. Разбор — Claude по подписке.
+  roof: ['flat', 'pitched_tile', 'thatch_alang', 'pitched_metal', 'green_roof', 'mixed', 'not_shown'],
+  image_kind: ['render', 'photo', 'mixed'],
+  build_stage: ['land_only', 'foundation', 'structure', 'finishing', 'completed', 'operating', 'unclear'],
+  shared: ['shared_pool', 'restaurant_cafe', 'gym', 'spa', 'coworking', 'kids_club', 'beach_club', 'rooftop_bar', 'reception_lobby', 'parking', 'sports_court', 'yoga_shala', 'garden_park'],
+  palette: ['white_light', 'warm_wood_earth', 'dark_contrast', 'grey_concrete', 'colorful'],
   flags: ['worn_furniture', 'stains_or_mold', 'cramped_rooms', 'clutter', 'poor_lighting', 'dated_bathroom', 'no_outdoor_space', 'construction_nearby', 'road_or_noise', 'low_quality_photos'],
 }
 
@@ -63,6 +69,22 @@ export const VISION_SCHEMA = {
   },
   required: ['visual_kind', 'style_primary', 'style_secondary', 'finish_tier', 'design_coherence', 'condition', 'materials', 'architecture', 'pool_type', 'pool_deck_tier', 'views', 'outdoor_living_share', 'rooms_shown', 'kitchen_tier', 'bathroom_tier', 'bathtub', 'outdoor_shower', 'ac_visible', 'workspace_desk', 'natural_light', 'space_feel', 'guest_segment', 'photo_professional', 'photo_staged', 'photo_twilight', 'photo_drone', 'photo_people', 'instagrammability', 'wow_element', 'red_flags', 'confidence'],
 }
+
+// Дополнительные поля v2. Применяются и к каталогу, и к рынку аренды.
+export const V2_FIELDS = `- style_exterior: one of ${VOCAB.style.join('|')} (style of the building outside: facade, roof, landscaping; "none" if no exterior shown)
+- style_interior: one of ${VOCAB.style.join('|')} (style inside; "none" if no interior shown)
+- roof_type: one of ${VOCAB.roof.join('|')}
+- facade_materials: array of ${VOCAB.materials.join('|')} (materials of the outside walls/roof only)
+- palette: one of ${VOCAB.palette.join('|')} (dominant colour mood)
+- image_kind: one of ${VOCAB.image_kind.join('|')} (render = 3D visualisation, photo = real camera photo)
+- build_stage: one of ${VOCAB.build_stage.join('|')} (judge from real photos only; renders alone = "unclear"; a lived-in rental = "operating")
+- plot_density: integer 0..5 (0 = not shown; 1 = lots of land between buildings, 3 = typical complex, 5 = wall-to-wall townhouse rows)
+- privacy: integer 0..5 (0 = not shown; 1 = pool/bedroom openly overlooked by neighbours, 5 = fully enclosed, nobody sees in)
+- greenery: integer 0..5 (0 = not shown; 1 = bare concrete and tiles, 5 = lush mature tropical garden)
+- shared_amenities: array of ${VOCAB.shared.join('|')} (facilities shared by residents/guests that are visible; empty if none)
+- units_visible: integer 0..200 (how many separate units/villas are visible in a master-plan or drone shot; 0 = no such shot)
+- buyer_appeal: integer 1..5 (how attractive this looks to a foreign buyer of a holiday/investment property, judged on the product only)
+- summary_ru: string (one Russian sentence, max 20 words, plain words: what this is and its style)`
 
 // Подсказка модели одинаковая для обоих миров, кроме строки контекста:
 // у аренды это снятые фото, у застройщика может быть рендер.
