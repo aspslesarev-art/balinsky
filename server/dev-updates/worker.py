@@ -504,11 +504,13 @@ def collect(dry=False):
     eaten = set()
     for c in sb_get("dev_price_checks", {"select": "msg_ids", "asked_at": f"gte.{since}"}):
         eaten.update(c.get("msg_ids") or [])
-    # Пока сверка открыта, чат целиком её: ответ «да» иначе стал бы карточкой новости.
+    # В чате с открытой сверкой свежие сообщения сначала разбирает она (ответ «да» не новость);
+    # чего она не взяла за 10 минут — идёт сюда как обычно.
     busy = {c["chat_id"] for c in sb_get("dev_price_checks", {"select": "chat_id", "state": "in.(asked,clarifying,confirming)"})}
+    fresh = datetime.now(timezone.utc) - timedelta(minutes=10)
     by_chat = {}
     for m in msgs:
-        if m["chat_id"] in busy:
+        if m["chat_id"] in busy and datetime.fromisoformat(m["created_at"]) > fresh:
             continue
         if m["id"] in eaten or m["id"] <= cursor.get(m["chat_id"], 0) or m.get("sender_id") == OWNER or m.get("media_type") == "sticker":
             continue
