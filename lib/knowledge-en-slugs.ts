@@ -12,6 +12,7 @@
 // `ru-slug: 'english-slug'` line (lowercase, hyphenated, ASCII, keyword-first).
 // The loader, detail paths, sitemap and the middleware 301 all read this map.
 export const EN_KNOWLEDGE_SLUG_OVERRIDES: Record<string, string> = {
+  "tsena-kvadratnogo-metra-na-bali-kak-schitat-pravilno-za-god-lizholda": "bali-villa-price-per-square-metre-per-year-leasehold",
   "skolko-stoit-villa-na-bali-tseny-po-rayonam-v-2026-godu": "bali-villa-prices-by-area-2026",
   "kak-pereehat-na-bali-iz-rossii-v-2026-vizy-zhile-dengi-poshagovo": "how-to-move-to-bali-visas-housing-money-2026",
   "mozhno-li-rossiyaninu-kupit-nedvizhimost-na-bali-i-kak-eto-sdelat-zakonno-v-2026": "can-foreigners-buy-property-bali-how-2026",
