@@ -1351,6 +1351,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
         label: pickCopy({ ru: 'Документы', en: 'Documents', id: 'Dokumen', fr: 'Documents', de: 'Dokumente', zh: '文件', nl: 'Documenten', ban: 'Dokumen', pl: 'Dokumenty', uk: 'Документи' }, lang),
         icon: <FileText size={18} aria-hidden />,
         cover: photos[3] ?? photos[0] ?? null,
+        count: docsForTile.docs.length,
         content: <ComplexDocsView docs={docsForTile} lang={lang} listingTitle={title} />,
         bleed: true,
       })

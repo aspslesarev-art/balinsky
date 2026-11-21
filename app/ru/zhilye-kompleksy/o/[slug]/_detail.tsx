@@ -1992,6 +1992,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         icon: <FileText size={18} aria-hidden />,
         cover: slidesPhotos[3] ?? slidesPhotos[0] ?? null,
         bleed: true,
+        count: docs.docs.length,
         content: <ComplexDocsView key="docs" docs={docs} lang={lang} listingTitle={name} />,
       })
     }

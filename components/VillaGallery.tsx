@@ -212,7 +212,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         ...(planCount > 0 ? [{ key: 'plans', label: c.plans, count: planCount > 1 ? planCount : undefined, cover: plans[0] ?? null, tab: 'plans' as Tab, i: 0 }] : []),
         ...(masterplan ? [{ key: 'master', label: c.master, cover: masterplanCover ?? null, tab: 'master' as Tab, i: 0 }] : []),
         ...(tourUrl ? [{ key: 'tour', label: c.tour, cover: photos[2] ?? photos[0] ?? null, tab: 'tour' as Tab, i: 0 }] : []),
-        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, cover: v.cover ?? null, unopt: /arcgisonline\.com/.test(v.cover ?? ''), tab: `x:${v.key}` as Tab, i: 0 })),
+        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, count: v.count, cover: v.cover ?? null, unopt: /arcgisonline\.com/.test(v.cover ?? ''), tab: `x:${v.key}` as Tab, i: 0 })),
         ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, tab: 'promo' as Tab, i: 0 }] : []),
       ]
 
@@ -228,9 +228,11 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
                 <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-[#F1F3F2]">
                   {l.cover && <Image src={l.cover} alt="" fill sizes="(min-width: 768px) 200px, 148px" unoptimized={l.unopt} className="object-cover transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.04]" />}
                   {l.key === 'videos' && <span className="absolute inset-0 flex items-center justify-center text-white [filter:drop-shadow(0_2px_6px_rgb(0_0_0/.4))]"><svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" /><path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" /></svg></span>}
+                  {/* Число — плашкой на картинке (владелец 21.11.2026): подпись не переносится на вторую строку. */}
+                  {l.count != null && <span className="absolute bottom-1.5 right-1.5 rounded-full bg-[#0F1A15]/75 px-2 py-0.5 text-[12px] font-semibold leading-[1.4] tabular-nums text-white backdrop-blur-sm">{l.count}</span>}
                 </span>
                 <span className="text-[15px] font-semibold leading-tight text-[#0F1A15] group-hover:underline group-hover:underline-offset-4">
-                  {l.label}{l.count != null && <span className="font-normal text-[#6B7570]"> {l.count}</span>}
+                  {l.label}
                 </span>
               </button>
             ))}
