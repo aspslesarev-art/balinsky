@@ -4,9 +4,17 @@
 // без горизонтальной прокрутки). Строка глав сверху - VillaChapterNav.
 import type { ReactNode } from 'react'
 
+/** Номер главы, который зависит от Pro: блок «Проверьте с ИИ» видят только
+ *  Pro (владелец 21.11.2026), и у остальных нумерация идёт без дыры. Тот же
+ *  косметический принцип, что у .bx-pro-only: HTML одинаков для всех. */
+export function ProNo({ pro, guest }: { pro: string; guest: string }) {
+  if (pro === guest) return <>{pro}</>
+  return <><span className="bx-pro-only">{pro}</span><span className="bx-nopro-block">{guest}</span></>
+}
+
 export function VillaChapter({ id, no, eyebrow, title, lead, band = false, plain = false, journal = false, children }: {
   id: string
-  no: string
+  no: ReactNode
   eyebrow: string
   title?: string
   lead?: string

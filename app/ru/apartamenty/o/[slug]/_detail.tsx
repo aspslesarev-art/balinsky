@@ -46,7 +46,7 @@ const LandProfileBlock = dynamic(
 import { LazyMount } from '@/components/LazyMount'
 import { ManagerContactButtons } from '@/components/ManagerContactButtons'
 import { VillaActions } from '@/components/VillaActions'
-import { VillaChapter } from '@/components/VillaChapter'
+import { VillaChapter, ProNo } from '@/components/VillaChapter'
 import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
 import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
 import { loadSurroundings } from '@/lib/surroundings'
@@ -1653,8 +1653,11 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
           </VillaChapter>
         )
   const hasDevChapter = !!(developer || devName || (parentComplex?.slug && parentComplex.name))
-  const noDev = hasDevChapter ? '03' : null
-  const noFaq = hasDevChapter ? '04' : '03'
+  // Без Pro глава «Проверьте с ИИ» скрыта — номера сдвигаются на одну.
+  const ai = analyses.length > 0 ? 1 : 0
+  const nn = (k: number) => String(k).padStart(2, '0')
+  const noDev = hasDevChapter ? <ProNo pro={nn(2 + ai)} guest="02" /> : null
+  const noFaq = <ProNo pro={nn((hasDevChapter ? 3 : 2) + ai)} guest={nn(hasDevChapter ? 3 : 2)} />
 
   return (
     <>
@@ -1717,11 +1720,14 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
 
         {/* Аналитика — одна глава «02 Проверьте апартаменты с ИИ», как у виллы. */}
         {analyses.length > 0 && (
+          // Только Pro (владелец 21.11.2026): аналитика ещё не готова для всех.
+          <div className="bx-pro-only">
           <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika}>
             <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${apartmentsRoot}/o/${slug}`)}`} no="02"
               heading={pickCopy(APT.aiHeading, lang)}
               extras={{ daily: calcBlock }} />
           </VillaChapter>
+          </div>
         )}
 
         {/* Застройщик и вопросы — рядом на компьютере, как у виллы. */}

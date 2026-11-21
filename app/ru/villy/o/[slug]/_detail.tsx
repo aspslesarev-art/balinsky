@@ -45,7 +45,7 @@ import { loadPromoKit } from '@/lib/promo-kits'
 import { complexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
-import { VillaChapter, VillaBlock } from '@/components/VillaChapter'
+import { VillaChapter, VillaBlock, ProNo } from '@/components/VillaChapter'
 import { ZoningMap } from '@/components/ZoningMap'
 import { RDTR_BASE, loadRdtr, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
@@ -2268,16 +2268,19 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
 
         {/* Аналитика — заголовок «02 Проверьте виллу с ИИ» рисует сама панель. */}
         {analyses.length > 0 ? (
+          // Только Pro (владелец 21.11.2026): аналитика ещё не готова для всех.
+          <div className="bx-pro-only">
           <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika[0]}>
             <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`} no="02"
               extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
           </VillaChapter>
+          </div>
         ) : (<>{mestoChapter}{analytics}</>)}
 
         {/* Застройщик и вопросы — рядом на компьютере, как в макете. */}
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
         {(developer || developerName || parentComplex) && (
-          <VillaChapter id="zastroyshchik" no={analyses.length > 0 ? '03' : '05'} eyebrow={CH.zastroyshchik[0]} journal>
+          <VillaChapter id="zastroyshchik" no={analyses.length > 0 ? <ProNo pro="03" guest="02" /> : '05'} eyebrow={CH.zastroyshchik[0]} journal>
             <div className="flex flex-col gap-5 md:gap-6">
               {(developer || developerName) && (
                 <div className="flex items-center justify-between gap-4">
@@ -2366,7 +2369,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           <VideoGrid jsonLdOnly videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
         )}
 
-        <VillaChapter id="voprosy" no={analyses.length > 0 ? '04' : '06'} eyebrow={CH.voprosy[0]} journal>
+        <VillaChapter id="voprosy" no={analyses.length > 0 ? <ProNo pro="04" guest="03" /> : '06'} eyebrow={CH.voprosy[0]} journal>
           <div className="-mt-2 md:-mt-4">
             {faqItems.map((it, i) => (
               <details key={i} className="group border-b border-[#ECEFED]">
