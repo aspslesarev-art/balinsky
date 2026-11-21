@@ -7,7 +7,7 @@
 // catalogue listing within 1.5 km — the same method as lib/district-market.json
 // and the rental-yield article. Medians throughout; p25/p75 for spread.
 //
-// Run monthly:  node scripts/build-market-index.mjs   → lib/market-index.json
+// Run monthly:  node scripts/build-market-index.mjs   → site_content 'market-index' (live) + lib/market-index.json (fallback)
 
 import fs from 'node:fs'
 
@@ -162,3 +162,17 @@ fs.writeFileSync('lib/market-index.json', JSON.stringify(out, null, 1) + '\n')
 fs.mkdirSync('data/market-history', { recursive: true })
 fs.writeFileSync(`data/market-history/${out.asOf}.json`, JSON.stringify(out) + '\n')
 console.log(JSON.stringify(out.totals), Object.keys(villaDistricts).length, 'villa districts,', Object.keys(aptDistricts).length, 'apt,', Object.keys(rentDistricts).length, 'rent')
+
+// Живая копия — в базе (site_content 'market-index' / 'current', см.
+// lib/market-index.ts primeMarketIndex). Запись сама перестраивает страницы
+// рынка, блок на главной и «инвестиции в район» (lib/row-revalidate.ts) —
+// выкладка сайта для новых цифр не нужна. JSON выше — запасной вариант и архив.
+if (!process.argv.includes('--no-db')) {
+  const r = await fetch(`${URL_}/rest/v1/site_content`, {
+    method: 'POST',
+    headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify([{ section: 'market-index', item: 'current', data: out, note: 'scripts/build-market-index.mjs' }]),
+  })
+  if (!r.ok) throw new Error(`site_content market-index: ${r.status} ${await r.text()}`)
+  console.log('site_content market-index/current updated')
+}

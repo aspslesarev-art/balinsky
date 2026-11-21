@@ -8,7 +8,9 @@
 //
 // Разделы: complex-docs (элемент = slug ЖК), 3d-plans (villa:<slug> /
 // apartment:<slug>), sun-plans (slug ЖК), verified-yield (<kind>:<id>),
-// knowledge-noindex (ru-слаг статьи).
+// knowledge-noindex (ru-слаг статьи), unit-grid (airtable_id ЖК — шахматка
+// поверх генплана, lib/unit-grid.ts), market-index (элемент current — пишет
+// scripts/build-market-index.mjs; seed для него не нужен).
 //
 // Любая запись сама ставит затронутые страницы в очередь перестройки
 // (миграция 146) — через 2–15 минут они обновятся на сайте. Отдельно звать
@@ -53,11 +55,15 @@ async function fallbackRows(section) {
       const m = await jiti.import('../lib/knowledge-noindex.ts')
       return Object.fromEntries(m.noindexKnowledgeFallback().map(s => [s, {}]))
     }
+    case 'unit-grid': {
+      const m = await jiti.import('../lib/unit-grid.ts')
+      return JSON.parse(JSON.stringify(m.UNIT_GRID_FALLBACK))
+    }
     default:
       throw new Error(`неизвестный раздел: ${section}`)
   }
 }
-const SECTIONS = ['complex-docs', '3d-plans', 'sun-plans', 'verified-yield', 'knowledge-noindex']
+const SECTIONS = ['complex-docs', '3d-plans', 'sun-plans', 'verified-yield', 'knowledge-noindex', 'unit-grid']
 
 async function rest(method, query, body) {
   const r = await fetch(`${URL}/rest/v1/site_content${query}`, {

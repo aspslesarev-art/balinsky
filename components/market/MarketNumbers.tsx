@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { MoneyTicker } from '@/components/Money'
 import { ArrowRight } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
-import { MARKET, marketPath, asOfLabel } from '@/lib/market-index'
+import { MARKET, marketPath, asOfLabel, primeMarketIndex } from '@/lib/market-index'
 
 type Copy = {
   h2: string
@@ -77,7 +77,13 @@ const COPY: Record<Exclude<Lang, 'ban'>, Copy> = {
   },
 }
 
-export function MarketNumbers({ lang }: { lang: Lang }) {
+// Цифры рынка — из базы (site_content 'market-index'), до рендера.
+export async function MarketNumbers({ lang }: { lang: Lang }) {
+  await primeMarketIndex()
+  return <MarketNumbersBody lang={lang} />
+}
+
+function MarketNumbersBody({ lang }: { lang: Lang }) {
   const V = MARKET.island.villas
   const c = COPY[lang === 'ban' ? 'id' : lang]
   const cards = [

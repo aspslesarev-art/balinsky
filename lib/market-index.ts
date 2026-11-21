@@ -45,7 +45,26 @@ export type MarketIndex = {
   }
 }
 
-export const MARKET = raw as unknown as MarketIndex
+// Свежий индекс живёт в базе: site_content, раздел 'market-index', элемент
+// 'current' (пишет scripts/build-market-index.mjs раз в месяц). JSON в коде —
+// запасной вариант и стартовое значение. MARKET — один объект на процесс:
+// primeMarketIndex() подменяет его содержимое на версию из базы, поэтому все
+// синхронные потребители видят свежие цифры без переделки на async.
+export const MARKET = structuredClone(raw) as unknown as MarketIndex
+
+/**
+ * Подтянуть индекс из базы в MARKET. Зовут страницы с цифрами рынка до
+ * рендера (PriceIndexView, RentIndexView, MethodologyView, MarketNumbers).
+ * Сбой или пустая база — остаётся JSON из кода.
+ */
+export async function primeMarketIndex(): Promise<void> {
+  const { loadSiteSection } = await import('./site-content')
+  const rows = await loadSiteSection<MarketIndex>('market-index', {})
+  const fresh = rows.current
+  if (!fresh || typeof fresh.asOf !== 'string' || !fresh.island || !fresh.villaDistricts) return
+  if (fresh.generatedAt === MARKET.generatedAt) return
+  Object.assign(MARKET, fresh)
+}
 
 /** Below this many observations a figure is shown as indicative, not a finding. */
 export const INDICATIVE_N = 30

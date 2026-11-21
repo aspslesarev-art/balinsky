@@ -17,7 +17,7 @@ import districtsNl from './district-copy/nl.json'
 import districtsPl from './district-copy/pl.json'
 import districtsUk from './district-copy/uk.json'
 import districtMarketJson from './district-market.json'
-import marketIndexJson from './market-index.json'
+import { MARKET as MARKET_INDEX } from './market-index'
 import { SLUG_TO_DISTRICT } from './seo-routes'
 
 export type DistrictCopy = {
@@ -623,7 +623,8 @@ const MARKET_LABELS: Record<Lang, { price: string; perM2: string; monthly: strin
   uk: { price: 'Медіанна ціна віли', perM2: 'Віла, ціна за м²', monthly: 'Оренда віли 2 сп. на місяць', nightly: 'Віла 2 сп. за ніч' },
 }
 type Stat = { n: number; median: number | null } | undefined
-const MI = marketIndexJson as unknown as {
+// Тот же объект, что MARKET: primeMarketIndex() обновляет его цифрами из базы.
+const MI = MARKET_INDEX as unknown as {
   villaDistricts: Record<string, { n: number; median: number | null; perM2: number | null }>
   monthly: { districts: Record<string, { villa2br?: Stat }> }
   rentDistricts: Record<string, { villa2br?: Stat }>

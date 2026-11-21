@@ -101,10 +101,18 @@ const nextConfig: NextConfig = {
     ]
   },
   async rewrites() {
-    return [
-      { source: '/agentskaya-set', destination: '/agentskaya-set/index.html' },
-      { source: '/intervyu-iji', destination: '/intervyu-iji/index.html' },
-    ]
+    return {
+      // /llms.txt со счётчиками из каталога (app/llms-live.txt/route.ts).
+      // beforeFiles — раньше public/llms.txt, который остаётся запасным.
+      beforeFiles: [
+        { source: '/llms.txt', destination: '/llms-live.txt' },
+      ],
+      afterFiles: [
+        { source: '/agentskaya-set', destination: '/agentskaya-set/index.html' },
+        { source: '/intervyu-iji', destination: '/intervyu-iji/index.html' },
+      ],
+      fallback: [],
+    }
   },
   async redirects() {
     // 301 redirects from old Wix site (balinsky.info) → new Next routes.

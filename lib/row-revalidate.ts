@@ -33,6 +33,8 @@ export type ChangeItem = { kind: string; id: string; op?: string; index?: boolea
 
 export type RevalidateSummary = {
   paths: number
+  /** Первые 200 адресов — для журнала и проверки. */
+  list: string[]
   kindWide: string[]
   bumped: string[]
   baselined: string[]
@@ -237,6 +239,8 @@ async function rowKind(kind: string, items: ChangeItem[], paths: PathSet, sum: R
   if (indexed.length) {
     paths.addAllLangs(LIST_RU[kind])
     paths.add('/sitemap/[id]')
+    // Счётчики объектов в /llms.txt считаются из каталога (app/llms-live.txt).
+    paths.add('/llms-live.txt')
     if (kind !== 'developers') paths.addAllLangs('/ru')
   }
 
@@ -249,13 +253,15 @@ async function unitPathsOfComplex(complexId: string, paths: PathSet): Promise<vo
   const sb = adminSb()
   const { data: c } = await sb.from('raw_complexes').select('project:data->>"Project"').eq('airtable_id', complexId).maybeSingle()
   const project = (c as { project: string | null } | null)?.project ?? null
-  const [villas, apts] = await Promise.all([
+  const none = Promise.resolve({ data: [] as { airtable_id: string }[] })
+  // Виллы связаны с ЖК по id, но у части юнитов в «Комплекс» старый id —
+  // поэтому ещё и по названию проекта, как scripts/build-verified-yield.mjs.
+  const [villas, villasByName, apts] = await Promise.all([
     sb.from('raw_villas').select('airtable_id').filter('data->"Комплекс"', 'cs', JSON.stringify([complexId])).limit(UNITS_PER_COMPLEX_CAP + 1),
-    project
-      ? sb.from('raw_apartments').select('airtable_id').eq('data->>"Комплекс 1"', project).limit(UNITS_PER_COMPLEX_CAP + 1)
-      : Promise.resolve({ data: [] as { airtable_id: string }[] }),
+    project ? sb.from('raw_villas').select('airtable_id').eq('data->>"Комплекс 1"', project).limit(UNITS_PER_COMPLEX_CAP + 1) : none,
+    project ? sb.from('raw_apartments').select('airtable_id').eq('data->>"Комплекс 1"', project).limit(UNITS_PER_COMPLEX_CAP + 1) : none,
   ])
-  const villaIds = ((villas.data ?? []) as { airtable_id: string }[]).map(r => r.airtable_id)
+  const villaIds = [...new Set([...(villas.data ?? []), ...(villasByName.data ?? [])].map(r => (r as { airtable_id: string }).airtable_id))]
   const aptIds = ((apts.data ?? []) as { airtable_id: string }[]).map(r => r.airtable_id)
   if (villaIds.length + aptIds.length > UNITS_PER_COMPLEX_CAP) return
   if (villaIds.length) {
@@ -429,6 +435,19 @@ async function siteContentChange(rowId: string, rowItems: Map<string, ChangeItem
       }
       return
     }
+    case 'unit-grid': {
+      // Шахматка: элемент — airtable_id ЖК. Она есть на странице ЖК и застройщика.
+      const list = rowItems.get('complexes') ?? []
+      list.push({ kind: 'complexes', id: item, op: 'SITE', index: false })
+      rowItems.set('complexes', list)
+      return
+    }
+    case 'market-index':
+      // Ежемесячный индекс рынка: три страницы рынка, блок «в цифрах» на
+      // главной и цифры на страницах «инвестиции в район».
+      for (const ru of ['/ru/tseny-na-nedvizhimost-bali', '/ru/tseny-arendy-na-bali', '/ru/metodologiya', '/ru']) paths.addAllLangs(ru)
+      paths.addAllLangs('/ru/investicii/[district]')
+      return
     case 'knowledge-noindex':
       paths.addAllLangs(DETAIL_RU.knowledge + item)
       for (const lang of LANGS) if (lang !== 'ru') paths.add(switchLangPath(DETAIL_RU.knowledge + enKnowledgeSlug(item), lang))
@@ -442,7 +461,7 @@ async function siteContentChange(rowId: string, rowItems: Map<string, ChangeItem
 // ---------------------------------------------------------------------------
 
 export async function revalidateChanges(items: ChangeItem[]): Promise<RevalidateSummary> {
-  const sum: RevalidateSummary = { paths: 0, kindWide: [], bumped: [], baselined: [], skipped: [] }
+  const sum: RevalidateSummary = { paths: 0, list: [], kindWide: [], bumped: [], baselined: [], skipped: [] }
   const paths = new PathSet()
   const rowItems = new Map<string, ChangeItem[]>()
   let _cidx: Promise<Map<string, string[]>> | null = null
@@ -465,9 +484,12 @@ export async function revalidateChanges(items: ChangeItem[]): Promise<Revalidate
   for (const [kind, list] of rowItems) await rowKind(kind, list, paths, sum, complexIndex)
 
   for (const p of paths.set) {
-    if (p === '/sitemap/[id]') revalidatePath(p, 'page')
+    // Шаблон маршрута ('/…/[slug]') сбрасывает все его адреса — только там,
+    // где это сознательно (карта сайта, ежемесячный индекс рынка).
+    if (p.includes('[')) revalidatePath(p, 'page')
     else revalidatePath(p)
   }
   sum.paths = paths.set.size
+  sum.list = [...paths.set].slice(0, 200)
   return sum
 }

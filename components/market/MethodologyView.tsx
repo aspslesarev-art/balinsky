@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type { Lang } from '@/lib/i18n'
 import { switchLangPath } from '@/lib/i18n'
 import { SRC } from '@/lib/investment-guide/data'
-import { MARKET, INDICATIVE_N, marketPath, knowledgePath, num, asOfLabel, dayLabel } from '@/lib/market-index'
+import { MARKET, INDICATIVE_N, marketPath, knowledgePath, num, asOfLabel, dayLabel, primeMarketIndex } from '@/lib/market-index'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import type { DataRow } from './DataTable'
 import { MarketShell, marketMetadata, H2, P, A } from './MarketShell'
@@ -189,7 +189,13 @@ export function methodologyMetadata(lang: Lang) {
 
 const LIST = 'space-y-2.5 list-disc pl-5 text-[16px] leading-[1.65] text-[#1f2937] max-w-[68ch]'
 
-export function MethodologyView({ lang }: { lang: Lang }) {
+// Цифры рынка — из базы (site_content 'market-index'), до рендера.
+export async function MethodologyView({ lang }: { lang: Lang }) {
+  await primeMarketIndex()
+  return <MethodologyViewBody lang={lang} />
+}
+
+function MethodologyViewBody({ lang }: { lang: Lang }) {
   const c = copy(lang)
   const rows: DataRow[] = c.sourceRows.map(([s, what, size]) => ({ key: s, label: s, cells: [what, size] }))
   return (

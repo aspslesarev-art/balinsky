@@ -16,6 +16,8 @@ type Props = {
   villas: VillaUnit[]
   masterplanUrl: string
   lang: string
+  /** Точки юнитов на генплане, % — из site_content 'unit-grid'. Нет — раскладка EcoWood. */
+  pins?: Record<string, { x: number; y: number }>
 }
 
 const PINS: Record<number, { x: number; y: number }> = {
@@ -31,7 +33,7 @@ const PINS: Record<number, { x: number; y: number }> = {
   10: { x: 62, y: 50 },
 }
 
-export function EcoWoodChessBoard({ villas, masterplanUrl, lang }: Props) {
+export function EcoWoodChessBoard({ villas, masterplanUrl, lang, pins }: Props) {
   const [hovered, setHovered] = useState<number | null>(null)
 
   const villaRoot = lang === 'en' ? '/en/villas/o' : '/ru/villy/o'
@@ -76,7 +78,7 @@ export function EcoWoodChessBoard({ villas, masterplanUrl, lang }: Props) {
 
         <div className="absolute inset-0">
           {villas.map(v => {
-            const pin = PINS[v.unit]
+            const pin = pins?.[String(v.unit)] ?? PINS[v.unit]
             if (!pin) return null
             const isHovered = hovered === v.unit
             const bg = v.sold ? 'rgb(239 68 68)' : 'rgb(34 197 94)'

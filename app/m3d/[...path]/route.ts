@@ -25,7 +25,7 @@ const TYPES: Record<string, string> = {
   webp: 'image/webp',
 }
 
-const SAFE = /^[a-z0-9][a-z0-9._-]*$/i
+const SAFE = /^[a-z0-9_][a-z0-9._-]*$/i
 
 export async function GET(_req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params

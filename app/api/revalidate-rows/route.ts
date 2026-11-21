@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   try {
     const summary = await revalidateChanges(items)
-    console.log('[revalidate-rows]', items.length, 'items →', JSON.stringify(summary))
+    console.log('[revalidate-rows]', items.length, 'items →', JSON.stringify({ ...summary, list: summary.list.slice(0, 20) }))
     return NextResponse.json({ ok: true, items: items.length, ...summary })
   } catch (e) {
     // 500 → база вернёт пачку в очередь и повторит через час.

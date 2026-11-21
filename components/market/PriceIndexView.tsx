@@ -8,8 +8,7 @@ import { switchLangPath, type Lang } from '@/lib/i18n'
 import { SRC } from '@/lib/investment-guide/data'
 import {
   MARKET, INDICATIVE_N, marketPath, knowledgePath, districtName, districtHub, usd, range, asOfLabel,
-  type SaleStats,
-} from '@/lib/market-index'
+  type SaleStats, primeMarketIndex } from '@/lib/market-index'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { DataTable, type DataRow } from './DataTable'
 import { MarketShell, marketMetadata, H2, P, NOTE, A, type Faq } from './MarketShell'
@@ -179,7 +178,13 @@ function saleCells(s: SaleStats, lang: Lang) {
   return [s.n, usd(s.median, lang), range(s, lang), s.perM2 ? usd(s.perM2, lang) : '—']
 }
 
-export function PriceIndexView({ lang }: { lang: Lang }) {
+// Цифры рынка — из базы (site_content 'market-index'), до рендера.
+export async function PriceIndexView({ lang }: { lang: Lang }) {
+  await primeMarketIndex()
+  return <PriceIndexViewBody lang={lang} />
+}
+
+function PriceIndexViewBody({ lang }: { lang: Lang }) {
   const c = copy(lang)
   const villaRows: DataRow[] = Object.entries(MARKET.villaDistricts)
     .sort((a, b) => b[1].n - a[1].n)

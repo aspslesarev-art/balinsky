@@ -1,9 +1,12 @@
 name: Market index (monthly)
 
-# Rebuilds lib/market-index.json — the numbers behind /en/bali-property-prices,
-# /en/bali-rent-prices, /en/methodology and the homepage «in numbers» block —
-# and keeps a snapshot per month in data/market-history/. The commit triggers
-# the usual Vercel deploy. Reads Supabase only.
+# Rebuilds the market index — the numbers behind /en/bali-property-prices,
+# /en/bali-rent-prices, /en/methodology and the homepage «in numbers» block.
+# The live copy goes to Supabase (site_content 'market-index'); that write
+# itself queues a targeted page refresh (migrations 146/147), so new numbers
+# are on the site within ~15 min without any deploy. The commit below only
+# archives lib/market-index.json (code fallback) and data/market-history/ —
+# it does NOT deploy (git deploys are disabled in vercel.json).
 
 on:
   schedule:

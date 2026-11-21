@@ -8,8 +8,7 @@ import { switchLangPath } from '@/lib/i18n'
 import { SRC } from '@/lib/investment-guide/data'
 import {
   MARKET, INDICATIVE_N, marketPath, knowledgePath, districtName, usd, num, ratio, range, asOfLabel, dayLabel,
-  type RentStats,
-} from '@/lib/market-index'
+  type RentStats, primeMarketIndex } from '@/lib/market-index'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { DataTable, type DataRow } from './DataTable'
 import { MarketShell, marketMetadata, H2, P, NOTE, A, type Faq } from './MarketShell'
@@ -161,7 +160,13 @@ export function rentIndexMetadata(lang: Lang) {
 
 const cell = (s: RentStats | undefined, lang: Lang) => (s && s.n >= 5 ? usd(s.median, lang) : '—')
 
-export function RentIndexView({ lang }: { lang: Lang }) {
+// Цифры рынка — из базы (site_content 'market-index'), до рендера.
+export async function RentIndexView({ lang }: { lang: Lang }) {
+  await primeMarketIndex()
+  return <RentIndexViewBody lang={lang} />
+}
+
+function RentIndexViewBody({ lang }: { lang: Lang }) {
   const c = copy(lang)
   const typeRows: DataRow[] = (['villa1br', 'villa2br', 'villa3br', 'villa4br', 'apartment'] as const).map(k => {
     const s = M.island[k]

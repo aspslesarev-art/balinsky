@@ -23,7 +23,8 @@ import { ApartmentCard, type ApartmentCardData } from '@/components/ApartmentCar
 import { loadManagersByDeveloperName } from '@/lib/managers'
 import { getDeveloperStats } from '@/lib/developer-stats'
 import { VillaCard, type VillaCardData } from '@/components/VillaCard'
-import { EcoWoodChessBoard, type VillaUnit as ChessBoardVilla } from '@/components/EcoWoodChessBoard'
+import { EcoWoodChessBoard } from '@/components/EcoWoodChessBoard'
+import { loadUnitGrid } from '@/lib/unit-grid'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { distanceKm as haversineKm } from '@/lib/competitor-utils'
 import { loadVideosByComplexSlug } from '@/lib/videos'
@@ -1335,28 +1336,6 @@ async function loadUnitsInComplex(complexName: string, lang: Lang = 'ru'): Promi
   return units
 }
 
-async function loadChessBoardVillas(complexId: string): Promise<ChessBoardVilla[]> {
-  if (complexId !== 'adm_ecowood_001') return []
-  const { data } = await sb.from('raw_villas')
-    .select('airtable_id, data')
-    .like('airtable_id', 'adm_ecowood_%')
-  if (!data) return []
-  return data
-    .map(r => {
-      const d = r.data as Record<string, unknown>
-      const unit = parseInt(String(r.airtable_id).replace('adm_ecowood_v', ''), 10)
-      return {
-        unit,
-        bedrooms: Number(d['Спальни']) || 1,
-        area: Number(d['Площадь']) || 70,
-        price: Number(d['Цена']) || 159000,
-        sold: d['Продано'] === true || d['Продано'] === 'true',
-        slug: String(d['SEO:Slug'] ?? ''),
-      }
-    })
-    .filter(v => v.slug && v.unit >= 1 && v.unit <= 10)
-    .sort((a, b) => a.unit - b.unit)
-}
 
 export async function generateComplexMetadata(slug: string, lang: Lang) {
   const c = await loadComplexBySlug(slug)
@@ -1439,14 +1418,16 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   if (!name) notFound()
   // Hidden developers must not appear anywhere (lib/hidden-developers.ts).
   if (isHiddenDeveloper(firstString(d['Developer1']), firstString(d['Варианты поиска застройщика']))) notFound()
-  const [photoManifest, units, geoFacts, chessBoardVillas, rdtrHit] = await Promise.all([
+  const [photoManifest, units, geoFacts, unitGrid, rdtrHit] = await Promise.all([
     _loadComplexPhotos(),
     loadUnitsInComplex(name, lang),
     loadGeoFacts('complex', c.airtable_id).catch(() => null),
-    loadChessBoardVillas(c.airtable_id),
+    // Шахматка поверх генплана — если для ЖК она настроена (site_content 'unit-grid').
+    loadUnitGrid([c.airtable_id]).catch(() => null),
     // Зоны плана застройки вокруг — вкладка «Зоны» и проверка участка, как у вилл.
     loadRdtr(c.airtable_id, slug).catch(() => null),
   ])
+  const chessBoardVillas = unitGrid?.villas ?? []
 
   // Балл востребованности грузится после units, а не в общем Promise.all:
   // ключом служат их airtable_id, которые до загрузки юнитов неизвестны.
@@ -2090,7 +2071,8 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
       {chessBoardVillas.length > 0 && (
         <EcoWoodChessBoard
           villas={chessBoardVillas}
-          masterplanUrl="https://images.balinsky.info/storage/v1/object/public/complex-photos/adm_ecowood_001/render.jpg"
+          masterplanUrl={unitGrid?.config.masterplanUrl ?? ''}
+          pins={unitGrid?.config.pins}
           lang={lang}
         />
       )}
