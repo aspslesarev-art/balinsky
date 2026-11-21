@@ -23,6 +23,7 @@
   html,body{height:100%;overflow:hidden;font-family:var(--font);color:var(--ink)}
   body{background:radial-gradient(ellipse at 50% 35%,#ffffff 0%,#eef6f0 55%,#dcebe1 100%)}
   #c{display:block;width:100%;height:100%;cursor:pointer;touch-action:pan-y}
+  .full #c{touch-action:none}
   #c.engaged{cursor:grab}#c.engaged:active{cursor:grabbing}
   .tapme{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:9px 18px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 16px rgba(31,139,95,.28);pointer-events:none;transition:opacity .2s}
   .tapme.hide{opacity:0}
@@ -444,6 +445,9 @@ const ToonKit = {
       drag.x = e.clientX; drag.y = e.clientY; updCam()
     })
     canvas.addEventListener('pointerup', () => { drag = null })
+    canvas.addEventListener('pointercancel', () => { drag = null })
+    // В окне просмотра (?full=1) прокручивать нечего — модель сразу берёт все жесты.
+    if (/[?&]full=1/.test(location.search)) { document.documentElement.classList.add('full'); engage() }
     canvas.addEventListener('contextmenu', e => e.preventDefault())
     canvas.addEventListener('wheel', e => { if (!engaged) return; e.preventDefault(); dist *= 1 + Math.sign(e.deltaY) * 0.08; updCam() }, { passive: false })
     let pinch = null

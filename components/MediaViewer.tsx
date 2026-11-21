@@ -183,8 +183,11 @@ function PhotosPane({ items, i, go, pick, c, wide }: { items: { src: string; alt
   const arrow = 'absolute top-1/2 -translate-y-1/2 w-[52px] h-[52px] rounded-full bg-[#0F1A15]/70 hover:bg-[#0F1A15]/85 text-white flex items-center justify-center cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1A15]'
   const stage = (
       <div className="relative flex-1 min-h-0 min-w-0 flex flex-col items-center justify-center gap-3 lg:px-24 lg:py-6"
-        onPointerDown={e => { if (e.pointerType !== 'mouse') swipe.current = e.clientX }}
-        onPointerUp={e => { const x0 = swipe.current; swipe.current = null; if (x0 != null && Math.abs(e.clientX - x0) > 40) go(e.clientX < x0 ? 1 : -1) }}>
+        // Свайп на touch-событиях: pointerup на телефоне не приходит —
+        // браузер забирает жест под прокрутку и шлёт pointercancel.
+        style={{ touchAction: 'pan-y pinch-zoom' }}
+        onTouchStart={e => { swipe.current = e.touches.length === 1 ? e.touches[0].clientX : null }}
+        onTouchEnd={e => { const x0 = swipe.current; swipe.current = null; const x = e.changedTouches[0]?.clientX; if (x0 != null && x != null && Math.abs(x - x0) > 40) go(x < x0 ? 1 : -1) }}>
         <div className="relative w-full flex-1 min-h-0 max-h-[60vh] lg:max-h-none">
           <Image key={cur.src} src={cur.src} alt={cur.alt} fill sizes="100vw" className="object-contain lg:rounded-lg" draggable={false} priority />
         </div>
@@ -239,7 +242,7 @@ function PlansPane({ items, i, pick, c, wide }: { items: Item[]; i: number; pick
   const labels = items.map(it => it.kind === '3d' ? { title: c.model3d, sub: c.model3dSub } : { title: c.plan(++planNo), sub: '' })
   const thumbOf = (it: Item) => it.kind === 'img' ? it.src : null
   const view = cur?.kind === '3d'
-    ? <iframe key={cur.src} src={cur.src} title={c.model3d} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer" className="w-full h-full border-0 bg-white" />
+    ? <iframe key={cur.src} src={`${cur.src}${cur.src.includes('?') ? '&' : '?'}full=1`} title={c.model3d} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer" className="w-full h-full border-0 bg-white" />
     : cur?.kind === 'img'
       ? <div className="w-full h-full overflow-auto flex items-center justify-center">
           <div className="relative w-[94%] h-[94%] transition-transform duration-200" style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}>
@@ -251,13 +254,13 @@ function PlansPane({ items, i, pick, c, wide }: { items: Item[]; i: number; pick
 
   if (!wide) {
     return (
-      <div className="flex-1 min-h-0 flex flex-col gap-3 px-4 pb-3">
-        <div className="relative flex-1 min-h-0 rounded-xl bg-white border border-[#ECEFED] overflow-hidden">
+      <div className={`flex-1 min-h-0 flex flex-col gap-3 pb-3 ${cur?.kind === '3d' ? '' : 'px-4'}`}>
+        <div className={`relative flex-1 min-h-0 bg-white overflow-hidden ${cur?.kind === '3d' ? '' : 'rounded-xl border border-[#ECEFED]'}`}>
           {view}
           {cur?.kind === 'img' && <span className="absolute left-2.5 bottom-2.5 px-2 py-1 rounded-md bg-[rgb(15_26_21/0.75)] text-white text-[12px]">{c.pinch}</span>}
         </div>
         {items.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+          <div className={`flex gap-2 overflow-x-auto [scrollbar-width:none] ${cur?.kind === '3d' ? 'px-4' : ''}`}>
             {labels.map((l, k) => (
               <button key={k} type="button" onClick={() => pick(k)} className={`shrink-0 h-11 px-3.5 rounded-xl border text-[14px] cursor-pointer ${k === i ? 'border-[#0F1A15] font-semibold text-[#0F1A15]' : 'border-[#ECEFED] text-[#4A5550]'}`}>{l.title}</button>
             ))}

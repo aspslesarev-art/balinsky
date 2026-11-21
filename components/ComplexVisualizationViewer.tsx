@@ -144,6 +144,9 @@ export function ComplexVisualizationViewer({
     setStack([layer])
     setPopup(null)
   }
+  // Телефон: шахматка высокая и листается пальцем — открываем с середины.
+  const scroller = useRef<HTMLDivElement>(null)
+  const centerPlan = () => { const el = scroller.current; if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2 }
   const [popup, setPopup] = useState<{ clientX: number; clientY: number; unit: UnitInfo; availability: 'free' | 'reserved' | 'sold' | null } | null>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -245,7 +248,7 @@ export function ComplexVisualizationViewer({
         )
       })()}
 
-      <div className="rounded-2xl overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative">
+      <div className="rounded-2xl overflow-hidden bg-[var(--color-search-bg)] border border-[var(--color-border)] relative max-sm:ml-[calc(50%-50vw)] max-sm:w-screen max-sm:max-w-none max-sm:rounded-none max-sm:border-x-0">
         {stack.length > 1 && (
           <div className="absolute top-3 left-3 z-10">
             <button
@@ -285,7 +288,10 @@ export function ComplexVisualizationViewer({
           </div>
         ) : null}
 
-        <div className="relative" onClick={() => setPopup(null)}>
+        {/* На телефоне картинка по высоте экрана, а не по ширине: зоны
+            крупные, остальное — свайпом влево-вправо (владелец 21.11.2026). */}
+        <div ref={scroller} className="max-sm:overflow-x-auto max-sm:overscroll-x-contain [scrollbar-width:none]">
+        <div className="relative max-sm:h-[62svh] max-sm:w-max" onClick={() => setPopup(null)}>
           {/* Layer photo can be 4-7 MB at source; let Next/Vercel
               optimise it. width/height are nominal — CSS overrides
               with width:100% + height:auto so aspect ratio comes
@@ -295,10 +301,11 @@ export function ComplexVisualizationViewer({
             alt={layerTitle(currentLayer.title, lang) ?? ''}
             width={1920}
             height={1280}
-            sizes="(max-width: 1200px) 100vw, 1180px"
-            className="block w-full h-auto select-none"
+            sizes="(max-width: 639px) 200vw, (max-width: 1200px) 100vw, 1180px"
+            className="block w-full h-auto select-none max-sm:h-full max-sm:w-auto max-sm:max-w-none"
             draggable={false}
             priority
+            onLoad={centerPlan}
           />
           <svg
             viewBox="0 0 1 1"
@@ -401,6 +408,7 @@ export function ComplexVisualizationViewer({
               </button>
             )
           })}
+        </div>
         </div>
       </div>
 
