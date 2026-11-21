@@ -35,7 +35,7 @@ export async function generateAuthorMetadata(slug: string, lang: PageLang): Prom
       languages: {
         ru: `${SITE_ORIGIN}${authorPath(slug, 'ru')}`,
         en: `${SITE_ORIGIN}${authorPath(slug, 'en')}`,
-        'x-default': `${SITE_ORIGIN}${authorPath(slug, 'ru')}`,
+        'x-default': `${SITE_ORIGIN}${authorPath(slug, 'en')}`,
       },
     },
   }

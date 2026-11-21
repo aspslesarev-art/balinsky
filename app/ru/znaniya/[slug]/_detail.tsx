@@ -115,7 +115,7 @@ export async function generateKnowledgeDetailMetadata(slug: string, lang: Lang):
       canonical: path,
       // RU/EN-only guides have no page in the other locales.
       languages: isRuEnOnlyKnowledge(k.slug)
-        ? { ru: `${SITE_ORIGIN}${ruPath}`, en: `${SITE_ORIGIN}${enPath}`, 'x-default': `${SITE_ORIGIN}${ruPath}` }
+        ? { ru: `${SITE_ORIGIN}${ruPath}`, en: `${SITE_ORIGIN}${enPath}`, 'x-default': `${SITE_ORIGIN}${enPath}` }
         : hreflangMap(ruPath),
     },
     openGraph: {

@@ -128,7 +128,7 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
       canonical,
       // RU/EN-only items share one slug and have no page in other locales.
       languages: n.langs && !complexSlug
-        ? { ru: `${SITE_ORIGIN}/ru/novosti/${n.slug}`, en: `${SITE_ORIGIN}/en/news/${n.slug}`, 'x-default': `${SITE_ORIGIN}/ru/novosti/${n.slug}` }
+        ? { ru: `${SITE_ORIGIN}/ru/novosti/${n.slug}`, en: `${SITE_ORIGIN}/en/news/${n.slug}`, 'x-default': `${SITE_ORIGIN}/en/news/${n.slug}` }
         : hreflangMap(ruCanon),
     },
     openGraph: {

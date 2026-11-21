@@ -85,7 +85,7 @@ function pairEntry(args: {
   // hreflang cluster — self-referential + reciprocal, per Google's spec.
   // Codes must be ISO 639-1 (+ optional ISO 3166-1 region). Simplified
   // Chinese uses `zh-Hans` (script) rather than the ambiguous bare `zh`.
-  // x-default = RU (the site's origin language).
+  // x-default = EN: сайт для иностранцев, язык по умолчанию — английский (21.11.2026).
   //
   // Балийский (`ban`) остаётся ВНЕ hreflang-кластера: ban — это ISO 639-3,
   // а hreflang принимает только 639-1, поэтому объявить его нечем. С 29.09.2026
@@ -96,7 +96,7 @@ function pairEntry(args: {
   const alternates = {
     languages: {
       ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl,
-      de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, pl: plUrl, uk: ukUrl, 'x-default': ruUrl,
+      de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, pl: plUrl, uk: ukUrl, 'x-default': enUrl,
     },
   }
   // Порядок сохраняем прежний — от него зависит шардирование по 1200 URL.
@@ -567,7 +567,7 @@ async function buildAll(): Promise<Categorized> {
     // RU/EN-only items (NewsItem.langs): the other locales 404, so the
     // cluster is just the pair — pairEntry would advertise all nine.
     if (x.langs) {
-      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${ruPath}` } }
+      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${enPath}` } }
       return [ruPath, enPath].map(p => ({ url: `${SITE_URL}${p}`, lastModified, changeFrequency: 'monthly' as const, priority: 0.6, alternates }))
     }
     return pairEntry({ ruPath, enPath, lastModified, changeFrequency: 'monthly', priority: 0.6 })
@@ -598,7 +598,7 @@ async function buildAll(): Promise<Categorized> {
     // RU/EN-only guides (lib/knowledge-locales.ts): the other locales 404, so
     // the cluster is just the pair — pairEntry would advertise all nine.
     if (isRuEnOnlyKnowledge(x.slug)) {
-      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${ruPath}` } }
+      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${enPath}` } }
       return [ruPath, enPath].map(p => ({ url: `${SITE_URL}${p}`, lastModified, changeFrequency: 'monthly' as const, priority: 0.5, alternates }))
     }
     return pairEntry({ ruPath, enPath, lastModified, changeFrequency: 'monthly', priority: 0.5 })
