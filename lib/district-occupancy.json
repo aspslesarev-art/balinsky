@@ -1,0 +1,105 @@
+{
+ "from": "2026-10-27",
+ "to": "2026-11-20",
+ "nights": 25,
+ "source": "Balinsky daily Booking.com availability tracking (single-unit villas)",
+ "generatedAt": "2026-11-21T03:46:10.261Z",
+ "zones": {
+  "Амед": {
+   "occupancyPct": 50.3,
+   "villas": 30
+  },
+  "Баланган": {
+   "occupancyPct": 52.3,
+   "villas": 50
+  },
+  "Берава": {
+   "occupancyPct": 63.8,
+   "villas": 155
+  },
+  "Бингин — Паданг-Паданг": {
+   "occupancyPct": 64.5,
+   "villas": 168
+  },
+  "Джимбаран": {
+   "occupancyPct": 43.3,
+   "villas": 94
+  },
+  "Кедунгу — Табанан": {
+   "occupancyPct": 47.3,
+   "villas": 20
+  },
+  "Керобокан": {
+   "occupancyPct": 57,
+   "villas": 176
+  },
+  "Легиан — Кута": {
+   "occupancyPct": 40.8,
+   "villas": 36
+  },
+  "Ловина — север": {
+   "occupancyPct": 45.5,
+   "villas": 81
+  },
+  "Нуса-Дуа": {
+   "occupancyPct": 44.8,
+   "villas": 56
+  },
+  "Нуса-Пенида — Лембонган": {
+   "occupancyPct": 47.6,
+   "villas": 60
+  },
+  "Падонан — Тумбак-Баю": {
+   "occupancyPct": 62.1,
+   "villas": 308
+  },
+  "Переренан": {
+   "occupancyPct": 68.4,
+   "villas": 67
+  },
+  "Сануp": {
+   "occupancyPct": 58.4,
+   "villas": 104
+  },
+  "Семиньяк": {
+   "occupancyPct": 59,
+   "villas": 349
+  },
+  "Сесех — Чемаги": {
+   "occupancyPct": 57.8,
+   "villas": 16
+  },
+  "Тегаллаланг — Паянган": {
+   "occupancyPct": 33.6,
+   "villas": 23
+  },
+  "Тубан — аэропорт": {
+   "occupancyPct": 49.8,
+   "villas": 24
+  },
+  "Убуд": {
+   "occupancyPct": 61.5,
+   "villas": 411
+  },
+  "Улувату — Пекату": {
+   "occupancyPct": 68.7,
+   "villas": 75
+  },
+  "Умалас": {
+   "occupancyPct": 58.9,
+   "villas": 274
+  },
+  "Унгасан — Меласти": {
+   "occupancyPct": 55.5,
+   "villas": 161
+  },
+  "Чангу — Бату-Болонг": {
+   "occupancyPct": 66.8,
+   "villas": 121
+  },
+  "Чандидаса — Карангасем": {
+   "occupancyPct": 45.3,
+   "villas": 25
+  }
+ }
+}
