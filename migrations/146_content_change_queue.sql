@@ -255,7 +255,10 @@ begin
   rid := net.http_post(
     url := 'https://balinsky.info/api/revalidate-rows',
     body := payload,
-    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || token),
+    -- UA balinsky-tools пропускает правило «Owner and service bypass» фаервола
+    -- Vercel; без него POST на новый адрес получает 429 (проверка на бота).
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || token,
+                                  'User-Agent', 'balinsky-tools/1.0 (content-change-flush)'),
     timeout_milliseconds := 60000
   );
   update public.content_change_batches
