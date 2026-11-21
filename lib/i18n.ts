@@ -161,6 +161,8 @@ const SEGMENT_TABLE: Record<string, Record<NonRuLang, string>> = {
   cookie:             { en: 'cookie',      id: 'cookie',     fr: 'cookie',              de: 'cookie',          zh: 'cookie',      nl: 'cookie',          ban: 'cookie',          pl: 'cookie',                   uk: 'cookie' },
   'politika-konfidencialnosti': { en: 'privacy', id: 'privasi', fr: 'confidentialite',  de: 'datenschutz',     zh: 'yinsi',       nl: 'privacy',         ban: 'privasi',         pl: 'prywatnosc',               uk: 'konfidentsiynist' },
   usloviya:           { en: 'terms',       id: 'ketentuan',  fr: 'conditions',          de: 'agb',             zh: 'tiaokuan',    nl: 'voorwaarden',     ban: 'ketentuan',       pl: 'regulamin',                uk: 'umovy' },
+  // Значок для сайтов застройщиков — только RU и EN; прочие префиксы middleware ведёт на /en/badge.
+  znachok:            { en: 'badge',       id: 'badge',      fr: 'badge',               de: 'badge',           zh: 'badge',       nl: 'badge',           ban: 'badge',           pl: 'badge',                    uk: 'badge' },
 }
 
 // value(in any language) -> canonical RU key. Built once at module load.

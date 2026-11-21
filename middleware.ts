@@ -186,6 +186,8 @@ export const config = {
     // Перепродажа существует только на русском — все остальные языковые
     // префиксы уводим на /ru, чтобы переключатель языка не приводил в 404.
     '/:lang/pereprodazha/:path*',
+    // Значок для застройщиков есть только на RU (/ru/znachok) и EN (/en/badge).
+    '/:lang/badge',
     // LLM text layer — any page URL + `.md` or `.json` is rewritten to the
     // /api/llm handler (verified-crawler-gated). Infra paths excluded.
     '/((?!api/|_next/|feeds/|admin/|sitemap).*)\\.md',
@@ -358,6 +360,16 @@ function handleResaleLang(req: NextRequest): NextResponse | null {
   return NextResponse.redirect(new URL(`/ru/pereprodazha${m[2] ?? ''}`, req.url), 301)
 }
 
+// Значок для застройщиков (/ru/znachok, /en/badge) существует только на двух
+// языках; остальные префиксы, куда ведёт переключатель языка, — на EN, с ?dev.
+function handleBadgeLang(req: NextRequest): NextResponse | null {
+  const m = req.nextUrl.pathname.match(/^\/([a-z]{2,3})\/badge\/?$/)
+  if (!m || m[1] === 'en') return null
+  if (!segmentToLang(m[1])) return null
+  const target = m[1] === 'ru' ? '/ru/znachok' : '/en/badge'
+  return NextResponse.redirect(new URL(`${target}${req.nextUrl.search}`, req.url), 307)
+}
+
 // District investment pages used to leak into hreflang as /en/investicii/<d>
 // (404) — Google still recrawls them. 301 to the locale's real address.
 function handleInvestLang(req: NextRequest): NextResponse | null {
@@ -475,6 +487,9 @@ export async function middleware(req: NextRequest) {
 
   const resale = handleResaleLang(req)
   if (resale) return resale
+
+  const badge = handleBadgeLang(req)
+  if (badge) return badge
 
   const invest = handleInvestLang(req)
   if (invest) return invest
