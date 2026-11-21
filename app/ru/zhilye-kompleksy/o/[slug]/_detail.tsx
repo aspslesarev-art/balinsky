@@ -10,7 +10,9 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import { contentRev } from '@/lib/content-version'
-import { MapPin, Sun, Globe, Layers } from 'lucide-react'
+import { MapPin, Sun, Globe, Layers, FileText } from 'lucide-react'
+import { complexDocs } from '@/lib/complex-docs'
+import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
@@ -69,7 +71,7 @@ import { PriceCtaCard } from '@/components/PriceCtaCard'
 import { isAirtableAttachment } from '@/lib/admin/fields'
 import { hreflangMap } from '@/lib/hreflang'
 import { metaSnippet } from '@/lib/seo'
-import { VillaChapter } from '@/components/VillaChapter'
+import { VillaChapter, ProNo } from '@/components/VillaChapter'
 import { VillaActions } from '@/components/VillaActions'
 import { LeadHeroCard, LeadStickyBar } from '@/components/LeadHeroCard'
 import { ManagerContactButtons } from '@/components/ManagerContactButtons'
@@ -1981,6 +1983,19 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         content: <ZoningMap key="zones" slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
       })
     }
+    // Документы комплекса — та же плитка, что на странице виллы (файлы только Pro).
+    const docs = complexDocs(slug)
+    if (docs) {
+      tabs.push({
+        key: 'docs',
+        label: pickCopy({ ru: 'Документы', en: 'Documents', id: 'Dokumen', fr: 'Documents', de: 'Dokumente', zh: '文件', nl: 'Documenten', ban: 'Dokumen', pl: 'Dokumenty', uk: 'Документи' }, lang),
+        icon: <FileText size={18} aria-hidden />,
+        cover: slidesPhotos[3] ?? slidesPhotos[0] ?? null,
+        bleed: true,
+        count: docs.docs.length,
+        content: <ComplexDocsView key="docs" docs={docs} lang={lang} listingTitle={name} />,
+      })
+    }
     return tabs
   }
 
@@ -1994,6 +2009,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
     analyses.length > 0 && 'analitika', hasDev && 'zastroyshchik', 'voprosy',
   ].filter(Boolean) as string[]
   const no = (id: string) => String(order.indexOf(id) + 1).padStart(2, '0')
+  // Без Pro глава «Проверьте с ИИ» скрыта — у глав после неё номер на один меньше.
+  const guestOrder = order.filter(id => id !== 'analitika')
+  const chNo = (id: string) => <ProNo pro={no(id)} guest={String(guestOrder.indexOf(id) + 1).padStart(2, '0')} />
 
   const unitCard = (u: Unit) => {
     const demand = demandByUnit[`${u.kind}|${u.id}`]
@@ -2136,16 +2154,19 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* Аналитика — одна глава «Проверьте комплекс с ИИ», как у виллы. */}
         {analyses.length > 0 && (
+          // Только Pro (владелец 21.11.2026): аналитика ещё не готова для всех.
+          <div className="bx-pro-only">
           <VillaChapter id="analitika" no={no('analitika')} plain eyebrow={CH.analitika}>
             <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${complexesRoot}/o/${slug}`)}`} no={no('analitika')}
               heading={pickCopy(CX_AI_HEADING, lang)} />
           </VillaChapter>
+          </div>
         )}
 
         {/* Застройщик и вопросы — рядом на компьютере, как у виллы. */}
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
         {hasDev && (
-          <VillaChapter id="zastroyshchik" no={no('zastroyshchik')} eyebrow={CH.zastroyshchik} journal>
+          <VillaChapter id="zastroyshchik" no={chNo('zastroyshchik')} eyebrow={CH.zastroyshchik} journal>
             <div className="flex flex-col gap-5 md:gap-6">
               {(developerLink || developerName) && (
                 <div className="flex items-center justify-between gap-4">
@@ -2201,7 +2222,7 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
           </VillaChapter>
         )}
 
-        <VillaChapter id="voprosy" no={no('voprosy')} eyebrow={CH.voprosy} journal>
+        <VillaChapter id="voprosy" no={chNo('voprosy')} eyebrow={CH.voprosy} journal>
           <div className="-mt-2 md:-mt-4">
             {faqItems.map((it, i) => (
               <details key={i} className="group border-b border-[#ECEFED]">

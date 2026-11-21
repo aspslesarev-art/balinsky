@@ -115,6 +115,7 @@ export type VillaCard = {
   pricePerSqmUsd: number | null
   pricePerSqmYearUsd: number | null
   leaseYears: number | null
+  landBucket: 'tourism' | 'residential' | 'unknown'
   permit: string | null
   completionYear: string | null
   claimedYieldPct: number | null
@@ -643,6 +644,7 @@ export function toCard(
     verifiedYield: hasVerifiedYield('villa', e.id),
     isTop: e.isTop,
     rentalRestricted: e.landBucket === 'residential',
+    landBucket: e.landBucket,
     views: e.views ?? 0,
   }
 }
@@ -699,17 +701,31 @@ const SLIM_VILLA_FIELDS = [
   ['Заявленная доходность', 'yield_decl'],
 ] as const
 
-const VILLA_SELECT = ['airtable_id', ...SLIM_VILLA_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+const VILLA_SELECT = ['airtable_id', 'synced_at', ...SLIM_VILLA_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
 
 function reassembleVilla(raw: Record<string, unknown>): Row {
   const data: Record<string, unknown> = {}
   for (const [k, a] of SLIM_VILLA_FIELDS) data[k] = raw[a]
+  // Дата последней записи строки — настоящий lastmod для карты сайта.
+  data.synced_at = raw.synced_at
   return { airtable_id: raw.airtable_id as string, data }
+}
+
+// Сборка открывает сотни страниц параллельно, и база под этой нагрузкой
+// иногда обрывает запрос каталога по statement timeout (21.11.2026: 2 сборки
+// из 3 упали на /en/villas). Повторяем до трёх раз с паузой; прочие ошибки
+// отдаём как есть.
+async function loadVillaRows() {
+  for (let attempt = 1; ; attempt++) {
+    const res = await sb.from('raw_villas').select(VILLA_SELECT).limit(1000)
+    if (!res.error || attempt >= 3 || !/statement timeout/i.test(res.error.message)) return res
+    await new Promise(r => setTimeout(r, 1500 * attempt))
+  }
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifestRaw, styles, enCache, viewCounts, featuresMap, visionMap, livingMap] = await Promise.all([
-    sb.from('raw_villas').select(VILLA_SELECT).limit(1000),
+    loadVillaRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:villas']),
     loadVillaStyles(),
     loadAllTranslations('villas'),
@@ -1104,7 +1120,7 @@ export function buildMetadataEn(
     : null
   const title = districtMeta?.title
     ?? (isSectionRoot && opts.totalCount
-      ? `Bali Villas for Sale — ${opts.totalCount} houses with prices, photos & yields | Balinsky`
+      ? `Bali Villas for Sale — ${opts.totalCount} leasehold listings with prices, photos & yields | Balinsky`
       : buildTitleEn(f))
   const description = districtMeta?.description ?? buildDescriptionEn(f, opts.totalCount)
   return {

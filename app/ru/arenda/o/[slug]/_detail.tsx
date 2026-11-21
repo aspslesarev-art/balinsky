@@ -13,6 +13,7 @@ import { PageViewTracker } from '@/components/PageViewTracker'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
 import { metaSnippet } from '@/lib/seo'
+import { BuyVillasNearby } from '@/components/BuyVillasNearby'
 import { rentalContact, fmtPostedDate, daysSince } from '@/lib/rental-meta'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -270,6 +271,8 @@ export async function RentalDetail({ slug, lang }: { slug: string; lang: Lang })
             }, lang)}
           </p>
         </section>
+
+        <BuyVillasNearby lang={lang} text={r.location} />
 
         {/* Product without image is a critical merchant-listing error. */}
         {r.photos.length > 0 && (

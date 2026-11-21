@@ -18,6 +18,7 @@ import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { MARKET, MARKET_PAGES_RU } from '@/lib/market-index'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { isStrongHub } from '@/lib/hub-indexable'
 import { switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -84,7 +85,7 @@ function pairEntry(args: {
   // hreflang cluster — self-referential + reciprocal, per Google's spec.
   // Codes must be ISO 639-1 (+ optional ISO 3166-1 region). Simplified
   // Chinese uses `zh-Hans` (script) rather than the ambiguous bare `zh`.
-  // x-default = RU (the site's origin language).
+  // x-default = EN: сайт для иностранцев, язык по умолчанию — английский (21.11.2026).
   //
   // Балийский (`ban`) остаётся ВНЕ hreflang-кластера: ban — это ISO 639-3,
   // а hreflang принимает только 639-1, поэтому объявить его нечем. С 29.09.2026
@@ -95,7 +96,7 @@ function pairEntry(args: {
   const alternates = {
     languages: {
       ru: ruUrl, en: enUrl, id: idUrl, fr: frUrl,
-      de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, pl: plUrl, uk: ukUrl, 'x-default': ruUrl,
+      de: deUrl, 'zh-Hans': zhUrl, nl: nlUrl, pl: plUrl, uk: ukUrl, 'x-default': enUrl,
     },
   }
   // Порядок сохраняем прежний — от него зависит шардирование по 1200 URL.
@@ -164,20 +165,25 @@ function filterIndexablePaths<T>(
   enriched: T[],
   parse: Parse,
   passes: Passes<T>,
+  now: Date,
+  newest: Map<string, Date>,
 ): string[] {
+  // newest: путь хаба → дата самого свежего объекта в нём (lastmod хаба).
   return paths.filter(p => {
     if (p === basePath) return true
     const segments = p.replace(`${basePath}/`, '').split('/').filter(Boolean)
     const f = parse(segments)
     if (!f) return false
     let hits = 0
-    for (const e of enriched) {
-      if (passes(e, f)) {
-        hits++
-        if (hits >= MIN_OBJECTS_PER_FILTER_PAGE) return true
-      }
+    for (const e of enriched) if (passes(e, f)) {
+      hits++
+      const lm = lastmodOfObject((e as { data?: Record<string, unknown> }).data, now)
+      const was = newest.get(p)
+      if (!was || lm > was) newest.set(p, lm)
     }
-    return false
+    // То же правило, что robots у самой страницы (lib/hub-indexable.ts):
+    // noindex-адрес в карте — ошибка GSC.
+    return hits >= MIN_OBJECTS_PER_FILTER_PAGE && isStrongHub(f as Parameters<typeof isStrongHub>[0], hits)
   })
 }
 
@@ -186,6 +192,10 @@ function filterIndexablePaths<T>(
 // see as the freshness signal. Falls back to `now` when missing.
 function lastmodOfObject(d: Record<string, unknown> | undefined, fallback: Date): Date {
   if (!d) return fallback
+  // Самая свежая из дат строки: правка цены в данных или запись строки в базе
+  // (synced_at). Раньше брали первую найденную, а без полей — «сейчас» у всех
+  // 1200 адресов файла, и Google переставал верить lastmod (аудит 21.11.2026).
+  let best: Date | null = null
   for (const k of ['Обновление цены', 'Last modified', 'Обновлено', 'Updated', 'synced_at']) {
     const v = d[k]
     const raw = typeof v === 'string' ? v
@@ -194,10 +204,10 @@ function lastmodOfObject(d: Record<string, unknown> | undefined, fallback: Date)
         : null
     if (raw) {
       const t = new Date(raw)
-      if (!isNaN(t.getTime())) return t
+      if (!isNaN(t.getTime()) && t <= fallback && (!best || t > best)) best = t
     }
   }
-  return fallback
+  return best ?? fallback
 }
 
 // Sitemap split. A single sitemap.xml grew past the point where Google /
@@ -465,12 +475,13 @@ async function buildAll(): Promise<Categorized> {
   let complexes: SitemapEntry[] = []
   let villas: SitemapEntry[] = []
   if (vData && aData && cData) {
-    apartments = filterIndexablePaths(listApartmentPaths(), '/ru/apartamenty', aData.enriched, parseAptPath, apartmentPasses)
-      .flatMap(path => hubEntries(path, now))
-    complexes = filterIndexablePaths(listComplexPaths(), '/ru/zhilye-kompleksy', cData.enriched, parseComplexPath, complexPasses)
-      .flatMap(path => hubEntries(path, now))
-    villas = filterIndexablePaths(listVillaPaths(), '/ru/villy', vData.enriched, parseVillaPath, villaPasses)
-      .flatMap(path => hubEntries(path, now))
+    const hubLm = new Map<string, Date>()
+    apartments = filterIndexablePaths(listApartmentPaths(), '/ru/apartamenty', aData.enriched, parseAptPath, apartmentPasses, now, hubLm)
+      .flatMap(path => hubEntries(path, hubLm.get(path) ?? now))
+    complexes = filterIndexablePaths(listComplexPaths(), '/ru/zhilye-kompleksy', cData.enriched, parseComplexPath, complexPasses, now, hubLm)
+      .flatMap(path => hubEntries(path, hubLm.get(path) ?? now))
+    villas = filterIndexablePaths(listVillaPaths(), '/ru/villy', vData.enriched, parseVillaPath, villaPasses, now, hubLm)
+      .flatMap(path => hubEntries(path, hubLm.get(path) ?? now))
   } else {
     apartments = listApartmentPaths().map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
     complexes = listComplexPaths().map(path => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 }))
@@ -556,7 +567,7 @@ async function buildAll(): Promise<Categorized> {
     // RU/EN-only items (NewsItem.langs): the other locales 404, so the
     // cluster is just the pair — pairEntry would advertise all nine.
     if (x.langs) {
-      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${ruPath}` } }
+      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${enPath}` } }
       return [ruPath, enPath].map(p => ({ url: `${SITE_URL}${p}`, lastModified, changeFrequency: 'monthly' as const, priority: 0.6, alternates }))
     }
     return pairEntry({ ruPath, enPath, lastModified, changeFrequency: 'monthly', priority: 0.6 })
@@ -587,7 +598,7 @@ async function buildAll(): Promise<Categorized> {
     // RU/EN-only guides (lib/knowledge-locales.ts): the other locales 404, so
     // the cluster is just the pair — pairEntry would advertise all nine.
     if (isRuEnOnlyKnowledge(x.slug)) {
-      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${ruPath}` } }
+      const alternates = { languages: { ru: `${SITE_URL}${ruPath}`, en: `${SITE_URL}${enPath}`, 'x-default': `${SITE_URL}${enPath}` } }
       return [ruPath, enPath].map(p => ({ url: `${SITE_URL}${p}`, lastModified, changeFrequency: 'monthly' as const, priority: 0.5, alternates }))
     }
     return pairEntry({ ruPath, enPath, lastModified, changeFrequency: 'monthly', priority: 0.5 })

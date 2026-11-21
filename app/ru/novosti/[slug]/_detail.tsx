@@ -13,7 +13,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { PageViewTracker } from '@/components/PageViewTracker'
 import { NewsBody } from '@/components/NewsBody'
 import { RelatedContent } from '@/components/RelatedContent'
-import { NewsBuyLinks } from '@/components/NewsBuyLinks'
+import { BuyVillasNearby } from '@/components/BuyVillasNearby'
 import { loadAllNews, loadNewsBySlug } from '@/lib/news'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap, SITE_ORIGIN } from '@/lib/hreflang'
@@ -128,7 +128,7 @@ export async function generateNewsDetailMetadata(slug: string, lang: Lang): Prom
       canonical,
       // RU/EN-only items share one slug and have no page in other locales.
       languages: n.langs && !complexSlug
-        ? { ru: `${SITE_ORIGIN}/ru/novosti/${n.slug}`, en: `${SITE_ORIGIN}/en/news/${n.slug}`, 'x-default': `${SITE_ORIGIN}/ru/novosti/${n.slug}` }
+        ? { ru: `${SITE_ORIGIN}/ru/novosti/${n.slug}`, en: `${SITE_ORIGIN}/en/news/${n.slug}`, 'x-default': `${SITE_ORIGIN}/en/news/${n.slug}` }
         : hreflangMap(ruCanon),
     },
     openGraph: {
@@ -228,7 +228,7 @@ export async function NewsDetail({ slug, lang }: { slug: string; lang: Lang }) {
 
         <RelatedContent lang={lang} developers={n.developers} complexNames={n.complexNames} title={n.title} />
 
-        <NewsBuyLinks lang={lang} text={`${n.title}\n${n.body ?? ''}`} />
+        <BuyVillasNearby lang={lang} text={`${n.title}\n${n.body ?? ''}`} />
 
         {related.length > 0 && (
           <section className="mt-14">

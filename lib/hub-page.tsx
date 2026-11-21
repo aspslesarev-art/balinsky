@@ -7,9 +7,17 @@
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Lang } from './i18n'
+import { isStrongHub } from './hub-indexable'
 import { hubPath, hubSegmentsToRu, hubLanguages, type HubSection } from './hub-routes'
 import { SLUG_TO_DISTRICT } from './seo-routes'
 import { getBuyHeading, getDistrictCopy } from './districts'
+
+// Позиционирование 20.11.2026: всё на сайте — лизхолд для иностранцев.
+// В title — после фразы «купить …», которую реально ищут (Андрей 21.11).
+const LEASEHOLD_TAG: Partial<Record<Lang, string>> = {
+  zh: '租赁产权',
+  uk: 'лізхолд',
+}
 
 type Params = Promise<{ slug: string[] }>
 type MetaOpts = { canonicalPath: string; noIndex: boolean; totalCount?: number }
@@ -76,7 +84,7 @@ export function makeHubPage<F>(cfg: HubConfig<F>, lang: Lang) {
     try {
       totalCount = (await cfg.loadCatalogPage(filters, page, lang)).totalCount
     } catch {}
-    const meta = cfg.buildMetadata(filters, lang, { canonicalPath: canonical, noIndex: false, totalCount })
+    const meta = cfg.buildMetadata(filters, lang, { canonicalPath: canonical, noIndex: totalCount != null && !isStrongHub(filters, totalCount), totalCount })
     if (page === 1) meta.alternates = { canonical, languages: hubLanguages(ruCanonical) }
     // Single-district hubs: RU and EN already get a commercial title from
     // getDistrictCommercialMeta; the other locales only had the descriptive
@@ -84,7 +92,7 @@ export function makeHubPage<F>(cfg: HubConfig<F>, lang: Lang) {
     const segs = ruCanonical.slice(cfg.section.length + 1).split('/').filter(Boolean)
     if (lang !== 'en' && lang !== 'ru' && segs.length === 1 && SLUG_TO_DISTRICT[segs[0]]) {
       const name = getDistrictCopy(segs[0], lang)?.name ?? SLUG_TO_DISTRICT[segs[0]]
-      meta.title = `${getBuyHeading(cfg.kind, lang, totalCount, name)} | Balinsky`
+      meta.title = `${getBuyHeading(cfg.kind, lang, totalCount, name)} · ${LEASEHOLD_TAG[lang] ?? 'Leasehold'} | Balinsky`
       if (meta.openGraph) meta.openGraph = { ...meta.openGraph, title: meta.title }
     }
     if (page > 1 && typeof meta.title === 'string') {

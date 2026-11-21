@@ -45,7 +45,7 @@ import { loadPromoKit } from '@/lib/promo-kits'
 import { complexDocs } from '@/lib/complex-docs'
 import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { MasterplanWithList, type MasterplanRow } from '@/components/MasterplanWithList'
-import { VillaChapter, VillaBlock } from '@/components/VillaChapter'
+import { VillaChapter, VillaBlock, ProNo } from '@/components/VillaChapter'
 import { ZoningMap } from '@/components/ZoningMap'
 import { RDTR_BASE, loadRdtr, plotLabel, type RdtrData } from '@/lib/rdtr-zones'
 import { LegalAudit } from '@/components/LegalAudit'
@@ -1172,8 +1172,19 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
     && numberOrNull(d['Площадь']) == null
     && firstString(d['Комнаты']) == null
 
+  // EN (21.11.2026, разбор Yolla Bali в AI Overview): заголовок в форме
+  // запроса — «<Название> for Sale in <Район>, Bali — $цена».
+  const enTitle = lang === 'en' && district ? (() => {
+    const esc = district.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const base = (title.split(/\s[-—–]\s(?=\d)/)[0] || title)
+      .replace(new RegExp(`\\s+(in|on|at)\\s+${esc}(,?\\s*Bali)?\\s*$`, 'i'), '')
+      .trim()
+    const t = `${base} for Sale in ${district}, Bali`
+    return `${t}${price && (t + dashPrice).length <= 70 ? dashPrice : ''} | Balinsky`
+  })() : null
+
   return {
-    title: seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle,
+    title: enTitle ?? (seoTitle.length > 70 ? `${title}${fallbackDistrict}${dashPrice} | Balinsky` : seoTitle),
     description,
     ...(isDataless ? { robots: { index: false, follow: true } } : {}),
     alternates: {
@@ -1340,6 +1351,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
         label: pickCopy({ ru: 'Документы', en: 'Documents', id: 'Dokumen', fr: 'Documents', de: 'Dokumente', zh: '文件', nl: 'Documenten', ban: 'Dokumen', pl: 'Dokumenty', uk: 'Документи' }, lang),
         icon: <FileText size={18} aria-hidden />,
         cover: photos[3] ?? photos[0] ?? null,
+        count: docsForTile.docs.length,
         content: <ComplexDocsView docs={docsForTile} lang={lang} listingTitle={title} />,
         bleed: true,
       })
@@ -2218,7 +2230,8 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           <div className="flex min-w-0 flex-col gap-2">
             <h1 className="m-0 font-display text-[28px] font-bold leading-[1.12] tracking-[-0.03em] text-[#0F1A15] [overflow-wrap:anywhere] md:text-[40px] lg:text-[44px] lg:leading-[1.1]">
               {/* Без «— 86 м², 2 спальни…»: эти цифры стоят строкой ниже (владелец 19.11.2026). */}
-              {title.split(/\s[-—–]\s(?=\d)/)[0] || title}
+              {/* EN: «Complex on Pandawa» → «in Pandawa» (район в конце названия). */}
+              {(() => { const h = title.split(/\s[-—–]\s(?=\d)/)[0] || title; return lang === 'en' ? h.replace(/\son\s(?=[A-Z][\w'’\- ]*$)/, ' in ') : h })()}
             </h1>
             {/* Строка фактов, справа на той же строке — сохранить · PDF · поделиться · ошибка
                 (владелец 20.11.2026). Плашку «Подтверждённая доходность» убрали: занимала место. */}
@@ -2268,16 +2281,19 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
 
         {/* Аналитика — заголовок «02 Проверьте виллу с ИИ» рисует сама панель. */}
         {analyses.length > 0 ? (
+          // Только Pro (владелец 21.11.2026): аналитика ещё не готова для всех.
+          <div className="bx-pro-only">
           <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika[0]}>
             <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`} no="02"
               extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
           </VillaChapter>
+          </div>
         ) : (<>{mestoChapter}{analytics}</>)}
 
         {/* Застройщик и вопросы — рядом на компьютере, как в макете. */}
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
         {(developer || developerName || parentComplex) && (
-          <VillaChapter id="zastroyshchik" no={analyses.length > 0 ? '03' : '05'} eyebrow={CH.zastroyshchik[0]} journal>
+          <VillaChapter id="zastroyshchik" no={analyses.length > 0 ? <ProNo pro="03" guest="02" /> : '05'} eyebrow={CH.zastroyshchik[0]} journal>
             <div className="flex flex-col gap-5 md:gap-6">
               {(developer || developerName) && (
                 <div className="flex items-center justify-between gap-4">
@@ -2366,7 +2382,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           <VideoGrid jsonLdOnly videos={videos} title={parentComplex ? c.videosTitleComplex(parentComplex.name) : developer ? c.videosTitleDev(developer.name) : c.videosTitleDefault} />
         )}
 
-        <VillaChapter id="voprosy" no={analyses.length > 0 ? '04' : '06'} eyebrow={CH.voprosy[0]} journal>
+        <VillaChapter id="voprosy" no={analyses.length > 0 ? <ProNo pro="04" guest="03" /> : '06'} eyebrow={CH.voprosy[0]} journal>
           <div className="-mt-2 md:-mt-4">
             {faqItems.map((it, i) => (
               <details key={i} className="group border-b border-[#ECEFED]">

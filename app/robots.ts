@@ -6,7 +6,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
 // reused across all rule blocks below.
 const DISALLOW = [
   '/api/',
-  '/ru/*/karta',
+  // Страницы-карты на всех языках: каждая загрузка Google-карты платная
+  // (владелец 21.11.2026), а поисковику они ничего не дают — объекты и так в каталоге.
+  '/ru/*/karta', '/ua/*/karta', '/en/*/map', '/de/*/karte', '/fr/*/carte',
+  '/id/*/peta', '/ban/*/peta', '/nl/*/kaart', '/pl/*/mapa', '/zh/*/ditu',
   // Catalog hit with ?q= or ?developer= etc is non-canonical — we 301
   // canonical filters to clean URLs, but bots love to find leftover
   // ?_rsc tokens, so block the whole query-param surface.

@@ -46,6 +46,7 @@ export function hreflangMap(ruPath: string): Record<string, string> {
   for (const [code, lang] of CLUSTER) {
     out[code] = `${SITE_ORIGIN}${switchLangPath(path, lang)}`
   }
-  out['x-default'] = `${SITE_ORIGIN}${path}`
+  // x-default — английская версия: сайт для иностранцев (аудит 21.11.2026).
+  out['x-default'] = `${SITE_ORIGIN}${switchLangPath(path, 'en')}`
   return out
 }

@@ -5,6 +5,7 @@ import { useCurrency } from '@/components/CurrencyContext'
 import { formatMoney } from '@/lib/currency'
 import type { Lang } from '@/lib/i18n'
 import { VizCover, VizView } from './VizView'
+import { useScrollLock } from '@/lib/use-scroll-lock'
 
 // На странице — карточки анализов на всю ширину, по темам: сверху карта или
 // график этого анализа, под ним главная цифра. Нажал — окно на весь экран, как
@@ -258,6 +259,11 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   const [done, setDone] = useState<Record<string, true>>({})
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
+  // Окно само едет за сбором вниз, а в конце встаёт на результат
+  // (владелец 21.11.2026). Тронул прокрутку сам — больше не тащим.
+  const contentRef = useRef<HTMLDivElement>(null)
+  const resultRef = useRef<HTMLDivElement>(null)
+  const follow = useRef(true)
   useEffect(() => () => { if (timer.current) clearInterval(timer.current) }, [])
 
   const byId = Object.fromEntries(analyses.map(a => [a.id, a]))
@@ -280,6 +286,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
     setGoal(id)
     setOpen(true)
     bodyRef.current?.scrollTo({ top: 0 })
+    follow.current = true
     // Вкладка отчёта может быть за краем ленты (телефон) — показать её.
     requestAnimationFrame(() => document.querySelector(`[data-ap-tab="${id}"]`)?.scrollIntoView({ inline: 'center', block: 'nearest' }))
     const end = endOf(a)
@@ -343,10 +350,9 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
     window.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
+    return () => window.removeEventListener('keydown', onKey)
   }, [open])
+  useScrollLock(open)
 
   const groups: { name: string; items: Analysis[] }[] = []
   for (const a of analyses) {
@@ -364,6 +370,22 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
   const nextA = G ? flat[(idx + 1) % flat.length] : null
   const gi = Math.max(0, groups.findIndex(g => g.name === G?.group))
   const progress = G ? Math.round(Math.min(1, t / end) * 100) : 0
+
+  // Пока идёт сбор — подтягиваем низ ленты в кадр, когда она подрастает.
+  useEffect(() => {
+    const body = bodyRef.current, content = contentRef.current
+    if (!open || !busy || !body || !content) return
+    const ro = new ResizeObserver(() => {
+      if (follow.current) body.scrollTo({ top: body.scrollHeight - body.clientHeight, behavior: 'smooth' })
+    })
+    ro.observe(content)
+    return () => ro.disconnect()
+  }, [open, busy])
+  // Сбор закончился — показываем результат с его начала.
+  useEffect(() => {
+    if (!open || !finished || !follow.current) return
+    requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }, [open, finished, goal])
 
   return (
     // Выделенный блок (макет AiBlockA, владелец 20.11.2026): светло-зелёная полоса
@@ -415,7 +437,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
       {open && G && (
         // Окно — вариант A «Журнал» (владелец 19.11.2026): белое, текст и
         // воздух, без цветных плашек; тонкая полоса загрузки сверху.
-        <div role="dialog" aria-modal="true" aria-label={c.badge} className="fixed inset-0 z-[9999] flex flex-col bg-white">
+        <div role="dialog" aria-modal="true" aria-label={c.badge} className="fixed inset-x-0 top-0 z-[9999] flex h-[100dvh] flex-col overscroll-none bg-white">
           <div className="h-0.5 shrink-0 bg-[#F1F3F2]"><div className="h-0.5 bg-[#0F1A15] transition-[width] duration-100 ease-linear" style={{ width: `${progress}%` }} /></div>
           <header className="flex shrink-0 items-center gap-4 py-3 pl-4 pr-2 md:px-12 md:py-5">
             <nav aria-label={c.themes} className="-mb-1 flex min-w-0 flex-grow gap-6 overflow-x-auto pb-1 md:gap-8">
@@ -460,8 +482,9 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
 
           {/* Справа — отчёт и под ним кнопки; колонка слева на всю высоту окна. */}
           <div className="flex min-h-0 min-w-0 flex-grow flex-col">
-          <div ref={bodyRef} className="min-h-0 flex-grow overflow-y-auto overscroll-contain">
-            <div className="flex max-w-[1000px] flex-col gap-8 px-4 pb-10 pt-2 md:px-0">
+          <div ref={bodyRef} className="min-h-0 flex-grow overflow-y-auto overscroll-contain"
+            onWheel={() => { follow.current = false }} onTouchMove={() => { follow.current = false }}>
+            <div ref={contentRef} className="flex max-w-[1000px] flex-col gap-8 px-4 pb-10 pt-2 md:px-0">
               <div className="flex flex-col gap-3">
                 {idle ? (
                   <span className="text-[13px] uppercase tracking-[0.06em] text-[#6B7570]">{c.pick}</span>
@@ -537,7 +560,7 @@ export function AnalyticsPanel({ analyses: raw, lang, extras, signInHref, report
                 </div>
               )}
               {finished && !locked && (
-                <div className="ap-in flex flex-col gap-6 border-t border-[#0F1A15] pt-6">
+                <div ref={resultRef} className="ap-in flex scroll-mt-4 flex-col gap-6 border-t border-[#0F1A15] pt-6">
                   <div className="flex flex-wrap gap-x-16 gap-y-4">
                     {G.bigs.map(b => (
                       <div key={b.l}>

@@ -61,16 +61,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
   // действительно увидит в каталоге.
   const ru: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `Купить виллу на Бали — цены${from ? ` от ${from}` : ''}, ${n} ${ruVilla} | Balinsky`,
-      description: `Сколько стоит вилла на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} ${ruVilla}${dev ? ` от ${dev} ${ruDev}` : ''}, статус PBG/SLF, видео с земли, прямые контакты.`,
+      title: `Купить виллу на Бали — цены${from ? ` от ${from}` : ''}, ${n} ${ruVilla}, лизхолд | Balinsky`,
+      description: `Виллы на Бали для иностранцев, всё в лизхолде${med ? `: медиана ${med}` : ''}${ruRange}. ${n} ${ruVilla}${dev ? ` от ${dev} ${ruDev}` : ''}: срок аренды земли, статус PBG/SLF, доход по данным аренды соседей.`,
     },
     apartments: {
-      title: `Купить апартаменты на Бали — цены${from ? ` от ${from}` : ''}, ${n} шт. | Balinsky`,
-      description: `Сколько стоят апартаменты на Бали${med ? `: медиана ${med}` : ''}${ruRange}. ${n} лотов в ЖК: Berawa, Pererenan, Pandawa. Акции и рассрочки.`,
+      title: `Купить апартаменты на Бали — цены${from ? ` от ${from}` : ''}, ${n} шт., лизхолд | Balinsky`,
+      description: `Апартаменты на Бали для иностранцев, всё в лизхолде${med ? `: медиана ${med}` : ''}${ruRange}. ${n} лотов в ЖК: срок аренды земли, управляющая компания, рассрочки.`,
     },
     complexes: {
-      title: `${n} ${ruComplex} на Бали со статусом PBG/SLF | Balinsky`,
-      description: `${n} ${ruComplex} на Бали с инфраструктурой. Статус PBG/SLF и зона земли, сроки сдачи${dev ? `, акции от ${dev} застройщиков` : ''}.`,
+      title: `${n} ${ruComplex} на Бали — цены и сроки сдачи, лизхолд | Balinsky`,
+      description: `${n} ${ruComplex} на Бали для покупателей без индонезийского паспорта. Срок лизхолда, статус PBG/SLF и зона земли, сроки сдачи${dev ? `, ${dev} застройщиков` : ''}.`,
     },
     developers: {
       title: `${n} застройщиков на Бали — проекты и сданные объекты | Balinsky`,
@@ -86,16 +86,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
     villas: {
       // Leads with «bali villas for sale» — the phrase English buyers type;
       // the old «341 villas in Bali from …» never said «for sale».
-      title: `Bali Villas for Sale — ${n} Listings${from ? ` from ${from}` : ''} | Balinsky`,
-      description: `${n} villas for sale in Bali${from && to ? ` from ${from} to ${to}` : from ? ` from ${from}` : ''}${dev ? ` from ${dev} developers` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Rental data, PBG/SLF permit status, on-site video.`,
+      title: `Bali Villas for Sale — ${n} Leasehold Listings${from ? ` from ${from}` : ''} | Balinsky`,
+      description: `${n} leasehold villas for sale in Bali for foreign buyers${from && to ? ` from ${from} to ${to}` : from ? ` from ${from}` : ''}${dev ? ` from ${dev} developers` : ''}. Land-lease term, PBG/SLF permit status and real rental data for every villa.`,
     },
     apartments: {
-      title: `Bali Apartments for Sale — ${n} Listings${from ? ` from ${from}` : ''} | Balinsky`,
-      description: `${n} apartments for sale in Bali complexes. Berawa, Pererenan, Pandawa. Management companies, deals and instalments.`,
+      title: `Bali Apartments for Sale — ${n} Leasehold Listings${from ? ` from ${from}` : ''} | Balinsky`,
+      description: `${n} leasehold apartments for sale in Bali for foreign buyers${from && to ? ` from ${from} to ${to}` : from ? ` from ${from}` : ''}. Land-lease term, management company, instalments.`,
     },
     complexes: {
-      title: `${n} residential complexes in Bali with PBG/SLF status | Balinsky`,
-      description: `${n} Bali complexes with infrastructure. PBG/SLF status and land zone, handover dates${dev ? `, deals from ${dev} developers` : ''}.`,
+      title: `${n} New Developments in Bali — Prices & Handover Dates, Leasehold | Balinsky`,
+      description: `${n} Bali complexes for buyers without an Indonesian passport. Leasehold term, PBG/SLF status and land zone, handover dates${dev ? `, ${dev} developers` : ''}.`,
     },
     developers: {
       // «bali property developer(s)» landed on a random developer's page —
@@ -115,16 +115,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const id: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} vila di Bali${from ? ` mulai ${from}` : ''} dengan status PBG/SLF | Balinsky`,
-      description: `${n} vila di Bali${from && to ? ` dari ${from} hingga ${to}` : from ? ` mulai ${from}` : ''}${dev ? ` dari ${dev} pengembang` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video langsung dari lokasi, kontak langsung.`,
+      title: `Vila dijual di Bali — ${n} listing leasehold${from ? ` mulai ${from}` : ''} | Balinsky`,
+      description: `${n} vila leasehold di Bali untuk pembeli asing${from && to ? ` dari ${from} hingga ${to}` : from ? ` mulai ${from}` : ''}${dev ? ` dari ${dev} pengembang` : ''}. Masa sewa tanah, status PBG/SLF, data sewa nyata.`,
     },
     apartments: {
-      title: `${n} apartemen di Bali${from ? ` mulai ${from}` : ''} | Balinsky`,
-      description: `${n} apartemen di kompleks. Berawa, Pererenan, Pandawa. Perusahaan pengelola, promo dan cicilan.`,
+      title: `Apartemen dijual di Bali — ${n} listing leasehold${from ? ` mulai ${from}` : ''} | Balinsky`,
+      description: `${n} apartemen leasehold di Bali untuk pembeli asing${from && to ? ` dari ${from} hingga ${to}` : from ? ` mulai ${from}` : ''}. Masa sewa tanah, perusahaan pengelola, cicilan.`,
     },
     complexes: {
-      title: `${n} kompleks hunian di Bali dengan status PBG/SLF | Balinsky`,
-      description: `${n} kompleks di Bali dengan infrastruktur. Status PBG/SLF dan zona tanah, tanggal serah terima${dev ? `, promo dari ${dev} pengembang` : ''}.`,
+      title: `${n} proyek baru di Bali — harga dan serah terima, leasehold | Balinsky`,
+      description: `${n} kompleks di Bali untuk pembeli tanpa paspor Indonesia. Masa leasehold, status PBG/SLF dan zona tanah, tanggal serah terima${dev ? `, ${dev} pengembang` : ''}.`,
     },
     developers: {
       title: `${n} pengembang properti di Bali — proyek dan rekam jejak | Balinsky`,
@@ -138,16 +138,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const fr: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} villas à Bali${from ? ` à partir de ${from}` : ''} avec statut PBG/SLF | Balinsky`,
-      description: `${n} villas à Bali${from && to ? ` de ${from} à ${to}` : from ? ` à partir de ${from}` : ''}${dev ? ` de ${dev} promoteurs` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Vidéo sur place, contacts directs.`,
+      title: `Villa à vendre à Bali — ${n} annonces en leasehold${from ? ` dès ${from}` : ''} | Balinsky`,
+      description: `${n} villas à vendre à Bali en leasehold pour acheteurs étrangers${from && to ? ` de ${from} à ${to}` : from ? ` à partir de ${from}` : ''}${dev ? ` de ${dev} promoteurs` : ''}. Durée du bail foncier, statut PBG/SLF, données locatives réelles.`,
     },
     apartments: {
-      title: `${n} appartements à Bali${from ? ` à partir de ${from}` : ''} | Balinsky`,
-      description: `${n} appartements dans des résidences. Berawa, Pererenan, Pandawa. Sociétés de gestion, offres et paiements échelonnés.`,
+      title: `Appartement à vendre à Bali — ${n} annonces en leasehold${from ? ` dès ${from}` : ''} | Balinsky`,
+      description: `${n} appartements à vendre à Bali en leasehold pour acheteurs étrangers${from && to ? ` de ${from} à ${to}` : from ? ` à partir de ${from}` : ''}. Durée du bail foncier, société de gestion, paiements échelonnés.`,
     },
     complexes: {
-      title: `${n} résidences à Bali avec statut PBG/SLF | Balinsky`,
-      description: `${n} résidences à Bali avec infrastructures. Statut PBG/SLF et zone du terrain, dates de livraison${dev ? `, offres de ${dev} promoteurs` : ''}.`,
+      title: `${n} programmes neufs à Bali — prix et livraison, leasehold | Balinsky`,
+      description: `${n} résidences à Bali pour acheteurs sans passeport indonésien. Durée du leasehold, statut PBG/SLF et zone du terrain, dates de livraison${dev ? `, ${dev} promoteurs` : ''}.`,
     },
     developers: {
       title: `Promoteur immobilier à Bali : ${n} promoteurs, projets et historique | Balinsky`,
@@ -161,16 +161,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const de: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} Villen auf Bali${from ? ` ab ${from}` : ''} mit PBG/SLF-Status | Balinsky`,
-      description: `${n} Villen auf Bali${from && to ? ` von ${from} bis ${to}` : from ? ` ab ${from}` : ''}${dev ? ` von ${dev} Bauträgern` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video vor Ort, direkte Kontakte.`,
+      title: `Villa auf Bali kaufen — ${n} Angebote${from ? ` ab ${from}` : ''}, Leasehold | Balinsky`,
+      description: `${n} Leasehold-Villen auf Bali für ausländische Käufer${from && to ? ` von ${from} bis ${to}` : from ? ` ab ${from}` : ''}${dev ? ` von ${dev} Bauträgern` : ''}. Laufzeit der Landpacht, PBG/SLF-Status, echte Mietdaten.`,
     },
     apartments: {
-      title: `${n} Apartments auf Bali${from ? ` ab ${from}` : ''} | Balinsky`,
-      description: `${n} Apartments in Wohnanlagen. Berawa, Pererenan, Pandawa. Hausverwaltungen, Angebote und Ratenzahlung.`,
+      title: `Apartment auf Bali kaufen — ${n} Angebote${from ? ` ab ${from}` : ''}, Leasehold | Balinsky`,
+      description: `${n} Leasehold-Apartments auf Bali für ausländische Käufer${from && to ? ` von ${from} bis ${to}` : from ? ` ab ${from}` : ''}. Laufzeit der Landpacht, Hausverwaltung, Ratenzahlung.`,
     },
     complexes: {
-      title: `${n} Wohnanlagen auf Bali mit PBG/SLF-Status | Balinsky`,
-      description: `${n} Bali-Anlagen mit Infrastruktur. PBG/SLF-Status und Grundstückszone, Übergabetermine${dev ? `, Angebote von ${dev} Bauträgern` : ''}.`,
+      title: `${n} Neubauprojekte auf Bali — Preise und Übergabe, Leasehold | Balinsky`,
+      description: `${n} Bali-Anlagen für Käufer ohne indonesischen Pass. Leasehold-Laufzeit, PBG/SLF-Status und Grundstückszone, Übergabetermine${dev ? `, ${dev} Bauträger` : ''}.`,
     },
     developers: {
       title: `${n} Bali-Bauträger — Projekte und Referenzen | Balinsky`,
@@ -184,16 +184,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const zh: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} 套巴厘岛别墅${from ? `，${from} 起` : ''}，附 PBG/SLF 状态 | Balinsky`,
-      description: `${n} 套巴厘岛别墅${from && to ? `，${from} 至 ${to}` : from ? `，${from} 起` : ''}${dev ? `，来自 ${dev} 家开发商` : ''}。Pererenan、Uluwatu、Ubud、Sanur。实地视频，直接联系。`,
+      title: `巴厘岛别墅出售 — ${n} 套${from ? `，${from} 起` : ''}，租赁产权 | Balinsky`,
+      description: `${n} 套面向外国买家的巴厘岛租赁产权（leasehold）别墅${from && to ? `，${from} 至 ${to}` : from ? `，${from} 起` : ''}${dev ? `，来自 ${dev} 家开发商` : ''}。土地租期、PBG/SLF 状态、真实租金数据。`,
     },
     apartments: {
-      title: `${n} 套巴厘岛公寓${from ? `，${from} 起` : ''} | Balinsky`,
-      description: `${n} 套社区公寓。Berawa、Pererenan、Pandawa。物业管理公司，优惠与分期。`,
+      title: `巴厘岛公寓出售 — ${n} 套${from ? `，${from} 起` : ''}，租赁产权 | Balinsky`,
+      description: `${n} 套面向外国买家的巴厘岛租赁产权（leasehold）公寓${from && to ? `，${from} 至 ${to}` : from ? `，${from} 起` : ''}。土地租期、物业管理公司、分期付款。`,
     },
     complexes: {
-      title: `${n} 个巴厘岛住宅区，附 PBG/SLF 状态 | Balinsky`,
-      description: `${n} 个配套齐全的巴厘岛住宅区。PBG/SLF 状态与土地分区，交房日期${dev ? `，${dev} 家开发商优惠` : ''}。`,
+      title: `${n} 个巴厘岛新楼盘 — 价格与交房日期，租赁产权 | Balinsky`,
+      description: `${n} 个巴厘岛住宅区，适合没有印尼护照的买家。租赁产权期限、PBG/SLF 状态与土地分区、交房日期${dev ? `，${dev} 家开发商` : ''}。`,
     },
     developers: {
       title: `${n} 家巴厘岛开发商 — 项目与业绩 | Balinsky`,
@@ -207,16 +207,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const nl: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} villa's op Bali${from ? ` vanaf ${from}` : ''} met PBG/SLF-status | Balinsky`,
-      description: `${n} villa's op Bali${from && to ? ` van ${from} tot ${to}` : from ? ` vanaf ${from}` : ''}${dev ? ` van ${dev} ontwikkelaars` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ter plaatse, directe contacten.`,
+      title: `Villa kopen op Bali — ${n} leasehold-aanbiedingen${from ? ` vanaf ${from}` : ''} | Balinsky`,
+      description: `${n} leasehold-villa's te koop op Bali voor buitenlandse kopers${from && to ? ` van ${from} tot ${to}` : from ? ` vanaf ${from}` : ''}${dev ? ` van ${dev} ontwikkelaars` : ''}. Looptijd grondhuur, PBG/SLF-status, echte huurdata.`,
     },
     apartments: {
-      title: `${n} appartementen op Bali${from ? ` vanaf ${from}` : ''} | Balinsky`,
-      description: `${n} appartementen in complexen. Berawa, Pererenan, Pandawa. Beheermaatschappijen, aanbiedingen en termijnbetaling.`,
+      title: `Appartement kopen op Bali — ${n} leasehold-aanbiedingen${from ? ` vanaf ${from}` : ''} | Balinsky`,
+      description: `${n} leasehold-appartementen te koop op Bali voor buitenlandse kopers${from && to ? ` van ${from} tot ${to}` : from ? ` vanaf ${from}` : ''}. Looptijd grondhuur, beheermaatschappij, termijnbetaling.`,
     },
     complexes: {
-      title: `${n} wooncomplexen op Bali met PBG/SLF-status | Balinsky`,
-      description: `${n} Bali-complexen met voorzieningen. PBG/SLF-status en grondzone, opleverdata${dev ? `, aanbiedingen van ${dev} ontwikkelaars` : ''}.`,
+      title: `${n} nieuwbouwprojecten op Bali — prijzen en oplevering, leasehold | Balinsky`,
+      description: `${n} Bali-complexen voor kopers zonder Indonesisch paspoort. Leasehold-looptijd, PBG/SLF-status en grondzone, opleverdata${dev ? `, ${dev} ontwikkelaars` : ''}.`,
     },
     developers: {
       title: `${n} vastgoedontwikkelaars op Bali — projecten en trackrecord | Balinsky`,
@@ -231,16 +231,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
   // Balinese — best-effort; content otherwise falls back to en/ru.
   const ban: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} vila ring Bali${from ? ` saking ${from}` : ''} sareng status PBG/SLF | Balinsky`,
-      description: `${n} vila ring Bali${from && to ? ` saking ${from} kantos ${to}` : from ? ` saking ${from}` : ''}${dev ? ` saking ${dev} pangwangun` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Video ring genah, kontak langsung.`,
+      title: `Vila kaadol ring Bali — ${n} listing leasehold${from ? ` saking ${from}` : ''} | Balinsky`,
+      description: `${n} vila leasehold ring Bali antuk pembeli asing${from && to ? ` saking ${from} kantos ${to}` : from ? ` saking ${from}` : ''}${dev ? ` saking ${dev} pangwangun` : ''}. Masa sewa tanah, status PBG/SLF, data sewa.`,
     },
     apartments: {
-      title: `${n} apartemen ring Bali${from ? ` saking ${from}` : ''} | Balinsky`,
-      description: `${n} apartemen ring kompleks. Berawa, Pererenan, Pandawa. Perusahaan pangelola, promo miwah cicilan.`,
+      title: `Apartemen kaadol ring Bali — ${n} listing leasehold${from ? ` saking ${from}` : ''} | Balinsky`,
+      description: `${n} apartemen leasehold ring Bali antuk pembeli asing${from && to ? ` saking ${from} kantos ${to}` : from ? ` saking ${from}` : ''}. Masa sewa tanah, perusahaan pangelola, cicilan.`,
     },
     complexes: {
-      title: `${n} kompleks umah ring Bali sareng status PBG/SLF | Balinsky`,
-      description: `${n} kompleks ring Bali sareng infrastruktur. Status PBG/SLF lan zona tanah, tanggal serah terima${dev ? `, promo saking ${dev} pangwangun` : ''}.`,
+      title: `${n} proyek anyar ring Bali — aji lan serah terima, leasehold | Balinsky`,
+      description: `${n} kompleks ring Bali antuk pembeli asing. Masa leasehold, status PBG/SLF lan zona tanah, tanggal serah terima${dev ? `, ${dev} pangwangun` : ''}.`,
     },
     developers: {
       title: `${n} pangwangun ring Bali — proyek lan pengalaman | Balinsky`,
@@ -254,16 +254,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const pl: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} willi na Bali${from ? ` od ${from}` : ''} ze statusem PBG/SLF | Balinsky`,
-      description: `${n} willi na Bali${from && to ? ` od ${from} do ${to}` : from ? ` od ${from}` : ''}${dev ? ` od ${dev} deweloperów` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Wideo z miejsca, bezpośredni kontakt.`,
+      title: `Willa na sprzedaż na Bali — ${n} ofert leasehold${from ? ` od ${from}` : ''} | Balinsky`,
+      description: `${n} willi na sprzedaż na Bali w leasehold dla kupujących z zagranicy${from && to ? ` od ${from} do ${to}` : from ? ` od ${from}` : ''}${dev ? ` od ${dev} deweloperów` : ''}. Okres dzierżawy gruntu, status PBG/SLF, prawdziwe dane najmu.`,
     },
     apartments: {
-      title: `${n} apartamentów na Bali${from ? ` od ${from}` : ''} | Balinsky`,
-      description: `${n} apartamentów w kompleksach. Berawa, Pererenan, Pandawa. Firmy zarządzające, promocje i raty.`,
+      title: `Apartament na sprzedaż na Bali — ${n} ofert leasehold${from ? ` od ${from}` : ''} | Balinsky`,
+      description: `${n} apartamentów na sprzedaż na Bali w leasehold dla kupujących z zagranicy${from && to ? ` od ${from} do ${to}` : from ? ` od ${from}` : ''}. Okres dzierżawy gruntu, firma zarządzająca, raty.`,
     },
     complexes: {
-      title: `${n} kompleksów mieszkaniowych na Bali ze statusem PBG/SLF | Balinsky`,
-      description: `${n} kompleksów na Bali z infrastrukturą. Status PBG/SLF i strefa gruntu, terminy oddania${dev ? `, promocje od ${dev} deweloperów` : ''}.`,
+      title: `${n} nowych inwestycji na Bali — ceny i terminy, leasehold | Balinsky`,
+      description: `${n} kompleksów na Bali dla kupujących bez indonezyjskiego paszportu. Okres leasehold, status PBG/SLF i strefa gruntu, terminy oddania${dev ? `, ${dev} deweloperów` : ''}.`,
     },
     developers: {
       title: `${n} deweloperów na Bali — inwestycje i realizacje | Balinsky`,
@@ -277,16 +277,16 @@ function build(kind: CategoryKind, lang: Lang, s: CategoryStats): CategoryMeta {
 
   const uk: Record<CategoryKind, CategoryMeta> = {
     villas: {
-      title: `${n} вілл на Балі${from ? ` від ${from}` : ''} зі статусом PBG/SLF | Balinsky`,
-      description: `${n} вілл на Балі${from && to ? ` від ${from} до ${to}` : from ? ` від ${from}` : ''}${dev ? ` від ${dev} забудовників` : ''}. Pererenan, Uluwatu, Ubud, Sanur. Відео з місця, прямі контакти.`,
+      title: `Купити віллу на Балі — ціни${from ? ` від ${from}` : ''}, ${n} вілл, лізхолд | Balinsky`,
+      description: `${n} вілл на Балі для іноземців, усе в лізхолді${from && to ? ` від ${from} до ${to}` : from ? ` від ${from}` : ''}${dev ? ` від ${dev} забудовників` : ''}. Термін оренди землі, статус PBG/SLF, дохід за даними оренди.`,
     },
     apartments: {
-      title: `${n} апартаментів на Балі${from ? ` від ${from}` : ''} | Balinsky`,
-      description: `${n} апартаментів у комплексах. Berawa, Pererenan, Pandawa. Керуючі компанії, акції та розстрочки.`,
+      title: `Купити апартаменти на Балі — ціни${from ? ` від ${from}` : ''}, ${n} шт., лізхолд | Balinsky`,
+      description: `${n} апартаментів на Балі для іноземців, усе в лізхолді${from && to ? ` від ${from} до ${to}` : from ? ` від ${from}` : ''}. Термін оренди землі, керуюча компанія, розстрочки.`,
     },
     complexes: {
-      title: `${n} житлових комплексів на Балі зі статусом PBG/SLF | Balinsky`,
-      description: `${n} комплексів на Балі з інфраструктурою. Статус PBG/SLF і зона землі, терміни здачі${dev ? `, акції від ${dev} забудовників` : ''}.`,
+      title: `${n} житлових комплексів на Балі — ціни та терміни здачі, лізхолд | Balinsky`,
+      description: `${n} комплексів на Балі для покупців без індонезійського паспорта. Термін лізхолду, статус PBG/SLF і зона землі, терміни здачі${dev ? `, ${dev} забудовників` : ''}.`,
     },
     developers: {
       title: `${n} забудовників на Балі — проєкти та здані об’єкти | Balinsky`,

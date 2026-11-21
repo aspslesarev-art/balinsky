@@ -101,13 +101,13 @@ export function localizeHubPath(ruPath: string, lang: Lang): string {
   return hubPath(ruPath, lang) ?? switchLangPath(ruPath, lang)
 }
 
-/** Full reciprocal hreflang cluster for a hub (x-default = RU, as in hreflangMap). */
+/** Full reciprocal hreflang cluster for a hub (x-default = EN, as in hreflangMap). */
 export function hubLanguages(ruPath: string): Record<string, string> {
   const out: Record<string, string> = {}
   for (const [code, lang] of HREFLANG) {
     const p = hubPath(ruPath, lang)
     if (p) out[code] = `${SITE_ORIGIN}${p}`
   }
-  if (out.ru) out['x-default'] = out.ru
+  if (out.en ?? out.ru) out['x-default'] = out.en ?? out.ru
   return out
 }

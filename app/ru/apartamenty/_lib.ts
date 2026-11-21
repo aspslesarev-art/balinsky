@@ -564,17 +564,28 @@ const SLIM_APT_FIELDS = [
   ['Последнее обновление', 'last_upd'],
 ] as const
 
-const APT_SELECT = ['airtable_id', ...SLIM_APT_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+const APT_SELECT = ['airtable_id', 'synced_at', ...SLIM_APT_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
 
 function reassembleApt(raw: Record<string, unknown>): Row {
   const data: Record<string, unknown> = {}
   for (const [k, a] of SLIM_APT_FIELDS) data[k] = raw[a]
+  // Дата последней записи строки — настоящий lastmod для карты сайта.
+  data.synced_at = raw.synced_at
   return { airtable_id: raw.airtable_id as string, data }
+}
+
+// Повтор при statement timeout под нагрузкой сборки — как loadVillaRows в villy/_lib.ts.
+async function loadAptRows() {
+  for (let attempt = 1; ; attempt++) {
+    const res = await sb.from('raw_apartments').select(APT_SELECT).limit(1000)
+    if (!res.error || attempt >= 3 || !/statement timeout/i.test(res.error.message)) return res
+    await new Promise(r => setTimeout(r, 1500 * attempt))
+  }
 }
 
 async function _loadAllInternal(): Promise<CachedAll> {
   const [rowsRes, manifestRaw, devMap, enCache, viewCounts, featuresMap, visionMap, livingMap] = await Promise.all([
-    sb.from('raw_apartments').select(APT_SELECT).limit(1000),
+    loadAptRows(),
     loadJson<Record<string, string[]>>(cdnManifestUrl(PHOTO_MANIFEST_URL, 600), {}, ['content:apartments']),
     loadJson<Record<string, string>>(cdnManifestUrl(DEV_LOOKUP_URL, 600), {}, ['content:apartments']),
     loadAllTranslations('apartments'),

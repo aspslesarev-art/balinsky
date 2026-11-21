@@ -111,7 +111,11 @@ def tg(method, **kw):
     return j
 
 
-def keyboard(uid, suggested):
+def keyboard(uid, suggested, market=False):
+    if market:  # новость рынка (market_news.py): только опубликовать или пропустить
+        return {"inline_keyboard": [[{"text": "✅ 📰 Новость", "callback_data": f"dvu:{uid}:news"},
+                                     {"text": "✖️ Пропустить", "callback_data": f"dvu:{uid}:skip"}]]}
+
     def b(kind):
         k = KIND[kind]
         mark = "✅ " if kind == suggested else ""
@@ -122,6 +126,16 @@ def keyboard(uid, suggested):
 
 def card_text(row, cx):
     d = row["draft"]
+    if d.get("market"):
+        lines = ["<b>📰 Новость рынка Бали</b>"]
+        if d.get("why"):
+            lines.append(f"Почему важно: {escape(d['why'])}")
+        lines += ["", f"<b>{escape(d.get('title', ''))}</b>", "", escape(d.get("body", "")).replace("**", ""), ""]
+        if d.get("sourceUrl"):
+            lines.append(f'<a href="{escape(d["sourceUrl"], quote=True)}">Первоисточник: {escape(d.get("sourceName") or "ссылка")}</a>')
+        lines.append("<i>Поправить текст — ответь на это сообщение, можно голосом.</i>")
+        text = "\n".join(lines)
+        return text if len(text) <= 4000 else text[:3990] + "…"
     head = f"<b>{escape(row['developer_name'] or '')}</b>"
     if cx:
         head += f" · {escape(cx['name'])}"
@@ -254,7 +268,13 @@ kind:
 
 def revise_prompt(row, feedback, today):
     d = row["draft"]
-    return RULES.format(today=today, dev=row["developer_name"], date=row["created_at"][:10]) + f"""
+    rules = RULES.format(today=today, dev=row["developer_name"], date=row["created_at"][:10])
+    if d.get("market"):
+        rules = f"""Ты редактор новостей balinsky.info (информационный каталог недвижимости Бали, сегодня {today}).
+Это новость рынка по первоисточнику {d.get('sourceUrl')}. Только факты из него, простые слова, без «!».
+Сохрани абзац «**Что это значит для покупателя:**» и последнюю строку «Источник: …».
+"""
+    return rules + f"""
 Вот черновик статьи (JSON):
 {json.dumps({k: d.get(k) for k in ('title', 'seoDescription', 'body', 'expiresAt', 'startsAt', 'endsAt', 'readinessPct')}, ensure_ascii=False, indent=1)}
 
@@ -269,7 +289,8 @@ def translate_prompt(d):
     return f"""Translate this Bali real-estate news item from Russian for balinsky.info.
 Languages: en, id, fr, de, zh, nl, pl, uk. Keep project, developer and place names in Latin as in the
 source. Keep numbers, dates, currency and the line structure of body (blank lines, "- " bullets).
-Neutral journalistic tone, natural native phrasing, not a calque. No markdown.
+Neutral journalistic tone, natural native phrasing, not a calque. No markdown, except: keep **bold**
+markers exactly where the source has them.
 Every title must be at most 75 characters (the English title becomes the page URL).
 
 Source (JSON):
@@ -449,7 +470,8 @@ def send_card(row, cx):
     if photos:
         tg("sendMediaGroup", chat_id=OWNER, media=[{"type": "photo", "media": u} for u in photos[:10]])
     j = tg("sendMessage", chat_id=OWNER, text=card_text(row, cx), parse_mode="HTML",
-           disable_web_page_preview=True, reply_markup=keyboard(row["id"], row["suggested_kind"]))
+           disable_web_page_preview=True,
+           reply_markup=keyboard(row["id"], row["suggested_kind"], bool(row["draft"].get("market"))))
     return (j.get("result") or {}).get("message_id")
 
 
@@ -478,9 +500,19 @@ def collect(dry=False):
         "chat_id": f"in.({','.join(str(c) for c in devs)})",
         "direction": "eq.in", "created_at": f"gte.{since}", "order": "id.asc", "limit": "2000",
     })
+    # Ответы застройщика на сверку цен (price_checks.py) — не новости, пропускаем.
+    eaten = set()
+    for c in sb_get("dev_price_checks", {"select": "msg_ids", "asked_at": f"gte.{since}"}):
+        eaten.update(c.get("msg_ids") or [])
+    # В чате с открытой сверкой свежие сообщения сначала разбирает она (ответ «да» не новость);
+    # чего она не взяла за 10 минут — идёт сюда как обычно.
+    busy = {c["chat_id"] for c in sb_get("dev_price_checks", {"select": "chat_id", "state": "in.(asked,clarifying,confirming)"})}
+    fresh = datetime.now(timezone.utc) - timedelta(minutes=10)
     by_chat = {}
     for m in msgs:
-        if m["id"] <= cursor.get(m["chat_id"], 0) or m.get("sender_id") == OWNER or m.get("media_type") == "sticker":
+        if m["chat_id"] in busy and datetime.fromisoformat(m["created_at"]) > fresh:
+            continue
+        if m["id"] in eaten or m["id"] <= cursor.get(m["chat_id"], 0) or m.get("sender_id") == OWNER or m.get("media_type") == "sticker":
             continue
         by_chat.setdefault(m["chat_id"], []).append(m)
 
@@ -618,7 +650,8 @@ def revise():
         tg("editMessageReplyMarkup", chat_id=OWNER, message_id=row["tg_message_id"],
            reply_markup={"inline_keyboard": [[{"text": "↩️ Переделано, см. ниже", "callback_data": "dvu:noop"}]]})
         j = tg("sendMessage", chat_id=OWNER, text=card_text(row, cx), parse_mode="HTML",
-               disable_web_page_preview=True, reply_markup=keyboard(row["id"], row["suggested_kind"]))
+               disable_web_page_preview=True,
+               reply_markup=keyboard(row["id"], row["suggested_kind"], bool(d.get("market"))))
         mid = (j.get("result") or {}).get("message_id")
         if mid:
             sb_update("dev_updates", {"id": row["id"]}, {"tg_message_id": mid})
@@ -683,7 +716,11 @@ def publish_one(row):
         "body": d.get("body"), "photo": photos[0] if photos else None, "photos": photos, "videos": videos,
         "pinned": False, "developers": [dev],
     }
-    if k["bucket"] == "news":
+    if d.get("market"):  # новость рынка: без застройщика, ссылка на первоисточник
+        item = {**common, "developers": [], "aliases": [], "status": "published",
+                "date": d.get("date") or today_str(), "createdAt": now,
+                "externalUrl": d.get("sourceUrl"), "videoUrl": None, "complexNames": []}
+    elif k["bucket"] == "news":
         item = {**common, "aliases": [], "status": "published", "date": today_str(), "createdAt": now,
                 "externalUrl": None, "videoUrl": None, "complexNames": [d.get("complexName") or dev["name"]]}
     elif kind == "promo":
@@ -750,6 +787,8 @@ def publish_one(row):
         msg += "\nСтраница пока не открылась — проверю ещё раз сам."
     tg("sendMessage", chat_id=OWNER, text=msg, reply_to_message_id=row["tg_message_id"], disable_web_page_preview=True)
     log("published", row["id"], url, "ok" if ok else "NOT 200")
+    if d.get("market"):
+        return  # отвечать некому: новость не из чата застройщика
     try:
         notify_source(row, k, slug)
     except Exception as e:  # публикация уже прошла — сбой ответа в чат её не откатывает

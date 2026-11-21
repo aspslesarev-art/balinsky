@@ -5,6 +5,8 @@ import { APIProvider, Map, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer'
 import { X } from 'lucide-react'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+import { likelyBot } from '@/lib/likely-bot'
+import { MapLoadPrompt } from './MapLoadPrompt'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
@@ -264,6 +266,9 @@ export function VillasMap({
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [showHeat, setShowHeat] = useState(false)
+  // Человеку карта грузится сразу, роботу — только по кнопке (загрузка платная).
+  const [wanted, setWanted] = useState<boolean | null>(null)
+  useEffect(() => { setWanted(!likelyBot()) }, [])
   const selected = useMemo(() => groups.find(g => g.key === selectedKey) ?? null, [groups, selectedKey])
 
   if (!apiKey) {
@@ -282,6 +287,8 @@ export function VillasMap({
       {heatCells.length > 0 && (
         <ReviewsHeatToggle on={showHeat} onToggle={() => setShowHeat(v => !v)} lang={lang} />
       )}
+      {wanted === false && <MapLoadPrompt lang={lang} onLoad={() => setWanted(true)} />}
+      {wanted && (
       <APIProvider apiKey={apiKey} language={lang}>
         <Map
           defaultCenter={BALI_CENTER}
@@ -314,6 +321,7 @@ export function VillasMap({
           )}
         </Map>
       </APIProvider>
+      )}
     </div>
   )
 }

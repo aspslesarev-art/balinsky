@@ -48,6 +48,8 @@ export type VillaCardData = {
   pricePerSqmUsd?: number | null
   pricePerSqmYearUsd?: number | null
   leaseYears?: number | null
+  // Зона земли: 'tourism' — посуточно можно, 'residential' (жёлтая) — нельзя.
+  landBucket?: 'tourism' | 'residential' | 'unknown' | null
   permit?: string | null
   completionYear?: string | null
   claimedYieldPct?: number | null
@@ -83,6 +85,24 @@ const slavicForm = (n: number, f: [string, string, string], pl = false) => {
   if (pl ? n === 1 : m10 === 1 && m100 !== 11) return f[0]
   return m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? f[1] : f[2]
 }
+const LEASE: Record<Lang, (n: number) => string> = {
+  ru: n => `лизхолд ${n} ${pluralRu(n, ['год', 'года', 'лет'])}`, en: n => `leasehold ${n} yrs`,
+  id: n => `leasehold ${n} thn`, fr: n => `leasehold ${n} ans`, de: n => `Leasehold ${n} J.`,
+  zh: n => `租期${n}年`, nl: n => `leasehold ${n} jr`, ban: n => `leasehold ${n} thn`,
+  pl: n => `leasehold ${n} lat`, uk: n => `лізхолд ${n} р.`,
+}
+const ZONE: Record<Lang, Record<'tourism' | 'residential', string>> = {
+  ru: { tourism: 'туристическая зона', residential: 'жилая зона' },
+  en: { tourism: 'tourism zone', residential: 'residential zone' },
+  id: { tourism: 'zona pariwisata', residential: 'zona hunian' },
+  fr: { tourism: 'zone touristique', residential: 'zone résidentielle' },
+  de: { tourism: 'Tourismuszone', residential: 'Wohnzone' },
+  zh: { tourism: '旅游用地', residential: '住宅用地' },
+  nl: { tourism: 'toeristische zone', residential: 'woonzone' },
+  ban: { tourism: 'zona pariwisata', residential: 'zona hunian' },
+  pl: { tourism: 'strefa turystyczna', residential: 'strefa mieszkaniowa' },
+  uk: { tourism: 'туристична зона', residential: 'житлова зона' },
+}
 const BEDS: Record<Lang, (n: number) => string> = {
   ru: n => `${n} ${pluralRu(n, ['спальня', 'спальни', 'спален'])}`,
   en: n => `${n} BR`,
@@ -112,6 +132,10 @@ export function VillaCard({ a, lang = 'ru', priority = false }: { a: VillaCardDa
     a.bedrooms != null ? (BEDS[lang] ?? BEDS.en)(a.bedrooms) : null,
     a.area != null ? `${a.area} ${copy.sqm}` : null,
     a.land != null ? `${lang === 'de' ? copy.land : copy.land.toLowerCase()} ${a.land} ${copy.sqm}` : null,
+    // Срок лизхолда и зона земли прямо в каталоге (макет CardFacts A, 21.11.2026):
+    // это первое, что спрашивает иностранец, и это видит Google в HTML списка.
+    a.leaseYears != null && a.leaseYears > 0 ? (LEASE[lang] ?? LEASE.en)(a.leaseYears) : null,
+    a.landBucket === 'tourism' || a.landBucket === 'residential' ? (ZONE[lang] ?? ZONE.en)[a.landBucket] : null,
   ].filter(Boolean).join(' · ')
   return (
     <Link

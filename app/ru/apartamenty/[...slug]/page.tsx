@@ -8,6 +8,7 @@ import {
   stripPagination,
   buildCanonicalPath,
 } from '@/lib/seo-routes'
+import { isStrongHub } from '@/lib/hub-indexable'
 import { hubLanguages } from '@/lib/hub-routes'
 
 type Params = Promise<{ slug: string[] }>
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     const probe = await loadCatalogPage(filters, page)
     totalCount = probe.totalCount
   } catch {}
-  const meta = buildMetadata(filters, { canonicalPath: canonical, noIndex: false, totalCount })
+  const meta = buildMetadata(filters, { canonicalPath: canonical, noIndex: totalCount != null && !isStrongHub(filters, totalCount), totalCount })
   // Reciprocal hreflang with the localized hubs (/en/villas/…, /id/vila/…).
   if (page === 1) meta.alternates = { canonical, languages: hubLanguages(baseCanonical) }
   if (page > 1) {

@@ -11,7 +11,7 @@ import { FiltersBar } from '@/components/filters/FiltersBar'
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/filter-href'
-import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString } from './_lib'
+import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString, toCard } from './_lib'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
 import { CatalogShell } from '@/components/CatalogShell'
@@ -177,7 +177,7 @@ export async function ApartamentyCatalog({
       const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
       let g = by.get(key)
       if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
-      g.items.push({ slug, title: (firstString(e.data['SEO:Title']) ?? firstString(e.data['Name']) ?? slug).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim(), href: switchLangPath(`/ru/apartamenty/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: all.manifest[e.id]?.[0] ?? null })
+      g.items.push({ slug, title: (lang === 'ru' ? (firstString(e.data['SEO:Title']) ?? firstString(e.data['Name']) ?? slug) : (toCard(e, all.manifest, undefined, lang)?.title ?? slug)).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim(), href: switchLangPath(`/ru/apartamenty/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: all.manifest[e.id]?.[0] ?? null })
     }
     return [...by.values()]
   })().catch(() => [])

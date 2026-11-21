@@ -73,6 +73,7 @@ export function MarketShell({ pageKey, lang, crumb, h1, lead, updated, children,
       spatialCoverage: { '@type': 'Place', name: 'Bali, Indonesia' },
       creator: { '@type': 'Organization', name: 'Balinsky', url: SITE_ORIGIN },
       isAccessibleForFree: true,
+      license: `${SITE_ORIGIN}/en/terms`,
       measurementTechnique: `${SITE_ORIGIN}${marketPath('method', lang)}`,
     })
   }

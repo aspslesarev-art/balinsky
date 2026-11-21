@@ -59,13 +59,16 @@ export function EcoWoodChessBoard({ villas, masterplanUrl, lang }: Props) {
         </span>
       </div>
 
-      <div className="relative w-full">
-        <div className="overflow-hidden rounded-xl border border-[var(--color-border)]">
+      {/* На телефоне генплан по высоте экрана и листается пальцем (владелец 21.11.2026). */}
+      <div className="max-sm:ml-[calc(50%-50vw)] max-sm:w-screen max-sm:overflow-x-auto max-sm:overscroll-x-contain [scrollbar-width:none]">
+      <div className="relative w-full max-sm:h-[62svh] max-sm:w-max">
+        <div className="overflow-hidden rounded-xl border border-[var(--color-border)] max-sm:h-full max-sm:rounded-none max-sm:border-x-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={masterplanUrl}
             alt="EcoWood masterplan"
-            className="w-full h-auto block"
+            className="w-full h-auto block max-sm:h-full max-sm:w-auto max-sm:max-w-none"
+            onLoad={e => { const el = e.currentTarget.closest<HTMLElement>('.max-sm\\:overflow-x-auto'); if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2 }}
             width={1600}
             height={893}
           />
@@ -143,6 +146,7 @@ export function EcoWoodChessBoard({ villas, masterplanUrl, lang }: Props) {
             )
           })}
         </div>
+      </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-4">

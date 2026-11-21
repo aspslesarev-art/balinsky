@@ -12,6 +12,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { pickCopy, type Lang } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/use-scroll-lock'
 
 const STYLE = 'https://tiles.openfreemap.org/styles/positron'
 
@@ -33,8 +34,19 @@ const COPY = {
 
 const esc = (s: string) => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))
 
-function MapCanvas({ groups, lang, className, onArea, onView }: { groups: CatalogMapGroup[]; lang: Lang; className: string; onArea?: (a: [number, number, number, number]) => void; onView?: (v: { area: [number, number, number, number]; n: number } | null) => void }) {
+function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, area = null }: { area?: string | null; groups: CatalogMapGroup[]; lang: Lang; className: string; onArea?: (a: [number, number, number, number]) => void; onView?: (v: { area: [number, number, number, number]; n: number } | null) => void; zoomOnly?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
+  // Колбэки — через ref: раньше они стояли в зависимостях эффекта, и после
+  // каждого сдвига карта пересоздавалась и прыгала на весь Бали (телефон, 21.11.2026).
+  const onAreaRef = useRef(onArea)
+  const onViewRef = useRef(onView)
+  useEffect(() => { onAreaRef.current = onArea; onViewRef.current = onView })
+  // Где стояла камера: список после «N объектов» пересобирается, карта
+  // создаётся заново — и раньше прыгала на весь Бали (владелец 21.11.2026).
+  const camRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
+  // «Показать все» — снова весь остров. Эффект объявлен до эффекта карты,
+  // поэтому срабатывает раньше, чем карта создаётся заново.
+  useEffect(() => { if (!area) camRef.current = null }, [area])
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
   useEffect(() => {
@@ -52,14 +64,17 @@ function MapCanvas({ groups, lang, className, onArea, onView }: { groups: Catalo
         // Сдвиги карты самим сайтом (подгонка, клик по группе) не считаем —
         // кнопка «Показать N здесь» только после движения человеком.
         let auto = true
-        m.fitBounds(b, { padding: 48, maxZoom: 14, animate: false })
+        if (camRef.current) m.jumpTo(camRef.current)
+        else m.fitBounds(b, { padding: 48, maxZoom: 14, animate: false })
         m.on('movestart', e => { if ((e as { originalEvent?: Event }).originalEvent) auto = false })
         m.on('moveend', () => {
+          const ctr = m.getCenter()
+          camRef.current = { center: [ctr.lng, ctr.lat], zoom: m.getZoom() }
           if (auto) { auto = false; return }
           const bb = m.getBounds()
           const area: [number, number, number, number] = [bb.getWest(), bb.getSouth(), bb.getEast(), bb.getNorth()]
           const n = groups.reduce((t, g) => t + (g.lng >= area[0] && g.lng <= area[2] && g.lat >= area[1] && g.lat <= area[3] ? g.items.length : 0), 0)
-          onView?.({ area, n })
+          onViewRef.current?.({ area, n })
         })
         ref.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
         // Точки ближе 90 px друг к другу на экране — одним пузырём «N объектов»;
@@ -97,18 +112,25 @@ function MapCanvas({ groups, lang, className, onArea, onView }: { groups: Catalo
                 e.stopPropagation()
                 const bb = new ml.LngLatBounds([members[0].g.lng, members[0].g.lat], [members[0].g.lng, members[0].g.lat])
                 members.forEach(x => bb.extend([x.g.lng, x.g.lat]))
+                // На телефоне только приближаем: карта не закрывается, список
+                // фильтрует кнопка «Показать N здесь» после приближения.
+                if (zoomOnly) { m.fitBounds(bb, { padding: 64, maxZoom: 16 }); return }
                 auto = true
-                onView?.(null)
+                onViewRef.current?.(null)
+                // Камеру запоминаем заранее: список сейчас пересоберётся, и
+                // новая карта должна встать сюда же, а не на весь остров.
+                const cam = m.cameraForBounds(bb, { padding: 80, maxZoom: 16 })
+                if (cam?.center) { const cc = ml.LngLat.convert(cam.center); camRef.current = { center: [cc.lng, cc.lat], zoom: cam.zoom ?? m.getZoom() } }
                 m.fitBounds(bb, { padding: 80, maxZoom: 16 })
                 // И список слева — только объекты этой области (запас ~150 м по краям).
                 const pad = 0.0015
-                onArea?.([bb.getWest() - pad, bb.getSouth() - pad, bb.getEast() + pad, bb.getNorth() + pad])
+                onAreaRef.current?.([bb.getWest() - pad, bb.getSouth() - pad, bb.getEast() + pad, bb.getNorth() + pad])
               })
             } else {
               const prices = items.map(i => i.priceUsd).filter((p): p is number => p != null && p > 0)
               el.textContent = items.length > 1 ? c.n(items.length) : prices[0] ? formatPrice(prices[0], currency, lang) : items[0].title.slice(0, 18)
               const html = `<div class="bx-cat-pop">${items.slice(0, 8).map(i => `<a href="${esc(i.href)}">${i.thumb ? `<img src="${esc(i.thumb)}" alt="" loading="lazy">` : '<span></span>'}<span><b>${esc(i.title)}</b>${i.priceUsd ? `<em>${esc(formatPrice(i.priceUsd, currency, lang))}</em>` : ''}</span></a>`).join('')}${items.length > 8 ? `<p>+${items.length - 8}</p>` : ''}</div>`
-              mk.setPopup(new ml.Popup({ offset: 18, maxWidth: '300px', closeButton: false }).setHTML(html))
+              mk.setPopup(new ml.Popup({ offset: 18, maxWidth: 'min(300px, calc(100vw - 32px))', closeButton: false }).setHTML(html))
             }
             mk.addTo(m); markers.push({ mk, el, slugs: new Set(items.map(i => i.slug)) })
           }
@@ -118,7 +140,7 @@ function MapCanvas({ groups, lang, className, onArea, onView }: { groups: Catalo
       })
     })
     return () => { cancelled = true; map?.remove() }
-  }, [groups, currency, lang, c, onArea, onView])
+  }, [groups, currency, lang, c, zoomOnly])
   return <div ref={ref} className={`w-full overflow-hidden bg-[#EEF1EF] ${className}`} />
 }
 
@@ -157,7 +179,7 @@ function CatalogMapInner({ groups: all, lang = 'ru' }: { groups: CatalogMapGroup
   // Вариант B (владелец 20.11.2026): после сдвига карты — «Показать N объектов здесь».
   const hereBtn = view && view.n > 0 && (
     <button type="button" onClick={() => { const a = view.area; setView(null); setOpen(false); onArea(a) }}
-      className="absolute bottom-6 left-1/2 z-[5] inline-flex h-12 -translate-x-1/2 cursor-pointer items-center whitespace-nowrap rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white shadow-[0_8px_24px_rgb(0_0_0/.25)] hover:bg-[var(--color-primary-pressed)]">
+      className="absolute bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 z-[5] inline-flex h-12 -translate-x-1/2 cursor-pointer items-center whitespace-nowrap rounded-xl border-0 bg-[var(--color-primary)] px-6 text-[16px] font-semibold text-white shadow-[0_8px_24px_rgb(0_0_0/.25)] hover:bg-[var(--color-primary-pressed)]">
       {c.here(view.n)}
     </button>
   )
@@ -175,25 +197,31 @@ function CatalogMapInner({ groups: all, lang = 'ru' }: { groups: CatalogMapGroup
     on(); mq.addEventListener('change', on)
     return () => mq.removeEventListener('change', on)
   }, [])
+  useScrollLock(open)
   useEffect(() => {
     if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('keydown', onKey)
-    return () => { document.body.style.overflow = prev; document.removeEventListener('keydown', onKey) }
+    return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
-  if (wide) return <div className="relative h-full"><MapCanvas groups={groups} lang={lang} className="h-full" onArea={onArea} onView={onView} />{allBtn}{hereBtn}</div>
+  if (wide) return <div className="relative h-full"><MapCanvas groups={groups} lang={lang} className="h-full" onArea={onArea} onView={onView} area={area} />{allBtn}{hereBtn}</div>
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)}
+      {/* data-no-typo: карта внутри Suspense оживает позже, чем типограф
+          заменяет пробелы, — иначе React видит другой текст и перестраивает блок. */}
+      <button type="button" onClick={() => setOpen(true)} data-no-typo
         className="fixed bottom-6 left-1/2 z-[40] inline-flex h-12 -translate-x-1/2 cursor-pointer items-center gap-2 rounded-full border-0 bg-[#0F1A15] px-5 text-[15px] font-semibold text-white shadow-[0_1px_2px_rgb(0_0_0/.1),0_8px_24px_rgb(0_0_0/.24)] lg:hidden">
         <MapIcon size={18} aria-hidden /> {c.open}
       </button>
       {open && createPortal(
-        <div className="fixed inset-0 z-[9999] bg-white" role="dialog" aria-modal="true" aria-label={c.open}>
-          <MapCanvas groups={groups} lang={lang} className="h-full" onArea={a => { setOpen(false); onArea(a) }} onView={onView} />{allBtn}{hereBtn}
+        <div className="fixed inset-x-0 top-0 z-[9999] h-[100dvh] overscroll-none bg-white" role="dialog" aria-modal="true" aria-label={c.open}>
+          <MapCanvas groups={groups} lang={lang} className="h-full" onView={onView} zoomOnly area={area} />{area && (
+            <button type="button" onClick={() => { setOpen(false); clearArea() }}
+              className="absolute left-[68px] top-4 z-[5] inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border-0 bg-[#0F1A15] px-4 text-[14px] font-semibold text-white shadow-[0_1px_2px_rgb(0_0_0/.1),0_6px_16px_rgb(0_0_0/.2)]">
+              <X size={16} aria-hidden /> {c.all}
+            </button>
+          )}{hereBtn}
           <button type="button" onClick={() => setOpen(false)} aria-label={c.close}
             className="absolute left-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-white text-[#0F1A15] shadow-[0_1px_2px_rgb(0_0_0/.1),0_6px_16px_rgb(0_0_0/.18)]">
             <X size={20} />

@@ -137,10 +137,19 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
     setTimeout(() => { try { src.stop() } catch {} }, 700)
   }
   useEffect(() => () => { audio.current?.ctx.close().catch(() => {}) }, [])
+  // Слайд-шоу листает только на уже загруженное фото: на медленном интернете
+  // верхний слой гас раньше, чем грузился нижний, и мелькал чёрный фон.
+  const loaded = useRef(new Set<string>())
+  const nextSrc = useRef<string | null>(null)
+  useEffect(() => {
+    const s = photos.length ? photos : plans.slice(0, 1)
+    nextSrc.current = show && s.length ? s[(show.from + show.k + 1) % s.length] : null
+  }, [show, photos, plans])
   useEffect(() => {
     if (!showing) return
     const timers: ReturnType<typeof setTimeout>[] = []
     const iv = setInterval(() => {
+      if (nextSrc.current && !loaded.current.has(nextSrc.current)) return
       setFading(true)
       timers.push(setTimeout(() => { setShow(p => p && { ...p, k: p.k + 1 }); setFading(false) }, FADE_MS))
     }, ADVANCE_MS)
@@ -165,8 +174,9 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const stop = () => { soundOff(); if (show) { setCur(topIdx); setShow(null); setFading(false) } }
   const step = (d: number) => { stop(); setCur(i => ((show ? topIdx : i) + d + n) % n) }
   const play = () => {
-    // Подгрузить все фото заранее, чтобы смена не мигала.
-    slides.forEach(src => { const im = new window.Image(); im.src = src })
+    // Заранее грузится только следующее фото (нижний слой, ужатая копия).
+    // Раньше тут качались все оригиналы разом — на телефоне они забивали
+    // канал, и нужный кадр не успевал.
     setShow({ from: Math.min(cur, n - 1), k: 0 })
     if (!muted) void soundOn()
   }
@@ -186,7 +196,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const layer = (name: 'a' | 'b', idx: number, top: boolean) => (
     <Image key={`${name}-${idx}`} src={slides[idx]} alt="" aria-hidden fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'}
       className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
-      style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }} />
+      style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }}
+      onLoad={() => loaded.current.add(slides[idx])} onError={() => loaded.current.add(slides[idx])} />
   )
   const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[640px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
@@ -201,7 +212,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         ...(planCount > 0 ? [{ key: 'plans', label: c.plans, count: planCount > 1 ? planCount : undefined, cover: plans[0] ?? null, tab: 'plans' as Tab, i: 0 }] : []),
         ...(masterplan ? [{ key: 'master', label: c.master, cover: masterplanCover ?? null, tab: 'master' as Tab, i: 0 }] : []),
         ...(tourUrl ? [{ key: 'tour', label: c.tour, cover: photos[2] ?? photos[0] ?? null, tab: 'tour' as Tab, i: 0 }] : []),
-        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, cover: v.cover ?? null, unopt: /arcgisonline\.com/.test(v.cover ?? ''), tab: `x:${v.key}` as Tab, i: 0 })),
+        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, count: v.count, cover: v.cover ?? null, unopt: /arcgisonline\.com/.test(v.cover ?? ''), tab: `x:${v.key}` as Tab, i: 0 })),
         ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, tab: 'promo' as Tab, i: 0 }] : []),
       ]
 
@@ -210,16 +221,18 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
       {belowHero}
 
       {tilesAs === 'text' ? (links.length > 0 && (
-          <nav aria-label={c.photos} className="-mx-6 mt-2 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:mt-4 md:w-auto md:max-w-full md:gap-5 md:overflow-visible md:px-0 [scrollbar-width:none]">
+          <nav aria-label={c.photos} className="-mx-6 mt-2 flex w-[calc(100%+3rem)] max-w-none snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-1 md:mx-0 md:mt-4 md:w-auto md:max-w-full md:flex-wrap md:gap-x-5 md:gap-y-6 md:overflow-visible md:px-0 [scrollbar-width:none]">
             {links.map(l => (
               <button key={l.key} type="button" onClick={() => { stop(); setOpen({ tab: l.tab, i: l.i }) }}
-                className="group flex w-[148px] shrink-0 cursor-pointer snap-start flex-col gap-2 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-[calc((100%-120px)/7)] md:min-w-0 md:flex-none">
+                className="group flex w-[148px] shrink-0 cursor-pointer snap-start flex-col gap-2 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-[calc((100%-60px)/4)] md:min-w-0 md:flex-none xl:w-[calc((100%-120px)/7)]">
                 <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-[#F1F3F2]">
                   {l.cover && <Image src={l.cover} alt="" fill sizes="(min-width: 768px) 200px, 148px" unoptimized={l.unopt} className="object-cover transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.04]" />}
                   {l.key === 'videos' && <span className="absolute inset-0 flex items-center justify-center text-white [filter:drop-shadow(0_2px_6px_rgb(0_0_0/.4))]"><svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" /><path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" /></svg></span>}
+                  {/* Число — плашкой на картинке (владелец 21.11.2026): подпись не переносится на вторую строку. */}
+                  {l.count != null && <span className="absolute bottom-1.5 right-1.5 rounded-full bg-[#0F1A15]/75 px-2 py-0.5 text-[12px] font-semibold leading-[1.4] tabular-nums text-white backdrop-blur-sm">{l.count}</span>}
                 </span>
                 <span className="text-[15px] font-semibold leading-tight text-[#0F1A15] group-hover:underline group-hover:underline-offset-4">
-                  {l.label}{l.count != null && <span className="font-normal text-[#6B7570]"> {l.count}</span>}
+                  {l.label}
                 </span>
               </button>
             ))}
@@ -320,7 +333,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
         {topRight && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 mx-auto w-full max-w-[1280px] px-4 pt-4 md:px-6 md:pt-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] mx-auto w-full max-w-[1280px] px-4 pt-4 md:px-6 md:pt-5">
             <div className="pointer-events-auto ml-auto w-fit">{topRight}</div>
           </div>
         )}
