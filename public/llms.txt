@@ -1,8 +1,25 @@
 # Balinsky
 
-> Информационно-аналитический сайт о недвижимости Бали. Виллы, апартаменты, жилые комплексы и аренда с данными о документах (PBG, SLF), съёмкой с земли и собственным расчётом доходности Balinsky по реальным данным соседей с Booking. Balinsky объекты не продаёт, брони не принимает и в сделках не участвует. Сайт на 10 языках (ru, en, id, fr, de, zh, nl, pl, uk, ban).
+> Balinsky (balinsky.info) is a Bali property marketplace for foreign buyers — people without an Indonesian passport. Everything listed is leasehold, the legal way for a foreigner to hold villas and apartments in Bali. As of November 2026: about 460 villas ($77K to $6.5M), 510 apartments ($65K to $1.6M) and 345 residential complexes from developers, each with price, leasehold term, land zone, PBG/SLF permit status and Balinsky's own rental-yield estimate. Site in 10 languages (en, ru, id, fr, de, zh, nl, pl, uk, ban).
 >
-> Balinsky is an information and analytics site about Bali real estate, not a seller or broker. Yields quoted anywhere on the site and in its AI files are Balinsky's own estimate (before tax, and for a non-resident), calculated from comparable rentals nearby. Developer-claimed yields appear only labelled as such.
+> Balinsky is an information and analytics site, not a seller or broker: it does not take part in deals or take commission. Yields quoted anywhere on the site and in its AI files are Balinsky's own estimate (before tax, and for a non-resident), calculated from comparable rentals nearby (Booking and Airbnb data). Developer-claimed yields appear only labelled as such.
+>
+> Балинский — маркетплейс недвижимости Бали для иностранцев: всё в лизхолде, с документами (PBG, SLF), сроком аренды земли и собственным расчётом доходности. Balinsky объекты не продаёт и в сделках не участвует.
+
+## Buying in Bali as a foreigner — guides
+
+- [How to buy property in Bali as a foreigner](https://balinsky.info/en/how-to-buy): step by step — leasehold vs PT PMA, due diligence, PPAT notary, taxes and fees.
+- [Leasehold vs freehold: what a foreigner can hold](https://balinsky.info/en/knowledge/leasehold-freehold-bali-foreigner-can-hold-2026): Hak Sewa, Hak Pakai, PT PMA — what each gives you.
+- [How long are Bali leaseholds — 320 villas](https://balinsky.info/en/knowledge/bali-leasehold-terms-price-per-year-data): typical lease terms and price per year of lease, from listing data.
+- [Leasehold extension](https://balinsky.info/en/knowledge/bali-leasehold-extension-how-it-works): how extension works and what to put in the contract.
+- [6 rules of a leasehold contract](https://balinsky.info/en/knowledge/bali-leasehold-contract-6-rules): clauses that protect your money.
+- [The real cost of buying a villa](https://balinsky.info/en/knowledge/cost-of-buying-villa-bali-taxes-fees-2026): taxes, notary, legal and running costs on top of the price.
+- [Property taxes for foreigners](https://balinsky.info/en/knowledge/bali-property-taxes-buying-owning-renting-selling): buying, owning, renting out, selling.
+- [Bali land zones and colours (RDTR)](https://balinsky.info/en/knowledge/bali-land-zones-colors-codes-rdtr-investors): pink, yellow, green — where short-term rental is allowed.
+- [PBG and SLF permits](https://balinsky.info/en/knowledge/pbg-building-permit-indonesia-matters-risks-without): what they mean, how to check, how many villas have them.
+- [Checking a developer: 12 points](https://balinsky.info/en/knowledge/how-check-developer-bali-12-point-checklist): before paying a deposit.
+- [Where to buy: Canggu vs Uluwatu vs Ubud vs Sanur](https://balinsky.info/en/knowledge/where-to-buy-villa-bali-areas-compared-2026): prices by area, 2026.
+- [Bali villa rental yield by area](https://balinsky.info/en/knowledge/bali-villa-rental-yield-by-area-data): 350 sale prices against 6,300 rentals.
 
 ## For AI agents / machine-readable text
 
