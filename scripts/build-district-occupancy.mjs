@@ -24,30 +24,44 @@ const fromD = new Date(Math.max(to.getTime() - (WINDOW - 1) * 86400000, Date.par
 const from = day(fromD), till = day(to)
 const nights = Math.round((to - fromD) / 86400000) + 1
 
-const rows = []
-for (let off = 0; ; off += 1000) {
-  const q = `${URL_}/rest/v1/booking_occ_single_daily?select=night,zone,booked,free&unit_kind=eq.villa&night=gte.${from}&night=lte.${till}&order=night,zone&limit=1000&offset=${off}`
-  const r = await fetch(q, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } })
-  const page = await r.json()
-  if (!Array.isArray(page)) throw new Error(JSON.stringify(page))
-  rows.push(...page)
-  if (page.length < 1000) break
+// По одному типу за запрос: фильтр сразу по двум типам вьюха не успевает (statement timeout).
+async function load(kind) {
+  const out = []
+  for (let off = 0; ; off += 1000) {
+    const q = `${URL_}/rest/v1/booking_occ_single_daily?select=night,zone,unit_kind,booked,free&unit_kind=eq.${kind}&night=gte.${from}&night=lte.${till}&order=night,zone&limit=1000&offset=${off}`
+    const r = await fetch(q, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } })
+    const page = await r.json()
+    if (!Array.isArray(page)) throw new Error(JSON.stringify(page))
+    out.push(...page)
+    if (page.length < 1000) break
+  }
+  return out
 }
+const rows = [...await load('villa'), ...await load('apartment')]
 if (rows.length === 0) throw new Error('нет данных за окно — файл не трогаю')
 
-const z = {}
-for (const x of rows) {
-  const a = (z[x.zone] ??= { booked: 0, open: 0 })
-  a.booked += x.booked
-  a.open += x.booked + x.free
+function byZone(kind) {
+  const z = {}
+  for (const x of rows) {
+    if (x.unit_kind !== kind) continue
+    const a = (z[x.zone] ??= { booked: 0, open: 0 })
+    a.booked += x.booked
+    a.open += x.booked + x.free
+  }
+  const out = {}
+  for (const [name, a] of Object.entries(z)) {
+    const units = Math.round(a.open / nights)
+    if (units < MIN_UNITS || name === 'Прочее') continue
+    out[name] = { occupancyPct: Math.round((1000 * a.booked) / a.open) / 10, villas: units }
+  }
+  return out
 }
-const zones = {}
-for (const [name, a] of Object.entries(z)) {
-  const units = Math.round(a.open / nights)
-  if (units < MIN_UNITS || name === 'Прочее') continue
-  zones[name] = { occupancyPct: Math.round((1000 * a.booked) / a.open) / 10, villas: units }
-}
-const out = { from, to: till, nights, source: 'Balinsky daily Booking.com availability tracking (single-unit villas)', generatedAt: new Date().toISOString(), zones }
+const zones = byZone('villa')
+// Апартаменты (одиночные юниты на Booking) — для страниц районов с апартаментами.
+const apartmentZones = byZone('apartment')
+const out = { from, to: till, nights, source: 'Balinsky daily Booking.com availability tracking (single-unit villas)', generatedAt: new Date().toISOString(), zones, apartmentZones }
 fs.writeFileSync('lib/district-occupancy.json', JSON.stringify(out, null, 1) + '\n')
 console.log(`${from} → ${till} (${nights} ночей), зон: ${Object.keys(zones).length}`)
 for (const [k, v] of Object.entries(zones)) console.log(' ', k, v.occupancyPct + '%', v.villas)
+console.log('апартаменты:')
+for (const [k, v] of Object.entries(apartmentZones)) console.log(' ', k, v.occupancyPct + '%', v.villas)

@@ -318,3 +318,165 @@ export function districtVillaFaq(district: string, name: string, lang: Lang): Fa
 
   return items.length >= 3 ? items : null
 }
+
+// === Апартаменты (страницы районов /ru/apartamenty/<район>) ===
+// Те же формулировки, что одобрены для вилл; данных по апартаментам меньше
+// (нет срока лизхолда и разрешений по району), поэтому вопросов 3–4.
+type AptCopy = {
+  usd: (n: number) => string
+  priceQ: (d: string) => string
+  priceA: (d: string, median: string, n: number, asOf: string) => string
+  range: (a: string, b: string) => string
+  perM2: (v: string) => string
+  rentQ: (d: string) => string
+  rentA: (v: string, n: number) => string
+  occQ: (d: string) => string
+  occA: (d: string, period: string, pct: number, units: number) => string
+  buyQ: (d: string) => string
+  buyA: string
+}
+
+const APT_COPY: Partial<Record<Lang, AptCopy>> = {
+  ru: {
+    usd: usdSpace,
+    priceQ: d => `Сколько стоят апартаменты в районе ${d}?`,
+    priceA: (d, m, n, a) => `Медианная цена апартаментов в районе ${d} - ${m} (${n} ${ruPl(n, ['лот', 'лота', 'лотов'])} в каталоге Balinsky, ${a}).`,
+    range: (a, b) => ` Половина стоит от ${a} до ${b}.`,
+    perM2: v => ` Квадратный метр - около ${v}.`,
+    rentQ: d => `Сколько можно зарабатывать на аренде апартаментов в районе ${d}?`,
+    rentA: (v, n) => `Апартаменты сдаются посуточно в среднем за ${v} за ночь (медиана по ${n} ${ruPl(n, ['объявлению', 'объявлениям', 'объявлениям'])} на Booking).`,
+    occQ: d => `Какая загрузка у апартаментов в районе ${d}?`,
+    occA: (d, p, pct, u) => `Balinsky каждый день отслеживает свободные даты на Booking. ${cap(p)} апартаменты в районе ${d} были заняты примерно ${pct}% ночей из тех, что были открыты для брони (около ${u} ${ruPl(u, ['апартамента', 'апартаментов', 'апартаментов'])}). Это один период, не средняя за год.`,
+    buyQ: d => `Может ли иностранец купить апартаменты в районе ${d}?`,
+    buyA: 'Да, через лизхолд - долгосрочную аренду, оформляется у нотариуса PPAT. Всё в каталоге Balinsky продаётся в лизхолде. Срок лизхолда, управляющая компания и рассрочка указаны на каждой карточке.',
+  },
+  en: {
+    usd: usdIntl,
+    priceQ: d => `How much does an apartment in ${d} cost?`,
+    priceA: (d, m, n, a) => `The median asking price of an apartment in ${d} is ${m} (${n} units in the Balinsky catalogue, ${a}).`,
+    range: (a, b) => ` Half of them are priced between ${a} and ${b}.`,
+    perM2: v => ` That is about ${v} per m².`,
+    rentQ: d => `How much does an apartment in ${d} rent for?`,
+    rentA: (v, n) => `Apartments rent for a median ${v} a night (${n} listings on Booking).`,
+    occQ: d => `How busy are apartments in ${d}?`,
+    occA: (d, p, pct, u) => `Balinsky checks availability on Booking every day. ${cap(p)}, apartments in ${d} were taken on about ${pct}% of the nights that had been open for booking (about ${u} apartments tracked). This is one period, not a yearly average.`,
+    buyQ: d => `Can a foreigner buy an apartment in ${d}?`,
+    buyA: 'Yes, through leasehold — a long-term lease signed at a PPAT notary. Everything in the Balinsky catalogue is sold leasehold. The lease term, management company and payment plan are shown on every listing.',
+  },
+  id: {
+    usd: usdIntl,
+    priceQ: d => `Berapa harga apartemen di ${d}?`,
+    priceA: (d, m, n, a) => `Harga median apartemen di ${d} adalah ${m} (${n} unit di katalog Balinsky, ${a}).`,
+    range: (a, b) => ` Separuhnya dihargai antara ${a} dan ${b}.`,
+    perM2: v => ` Sekitar ${v} per m².`,
+    rentQ: d => `Berapa harga sewa apartemen di ${d}?`,
+    rentA: (v, n) => `Apartemen disewakan dengan median ${v} per malam (${n} iklan di Booking).`,
+    occQ: d => `Seberapa tinggi tingkat hunian apartemen di ${d}?`,
+    occA: (d, p, pct, u) => `Balinsky memantau ketersediaan di Booking setiap hari. ${cap(p)}, apartemen di ${d} terisi sekitar ${pct}% dari malam yang dibuka untuk pemesanan (sekitar ${u} apartemen dipantau). Ini satu periode, bukan rata-rata tahunan.`,
+    buyQ: d => `Bisakah orang asing membeli apartemen di ${d}?`,
+    buyA: 'Ya, melalui leasehold — sewa jangka panjang yang ditandatangani di notaris PPAT. Semua properti di katalog Balinsky dijual secara leasehold. Masa sewa, perusahaan pengelola dan cicilan tercantum di setiap listing.',
+  },
+  fr: {
+    usd: usdIntl,
+    priceQ: d => `Combien coûte un appartement à ${d} ?`,
+    priceA: (d, m, n, a) => `Le prix médian d’un appartement à ${d} est de ${m} (${n} lots dans le catalogue Balinsky, ${a}).`,
+    range: (a, b) => ` La moitié se situe entre ${a} et ${b}.`,
+    perM2: v => ` Soit environ ${v} le m².`,
+    rentQ: d => `Combien rapporte la location d’un appartement à ${d} ?`,
+    rentA: (v, n) => `Les appartements se louent en médiane ${v} la nuit (${n} annonces sur Booking).`,
+    occQ: d => `Quel est le taux d’occupation des appartements à ${d} ?`,
+    occA: (d, p, pct, u) => `Balinsky relève chaque jour les disponibilités sur Booking. ${cap(p)}, les appartements à ${d} ont été occupés environ ${pct} % des nuits ouvertes à la réservation (environ ${u} appartements suivis). C’est une seule période, pas une moyenne annuelle.`,
+    buyQ: d => `Un étranger peut-il acheter un appartement à ${d} ?`,
+    buyA: 'Oui, en leasehold — un bail longue durée signé chez un notaire PPAT. Tout le catalogue Balinsky est vendu en leasehold. La durée du bail, la société de gestion et l’échéancier figurent sur chaque annonce.',
+  },
+  de: {
+    usd: usdIntl,
+    priceQ: d => `Was kostet ein Apartment in ${d}?`,
+    priceA: (d, m, n, a) => `Der Median-Angebotspreis eines Apartments in ${d} liegt bei ${m} (${n} Einheiten im Balinsky-Katalog, ${a}).`,
+    range: (a, b) => ` Die Hälfte kostet zwischen ${a} und ${b}.`,
+    perM2: v => ` Das sind etwa ${v} pro m².`,
+    rentQ: d => `Wie viel bringt die Vermietung eines Apartments in ${d}?`,
+    rentA: (v, n) => `Apartments kosten im Median ${v} pro Nacht (${n} Inserate auf Booking).`,
+    occQ: d => `Wie gut sind Apartments in ${d} ausgelastet?`,
+    occA: (d, p, pct, u) => `Balinsky erfasst täglich die freien Termine auf Booking. ${cap(p)} waren Apartments in ${d} an etwa ${pct} % der buchbaren Nächte belegt (rund ${u} beobachtete Apartments). Das ist ein einzelner Zeitraum, kein Jahresdurchschnitt.`,
+    buyQ: d => `Kann ein Ausländer ein Apartment in ${d} kaufen?`,
+    buyA: 'Ja, über Leasehold — eine langfristige Pacht, beurkundet bei einem PPAT-Notar. Alles im Balinsky-Katalog wird als Leasehold verkauft. Laufzeit, Verwaltungsgesellschaft und Ratenplan stehen bei jedem Inserat.',
+  },
+  zh: {
+    usd: usdIntl,
+    priceQ: d => `${d}的公寓多少钱？`,
+    priceA: (d, m, n, a) => `${d}公寓的挂牌价中位数为 ${m}（Balinsky 目录中 ${n} 套，${a}）。`,
+    range: (a, b) => `一半的价格在 ${a} 至 ${b} 之间。`,
+    perM2: v => `约合每平方米 ${v}。`,
+    rentQ: d => `${d}的公寓租金是多少？`,
+    rentA: (v, n) => `公寓日租中位数为每晚 ${v}（Booking 上 ${n} 条房源）。`,
+    occQ: d => `${d}的公寓入住率如何？`,
+    occA: (d, p, pct, u) => `Balinsky 每天跟踪 Booking 上的空房情况。${p}，${d}的公寓在开放预订的夜晚中约有 ${pct}% 被订出（约 ${u} 套公寓）。这只是一个时段，不是全年平均。`,
+    buyQ: d => `外国人可以在${d}买公寓吗？`,
+    buyA: '可以，通过租赁产权（leasehold）——长期租赁，在 PPAT 公证处签署。Balinsky 目录中的房产全部以租赁产权出售。每个房源都注明租期、物业管理公司和分期方案。',
+  },
+  nl: {
+    usd: usdIntl,
+    priceQ: d => `Wat kost een appartement in ${d}?`,
+    priceA: (d, m, n, a) => `De mediane vraagprijs van een appartement in ${d} is ${m} (${n} units in de Balinsky-catalogus, ${a}).`,
+    range: (a, b) => ` De helft kost tussen ${a} en ${b}.`,
+    perM2: v => ` Dat is ongeveer ${v} per m².`,
+    rentQ: d => `Wat levert de verhuur van een appartement in ${d} op?`,
+    rentA: (v, n) => `Appartementen worden verhuurd voor mediaan ${v} per nacht (${n} advertenties op Booking).`,
+    occQ: d => `Hoe goed zijn appartementen in ${d} bezet?`,
+    occA: (d, p, pct, u) => `Balinsky controleert dagelijks de beschikbaarheid op Booking. ${cap(p)} waren appartementen in ${d} bezet op ongeveer ${pct}% van de boekbare nachten (zo'n ${u} appartementen gevolgd). Dit is één periode, geen jaargemiddelde.`,
+    buyQ: d => `Kan een buitenlander een appartement in ${d} kopen?`,
+    buyA: 'Ja, via leasehold — een langlopende pacht, getekend bij een PPAT-notaris. Alles in de Balinsky-catalogus wordt in leasehold verkocht. Looptijd, beheermaatschappij en betaalplan staan bij elke advertentie.',
+  },
+  pl: {
+    usd: usdIntl,
+    priceQ: d => `Ile kosztuje apartament w ${d}?`,
+    priceA: (d, m, n, a) => `Mediana ceny apartamentu w ${d} to ${m} (${n} lokali w katalogu Balinsky, ${a}).`,
+    range: (a, b) => ` Połowa kosztuje od ${a} do ${b}.`,
+    perM2: v => ` To około ${v} za m².`,
+    rentQ: d => `Ile można zarobić na wynajmie apartamentu w ${d}?`,
+    rentA: (v, n) => `Apartamenty wynajmuje się średnio za ${v} za noc (mediana z ${n} ogłoszeń na Booking).`,
+    occQ: d => `Jakie jest obłożenie apartamentów w ${d}?`,
+    occA: (d, p, pct, u) => `Balinsky codziennie sprawdza wolne terminy na Booking. ${cap(p)} apartamenty w ${d} były zajęte przez około ${pct}% nocy otwartych do rezerwacji (około ${u} śledzonych apartamentów). To jeden okres, a nie średnia roczna.`,
+    buyQ: d => `Czy cudzoziemiec może kupić apartament w ${d}?`,
+    buyA: 'Tak, w formie leasehold — długoterminowej dzierżawy podpisywanej u notariusza PPAT. Wszystko w katalogu Balinsky jest sprzedawane w leasehold. Okres dzierżawy, firma zarządzająca i raty są podane w każdym ogłoszeniu.',
+  },
+  uk: {
+    usd: usdSpace,
+    priceQ: d => `Скільки коштують апартаменти в районі ${d}?`,
+    priceA: (d, m, n, a) => `Медіанна ціна апартаментів у районі ${d} - ${m} (${n} ${ruPl(n, ['лот', 'лоти', 'лотів'])} у каталозі Balinsky, ${a}).`,
+    range: (a, b) => ` Половина коштує від ${a} до ${b}.`,
+    perM2: v => ` Квадратний метр - близько ${v}.`,
+    rentQ: d => `Скільки можна заробляти на оренді апартаментів у районі ${d}?`,
+    rentA: (v, n) => `Апартаменти здаються подобово в середньому за ${v} за ніч (медіана за ${n} оголошеннями на Booking).`,
+    occQ: d => `Яке завантаження апартаментів у районі ${d}?`,
+    occA: (d, p, pct, u) => `Balinsky щодня відстежує вільні дати на Booking. ${cap(p)} апартаменти в районі ${d} були зайняті приблизно ${pct}% ночей із тих, що були відкриті для бронювання (близько ${u} апартаментів). Це один період, а не середнє за рік.`,
+    buyQ: d => `Чи може іноземець купити апартаменти в районі ${d}?`,
+    buyA: 'Так, через лізхолд - довгострокову оренду, оформлюється в нотаріуса PPAT. Усе в каталозі Balinsky продається в лізхолд. Термін лізхолду, керуюча компанія та розстрочка вказані на кожній картці.',
+  },
+}
+
+type AptOccFile = { apartmentZones?: Record<string, { occupancyPct: number; villas: number }> }
+
+export function districtApartmentFaq(district: string, name: string, lang: Lang): FaqItem[] | null {
+  const c = APT_COPY[lang]
+  const v = COPY[lang]
+  if (!c || !v) return null
+  const sale = MARKET.aptDistricts[district]
+  const rent = MARKET.rentDistricts[district]?.apartment
+  const zone = ZONE[district] ? (occ as AptOccFile).apartmentZones?.[ZONE[district]] : undefined
+  const items: FaqItem[] = []
+  if (sale && sale.n >= MIN_SALE && sale.median) {
+    let a = c.priceA(name, c.usd(sale.median), sale.n, monthYear(lang, v.locale))
+    if (sale.p25 && sale.p75) a += c.range(c.usd(sale.p25), c.usd(sale.p75))
+    if (sale.perM2) a += c.perM2(c.usd(sale.perM2))
+    items.push({ q: c.priceQ(name), a })
+  }
+  if (rent && rent.n >= MIN_RENT && rent.median) items.push({ q: c.rentQ(name), a: c.rentA(c.usd(rent.median), rent.n) })
+  if (zone) {
+    const period = v.period(dayMonth(OCC.from, lang, v.locale), dayMonth(OCC.to, lang, v.locale), new Date(OCC.to).getUTCFullYear())
+    items.push({ q: c.occQ(name), a: c.occA(name, period, Math.round(zone.occupancyPct), zone.villas) })
+  }
+  if (sale && sale.n >= MIN_SALE) items.push({ q: c.buyQ(name), a: c.buyA })
+  return items.length >= 3 ? items : null
+}

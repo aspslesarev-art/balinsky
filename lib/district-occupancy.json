@@ -3,7 +3,7 @@
  "to": "2026-11-20",
  "nights": 25,
  "source": "Balinsky daily Booking.com availability tracking (single-unit villas)",
- "generatedAt": "2026-11-21T03:46:10.261Z",
+ "generatedAt": "2026-11-21T04:46:38.613Z",
  "zones": {
   "Амед": {
    "occupancyPct": 50.3,
@@ -100,6 +100,52 @@
   "Чандидаса — Карангасем": {
    "occupancyPct": 45.3,
    "villas": 25
+  }
+ },
+ "apartmentZones": {
+  "Берава": {
+   "occupancyPct": 62.6,
+   "villas": 17
+  },
+  "Бингин — Паданг-Паданг": {
+   "occupancyPct": 59.8,
+   "villas": 16
+  },
+  "Керобокан": {
+   "occupancyPct": 41.3,
+   "villas": 13
+  },
+  "Нуса-Дуа": {
+   "occupancyPct": 36.9,
+   "villas": 19
+  },
+  "Падонан — Тумбак-Баю": {
+   "occupancyPct": 50.2,
+   "villas": 29
+  },
+  "Сануp": {
+   "occupancyPct": 57.7,
+   "villas": 10
+  },
+  "Семиньяк": {
+   "occupancyPct": 42.4,
+   "villas": 26
+  },
+  "Убуд": {
+   "occupancyPct": 55.3,
+   "villas": 21
+  },
+  "Улувату — Пекату": {
+   "occupancyPct": 68.6,
+   "villas": 14
+  },
+  "Умалас": {
+   "occupancyPct": 29.1,
+   "villas": 15
+  },
+  "Унгасан — Меласти": {
+   "occupancyPct": 71.8,
+   "villas": 10
   }
  }
 }

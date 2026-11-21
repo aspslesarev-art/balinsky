@@ -12,6 +12,8 @@ import { localizeHubPath } from '@/lib/hub-routes'
 import { getHubLongCopy, isUnfilteredHub } from '@/lib/hub-seo'
 import { getRelatedReading } from '@/lib/hub-seo/related-reading'
 import { HubLongForm } from '@/components/HubLongForm'
+import { districtApartmentFaq } from '@/lib/district-faq'
+import { districtRu } from '@/lib/district-ru'
 
 const POPULAR_DISTRICTS = ['Berawa', 'Sanur', 'Ubud', 'Uluwatu', 'Pererenan', 'Pandawa', 'Batu Bolong', 'Cemagi']
 
@@ -465,7 +467,11 @@ export function SeoContent({
   const longCopy = variant === 'list' && isUnfilteredHub(filters)
     ? getHubLongCopy('apartments', lang)
     : null
-  const faq = longCopy ? [...C.faq, ...longCopy.faqExtra] : C.faq
+  // Страница района: свои вопросы с цифрами района (lib/district-faq.ts).
+  const districtFaq = filters.district.length === 1
+    ? districtApartmentFaq(filters.district[0], lang === 'ru' ? (districtRu(filters.district[0]) ?? filters.district[0]) : filters.district[0], lang)
+    : null
+  const faq = districtFaq ?? (longCopy ? [...C.faq, ...longCopy.faqExtra] : C.faq)
 
   const faqJsonLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',
