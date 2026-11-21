@@ -34,6 +34,16 @@ const COPY = {
   uk: { from: 'від', here: (k: number) => `Показати ${k} об’єктів тут`, all: 'Показати всі', open: 'На мапі', close: 'Закрити мапу', n: (k: number) => `${k} об’єктів` },
 } as const
 
+// Картинка в подсказке — то же первое фото, что у карточки в списке, но через
+// оптимизатор Next (как карточка) и маленькая: 128 px = 64 px × 2 для чётких
+// экранов, ~5 КБ вместо оригинала до 3 МБ. Раньше бралась прямая ссылка CDN:
+// на ближайшем к Бали узле Cloudflare (CGK) часть файлов закэширована пустыми
+// (0 байт), и в подсказке было пусто, хотя карточка — через оптимизатор —
+// показывала фото (владелец 22.11.2026). Хосты — как images.remotePatterns
+// в next.config.ts; чужие ссылки оптимизатор не берёт, их отдаём как есть.
+const OPTIMIZABLE = /^https:\/\/(images\.balinsky\.info|ifdgiwxothmcalibmydv\.supabase\.co|[a-z0-9-]+\.b-cdn\.net|v5\.airtableusercontent\.com|dl\.airtable\.com)\//
+const thumbSrc = (u: string) => (OPTIMIZABLE.test(u) ? `/_next/image?url=${encodeURIComponent(u)}&w=128&q=75` : u)
+
 const esc = (s: string) => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))
 
 type Area = [number, number, number, number]
@@ -140,6 +150,17 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
     // Навели на карточку в списке — её точка на карте подсвечивается (владелец 20.11.2026).
     const onHover = (e: Event) => { hotRef.current = (e as CustomEvent<string | null>).detail ?? null; paint() }
     window.addEventListener('bx-cat-hover', onHover)
+    // Картинка в подсказке не загрузилась — пробуем исходную ссылку, а если и
+    // она пустая, ставим серую заглушку вместо значка «битой» картинки.
+    const host = ref.current
+    const onImgError = (e: Event) => {
+      const img = e.target as HTMLImageElement
+      if (img.tagName !== 'IMG' || !img.closest('.bx-cat-pop')) return
+      const raw = img.dataset.raw
+      if (raw && img.getAttribute('src') !== raw) { img.src = raw; return }
+      img.replaceWith(document.createElement('span'))
+    }
+    host?.addEventListener('error', onImgError, true)
     const attach = (inst: Parked, reused: boolean) => {
       const { m } = inst
       // Слушатели ставим ДО первой подгонки камеры. Раньше подгонка шла
@@ -213,6 +234,7 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
     return () => {
       cancelled = true
       window.removeEventListener('bx-cat-hover', onHover)
+      host?.removeEventListener('error', onImgError, true)
       detach?.()
       mapRef.current = null
     }
@@ -257,7 +279,7 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
         // не налезают друг на друга.
         const mk = new ml.Marker({ element: el }).setLngLat([pts[a].g.lng, pts[a].g.lat])
         const popup = () => new ml.Popup({ offset: 18, maxWidth: 'min(300px, calc(100vw - 32px))', closeButton: false }).setHTML(
-          `<div class="bx-cat-pop">${items.slice(0, 8).map(i => `<a href="${esc(i.href)}">${i.thumb ? `<img src="${esc(i.thumb)}" alt="" loading="lazy">` : '<span></span>'}<span><b>${esc(i.title)}</b>${i.priceUsd ? `<strong>${esc((i.priceFrom ? `${c.from} ` : '') + formatPrice(i.priceUsd, currency, lang))}</strong>` : ''}${i.facts ? `<em>${esc(i.facts)}</em>` : ''}</span></a>`).join('')}${items.length > 8 ? `<p>+${items.length - 8}</p>` : ''}</div>`)
+          `<div class="bx-cat-pop">${items.slice(0, 8).map(i => `<a href="${esc(i.href)}">${i.thumb ? `<img src="${esc(thumbSrc(i.thumb))}" data-raw="${esc(i.thumb)}" alt="" width="64" height="48" loading="lazy" decoding="async">` : '<span></span>'}<span><b>${esc(i.title)}</b>${i.priceUsd ? `<strong>${esc((i.priceFrom ? `${c.from} ` : '') + formatPrice(i.priceUsd, currency, lang))}</strong>` : ''}${i.facts ? `<em>${esc(i.facts)}</em>` : ''}</span></a>`).join('')}${items.length > 8 ? `<p>+${items.length - 8}</p>` : ''}</div>`)
         if (members.length > 1) {
           el.classList.add('bx-cat-pin--many')
           el.addEventListener('click', e => {

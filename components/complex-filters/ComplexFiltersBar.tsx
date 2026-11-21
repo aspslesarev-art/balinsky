@@ -141,7 +141,10 @@ export function ComplexFiltersBar({
 
   return (
     <Suspense fallback={null}>
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* data-no-typo: кнопки фильтров внутри Suspense оживают позже, чем
+          Typographer меняет пробелы на неразрывные («до Rp 5,4 млрд»), —
+          React видел другой текст и падал с ошибкой #418 (22.11.2026). */}
+      <div data-no-typo className="flex items-center gap-3 flex-wrap">
         <ComplexMultiSelect stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable />
         <ComplexMultiSelect stateKey="types"     label={c.types}     options={options.types}     selected={state.types}     current={state} view={view} lang={lang} />
         <ComplexMultiSelect stateKey="status"    label={c.status}    options={options.status}    selected={state.status}    current={state} view={view} lang={lang} />

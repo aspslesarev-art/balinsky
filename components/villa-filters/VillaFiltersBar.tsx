@@ -110,7 +110,10 @@ export function VillaFiltersBar({
 
   return (
     <Suspense fallback={null}>
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* data-no-typo: кнопки фильтров внутри Suspense оживают позже, чем
+          Typographer меняет пробелы на неразрывные («до Rp 5,4 млрд»), —
+          React видел другой текст и падал с ошибкой #418 (22.11.2026). */}
+      <div data-no-typo className="flex items-center gap-2 flex-wrap">
         <VillaGoalFilter current={state} view={view} lang={lang} />
         <VillaPriceRange label={c.price} min={state.priceMin} max={state.priceMax} current={state} view={view} lang={lang} />
         <VillaMultiSelect stateKey="district"  label={c.district}  options={options.district}  selected={state.district}  current={state} view={view} lang={lang} searchable groups={buildDistrictGroups(options.district, lang)} />
