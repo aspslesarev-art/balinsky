@@ -533,8 +533,8 @@ const loadCpxTable = cachedTable('raw_complexes', CPX_FIELDS, 500, 'content:comp
 const loadVillaTable = cachedTable('raw_villas', VILLA_FIELDS, 3000, 'content:villas')
 
 export async function loadDeveloperTemplateData(slug: string): Promise<DeveloperTemplateData | null> {
-  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, placesFallback, cpxVision, extLabels,
-    placesPhotos] =
+  const [devs, cpxAll, villas, photoManifest, villaPhotoManifest, _placesFallback, cpxVision, extLabels,
+    _placesPhotos] =
     await Promise.all([
       loadDevTable(), loadCpxTable(), loadVillaTable(),
       loadManifest(PHOTO_MANIFEST_URL), loadManifest(VILLA_PHOTO_MANIFEST_URL),
@@ -588,13 +588,9 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
       .filter(url => extLabels[url] === 'ext')
     // Where the gallery was too thin, a Google Places shot leads: it is the
     // single best image we could find for the complex.
-    const place = placesFallback[id]
-    const lead = place ? [`/api/place-photo?name=${encodeURIComponent(place.photoName)}`] : []
-    // Google shots go last: they are real photos of the finished place, useful
-    // filler, but the developer's own renders should lead.
-    const fromPlaces = asList(placesPhotos[id]?.photos)
-      .map(p => `/api/place-photo?name=${encodeURIComponent(p.name)}`)
-    const photos = [...new Set([...lead, ...ownPhotos, ...unitPhotos, ...fromPlaces])]
+    // Фото Google Places отключены (владелец 21.11.2026): платный сервис,
+    // берём только свои фото.
+    const photos = [...new Set([...ownPhotos, ...unitPhotos])]
       .slice(0, MAX_GALLERY_PHOTOS)
 
     const base = {
@@ -614,7 +610,7 @@ export async function loadDeveloperTemplateData(slug: string): Promise<Developer
       lede: firstString(c['Описание']) ?? firstString(c['ИИ Описание']),
       geo: lat != null && lng != null ? { lat, lng } : null,
       photos,
-      photoCredit: place?.attribution ?? asList(placesPhotos[id]?.photos)[0]?.attribution ?? null,
+      photoCredit: null,
       units,
       pois,
       url: `/ru/zhilye-kompleksy/${cslug}`,

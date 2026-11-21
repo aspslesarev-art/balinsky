@@ -41,7 +41,8 @@ function project(lat: number, lng: number): { x: number; y: number } {
 
 /** Preview thumbnail + facts for the selected place. */
 export function PoiCard({ poi }: { poi: MapPoi }) {
-  const src = poi.photoName ? `/api/place-photo?name=${encodeURIComponent(poi.photoName)}` : null
+  // Фото Google Places отключены (владелец 21.11.2026) — платный сервис.
+  const src: string | null = null
   return (
     <div style={{
       marginTop: 16, display: 'flex', gap: 16, alignItems: 'stretch',
