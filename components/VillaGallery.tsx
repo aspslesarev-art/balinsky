@@ -8,7 +8,7 @@
 // when the villa has one (lib/villa-3d-plans.ts).
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import Image from 'next/image'
+import Image, { type ImageProps } from 'next/image'
 import { Play, Pause, MapPinned, Rotate3d, Megaphone, Volume2, VolumeX } from 'lucide-react'
 import type { PromoKit } from '@/lib/promo-kits'
 import { MediaViewer, ytThumb, type GalleryVideo, type Tab, type ViewerTab } from './MediaViewer'
@@ -38,6 +38,17 @@ const COPY = {
   pl: { mute: 'Wycisz', unmute: 'Włącz dźwięk', play: 'Odtwórz pokaz slajdów', pause: 'Pauza', promo: 'Reklama', tour: 'Spacer 3D', master: 'Plan osiedla', photos: 'Zdjęcia', videos: 'Wideo', plans: 'Rzuty', model3d: 'Model 3D', open: 'Otwórz zdjęcie', close: 'Zamknij', prev: 'Poprzednie', next: 'Następne', more: (n: number) => `+${n} zdjęć` },
   uk: { mute: 'Без звуку', unmute: 'Увімкнути звук', play: 'Дивитися слайд-шоу', pause: 'Пауза', promo: 'Реклама', tour: '3D-тур', master: 'Генплан', photos: 'Фото', videos: 'Відео', plans: 'Планування', model3d: '3D-модель', open: 'Відкрити фото', close: 'Закрити', prev: 'Назад', next: 'Вперед', more: (n: number) => `+${n} фото` },
 } as const
+
+// Обложка плитки. Спутник «Локации» (Esri, бесплатно) иногда не доходит до
+// браузера — тогда пробуем второй адрес того же сервиса, а если и он молчит,
+// убираем картинку: под ней значок плитки, а не пустой серый квадрат.
+function CoverImage({ src, alt, ...rest }: Omit<ImageProps, 'src'> & { src: string }) {
+  const [tries, setTries] = useState(0)
+  const esri = src.startsWith('https://server.arcgisonline.com/')
+  if (tries >= (esri ? 2 : 1)) return null
+  const s = tries === 1 ? src.replace('https://server.arcgisonline.com/', 'https://services.arcgisonline.com/') : src
+  return <Image key={s} {...rest} src={s} alt={alt} onError={() => setTries(t => t + 1)} />
+}
 
 // Used by both the villa and the apartment detail pages.
 export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, lang, wishlistItem, extraTiles, masterplan, masterplanCover, tourUrl, plansAreMasterplan = false, promo, viewerTabs = [], belowTiles, bleed = false, tilesAs = 'tiles', ambient, belowHero, overHero, aside, afterTiles, topRight }: {
@@ -236,13 +247,13 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   // «Журнал» (владелец 19.11.2026): медиа под фото — превью-картинки с
   // подписью под ними, чтобы мультимедиа привлекало внимание.
       const promoCover = promo ? (promo.series[0].thumbs?.[0] ?? promo.series[0].files[0]) : null
-      const links: { key: string; label: string; count?: number; cover: string | null; unopt?: boolean; tab: Tab; i: number }[] = [
+      const links: { key: string; label: string; count?: number; cover: string | null; unopt?: boolean; icon?: ReactNode; tab: Tab; i: number }[] = [
         ...(photos.length > 1 ? [{ key: 'photos', label: c.photos, count: photos.length, cover: photos[1], tab: 'photos' as Tab, i: 1 }] : []),
         ...(videos.length > 0 ? [{ key: 'videos', label: c.videos, count: videos.length > 1 ? videos.length : undefined, cover: ytThumb(videos[0].url), unopt: true, tab: 'videos' as Tab, i: 0 }] : []),
         ...(planCount > 0 ? [{ key: 'plans', label: c.plans, count: planCount > 1 ? planCount : undefined, cover: plans[0] ?? null, tab: 'plans' as Tab, i: 0 }] : []),
         ...(masterplan ? [{ key: 'master', label: c.master, cover: masterplanCover ?? null, tab: 'master' as Tab, i: 0 }] : []),
         ...(tourUrl ? [{ key: 'tour', label: c.tour, cover: photos[2] ?? photos[0] ?? null, tab: 'tour' as Tab, i: 0 }] : []),
-        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, count: v.count, cover: v.cover ?? null, unopt: /arcgisonline\.com/.test(v.cover ?? ''), tab: `x:${v.key}` as Tab, i: 0 })),
+        ...viewerTabs.filter(v => !v.hideTile).map(v => ({ key: `x:${v.key}`, label: v.label, count: v.count, cover: v.cover ?? null, unopt: /arcgisonline\.com/.test(v.cover ?? ''), icon: v.icon, tab: `x:${v.key}` as Tab, i: 0 })),
         ...(promo ? [{ key: 'promo', label: c.promo, cover: promoCover, unopt: true, tab: 'promo' as Tab, i: 0 }] : []),
       ]
 
@@ -256,7 +267,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
               <button key={l.key} type="button" onClick={() => { stop(); setOpen({ tab: l.tab, i: l.i }) }}
                 className="group flex w-[148px] shrink-0 cursor-pointer snap-start flex-col gap-2 border-0 bg-transparent p-0 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0F1A15] md:w-[calc((100%-60px)/4)] md:min-w-0 md:flex-none xl:w-[calc((100%-120px)/7)]">
                 <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-[#F1F3F2]">
-                  {l.cover && <Image src={l.cover} alt="" fill sizes="(min-width: 768px) 200px, 148px" unoptimized={l.unopt} className="object-cover transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.04]" />}
+                  {l.icon && <span aria-hidden className="absolute inset-0 flex items-center justify-center text-[#0F1A15]/40">{l.icon}</span>}
+                  {l.cover && <CoverImage src={l.cover} alt="" fill sizes="(min-width: 768px) 200px, 148px" unoptimized={l.unopt} className="object-cover transition-transform duration-[320ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-[1.04]" />}
                   {l.key === 'videos' && <span className="absolute inset-0 flex items-center justify-center text-white [filter:drop-shadow(0_2px_6px_rgb(0_0_0/.4))]"><svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46.5" fill="none" stroke="currentColor" strokeWidth="7" /><path d="M38.3 30L38.3 70L73.3 50Z" fill="currentColor" /></svg></span>}
                   {/* Число — плашкой на картинке (владелец 21.11.2026): подпись не переносится на вторую строку. */}
                   {l.count != null && <span className="absolute bottom-1.5 right-1.5 rounded-full bg-[#0F1A15]/75 px-2 py-0.5 text-[12px] font-semibold leading-[1.4] tabular-nums text-white backdrop-blur-sm">{l.count}</span>}
@@ -298,7 +310,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           {extraTiles}
           {viewerTabs.filter(v => !v.hideTile).map(v => (
             <button key={v.key} type="button" onClick={() => setOpen({ tab: `x:${v.key}`, i: 0 })} className={MEDIA_TILE} aria-label={v.label}>
-              {v.cover && <Image src={v.cover} alt="" width={200} height={96} sizes="200px" unoptimized={/arcgisonline\.com/.test(v.cover)} className="w-full h-full object-cover" />}
+              {v.cover && <CoverImage src={v.cover} alt="" width={200} height={96} sizes="200px" unoptimized={/arcgisonline\.com/.test(v.cover)} className="w-full h-full object-cover" />}
               <MediaTileLabel icon={v.icon}>{v.label}</MediaTileLabel>
             </button>
           ))}
