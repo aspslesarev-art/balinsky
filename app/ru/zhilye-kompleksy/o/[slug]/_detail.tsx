@@ -10,7 +10,9 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import { contentRev } from '@/lib/content-version'
-import { MapPin, Sun, Globe, Layers } from 'lucide-react'
+import { MapPin, Sun, Globe, Layers, FileText } from 'lucide-react'
+import { complexDocs } from '@/lib/complex-docs'
+import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { ExpandableText } from '@/components/ExpandableText'
@@ -1979,6 +1981,18 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
         hideTile: true,
         bleed: true,
         content: <ZoningMap key="zones" slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
+      })
+    }
+    // Документы комплекса — та же плитка, что на странице виллы (файлы только Pro).
+    const docs = complexDocs(slug)
+    if (docs) {
+      tabs.push({
+        key: 'docs',
+        label: pickCopy({ ru: 'Документы', en: 'Documents', id: 'Dokumen', fr: 'Documents', de: 'Dokumente', zh: '文件', nl: 'Documenten', ban: 'Dokumen', pl: 'Dokumenty', uk: 'Документи' }, lang),
+        icon: <FileText size={18} aria-hidden />,
+        cover: slidesPhotos[3] ?? slidesPhotos[0] ?? null,
+        bleed: true,
+        content: <ComplexDocsView key="docs" docs={docs} lang={lang} listingTitle={name} />,
       })
     }
     return tabs

@@ -63,7 +63,51 @@ const CITRINE: ComplexDocs = {
   ],
 }
 
-const BY_SLUG: Record<string, ComplexDocs> = { citrine: CITRINE }
+// EcoWood (PT Our Place Invest) — пакет от застройщика «для работы с партнёрами»
+// (TG, 06.11 и 09.11.2026). Паспорта и семейные карты собственника вырезаны,
+// номера паспортов директоров закрашены. Два листа PBG, присланные 09.11
+// «только для личного пользования», не публикуем — PBG здесь из пакета 06.11.
+const ECOWOOD: ComplexDocs = {
+  slug: 'ecowood',
+  checkedAt: '2025-11',
+  docs: [
+    { file: 'land-certificates', mb: 2.6, name: { ru: 'Сертификаты на землю SHM 5845 и SHM 1678', en: 'Land certificates SHM 5845 and SHM 1678' }, what: { ru: 'Участки 2000 и 3335 м², Kutuh', en: 'Plots of 2,000 and 3,335 m², Kutuh' } },
+    { file: 'land-split', mb: 0.1, name: { ru: 'Раздел участка на две очереди', en: 'Plot split into two phases' }, what: { ru: 'Первая очередь EcoWood - 2000 м²', en: 'EcoWood phase 1 - 2,000 m²' } },
+    { file: 'lease', mb: 2.7, name: { ru: 'Договор аренды земли у нотариуса', en: 'Notarial land lease agreement' }, what: { ru: '№ 11 от 19.12.2024', en: 'No. 11 dated 19.12.2024' } },
+    { file: 'lease-addendum-17', mb: 1, name: { ru: 'Допсоглашение № 17 к аренде', en: 'Lease addendum No. 17' }, what: { ru: 'Срок аренды до 09.01.2056', en: 'Lease term until 09.01.2056' } },
+    { file: 'dd-land-2000m2', mb: 7.3, name: { ru: 'Проверка участка 2000 м² у нотариуса', en: 'Notary due diligence, 2,000 m² plot' }, what: { ru: 'SHM 5845, первая очередь', en: 'SHM 5845, phase 1' } },
+    { file: 'dd-land-3335m2', mb: 12, name: { ru: 'Проверка участка 3335 м² у нотариуса', en: 'Notary due diligence, 3,335 m² plot' }, what: { ru: 'SHM 1678, вторая очередь', en: 'SHM 1678, phase 2' } },
+    { file: 'pbg', mb: 0.4, name: { ru: 'PBG - разрешение на стройку', en: 'PBG - building permit' }, what: { ru: 'SK-PBG-510305-05062026-009', en: 'SK-PBG-510305-05062026-009' } },
+    { file: 'pkkpr', mb: 2.7, name: { ru: 'PKKPR - согласование использования участка', en: 'PKKPR - land use approval' }, what: { ru: 'Туристическая зона W', en: 'Tourism zone W' } },
+    { file: 'genplan', mb: 6.5, name: { ru: 'Генплан комплекса', en: 'Site master plan' }, what: { ru: '10 вилл', en: '10 villas' } },
+    { file: 'dd-company', mb: 3.9, name: { ru: 'Юридическая проверка Bali Law Consulting', en: 'Legal due diligence by Bali Law Consulting' }, what: { ru: 'Земля, аренда, разрешения, компания', en: 'Land, lease, permits, company' } },
+    { file: 'ahu', mb: 0.3, name: { ru: 'Карточка компании в реестре AHU', en: 'AHU company registry profile' }, what: { ru: 'PT Our Place Invest', en: 'PT Our Place Invest' } },
+    { file: 'director-deed', mb: 3.1, name: { ru: 'Нотариальный акт о смене директора', en: 'Notarial deed on change of director' }, what: { ru: 'Акт № 04', en: 'Deed No. 04' } },
+    { file: 'director-change', mb: 1.6, name: { ru: 'Уведомление о смене данных компании', en: 'Company data change notice' }, what: { ru: 'Директор - Григорий Поршнев', en: 'Director - Grigory Porshnev' } },
+    { file: 'contract-booking', mb: 0.1, name: { ru: 'Образец: договор бронирования', en: 'Sample: booking agreement' }, what: { ru: 'На примере виллы № 9', en: 'Villa No. 9 as an example' } },
+    { file: 'contract-preliminary', mb: 0.2, name: { ru: 'Образец: предварительный договор', en: 'Sample: preliminary agreement' }, what: { ru: 'На примере виллы № 9', en: 'Villa No. 9 as an example' } },
+    { file: 'contract-lease-transfer', mb: 0.6, name: { ru: 'Образец: передача права аренды', en: 'Sample: lease transfer agreement' }, what: { ru: 'На примере виллы № 9', en: 'Villa No. 9 as an example' } },
+    { file: 'contract-construction', mb: 2.2, name: { ru: 'Образец: договор на строительство', en: 'Sample: construction agency agreement' }, what: { ru: 'На примере виллы № 9', en: 'Villa No. 9 as an example' } },
+    { file: 'mgmt-management', mb: 0.2, name: { ru: 'Образец: договор управления виллой', en: 'Sample: villa management agreement' }, what: { ru: 'Посуточная сдача через УК', en: 'Short-term rental via a management company' } },
+    { file: 'mgmt-marketing', mb: 0.3, name: { ru: 'Образец: маркетинговый договор', en: 'Sample: marketing agreement' }, what: { ru: 'Продвижение виллы в аренду', en: 'Rental marketing' } },
+  ],
+  checks: [
+    { title: { ru: 'Земля чистая', en: 'Clean land title' }, text: { ru: 'SHM 5845 и 1678 в собственности, без ипотеки, ареста и споров (BPN, 17.12.2024).', en: 'SHM 5845 and 1678 are freehold, with no mortgage, seizure or disputes (BPN, 17.12.2024).' }, files: ['land-certificates', 'dd-land-2000m2', 'dd-company'] },
+    { title: { ru: 'Аренда у нотариуса до 2056', en: 'Notarial lease until 2056' }, text: { ru: 'Договор № 11 от 19.12.2024, срок до 09.01.2056, право продления ещё на 30 лет.', en: 'Agreement No. 11 dated 19.12.2024, term until 09.01.2056, with a right to extend for 30 more years.' }, files: ['lease', 'lease-addendum-17'] },
+    { title: { ru: 'Туристическая зона', en: 'Tourism zone' }, text: { ru: 'Зона W (Pariwisata): разрешены виллы и гостиницы.', en: 'Zone W (Pariwisata): villas and hotels are permitted.' }, files: ['pkkpr', 'dd-company'] },
+    { title: { ru: 'Разрешение на стройку получено', en: 'Building permit issued' }, text: { ru: 'PBG выдан на гостиничный комплекс Smart Villas Club - официальное название EcoWood: до 4 этажей и 4 532 м².', en: 'PBG issued for the Smart Villas Club hotel complex, EcoWood’s official name: up to 4 floors and 4,532 m².' }, files: ['pbg'] },
+    { title: { ru: 'Компания проверена', en: 'Company checked' }, text: { ru: 'PT Our Place Invest - иностранная компания (PMA) с 2022 года, судебных и налоговых рисков проверка не нашла.', en: 'PT Our Place Invest is a foreign-owned company (PMA) since 2022; the check found no court or tax risks.' }, files: ['dd-company', 'ahu', 'director-deed', 'director-change'] },
+  ],
+  groups: [
+    { title: { ru: 'Земля', en: 'Land' }, files: ['land-certificates', 'land-split', 'lease', 'lease-addendum-17', 'dd-land-2000m2', 'dd-land-3335m2'] },
+    { title: { ru: 'Разрешения', en: 'Permits' }, files: ['pbg', 'pkkpr', 'genplan'] },
+    { title: { ru: 'Независимая проверка', en: 'Independent due diligence' }, files: ['dd-company'] },
+    { title: { ru: 'Компания', en: 'Company' }, files: ['ahu', 'director-deed', 'director-change'] },
+    { title: { ru: 'Образцы договоров', en: 'Sample contracts' }, files: ['contract-booking', 'contract-preliminary', 'contract-lease-transfer', 'contract-construction', 'mgmt-management', 'mgmt-marketing'] },
+  ],
+}
+
+const BY_SLUG: Record<string, ComplexDocs> = { citrine: CITRINE, ecowood: ECOWOOD }
 
 export function complexDocs(slug: string | null | undefined): ComplexDocs | null {
   return slug ? BY_SLUG[slug] ?? null : null
