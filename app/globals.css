@@ -650,3 +650,9 @@ html[data-goal="live"] #dokhodnost { display: none; }
 .bx-cat-pin--many { background: #0F1A15; color: #fff; }
 .bx-cat-pin--many:hover, .bx-cat-pin--many:focus-visible { background: var(--color-primary); }
 .bx-cat-pin--hot { background: var(--color-primary) !important; color: #fff !important; box-shadow: 0 0 0 3px rgb(31 139 95 / .3), 0 4px 12px rgb(0 0 0 / .2); z-index: 3; }
+
+/* Мобильное меню шапки (components/Header.tsx): появляется за 200 мс. */
+@keyframes bx-menu-in {
+  from { opacity: 0; transform: translate3d(0, -8px, 0); }
+  to   { opacity: 1; transform: none; }
+}
