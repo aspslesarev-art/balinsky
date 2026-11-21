@@ -38,7 +38,7 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 // Hyphens are folded to spaces on both sides: «Нуса-Дуа» vs «Нуса Дуа».
 const fold = (s: string) => s.replace(/[-‐‑]/g, ' ')
 
-function mentionedDistricts(raw: string): string[] {
+export function mentionedDistricts(raw: string): string[] {
   const text = fold(raw)
   const hits: { name: string; at: number }[] = []
   for (const name of Object.keys(DISTRICT_TO_SLUG)) {
