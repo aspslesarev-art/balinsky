@@ -18,6 +18,7 @@ import { isNoindexKnowledge } from '@/lib/knowledge-noindex'
 import { isRuEnOnlyKnowledge } from '@/lib/knowledge-locales'
 import { MARKET, MARKET_PAGES_RU } from '@/lib/market-index'
 import { normalizeSlug } from '@/lib/slug-normalize'
+import { isStrongHub } from '@/lib/hub-indexable'
 import { switchLangPath, type Lang } from '@/lib/i18n'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
@@ -171,13 +172,10 @@ function filterIndexablePaths<T>(
     const f = parse(segments)
     if (!f) return false
     let hits = 0
-    for (const e of enriched) {
-      if (passes(e, f)) {
-        hits++
-        if (hits >= MIN_OBJECTS_PER_FILTER_PAGE) return true
-      }
-    }
-    return false
+    for (const e of enriched) if (passes(e, f)) hits++
+    // То же правило, что robots у самой страницы (lib/hub-indexable.ts):
+    // noindex-адрес в карте — ошибка GSC.
+    return hits >= MIN_OBJECTS_PER_FILTER_PAGE && isStrongHub(f as Parameters<typeof isStrongHub>[0], hits)
   })
 }
 

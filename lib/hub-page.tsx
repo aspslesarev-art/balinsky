@@ -7,6 +7,7 @@
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Lang } from './i18n'
+import { isStrongHub } from './hub-indexable'
 import { hubPath, hubSegmentsToRu, hubLanguages, type HubSection } from './hub-routes'
 import { SLUG_TO_DISTRICT } from './seo-routes'
 import { getBuyHeading, getDistrictCopy } from './districts'
@@ -83,7 +84,7 @@ export function makeHubPage<F>(cfg: HubConfig<F>, lang: Lang) {
     try {
       totalCount = (await cfg.loadCatalogPage(filters, page, lang)).totalCount
     } catch {}
-    const meta = cfg.buildMetadata(filters, lang, { canonicalPath: canonical, noIndex: false, totalCount })
+    const meta = cfg.buildMetadata(filters, lang, { canonicalPath: canonical, noIndex: totalCount != null && !isStrongHub(filters, totalCount), totalCount })
     if (page === 1) meta.alternates = { canonical, languages: hubLanguages(ruCanonical) }
     // Single-district hubs: RU and EN already get a commercial title from
     // getDistrictCommercialMeta; the other locales only had the descriptive
