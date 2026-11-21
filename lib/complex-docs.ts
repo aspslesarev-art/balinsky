@@ -111,7 +111,8 @@ const ECOWOOD: ComplexDocs = {
 // Номера KTP и паспортов, телефоны и почты закрашены. Не публикуем: KTP,
 // свидетельство о смерти, справки о наследстве и родстве, «Agreement and
 // statement» (номера документов в скане), платёжки за аренду (банковские
-// данные), договор по юниту 9 с данными покупателя.
+// данные), договор по юниту 9 с данными покупателя, юр-проверку Bali Business
+// Consulting (оговорка запрещает передачу третьим лицам, решение владельца 21.11.2026).
 const MAISON_BOHEME: ComplexDocs = {
   slug: 'maison-boheme',
   checkedAt: '2026-06',
@@ -121,7 +122,6 @@ const MAISON_BOHEME: ComplexDocs = {
     { file: 'dd-notary', mb: 0.6, name: { ru: 'Проверка участка у нотариуса', en: 'Notary due diligence' }, what: { ru: 'Отчёт от 05.02.2025 и выписка BPN', en: 'Report of 05.02.2025 and BPN extract' } },
     { file: 'lease', mb: 2.4, name: { ru: 'Договор аренды земли у нотариуса', en: 'Notarial land lease agreement' }, what: { ru: '№ 08 от 30.05.2024, до 30.01.2055', en: 'No. 08 dated 30.05.2024, until 30.01.2055' } },
     { file: 'lease-transfer', mb: 2.7, name: { ru: 'Передача права аренды застройщику', en: 'Transfer of lease rights to the developer' }, what: { ru: '№ 05 от 03.02.2025', en: 'No. 05 dated 03.02.2025' } },
-    { file: 'dd-legal', mb: 0.3, name: { ru: 'Юридическая проверка Bali Business Consulting', en: 'Legal due diligence by Bali Business Consulting' }, what: { ru: 'Земля, аренда, зонирование, компания', en: 'Land, lease, zoning, company' } },
     { file: 'pkkpr', mb: 0.6, name: { ru: 'KKPR - согласование использования участка', en: 'KKPR - land use approval' }, what: { ru: 'От 21.04.2025, зона K-1', en: 'Dated 21.04.2025, zone K-1' } },
     { file: 'nib', mb: 0.6, name: { ru: 'NIB - регистрация отельного бизнеса', en: 'NIB - hotel business registration' }, what: { ru: 'Отель, апарт-отель, ресторан', en: 'Hotel, apartment hotel, restaurant' } },
     { file: 'sppl', mb: 0.1, name: { ru: 'SPPL - экологическое обязательство', en: 'SPPL - environmental undertaking' }, what: { ru: 'От 24.06.2025', en: 'Dated 24.06.2025' } },
@@ -132,14 +132,13 @@ const MAISON_BOHEME: ComplexDocs = {
   ],
   checks: [
     { title: { ru: 'Земля без обременений', en: 'No encumbrances on the land' }, text: { ru: 'SHM 453 (2 280 м²): без залога, ареста и споров - проверки BPN от 24.04.2024 и 04.02.2025.', en: 'SHM 453 (2,280 m²): no mortgage, seizure or disputes - BPN checks of 24.04.2024 and 04.02.2025.' }, files: ['bpn-check-2024', 'dd-notary', 'land-certificate'] },
-    { title: { ru: 'Аренда у нотариуса до 2055', en: 'Notarial lease until 2055' }, text: { ru: 'Договор № 08 от 30.05.2024 с наследниками собственника, срок до 30.01.2055, продление по рыночной цене. Права переданы PT Niki Real Estate актом № 05 от 03.02.2025. Платёж за год по договору - до 30 января; за второй год, по списку застройщика, 1,2 млрд IDR внесены частями с 06.01 по 19.05.2026.', en: 'Agreement No. 08 dated 30.05.2024 with the owner’s heirs, term until 30.01.2055, extension at market price. Rights transferred to PT Niki Real Estate by deed No. 05 of 03.02.2025. The annual payment is due by 30 January; for the second year, per the developer’s list, IDR 1.2 billion was paid in instalments from 06.01 to 19.05.2026.' }, files: ['lease', 'lease-transfer', 'dd-legal'] },
+    { title: { ru: 'Аренда у нотариуса до 2055', en: 'Notarial lease until 2055' }, text: { ru: 'Договор № 08 от 30.05.2024 с наследниками собственника, срок до 30.01.2055, продление по рыночной цене. Права переданы PT Niki Real Estate актом № 05 от 03.02.2025. Платёж за год по договору - до 30 января.', en: 'Agreement No. 08 dated 30.05.2024 with the owner’s heirs, term until 30.01.2055, extension at market price. Rights transferred to PT Niki Real Estate by deed No. 05 of 03.02.2025. The annual payment is due by 30 January.' }, files: ['lease', 'lease-transfer'] },
     { title: { ru: 'Зона торговли и услуг', en: 'Trade and services zone' }, text: { ru: 'KKPR от 21.04.2025: зона K-1, разрешены апарт-отель и ресторан. В отчёте нотариуса от 05.02.2025 участок ещё числился в жилой зоне.', en: 'KKPR of 21.04.2025: zone K-1, apartment hotel and restaurant permitted. The notary report of 05.02.2025 still listed the plot as residential.' }, files: ['pkkpr', 'dd-notary'] },
-    { title: { ru: 'SLF пока не выдан', en: 'SLF not issued yet' }, text: { ru: 'Заявка на SLF от 24.06.2025 на проверке комплектности. Лицензии отеля (NIB, KKPR, заявка SLF) оформлены на частное лицо из семьи собственников земли, а не на компанию застройщика.', en: 'The SLF application of 24.06.2025 is under completeness review. The hotel licences (NIB, KKPR, SLF application) are held by an individual from the landowners’ family, not by the developer’s company.' }, files: ['slf-application', 'nib', 'as-built', 'soil-test'] },
+    { title: { ru: 'SLF пока не выдан', en: 'SLF not issued yet' }, text: { ru: 'Заявка на SLF от 24.06.2025 на проверке комплектности. Лицензии отеля (NIB, KKPR, заявка SLF) оформлены на частное лицо из семьи собственников земли, а не на компанию застройщика.', en: 'The SLF application of 24.06.2025 is under completeness review. The hotel licences (NIB, KKPR, SLF application) are held by an individual from the landowners’ family, not by the developer’s company.' }, files: ['slf-application', 'nib', 'lease-transfer', 'as-built', 'soil-test'] },
   ],
   groups: [
     { title: { ru: 'Земля', en: 'Land' }, files: ['land-certificate', 'bpn-check-2024', 'dd-notary', 'lease', 'lease-transfer'] },
     { title: { ru: 'Разрешения', en: 'Permits' }, files: ['pkkpr', 'nib', 'sppl', 'slf-application', 'imb'] },
-    { title: { ru: 'Независимая проверка', en: 'Independent due diligence' }, files: ['dd-legal'] },
     { title: { ru: 'Чертежи и изыскания', en: 'Drawings and surveys' }, files: ['as-built', 'soil-test'] },
   ],
 }
