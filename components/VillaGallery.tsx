@@ -137,10 +137,19 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
     setTimeout(() => { try { src.stop() } catch {} }, 700)
   }
   useEffect(() => () => { audio.current?.ctx.close().catch(() => {}) }, [])
+  // Слайд-шоу листает только на уже загруженное фото: на медленном интернете
+  // верхний слой гас раньше, чем грузился нижний, и мелькал чёрный фон.
+  const loaded = useRef(new Set<string>())
+  const nextSrc = useRef<string | null>(null)
+  useEffect(() => {
+    const s = photos.length ? photos : plans.slice(0, 1)
+    nextSrc.current = show && s.length ? s[(show.from + show.k + 1) % s.length] : null
+  }, [show, photos, plans])
   useEffect(() => {
     if (!showing) return
     const timers: ReturnType<typeof setTimeout>[] = []
     const iv = setInterval(() => {
+      if (nextSrc.current && !loaded.current.has(nextSrc.current)) return
       setFading(true)
       timers.push(setTimeout(() => { setShow(p => p && { ...p, k: p.k + 1 }); setFading(false) }, FADE_MS))
     }, ADVANCE_MS)
@@ -165,8 +174,9 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const stop = () => { soundOff(); if (show) { setCur(topIdx); setShow(null); setFading(false) } }
   const step = (d: number) => { stop(); setCur(i => ((show ? topIdx : i) + d + n) % n) }
   const play = () => {
-    // Подгрузить все фото заранее, чтобы смена не мигала.
-    slides.forEach(src => { const im = new window.Image(); im.src = src })
+    // Заранее грузится только следующее фото (нижний слой, ужатая копия).
+    // Раньше тут качались все оригиналы разом — на телефоне они забивали
+    // канал, и нужный кадр не успевал.
     setShow({ from: Math.min(cur, n - 1), k: 0 })
     if (!muted) void soundOn()
   }
@@ -186,7 +196,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const layer = (name: 'a' | 'b', idx: number, top: boolean) => (
     <Image key={`${name}-${idx}`} src={slides[idx]} alt="" aria-hidden fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'}
       className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
-      style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }} />
+      style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }}
+      onLoad={() => loaded.current.add(slides[idx])} onError={() => loaded.current.add(slides[idx])} />
   )
   const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[640px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
