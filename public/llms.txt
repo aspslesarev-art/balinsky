@@ -98,4 +98,4 @@ current, **in any of the 10 languages** (links point to that language's pages):
 
 - Сайт: https://balinsky.info
 - Telegram-бот: https://t.me/BalinskyBot
-- Email: info@balinsky.info
+- Email: i@balinsky.info
