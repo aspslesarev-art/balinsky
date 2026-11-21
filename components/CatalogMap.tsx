@@ -17,20 +17,21 @@ import { useScrollLock } from '@/lib/use-scroll-lock'
 
 const STYLE = 'https://tiles.openfreemap.org/styles/positron'
 
-export type CatalogMapItem = { slug: string; title: string; href: string; priceUsd: number | null; thumb: string | null }
+// priceFrom — цена «от» (ЖК), facts — «2 спальни · 76 м²» для подсказки.
+export type CatalogMapItem = { slug: string; title: string; href: string; priceUsd: number | null; thumb: string | null; priceFrom?: boolean; facts?: string }
 export type CatalogMapGroup = { key: string; lat: number; lng: number; items: CatalogMapItem[] }
 
 const COPY = {
-  ru: { here: (k: number) => `Показать ${k} ${k % 10 === 1 && k % 100 !== 11 ? 'объект' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'объекта' : 'объектов'} здесь`, all: 'Показать все', open: 'На карте', close: 'Закрыть карту', n: (k: number) => `${k} ${k % 10 === 1 && k % 100 !== 11 ? 'объект' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'объекта' : 'объектов'}` },
-  en: { here: (k: number) => `Show ${k} listings here`, all: 'Show all', open: 'Map', close: 'Close map', n: (k: number) => `${k} listings` },
-  id: { here: (k: number) => `Tampilkan ${k} properti di sini`, all: 'Tampilkan semua', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
-  fr: { here: (k: number) => `Afficher ${k} biens ici`, all: 'Tout afficher', open: 'Carte', close: 'Fermer la carte', n: (k: number) => `${k} biens` },
-  de: { here: (k: number) => `${k} Objekte hier zeigen`, all: 'Alle zeigen', open: 'Karte', close: 'Karte schließen', n: (k: number) => `${k} Objekte` },
-  zh: { here: (k: number) => `显示此处 ${k} 个房源`, all: '显示全部', open: '地图', close: '关闭地图', n: (k: number) => `${k} 个房源` },
-  nl: { here: (k: number) => `Toon ${k} objecten hier`, all: 'Alles tonen', open: 'Kaart', close: 'Kaart sluiten', n: (k: number) => `${k} objecten` },
-  ban: { here: (k: number) => `Tampilang ${k} properti driki`, all: 'Tampilang sami', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
-  pl: { here: (k: number) => `Pokaż ${k} ofert tutaj`, all: 'Pokaż wszystkie', open: 'Mapa', close: 'Zamknij mapę', n: (k: number) => `${k} ofert` },
-  uk: { here: (k: number) => `Показати ${k} об’єктів тут`, all: 'Показати всі', open: 'На мапі', close: 'Закрити мапу', n: (k: number) => `${k} об’єктів` },
+  ru: { from: 'от', here: (k: number) => `Показать ${k} ${k % 10 === 1 && k % 100 !== 11 ? 'объект' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'объекта' : 'объектов'} здесь`, all: 'Показать все', open: 'На карте', close: 'Закрыть карту', n: (k: number) => `${k} ${k % 10 === 1 && k % 100 !== 11 ? 'объект' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'объекта' : 'объектов'}` },
+  en: { from: 'from', here: (k: number) => `Show ${k} listings here`, all: 'Show all', open: 'Map', close: 'Close map', n: (k: number) => `${k} listings` },
+  id: { from: 'dari', here: (k: number) => `Tampilkan ${k} properti di sini`, all: 'Tampilkan semua', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
+  fr: { from: 'dès', here: (k: number) => `Afficher ${k} biens ici`, all: 'Tout afficher', open: 'Carte', close: 'Fermer la carte', n: (k: number) => `${k} biens` },
+  de: { from: 'ab', here: (k: number) => `${k} Objekte hier zeigen`, all: 'Alle zeigen', open: 'Karte', close: 'Karte schließen', n: (k: number) => `${k} Objekte` },
+  zh: { from: '从', here: (k: number) => `显示此处 ${k} 个房源`, all: '显示全部', open: '地图', close: '关闭地图', n: (k: number) => `${k} 个房源` },
+  nl: { from: 'vanaf', here: (k: number) => `Toon ${k} objecten hier`, all: 'Alles tonen', open: 'Kaart', close: 'Kaart sluiten', n: (k: number) => `${k} objecten` },
+  ban: { from: 'saking', here: (k: number) => `Tampilang ${k} properti driki`, all: 'Tampilang sami', open: 'Peta', close: 'Tutup peta', n: (k: number) => `${k} properti` },
+  pl: { from: 'od', here: (k: number) => `Pokaż ${k} ofert tutaj`, all: 'Pokaż wszystkie', open: 'Mapa', close: 'Zamknij mapę', n: (k: number) => `${k} ofert` },
+  uk: { from: 'від', here: (k: number) => `Показати ${k} об’єктів тут`, all: 'Показати всі', open: 'На мапі', close: 'Закрити мапу', n: (k: number) => `${k} об’єктів` },
 } as const
 
 const esc = (s: string) => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))
@@ -73,7 +74,7 @@ function takeParked(zoomOnly: boolean): Parked | null {
   return p
 }
 
-function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, area = null }: { area?: string | null; groups: CatalogMapGroup[]; lang: Lang; className: string; onArea?: (a: Area) => void; onView?: (v: { area: Area; n: number } | null) => void; zoomOnly?: boolean }) {
+function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, follow = false, area = null }: { area?: string | null; groups: CatalogMapGroup[]; lang: Lang; className: string; onArea?: (a: Area, replace?: boolean) => void; onView?: (v: { area: Area; n: number } | null) => void; zoomOnly?: boolean; follow?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   // Карта создаётся ОДИН раз на всё время жизни блока. Раньше она
   // пересоздавалась на каждый ответ сервера (после «Показать N здесь», смены
@@ -84,7 +85,13 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
   const onViewRef = useRef(onView)
   const groupsRef = useRef(groups)
   const areaRef = useRef(area)
-  useEffect(() => { onAreaRef.current = onArea; onViewRef.current = onView; groupsRef.current = groups; areaRef.current = area })
+  const followRef = useRef(follow)
+  useEffect(() => { onAreaRef.current = onArea; onViewRef.current = onView; groupsRef.current = groups; areaRef.current = area; followRef.current = follow })
+  // Список следует за картой (владелец 21.11.2026: «чтобы слева было то, что я
+  // на карте смотрю»): через полсекунды после того, как карта остановилась.
+  // Новый сдвиг отменяет ожидание — запрос один на остановку, а не на кадр.
+  const followTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stopFollow = () => { if (followTimer.current) { clearTimeout(followTimer.current); followTimer.current = null } }
   // true — ближайший сдвиг делает сам сайт (подгонка, клик по «N объектов»):
   // кнопку «Показать N здесь» после него не показываем.
   const autoRef = useRef(false)
@@ -139,7 +146,7 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
       // первой, её «конец сдвига» никто не слышал, и флажок «это сайт»
       // съедал первый сдвиг человека — кнопка «Показать N здесь» не
       // появлялась (на телефоне — после нажатия на «N объектов»).
-      const onStart = (e: { originalEvent?: unknown }) => { if (e.originalEvent) autoRef.current = false }
+      const onStart = (e: { originalEvent?: unknown }) => { stopFollow(); if (e.originalEvent) autoRef.current = false }
       const onEnd = () => {
         drawRef.current()
         const bb = m.getBounds()
@@ -149,6 +156,16 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
         // Видно ровно выбранную область — кнопка «Показать N здесь» ни к чему.
         if (viewRef.current === areaRef.current) { onViewRef.current?.(null); return }
         const n = groupsRef.current.reduce((t, g) => t + (g.lng >= v[0] && g.lng <= v[2] && g.lat >= v[1] && g.lat <= v[3] ? g.items.length : 0), 0)
+        if (followRef.current) {
+          // Пустое место (море) список не трогает — остаётся прежний.
+          stopFollow()
+          if (n > 0) followTimer.current = setTimeout(() => {
+            followTimer.current = null
+            pushedRef.current = areaKey(v)
+            onAreaRef.current?.(v, true)
+          }, 500)
+          return
+        }
         onViewRef.current?.({ area: v, n })
       }
       m.on('movestart', onStart)
@@ -160,6 +177,7 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
       }
       mapRef.current = { m, ml: inst.ml }
       detach = () => {
+        stopFollow()
         m.off('movestart', onStart)
         m.off('moveend', onEnd)
         park({ ...inst, view: viewRef.current, pushed: pushedRef.current, groups: shownRef.current?.groups ?? '', area: shownRef.current?.area ?? null })
@@ -226,7 +244,7 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
         }
         const items = members.flatMap(x => x.g.items)
         const prices = items.map(i => i.priceUsd).filter((p): p is number => p != null && p > 0)
-        const label = items.length > 1 ? c.n(items.length) : prices[0] ? formatPrice(prices[0], currency, lang) : items[0].title.slice(0, 18)
+        const label = items.length > 1 ? c.n(items.length) : prices[0] ? (items[0].priceFrom ? `${c.from} ` : '') + formatPrice(prices[0], currency, lang) : items[0].title.slice(0, 18)
         const key = `${members.map(x => x.g.key).sort().join(';')}|${label}`
         const old = markers.get(key)
         if (old) { markers.delete(key); next.set(key, old); continue }
@@ -239,7 +257,7 @@ function MapCanvas({ groups, lang, className, onArea, onView, zoomOnly = false, 
         // не налезают друг на друга.
         const mk = new ml.Marker({ element: el }).setLngLat([pts[a].g.lng, pts[a].g.lat])
         const popup = () => new ml.Popup({ offset: 18, maxWidth: 'min(300px, calc(100vw - 32px))', closeButton: false }).setHTML(
-          `<div class="bx-cat-pop">${items.slice(0, 8).map(i => `<a href="${esc(i.href)}">${i.thumb ? `<img src="${esc(i.thumb)}" alt="" loading="lazy">` : '<span></span>'}<span><b>${esc(i.title)}</b>${i.priceUsd ? `<em>${esc(formatPrice(i.priceUsd, currency, lang))}</em>` : ''}</span></a>`).join('')}${items.length > 8 ? `<p>+${items.length - 8}</p>` : ''}</div>`)
+          `<div class="bx-cat-pop">${items.slice(0, 8).map(i => `<a href="${esc(i.href)}">${i.thumb ? `<img src="${esc(i.thumb)}" alt="" loading="lazy">` : '<span></span>'}<span><b>${esc(i.title)}</b>${i.priceUsd ? `<strong>${esc((i.priceFrom ? `${c.from} ` : '') + formatPrice(i.priceUsd, currency, lang))}</strong>` : ''}${i.facts ? `<em>${esc(i.facts)}</em>` : ''}</span></a>`).join('')}${items.length > 8 ? `<p>+${items.length - 8}</p>` : ''}</div>`)
         if (members.length > 1) {
           el.classList.add('bx-cat-pin--many')
           el.addEventListener('click', e => {
@@ -331,11 +349,14 @@ function CatalogMapInner({ groups: all, lang = 'ru' }: { groups: CatalogMapGroup
   const params = useSearchParams()
   const area = params?.get('area') ?? null
   // Нажали на «N объектов» — область в адрес (?area=…), сервер отфильтрует список.
-  const onArea = useMemo(() => (a: [number, number, number, number]) => {
+  // replace — когда список сам следует за картой: иначе «Назад» пришлось бы
+  // жать по разу на каждый сдвиг.
+  const onArea = useMemo(() => (a: [number, number, number, number], replace = false) => {
     const sp = new URLSearchParams(params?.toString() ?? '')
     sp.set('area', a.map(x => x.toFixed(5)).join(','))
     sp.delete('page')
-    startTransition(() => router.push(`${pathname}?${sp.toString()}`, { scroll: false }))
+    const href = `${pathname}?${sp.toString()}`
+    startTransition(() => (replace ? router.replace : router.push)(href, { scroll: false }))
   }, [params, pathname, router])
   const clearArea = () => {
     const sp = new URLSearchParams(params?.toString() ?? '')
@@ -383,7 +404,9 @@ function CatalogMapInner({ groups: all, lang = 'ru' }: { groups: CatalogMapGroup
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
-  if (wide) return <div className="relative h-full"><MapCanvas groups={groups} lang={lang} className="h-full" onArea={onArea} onView={onView} area={area} />{allBtn}{hereBtn}{spinner}</div>
+  // Компьютер: список сам следует за картой, кнопка «Показать N здесь» не нужна.
+  // Телефон: список под картой не виден — там по-прежнему кнопка.
+  if (wide) return <div className="relative h-full"><MapCanvas groups={groups} lang={lang} className="h-full" onArea={onArea} area={area} follow />{allBtn}{spinner}</div>
   return (
     <>
       {/* data-no-typo: карта внутри Suspense оживает позже, чем типограф

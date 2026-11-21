@@ -122,6 +122,11 @@ export async function ComplexesCatalog({
   // после «Показать N здесь» соседние объекты исчезали с карты, а при сдвиге
   // кнопка считала только уже выбранные (21.11.2026).
   const mapFilters = { ...filters, area: null }
+  // Цена «от» в подсказке карты — самая низкая из вилл и апартаментов ЖК.
+  const fromPrice = (p: { villas?: { from: number }; apartments?: { from: number } } | undefined) => {
+    const v = [p?.villas?.from, p?.apartments?.from].filter((x): x is number => x != null && x > 0)
+    return v.length ? Math.min(...v) : null
+  }
   const mapGroups: CatalogMapGroup[] = await (async () => {
     const all = await loadAll()
     let rows = all.enriched.filter(e => passes(e, mapFilters))
@@ -133,7 +138,7 @@ export async function ComplexesCatalog({
       const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
       let g = by.get(key)
       if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
-      g.items.push({ slug, title: e.name ?? slug, href: switchLangPath(`/ru/zhilye-kompleksy/o/${slug}`, lang), priceUsd: null, thumb: all.manifest[e.id]?.[0] ?? e.coverUrl ?? null })
+      g.items.push({ slug, title: e.name ?? slug, href: switchLangPath(`/ru/zhilye-kompleksy/o/${slug}`, lang), priceUsd: fromPrice(all.prices.get(e.id)), priceFrom: true, thumb: all.manifest[e.id]?.[0] ?? e.coverUrl ?? null })
     }
     return [...by.values()]
   })().catch(() => [])
@@ -192,7 +197,11 @@ export async function ComplexesCatalog({
               {cards.map((c, i) => <ComplexCard key={c.id} c={c} lang={lang} priority={i < 2} />)}
             </div>
 
+            {/* key: другие фильтры или область карты — догрузка начинается заново,
+                а не дописывает к новому списку карточки старого (и опоздавший
+                ответ старого запроса уже некуда дописать). */}
             <ComplexInfiniteScrollClient
+              key={toQueryString(filters)}
               initialOffset={cards.length}
               initialHasMore={hasMore}
               searchString={toQueryString(filters)}

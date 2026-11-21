@@ -14,6 +14,7 @@ import { buildListHref, buildMapHref } from '@/lib/filter-href'
 import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString, toCard } from './_lib'
 import { normalizeSlug } from '@/lib/slug-normalize'
 import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
+import { mapFacts } from '@/lib/catalog-map-facts'
 import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
@@ -181,7 +182,7 @@ export async function ApartamentyCatalog({
       const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
       let g = by.get(key)
       if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
-      g.items.push({ slug, title: (lang === 'ru' ? (firstString(e.data['SEO:Title']) ?? firstString(e.data['Name']) ?? slug) : (toCard(e, all.manifest, undefined, lang)?.title ?? slug)).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim(), href: switchLangPath(`/ru/apartamenty/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: all.manifest[e.id]?.[0] ?? null })
+      g.items.push({ slug, title: (lang === 'ru' ? (firstString(e.data['SEO:Title']) ?? firstString(e.data['Name']) ?? slug) : (toCard(e, all.manifest, undefined, lang)?.title ?? slug)).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim(), href: switchLangPath(`/ru/apartamenty/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: all.manifest[e.id]?.[0] ?? null, facts: mapFacts(lang, e.bedrooms, e.area) })
     }
     return [...by.values()]
   })().catch(() => [])
@@ -300,7 +301,11 @@ export async function ApartamentyCatalog({
               {cards.map((c, i) => <ApartmentCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
             </div>
 
+            {/* key: другие фильтры или область карты — догрузка начинается заново,
+                а не дописывает к новому списку карточки старого (и опоздавший
+                ответ старого запроса уже некуда дописать). */}
             <InfiniteScrollClient
+              key={toQueryString(filters)}
               initialOffset={cards.length}
               initialHasMore={hasMore}
               searchString={toQueryString(filters)}

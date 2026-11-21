@@ -13,6 +13,7 @@ import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
 import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString, toCard, type VillaFilterState } from './_lib'
 import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
+import { mapFacts } from '@/lib/catalog-map-facts'
 import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { CatalogSortSelect } from '@/components/CatalogSortSelect'
@@ -187,7 +188,7 @@ export async function VillasCatalog({
       const title = rawTitle.replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim()
       let g = by.get(key)
       if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
-      g.items.push({ slug, title, href: switchLangPath(`/ru/villy/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: manifest[e.id]?.[0] ?? null })
+      g.items.push({ slug, title, href: switchLangPath(`/ru/villy/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: manifest[e.id]?.[0] ?? null, facts: mapFacts(lang, e.bedrooms, e.area) })
     }
     return [...by.values()]
   })().catch(() => [])
@@ -319,7 +320,11 @@ export async function VillasCatalog({
             <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
               {cards.map((c, i) => <VillaCard key={c.id} a={c} lang={lang} priority={i < 2} />)}
             </div>
+            {/* key: другие фильтры или область карты — догрузка начинается заново,
+                а не дописывает к новому списку карточки старого (и опоздавший
+                ответ старого запроса уже некуда дописать). */}
             <VillaInfiniteScrollClient
+              key={toQueryString(filters)}
               initialOffset={cards.length}
               initialHasMore={hasMore}
               searchString={toQueryString(filters)}
