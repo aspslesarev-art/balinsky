@@ -100,13 +100,24 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const audio = useRef<{ ctx: AudioContext; gain: GainNode; src: AudioBufferSourceNode | null; buf: AudioBuffer | null } | null>(null)
   const [muted, setMuted] = useState(false)
   useEffect(() => { try { setMuted(sessionStorage.getItem('bx-ambient-muted') === '1') } catch {} }, [])
+  // Создание AudioContext держит главный поток ~100 мс (замер 21.11.2026) —
+  // на компьютере делаем это при наведении на фото, а не в момент нажатия Play,
+  // иначе первый кадр слайд-шоу запаздывает. Контекст стартует «на паузе»,
+  // включается в soundOn по нажатию.
+  const audioCtx = () => {
+    if (audio.current) return audio.current
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!Ctx) return null
+    const a = audio.current = { ctx: new Ctx(), gain: null as unknown as GainNode, src: null, buf: null }
+    a.gain = a.ctx.createGain(); a.gain.gain.value = 0; a.gain.connect(a.ctx.destination)
+    return a
+  }
+  const warmAudio = () => { if (ambient && !muted && !audio.current) { try { audioCtx() } catch (e) { console.error('ambient', e) } } }
   const soundOn = async () => {
     if (!ambient) return
     try {
-      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      if (!Ctx) return
-      const a = audio.current ?? (audio.current = { ctx: new Ctx(), gain: null as unknown as GainNode, src: null, buf: null })
-      if (!a.gain) { a.gain = a.ctx.createGain(); a.gain.gain.value = 0; a.gain.connect(a.ctx.destination) }
+      const a = audioCtx()
+      if (!a) return
       if (a.ctx.state === 'suspended') await a.ctx.resume()
       if (!a.buf) a.buf = await a.ctx.decodeAudioData(await (await fetch(ambient)).arrayBuffer())
       if (a.src) return
@@ -139,7 +150,25 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   useEffect(() => () => { audio.current?.ctx.close().catch(() => {}) }, [])
   // Слайд-шоу листает только на уже загруженное фото: на медленном интернете
   // верхний слой гас раньше, чем грузился нижний, и мелькал чёрный фон.
+  // «Загружено» = скачано И раскодировано (img.decode): иначе браузер
+  // раскодировал 2560-px кадр только в момент, когда верхний слой начинал
+  // гаснуть, и смена кадра подтормаживала.
   const loaded = useRef(new Set<string>())
+  const markLoaded = (src: string, img?: HTMLImageElement) => {
+    if (!img?.decode) { loaded.current.add(src); return }
+    img.decode().catch(() => {}).finally(() => loaded.current.add(src))
+  }
+  // Пока вкладка скрыта или фото ушло с экрана — не листаем: иначе каждые 2 с
+  // качался и раскодировался новый кадр, которого никто не видит.
+  const heroRef = useRef<HTMLDivElement>(null)
+  const onScreen = useRef(true)
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => { onScreen.current = e.isIntersecting })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
   const nextSrc = useRef<string | null>(null)
   useEffect(() => {
     const s = photos.length ? photos : plans.slice(0, 1)
@@ -149,6 +178,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
     if (!showing) return
     const timers: ReturnType<typeof setTimeout>[] = []
     const iv = setInterval(() => {
+      if (document.hidden || !onScreen.current) return
       if (nextSrc.current && !loaded.current.has(nextSrc.current)) return
       setFading(true)
       timers.push(setTimeout(() => { setShow(p => p && { ...p, k: p.k + 1 }); setFading(false) }, FADE_MS))
@@ -197,7 +227,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
     <Image key={`${name}-${idx}`} src={slides[idx]} alt="" aria-hidden fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'}
       className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
       style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }}
-      onLoad={() => loaded.current.add(slides[idx])} onError={() => loaded.current.add(slides[idx])} />
+      onLoad={e => markLoaded(slides[idx], e.currentTarget)} onError={() => loaded.current.add(slides[idx])} />
   )
   const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[640px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
@@ -288,7 +318,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
 
   return (
     <section className="flex flex-col gap-2">
-      <div className={`relative overflow-hidden bg-[#1B211E] ${heroH} ${round} ${bleed ? 'ml-[calc(50%-50vw)] w-screen max-w-none' : ''}`}
+      <div ref={heroRef} className={`relative overflow-hidden bg-[#1B211E] ${heroH} ${round} ${bleed ? 'ml-[calc(50%-50vw)] w-screen max-w-none' : ''}`}
+        onPointerEnter={e => { if (e.pointerType === 'mouse') warmAudio() }}
         onPointerDown={e => { if (e.pointerType !== 'mouse') swipe.current = e.clientX }}
         onPointerUp={e => {
           const x0 = swipe.current; swipe.current = null
@@ -328,7 +359,8 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
             </button>
           )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[3px] bg-white/30">
-            <div key={Math.floor(show.k / n)} className="h-full bg-white" style={{ animation: `photo-progress ${n * ADVANCE_MS}ms linear forwards` }} />
+            {/* scaleX, а не width: width пересчитывал раскладку и перерисовывал страницу каждый кадр. */}
+            <div key={Math.floor(show.k / n)} className="h-full w-full origin-left bg-white" style={{ animation: `photo-progress-x ${n * ADVANCE_MS}ms linear forwards` }} />
           </div>
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
