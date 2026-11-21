@@ -166,9 +166,13 @@ export async function ApartamentyCatalog({
   const copy = pickCopy(COPY, lang)
 
   // Карта рядом со списком (владелец 20.11.2026, макет CatB).
+  // Карта показывает всё под фильтрами, без выбранной области (?area): иначе
+  // после «Показать N здесь» соседние объекты исчезали с карты, а при сдвиге
+  // кнопка считала только уже выбранные (21.11.2026).
+  const mapFilters = { ...filters, area: null }
   const mapGroups: CatalogMapGroup[] = await (async () => {
     const all = await loadAll()
-    let rows = all.enriched.filter(e => passes(e, filters))
+    let rows = all.enriched.filter(e => passes(e, mapFilters))
     if (filters.q.trim()) rows = applySearch(rows, filters.q)
     const by = new globalThis.Map<string, CatalogMapGroup>()
     for (const e of rows) {

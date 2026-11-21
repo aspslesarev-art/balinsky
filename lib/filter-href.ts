@@ -1,6 +1,7 @@
 import type { FilterState } from '@/components/filters/FiltersBar'
 import { buildCanonicalPath } from './seo-routes'
 import { switchLangPath, type Lang } from './i18n'
+import { areaParam } from './catalog-area'
 
 const RU_LIST_BASE = '/ru/apartamenty'
 const RU_MAP_BASE = '/ru/apartamenty/karta'
@@ -27,13 +28,17 @@ export function buildListHref(f: FilterState, lang: Lang = 'ru'): string {
   // RU canonical slugs (/ru/apartamenty/canggu/2-spalni) only exist for RU
   // — EN has no matching route tree, so on EN we always stay at the flat
   // base with the filters in the query string.
-  if (lang === 'ru' && (!f.q || !f.q.trim())) {
+  // Выбранная на карте область (?area) переживает смену фильтров и
+  // сортировки — раньше любой клик по фильтру молча сбрасывал её.
+  // Красивые адреса районов области не знают, поэтому с ней — общий адрес.
+  if (lang === 'ru' && (!f.q || !f.q.trim()) && !f.area) {
     const canonical = buildCanonicalPath(f)
     if (canonical) return canonical
   }
   // Сортировка нужна только списку — карта её не знает.
   const sp = new URLSearchParams(toQueryString(f))
   if (f.sort) sp.set('sort', f.sort)
+  if (f.area) sp.set('area', areaParam(f.area)!)
   const qs = sp.toString()
   return qs ? `${base}?${qs}` : base
 }

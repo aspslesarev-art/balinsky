@@ -1,6 +1,7 @@
 import type { ComplexFilterState } from '@/app/ru/zhilye-kompleksy/_lib'
 import { buildCanonicalPath } from './complex-seo-routes'
 import { switchLangPath, type Lang } from './i18n'
+import { areaParam } from './catalog-area'
 
 const RU_LIST_BASE = '/ru/zhilye-kompleksy'
 const RU_MAP_BASE = '/ru/zhilye-kompleksy/karta'
@@ -19,11 +20,16 @@ function toQueryString(f: ComplexFilterState): string {
 
 export function buildListHref(f: ComplexFilterState, lang: Lang = 'ru'): string {
   const base = switchLangPath(RU_LIST_BASE, lang)
-  if (lang === 'ru' && (!f.q || !f.q.trim())) {
+  // Выбранная на карте область (?area) переживает смену фильтров и
+  // сортировки — раньше любой клик по фильтру молча сбрасывал её.
+  // Красивые адреса районов области не знают, поэтому с ней — общий адрес.
+  if (lang === 'ru' && (!f.q || !f.q.trim()) && !f.area) {
     const canonical = buildCanonicalPath(f)
     if (canonical) return canonical
   }
-  const qs = toQueryString(f)
+  const sp = new URLSearchParams(toQueryString(f))
+  if (f.area) sp.set('area', areaParam(f.area)!)
+  const qs = sp.toString()
   return qs ? `${base}?${qs}` : base
 }
 

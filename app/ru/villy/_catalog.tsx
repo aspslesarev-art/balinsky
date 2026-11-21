@@ -168,9 +168,13 @@ export async function VillasCatalog({
 
   // Карта рядом со списком (владелец 20.11.2026, макет CatB): все объекты
   // под текущими фильтрами, юниты одного места — одной точкой.
+  // Карта показывает всё под фильтрами, без выбранной области (?area): иначе
+  // после «Показать N здесь» соседние объекты исчезали с карты, а при сдвиге
+  // кнопка считала только уже выбранные (21.11.2026).
+  const mapFilters = { ...filters, area: null }
   const mapGroups: CatalogMapGroup[] = await (async () => {
     const { enriched, manifest } = await loadAll()
-    let rows = enriched.filter(e => passes(e, filters))
+    let rows = enriched.filter(e => passes(e, mapFilters))
     if (filters.q.trim()) rows = applySearch(rows, filters.q)
     const by = new globalThis.Map<string, CatalogMapGroup>()
     for (const e of rows) {
