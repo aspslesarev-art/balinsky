@@ -11,7 +11,7 @@ import { getDistrictCopy, getBuyHeading } from '@/lib/districts'
 import { DISTRICT_TO_SLUG } from '@/lib/seo-routes'
 import { SubscribeCTA } from '@/components/SubscribeCTA'
 import { buildListHref, buildMapHref } from '@/lib/villa-filter-href'
-import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString, type VillaFilterState } from './_lib'
+import { loadCatalogPage, buildHeadingLoc, loadAll, passes, applySearch, firstString, toCard, type VillaFilterState } from './_lib'
 import { CatalogMap, type CatalogMapGroup } from '@/components/CatalogMap'
 import { CatalogShell } from '@/components/CatalogShell'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
@@ -177,7 +177,10 @@ export async function VillasCatalog({
       const slug = e.slug ?? firstString(e.data['SEO:Slug'])
       if (e.lat == null || e.lng == null || !slug || slug.startsWith('-')) continue
       const lat = Number(e.lat.toFixed(4)), lng = Number(e.lng.toFixed(4)), key = `${lat},${lng}`
-      const title = (firstString(e.data['SEO:Title']) ?? slug).replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim()
+      // Не на русском: заголовок как у карточки (toCard берёт перевод), иначе
+      // на /en/villas в подсказках карты висело «Вилла … в Bukit».
+      const rawTitle = lang === 'ru' ? (firstString(e.data['SEO:Title']) ?? slug) : (toCard(e, manifest, undefined, lang)?.title ?? slug)
+      const title = rawTitle.replace(/\s*\|\s*Balinsky\s*$/i, '').split(/\s[-—–]\s(?=\d)/)[0].trim()
       let g = by.get(key)
       if (!g) { g = { key, lat, lng, items: [] }; by.set(key, g) }
       g.items.push({ slug, title, href: switchLangPath(`/ru/villy/o/${slug}`, lang), priceUsd: e.priceUsd, thumb: manifest[e.id]?.[0] ?? null })
