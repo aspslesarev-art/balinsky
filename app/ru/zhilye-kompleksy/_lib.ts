@@ -1071,7 +1071,8 @@ export function buildDescriptionEn(f: ComplexFilterState, totalCount?: number): 
   const countPart = typeof totalCount === 'number' && totalCount > 0
     ? `${totalCount} residential complexes` : 'Residential complexes'
   let s = `${countPart} ${where}`
-  if (f.types.length === 1) s += `, type: ${f.types[0]}`
+  // facetLabel: в данных тип по-русски («Виллы») — в EN-описание уходил как есть.
+  if (f.types.length === 1) s += `, type: ${facetLabel('type', f.types[0], 'en').toLowerCase()}`
   if (f.year.length === 1) s += `, completion ${f.year[0]}`
   return `${s}. Photos, developer pricing, completion dates, permits and contacts.`
 }

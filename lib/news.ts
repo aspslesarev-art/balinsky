@@ -3,6 +3,7 @@ import { applyManifestTranslation, loadTranslations } from '@/lib/en-translation
 import { slugifyTitle, uniqueSlug } from '@/lib/slugify'
 import { contentRev } from '@/lib/content-version'
 import type { Lang } from '@/lib/i18n'
+import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 
 export type NewsDeveloper = { name: string; slug: string | null }
 
@@ -126,6 +127,21 @@ const isPublished = (item: NewsItem): boolean => item.status !== 'draft'
 // в админке, вернуть = удалить эту строку. Видео не трогаем.
 const withoutPhotos = (item: NewsItem): NewsItem => ({ ...item, photo: null, photos: [] })
 
+// Нет перевода на язык страницы — поле остаётся русским, и на /id/ или /de/
+// висел «Ramada — июнь 2026» (аудит 21.11.2026). Берём английский перевод,
+// а если нет и его — латиницу. Украинский кириллицу оставляет.
+function withoutCyrillic(n: NewsItem, en: Record<string, unknown> | undefined, lang: Lang): NewsItem {
+  if (lang === 'uk') return n
+  const out = { ...n } as Record<string, unknown>
+  for (const f of EN_FIELDS) {
+    const v = out[f]
+    if (typeof v !== 'string' || !hasCyrillic(v)) continue
+    const e = en?.[f]
+    out[f] = typeof e === 'string' && e && !hasCyrillic(e) ? e : translitPreserveCase(v)
+  }
+  return out as NewsItem
+}
+
 export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
   const items = withDerivedSlugs((await loadRawNews()).filter(n => isPublished(n) && newsAvailableIn(n, lang)).map(withoutPhotos))
   if (items.length === 0) return items
@@ -152,7 +168,7 @@ export async function loadAllNews(lang: Lang = 'ru'): Promise<NewsItem[]> {
   // попадал в aliases и /ru/novosti/<английский-слаг> тоже отдавал 404.
   const enCache = lang === 'en' ? cache : await loadTranslations('news', 'en')
   return items.map(item => {
-    const translated = lang !== 'ru' ? applyManifestTranslation(item, cache, EN_FIELDS) : item
+    const translated = lang !== 'ru' ? withoutCyrillic(applyManifestTranslation(item, cache, EN_FIELDS), enCache[item.id], lang) : item
     // Compute the EN-derived slug from whatever EN title we have in cache —
     // even on the RU branch, where we'll only stash it into aliases.
     const enTitle = enCache[item.id]?.title
