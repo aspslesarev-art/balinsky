@@ -41,24 +41,24 @@ export async function loadComplexFacts(complexId: string | null): Promise<Comple
   if (!complexId) return null
   const { data, error } = await sb
     .from('raw_complexes')
-    // Одна строка проекта — data целиком дешевле, чем экранировать в select
-    // имя поля с запятой («Payment plan,%»).
-    .select('data')
+    // Только 5 нужных полей, а не data целиком (~24 КБ на каждую страницу
+    // виллы/квартиры). Имя с запятой в двойных кавычках PostgREST понимает.
+    .select('r:data->"Готовность", pp:data->"Payment plan,%", le:data->"Leashold продление", pd:data->"Разрешительные документы", u:data->"Total quantity of units"')
     .eq('airtable_id', complexId)
     .maybeSingle()
   if (error || !data) return null
+  const p = data as unknown as Record<'r' | 'pp' | 'le' | 'pd' | 'u', unknown>
   const num = (v: unknown) => {
     const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v.replace(/[^\d.]/g, '')) : NaN
     return Number.isFinite(n) && String(v).trim() !== '' ? n : null
   }
   const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
-  const row = (data as { data: Record<string, unknown> }).data ?? {}
   return {
-    readiness: num(row['Готовность']),
-    paymentPlan: str(row['Payment plan,%']),
-    leaseExtension: num(row['Leashold продление']),
-    permitDocs: str(row['Разрешительные документы']),
-    units: num(row['Total quantity of units']),
+    readiness: num(p.r),
+    paymentPlan: str(p.pp),
+    leaseExtension: num(p.le),
+    permitDocs: str(p.pd),
+    units: num(p.u),
   }
 }
 

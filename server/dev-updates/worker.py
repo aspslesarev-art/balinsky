@@ -305,23 +305,24 @@ Answer with ONE JSON object only:
 # --- helpers ------------------------------------------------------------------
 
 def developers():
-    rows = sb_get("raw_developers", {"select": "telegram_chat_id,data", "telegram_chat_id": "not.is.null"})
+    # Только имя и слаг, а не data целиком: функция крутится каждые пару минут,
+    # и полная таблица застройщиков (~4 МБ) была главным источником egress.
+    rows = sb_get("raw_developers", {"select": DEV_SELECT, "telegram_chat_id": "not.is.null"})
     out = {}
     for r in rows:
         try:
             cid = int(str(r["telegram_chat_id"]).strip())
         except ValueError:
             continue
-        d = r["data"] or {}
-        out[cid] = {"name": (d.get("Developer") or "").strip(), "slug": d.get("SEO:Slug")}
+        out[cid] = {"name": (r.get("Developer") or "").strip(), "slug": r.get("slug")}
     # Остальные группы — по названию чата. Группа, ставшая супергруппой,
     # получает новый chat_id при том же названии; а у части застройщиков чат
     # в карточке не указан вовсе. Рабочие чаты называются «X & Balinsky» /
     # «X | Балинский» — X ищем среди застройщиков каталога.
     groups = sb_get("bot_chats", {"select": "chat_id,title", "chat_type": "in.(group,supergroup)"})
     by_title = {r["title"]: out[r["chat_id"]] for r in groups if r["chat_id"] in out and r.get("title")}
-    catalog = [{"name": (r["data"].get("Developer") or "").strip(), "slug": r["data"].get("SEO:Slug")}
-               for r in sb_get("raw_developers", {"select": "data"}) if r.get("data")]
+    catalog = [{"name": (r.get("Developer") or "").strip(), "slug": r.get("slug")}
+               for r in sb_get("raw_developers", {"select": DEV_SELECT, "data": "not.is.null"})]
     for r in groups:
         title = r.get("title") or ""
         if r["chat_id"] in out:
@@ -341,6 +342,7 @@ def developers():
 
 
 CATALOG = []
+DEV_SELECT = 'telegram_chat_id,Developer:data->Developer,slug:data->"SEO:Slug"'
 
 
 def dev_from_complex(text):
@@ -388,10 +390,12 @@ def match_developer(name, catalog):
 def complexes_of(dev_name):
     if not dev_name:
         return []
-    rows = sb_get("raw_complexes", {"select": "airtable_id,data", "data->>Developer": f"ilike.{dev_name.strip()}*"})
+    rows = sb_get("raw_complexes", {
+        "select": 'airtable_id,Project:data->Project,"SEO:Slug":data->"SEO:Slug",Статус:data->Статус,Готовность:data->Готовность',
+        "data->>Developer": f"ilike.{dev_name.strip()}*"})
     out = []
     for r in rows:
-        d = r["data"] or {}
+        d = r
         raw = d.get("Готовность")
         ready = None
         if isinstance(raw, (int, float)):

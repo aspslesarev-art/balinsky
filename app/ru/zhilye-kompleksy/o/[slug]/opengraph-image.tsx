@@ -20,7 +20,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params
   const { data } = await sb
     .from('raw_complexes')
-    .select('airtable_id, data, slug, cover_url')
+    .select('airtable_id, data:web_data, slug, cover_url')
     .eq('slug', slug)
     .maybeSingle()
   const d = (data?.data ?? {}) as Record<string, unknown>

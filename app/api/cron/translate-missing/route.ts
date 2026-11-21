@@ -166,15 +166,21 @@ async function saveCache(sb: Sb, section: string, lang: Lang, cache: Cache): Pro
   revalidateTag(`translations:${section}:${lang}`, 'max')
 }
 
-async function loadFromTable(sb: Sb, table: string) {
+async function loadFromTable(sb: Sb, table: string, fields: string[]) {
   const PAGE = 500
+  // runSection читает только поле и его EN-двойника — тянем их, а не data
+  // целиком (вся таблица вилл ~34 МБ на каждый язык).
+  const keys = fields.flatMap(f => [f, `${f} EN`, `${f} En`])
+  const select = ['airtable_id', ...keys.map((k, i) => `f${i}:data->"${k}"`)].join(', ')
   const rows: Array<{ id: string; data: Record<string, unknown> }> = []
   for (let offset = 0; ; offset += PAGE) {
-    const { data, error } = await sb.from(table).select('airtable_id, data').range(offset, offset + PAGE - 1)
+    const { data, error } = await sb.from(table).select(select).range(offset, offset + PAGE - 1)
     if (error) throw new Error(`select ${table}: ${error.message}`)
     if (!data || data.length === 0) break
-    for (const r of (data as Array<{ airtable_id: string; data: unknown }>)) {
-      rows.push({ id: r.airtable_id, data: (r.data as Record<string, unknown>) || {} })
+    for (const r of (data as unknown as Array<Record<string, unknown>>)) {
+      const d: Record<string, unknown> = {}
+      keys.forEach((k, i) => { d[k] = r[`f${i}`] })
+      rows.push({ id: r.airtable_id as string, data: d })
     }
     if (data.length < PAGE) break
   }
@@ -193,7 +199,7 @@ async function runSection(sb: Sb, name: string, cfg: Section, lang: Lang, env: A
   const cache = await loadCache(sb, name, lang)
   const rows = cfg.source === 'manifest'
     ? await loadFromManifest(cfg.url!, cfg.idField!)
-    : await loadFromTable(sb, cfg.table!)
+    : await loadFromTable(sb, cfg.table!, cfg.fields)
 
   const plan: Array<{ id: string; missing: Record<string, string>; hash: string; action: 'new' | 'fill-gaps' | 're-translate' }> = []
   for (const r of rows) {

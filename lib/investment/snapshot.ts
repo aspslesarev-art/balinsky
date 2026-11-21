@@ -467,7 +467,7 @@ export type ListingKind = 'villa' | 'apartment'
 
 export async function buildSnapshot(villaId: string, kind: ListingKind = 'villa'): Promise<InvestmentSnapshot | null> {
   const table = kind === 'apartment' ? 'raw_apartments' : 'raw_villas'
-  const { data: rows, error } = await sb.from(table).select('airtable_id, data').eq('airtable_id', villaId).limit(1)
+  const { data: rows, error } = await sb.from(table).select('airtable_id, data:web_data').eq('airtable_id', villaId).limit(1)
   if (error) { console.error('[investment] db error:', error.message); return null }
   const row = (rows?.[0] as Row | undefined)
   if (!row) return null

@@ -94,7 +94,7 @@ async function minUnitPrice(projectName: string): Promise<number | null> {
 }
 
 export async function loadStoryData(kind: StoryKind, id: string): Promise<StoryData | null> {
-  const { data: row, error } = await sb.from(TABLE[kind]).select('airtable_id, data').eq('airtable_id', id).maybeSingle()
+  const { data: row, error } = await sb.from(TABLE[kind]).select('airtable_id, data:web_data').eq('airtable_id', id).maybeSingle()
   if (error) throw error
   if (!row) return null
   const d = row.data as Data

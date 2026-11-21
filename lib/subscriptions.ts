@@ -291,6 +291,14 @@ function isCoastal(districtRaw: string | null): boolean {
   return !INLAND_DISTRICT_TOKENS.some(t => lower.includes(t))
 }
 
+const MATCH_FIELDS = [
+  'Опубликовать', 'Публикация', 'SEO:Slug', 'SEO:Title', 'ИИ Имя', 'Name', 'Project',
+  'Location filter', 'Location 2', 'Location',
+  'Назначение земли', 'Land color', 'Цвет земли', 'Цвет земли вторичка',
+  'Комнаты', 'Спальни', 'Площадь', 'price_usd', 'price', 'Цена', 'Цена м²',
+] as const
+const MATCH_SELECT = ['airtable_id, synced_at', ...MATCH_FIELDS.map((k, i) => `f${i}:data->"${k}"`)].join(', ')
+
 // Run the same predicate set as search_listings against the full
 // catalog and return minimal display records. Sorted by synced_at
 // DESC so newest-edited rows surface first in the digest.
@@ -302,8 +310,15 @@ export async function findMatches(
   if (filter.kind === 'rental') return findRentalMatches(filter, excludeIds, limit)
 
   const table = TABLE_BY_KIND[filter.kind]
-  const { data } = await sb.from(table).select('airtable_id, data, synced_at').limit(2000)
-  const rows = (data ?? []) as { airtable_id: string; data: Record<string, unknown>; synced_at?: string }[]
+  // Только поля, которые читают фильтр и карточка ниже, — а не data целиком
+  // (вся таблица вилл ~34 МБ на каждую подписку). `->` отдаёт значение как
+  // есть, поэтому собранный data совпадает с исходным по этим ключам.
+  const { data } = await sb.from(table).select(MATCH_SELECT).limit(2000)
+  const rows = ((data ?? []) as unknown as Record<string, unknown>[]).map(rr => {
+    const d: Record<string, unknown> = {}
+    MATCH_FIELDS.forEach((k, i) => { d[k] = rr[`f${i}`] })
+    return { airtable_id: rr.airtable_id as string, data: d, synced_at: rr.synced_at as string | undefined }
+  })
 
   const exclude = new Set(excludeIds)
   const photoBucket = PHOTO_BUCKET_BY_KIND[filter.kind]
