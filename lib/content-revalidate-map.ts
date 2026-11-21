@@ -17,6 +17,11 @@ export const KIND_TO_TAGS: Record<string, string> = {
   complexes: 'content:complexes',
   videos: 'content:videos',
   districts: 'content:districts',
+  // Соседи по аренде: тег на тепловой карте, тайлах соседей и инвест-оценке
+  // (lib/reviews-heat.ts, lib/competitors.ts, lib/investment/batch-scores.ts).
+  // Путей нет намеренно: страницы, читавшие эти данные, помечены тегом сами —
+  // перестраиваются только они, а не весь каталог.
+  competitors: 'content:competitors',
 }
 
 type RevalidateRoute = { path: string; type?: 'page' | 'layout' }

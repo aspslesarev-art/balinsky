@@ -6,6 +6,7 @@ import { revalidateCollection } from '@/lib/admin/revalidate'
 import { aiAutofillPatch } from '@/lib/admin/ai-autofill'
 import { priceSyncPatch } from '@/lib/admin/price-sync'
 import { unitCreateDefaults } from '@/lib/admin/unit-defaults'
+import { parserUnitPatch } from '@/lib/admin/parser-units'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,8 +36,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ collecti
     .map(([k, v]) => ({ key: k.slice('filter.'.length), value: v }))
     .filter(f => allowedKeys.has(f.key))
 
+  // softDelete collections: `?archived=1` lists the archive.
+  const archived = !!cfg.softDelete && url.searchParams.get('archived') === '1'
+
   try {
-    const { rows, total } = await adapterFor(cfg).list(cfg, { sort, page, pageSize, q, filters })
+    const { rows, total } = await adapterFor(cfg).list(cfg, { sort, page, pageSize, q, filters, archived })
     return NextResponse.json({ rows, total, page, pageSize })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'list_failed' }, { status: 500 })
@@ -59,7 +63,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ collect
     // linked complex) — deterministic, free and instant. They also give the AI
     // pass below real source material to ground on, and stop it from inventing
     // a headline the catalogue's own formula already defines.
-    const seeded = { ...fields, ...(await unitCreateDefaults(cfg, fields)) }
+    const seeded = { ...fields, ...(await unitCreateDefaults(cfg, fields)), ...(await parserUnitPatch(cfg, fields, { create: true })) }
     // Новая запись обязана прийти с одной ценой во всех трёх полях: у
     // созданной вручную карточки `Цена` иначе остаётся пустой (или, после
     // «Дублировать», ценой донора), и трекер прайсов её не свяжет.

@@ -8,6 +8,7 @@ import { areaSyncPatch } from '@/lib/admin/area-sync'
 import { priceSyncPatch } from '@/lib/admin/price-sync'
 import { withComplexDescription } from '@/lib/admin/complex-description'
 import { propagateComplexGeo } from '@/lib/admin/complex-geo-sync'
+import { parserUnitPatch } from '@/lib/admin/parser-units'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,8 +43,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
   let body: { fields?: Record<string, unknown> }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }) }
-  const patch = body.fields ?? {}
   try {
+    // Moving a parser unit to another complex has to move its complex_id too.
+    const patch = { ...(body.fields ?? {}), ...(await parserUnitPatch(cfg, body.fields ?? {}, { create: false })) }
     // An edit is usually what completes a record — the body gets pasted in on
     // the second save. Merge the patch over the stored row so the generators
     // see the finished material, then fill whatever is still empty.
@@ -81,7 +83,8 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   try {
     await adapterFor(cfg).remove(cfg, id)
     await revalidateCollection(cfg, id)
-    return NextResponse.json({ ok: true })
+    // softDelete collections archive instead — the UI words its notice by this.
+    return NextResponse.json({ ok: true, archived: !!cfg.softDelete })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'delete_failed' }, { status: 500 })
   }

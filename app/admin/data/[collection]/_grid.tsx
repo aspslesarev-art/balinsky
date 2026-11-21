@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles, Copy, Columns3 } from 'lucide-react'
+import { Plus, ArrowUp, ArrowDown, Search, Loader2, Maximize2, Link2, Filter, X, Sparkles, Copy, Columns3, Archive } from 'lucide-react'
 import type { CollectionConfig, FieldDef, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveFields, displayValue, editableText, coerceValue, isImageUrl, percentToInput, inputToPercent, percentDisplay, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { hasAi } from '@/lib/admin/ai-fields'
@@ -147,6 +147,8 @@ export function DataGridScreen({
   const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedId, setSelectedId] = useState<string | 'new' | null>(null)
+  // softDelete collections (developers): the grid shows live rows or the archive.
+  const [archived, setArchived] = useState(false)
 
   const [edit, setEdit] = useState<EditCell>(null)
   const [editText, setEditText] = useState('')
@@ -157,7 +159,8 @@ export function DataGridScreen({
   // up in the «Фото» column after a full page reload.
   const [photoMap, setPhotoMap] = useState<Record<string, string[]>>({})
   const reloadPhotoMap = useCallback(() => {
-    if (!cfg.photo) return
+    // Field-backed photos (rental) come with the rows themselves.
+    if (!cfg.photo || cfg.photo.field) return
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = cfg.photo.manifestKey ?? '_manifest.json'
     fetch(`${base}/storage/v1/object/public/${cfg.photo.bucket}/${key}?t=${Date.now()}`)
@@ -209,9 +212,10 @@ export function DataGridScreen({
     [cols, hidden, titleKey],
   )
 
-  const fetchPage = useCallback(async (opts: { page: number; sort: SortState; q: string; filters: { key: string; value: string }[] }) => {
+  const fetchPage = useCallback(async (opts: { page: number; sort: SortState; q: string; filters: { key: string; value: string }[]; archived?: boolean }) => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(opts.page), pageSize: String(PAGE_SIZE) })
+    if (opts.archived) params.set('archived', '1')
     if (opts.sort) { params.set('sort', opts.sort.field); params.set('dir', opts.sort.dir) }
     if (opts.q.trim()) params.set('q', opts.q.trim())
     for (const f of opts.filters) if (f.key && f.value) params.set(`filter.${f.key}`, f.value)
@@ -226,12 +230,17 @@ export function DataGridScreen({
   const firstRender = useRef(true)
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return }
-    const t = setTimeout(() => { setPage(0); fetchPage({ page: 0, sort, q, filters }) }, 300)
+    const t = setTimeout(() => { setPage(0); fetchPage({ page: 0, sort, q, filters, archived }) }, 300)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, filters])
 
-  const go = (nextPage: number, nextSort: SortState) => { setPage(nextPage); setSort(nextSort); fetchPage({ page: nextPage, sort: nextSort, q, filters }) }
+  const go = (nextPage: number, nextSort: SortState) => { setPage(nextPage); setSort(nextSort); fetchPage({ page: nextPage, sort: nextSort, q, filters, archived }) }
+  const toggleArchived = () => {
+    const next = !archived
+    setArchived(next); setPage(0); setSelectedId(null)
+    fetchPage({ page: 0, sort, q, filters, archived: next })
+  }
   const toggleSort = (field: string) => {
     let next: SortState
     if (!sort || sort.field !== field) next = { field, dir: 'asc' }
@@ -240,7 +249,7 @@ export function DataGridScreen({
     go(0, next)
   }
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const refresh = useCallback(() => fetchPage({ page, sort, q, filters }), [fetchPage, page, sort, q, filters])
+  const refresh = useCallback(() => fetchPage({ page, sort, q, filters, archived }), [fetchPage, page, sort, q, filters, archived])
 
   // Persist a single field (or several, for links) on one row. Optimistic.
   const patchRow = useCallback(async (rowId: string, fieldsPatch: Record<string, unknown>) => {
@@ -336,8 +345,8 @@ export function DataGridScreen({
   return (
     <div>
       {/* toolbar */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="relative flex-1 max-w-[360px]">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="relative flex-1 min-w-[220px] max-w-[360px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ax-fg-faint)]" />
           <input value={q} onChange={e => setQ(e.target.value)}
             placeholder={`Поиск по «${cfg.fields.find(f => f.key === titleKey)?.label ?? titleKey}»…`}
@@ -364,8 +373,15 @@ export function DataGridScreen({
             />
           )}
         </div>
+        {cfg.softDelete && (
+          <button type="button" onClick={toggleArchived} aria-pressed={archived}
+            title={archived ? 'Вернуться к действующим записям' : 'Показать записи, убранные в архив'}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] whitespace-nowrap border ${archived ? 'border-[var(--color-primary)] bg-[var(--ax-hover)] text-[var(--color-primary)]' : 'border-[var(--ax-border)] text-[var(--ax-fg-soft)]'} hover:bg-[var(--ax-hover)]`}>
+            <Archive size={14} /> Архив
+          </button>
+        )}
         {loading && <Loader2 size={15} className="animate-spin text-[var(--ax-fg-faint)]" />}
-        <div className="text-[12px] text-[var(--ax-fg-faint)]">{total} записей · {visibleCols.length} из {cols.length} полей</div>
+        <div className="text-[12px] text-[var(--ax-fg-faint)]">{total} {archived ? 'в архиве' : 'записей'} · {visibleCols.length} из {cols.length} полей</div>
         <div className="flex-1" />
         {aiOn && (
           <button type="button" onClick={genEmpty} disabled={!!bulk}
@@ -375,7 +391,7 @@ export function DataGridScreen({
             {bulk ? `Генерю ${bulk.done}/${bulk.total}…` : 'Заполнить SEO'}
           </button>
         )}
-        {cfg.caps.create && (
+        {cfg.caps.create && !archived && (
           <button type="button" onClick={() => setSelectedId('new')}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-[var(--color-primary)] text-white hover:opacity-90">
             <Plus size={15} /> Создать
@@ -430,7 +446,7 @@ export function DataGridScreen({
                 </td>
                 {cfg.photo && (
                   <td className="px-2 py-1.5 border-r border-[var(--ax-border-soft)]/50 align-middle" onClick={() => setSelectedId(r.id)}>
-                    <PhotoThumbs urls={photoMap[r.id] ?? []} />
+                    <PhotoThumbs urls={cfg.photo.field ? photoList(r.fields[cfg.photo.field]) : (photoMap[r.id] ?? [])} />
                   </td>
                 )}
                 {visibleCols.map(c => {
@@ -612,6 +628,10 @@ function ColumnsMenu({ cols, hidden, titleKey, onToggle, onShowAll, onHideEmpty,
 }
 
 // Row photo preview — up to 3 Supabase thumbnails + count.
+function photoList(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((u): u is string => typeof u === 'string') : []
+}
+
 function PhotoThumbs({ urls }: { urls: string[] }) {
   if (!urls.length) return <span className="text-[var(--ax-fg-faint)] text-[11px]">—</span>
   return (

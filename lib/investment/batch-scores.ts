@@ -312,12 +312,14 @@ async function loadAllScoresInternal(kind: 'villa' | 'apartment' = 'villa'): Pro
 const _sharedVillaScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('villa')).entries()],
   ['villa-scores-v15'],
-  { revalidate: 604800, tags: ['content:villas', 'content:apartments'] },
+  // Scores rank a villa against its rental neighbours — an edit to the
+  // competitor list changes them too.
+  { revalidate: 604800, tags: ['content:villas', 'content:apartments', 'content:competitors'] },
 )
 const _sharedApartmentScores = unstable_cache(
   async () => [...(await loadAllScoresInternal('apartment')).entries()],
   ['apartment-scores-v15'],
-  { revalidate: 604800, tags: ['content:apartments'] },
+  { revalidate: 604800, tags: ['content:apartments', 'content:competitors'] },
 )
 
 export async function loadAllVillaScores(): Promise<Map<string, VillaScore>> {

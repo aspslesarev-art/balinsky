@@ -28,6 +28,8 @@ export async function getOptions(cfg: CollectionConfig, q: string): Promise<Opti
     const pk = cfg.primaryKey ?? 'airtable_id'
     let query = adminSb().from(cfg.table!).select(`${pk}, t:data->>"${cfg.titleField}"${slugSel}`)
     if (needle) query = query.ilike(`data->>"${cfg.titleField}"`, `%${needle}%`)
+    // An archived developer must not be offered as a new link target.
+    if (cfg.softDelete) query = query.is(cfg.softDelete.column, null)
     const { data, error } = await query.limit(LIMIT)
     if (error) throw new Error(error.message)
     return ((data ?? []) as unknown as Record<string, unknown>[])

@@ -88,7 +88,10 @@ function logoFromJson(data: Record<string, unknown>): string | null {
   const arr = data['Logo']
   if (Array.isArray(arr) && arr[0] && typeof arr[0] === 'object' && 'url' in arr[0]) {
     const url = (arr[0] as { url: unknown }).url
-    return typeof url === 'string' ? url : null
+    // Airtable attachment links expired when Airtable was switched off — a
+    // dead link renders as a broken image, no logo reads better.
+    if (typeof url !== 'string' || /airtableusercontent\.com|dl\.airtable\.com/.test(url)) return null
+    return url
   }
   return null
 }

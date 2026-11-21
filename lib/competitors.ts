@@ -1,4 +1,5 @@
 import { cdnManifestUrl } from './photo-cdn'
+import { contentRev } from './content-version'
 import {
   type Competitor,
   type CompetitorWithDistance,
@@ -27,13 +28,18 @@ const CELLS_INDEX_URL = `${SUPABASE_URL}/storage/v1/object/public/competitors/_c
 const CELL_URL = (k: string) => `${SUPABASE_URL}/storage/v1/object/public/competitors/_cells/${k}.json`
 
 const TTL_MS = 10 * 60 * 1000
-let _cache: { ts: number; data: Competitor[] } | null = null
+// Edits from /admin/data (collection «Конкуренты») bump this revision and
+// revalidate the tag: the revision drops the in-memory copies below ahead of
+// their TTL, the tag drops the Data Cache entries of the tiles.
+const REV_KIND = 'competitors'
+const TAGS = ['content:competitors']
+let _cache: { ts: number; rev: number; data: Competitor[] } | null = null
 let _inflight: Promise<Competitor[]> | null = null
 
 // Per-cell cache (5.5 km tiles). loadNearby resolves 1-4 cells per request,
 // so snapshot egress drops from 10.5 MB (full manifest) to ~280 KB.
-let _cellIndex: { ts: number; data: CellIndex } | null = null
-const _cellCache = new Map<string, { ts: number; data: Competitor[] }>()
+let _cellIndex: { ts: number; rev: number; data: CellIndex } | null = null
+const _cellCache = new Map<string, { ts: number; rev: number; data: Competitor[] }>()
 
 function dedupCompetitors(items: Competitor[]): Competitor[] {
   // Один Booking-объект иногда лежит несколько раз (разные даты сбора).
@@ -53,17 +59,20 @@ function dedupCompetitors(items: Competitor[]): Competitor[] {
 }
 
 export async function loadCompetitors(): Promise<Competitor[]> {
-  if (_cache && Date.now() - _cache.ts < TTL_MS) return _cache.data
+  const rev = await contentRev(REV_KIND)
+  if (_cache && _cache.rev === rev && Date.now() - _cache.ts < TTL_MS) return _cache.data
   if (_inflight) return _inflight
   _inflight = (async () => {
     try {
       // Via the CDN host: ~14 MB, far over the Data Cache limit, so this
-      // fetch is never cached by Next — keep it off Supabase egress.
-      const r = await fetch(cdnManifestUrl(MANIFEST_URL, 3600), { next: { revalidate: 604800 } })
+      // fetch is never cached by Next — keep it off Supabase egress. The
+      // revision in the URL makes the CDN miss once after an admin edit.
+      const base = cdnManifestUrl(MANIFEST_URL, 3600)
+      const r = await fetch(`${base}${base.includes('?') ? '&' : '?'}r=${rev}`, { next: { revalidate: 604800, tags: TAGS } })
       if (!r.ok) return []
       const j = (await r.json()) as Manifest
       const items = Array.isArray(j.items) ? dedupCompetitors(j.items) : []
-      _cache = { ts: Date.now(), data: items }
+      _cache = { ts: Date.now(), rev, data: items }
       return items
     } catch {
       return _cache?.data ?? []
@@ -75,12 +84,13 @@ export async function loadCompetitors(): Promise<Competitor[]> {
 }
 
 async function loadCellIndex(): Promise<CellIndex | null> {
-  if (_cellIndex && Date.now() - _cellIndex.ts < TTL_MS) return _cellIndex.data
+  const rev = await contentRev(REV_KIND)
+  if (_cellIndex && _cellIndex.rev === rev && Date.now() - _cellIndex.ts < TTL_MS) return _cellIndex.data
   try {
-    const r = await fetch(CELLS_INDEX_URL, { next: { revalidate: 604800 } })
+    const r = await fetch(CELLS_INDEX_URL, { next: { revalidate: 604800, tags: TAGS } })
     if (!r.ok) return null
     const j = (await r.json()) as CellIndex
-    _cellIndex = { ts: Date.now(), data: j }
+    _cellIndex = { ts: Date.now(), rev, data: j }
     return j
   } catch {
     return _cellIndex?.data ?? null
@@ -88,13 +98,14 @@ async function loadCellIndex(): Promise<CellIndex | null> {
 }
 
 async function loadCell(key: string): Promise<Competitor[]> {
+  const rev = await contentRev(REV_KIND)
   const hit = _cellCache.get(key)
-  if (hit && Date.now() - hit.ts < TTL_MS) return hit.data
+  if (hit && hit.rev === rev && Date.now() - hit.ts < TTL_MS) return hit.data
   try {
-    const r = await fetch(CELL_URL(key), { next: { revalidate: 604800 } })
+    const r = await fetch(CELL_URL(key), { next: { revalidate: 604800, tags: TAGS } })
     if (!r.ok) return []
     const data = (await r.json()) as Competitor[]
-    _cellCache.set(key, { ts: Date.now(), data })
+    _cellCache.set(key, { ts: Date.now(), rev, data })
     return data
   } catch {
     return hit?.data ?? []
