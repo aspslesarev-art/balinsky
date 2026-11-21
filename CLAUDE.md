@@ -36,7 +36,8 @@ Rules:
 
 **Supabase is the source of truth. Airtable was retired on 2026-07-22** — its
 workflows, webhook and cron are deleted and its scripts sit disabled in
-`scripts/legacy-airtable/`. Editing happens in the admin CRUD at `/admin/data`.
+`scripts/legacy-airtable/` (env `ALLOW_AIRTABLE_LEGACY=1` + DB flag
+`sync_switches.airtable_import`, both required). Editing happens in the admin CRUD at `/admin/data`.
 Content still reaches the site two ways, and **which one matters when you change a loader**:
 
 1. **SQL-backed** (villas, apartments, complexes, rentals, developers): rows live in Supabase `raw_<table>` with a JSONB `data` column holding *all* fields (no allowlist) under their original Airtable-era names. Pages read these via `lib/*` loaders. Field access is `data['Field Name']` through helpers like `tField`/`firstString`/`numberOrNull` — fields are loosely typed.

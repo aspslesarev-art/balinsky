@@ -7,7 +7,10 @@ edits made in the admin panel at `/admin/data`.
 
 **Supabase is now the source of truth.** Running any of these scripts against
 production would replay stale Airtable data over current content, so each one
-refuses to start unless `ALLOW_AIRTABLE_LEGACY=1` is set. Only do that for a
+refuses to start unless BOTH `ALLOW_AIRTABLE_LEGACY=1` is set AND the DB
+kill-switch is on (`public.sync_switches`, row `airtable_import`, migration
+148 — off by default; flip it in SQL, no deploy needed). Since 21.11.2026 the
+owner's rule is: objects are edited only in `/admin/data`. Only do that for a
 deliberate one-off re-import, and only after checking what the script upserts
 and prunes.
 
