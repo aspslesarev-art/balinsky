@@ -13,7 +13,7 @@ import { unstable_cache } from 'next/cache'
 import { revisionedCache } from '@/lib/revisioned-cache'
 import {
   BedDouble, Square, Calendar, FileCheck2, Lock, MapPin, Plane,
-  Layers,
+  Layers, FileText,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { ExpandableText } from '@/components/ExpandableText'
@@ -96,6 +96,8 @@ import { loadAirbnbNearby } from '@/lib/airbnb-nearby'
 import { loadListingVision, altFor } from '@/lib/listing-features'
 import { loadListingCopy } from '@/lib/listing-copy'
 import { loadComplexMedia } from '@/lib/complex-media'
+import { complexDocs } from '@/lib/complex-docs'
+import { ComplexDocsView } from '@/components/ComplexDocsView'
 import { curatePhotos } from '@/lib/listing-photos'
 import { DistrictAboutCard } from '@/components/DistrictAboutCard'
 import { getDistrictCopy } from '@/lib/districts'
@@ -1034,6 +1036,19 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
     bleed: true,
     content: <ZoningMap slug={rdtrHit.key} plotOverride={rdtr.plot} lang={lang} ver={`${rdtr.fetchedAt ?? ''}-${rdtr.radius}`} />,
   }] : []
+  // Документы комплекса (только Pro) — плиткой, как на странице виллы.
+  const aptDocs = complexDocs(aptComplex.slug)
+  if (aptDocs) {
+    aptViewerTabs.push({
+      key: 'docs',
+      label: pickCopy({ ru: 'Документы', en: 'Documents', id: 'Dokumen', fr: 'Documents', de: 'Dokumente', zh: '文件', nl: 'Documenten', ban: 'Dokumen', pl: 'Dokumenty', uk: 'Документи' }, lang),
+      icon: <FileText size={18} aria-hidden />,
+      cover: photos[3] ?? photos[0] ?? null,
+      count: aptDocs.docs.length,
+      content: <ComplexDocsView docs={aptDocs} lang={lang} listingTitle={title} />,
+      bleed: true,
+    })
+  }
 
   const [managers, activeReservation, landProfile, marketStats, developers, nearby, geoFacts, demand, verdictSnap, complexFacts, airbnbComps, landmarks] = await Promise.all([
     loadManagersByDeveloperName(devName),
