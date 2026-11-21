@@ -116,5 +116,7 @@ export function datasetLd(opts: {
     keywords: opts.keywords,
     creator: { '@id': ORG_ID },
     isAccessibleForFree: true,
+    // GSC 27.10.2026: «нет поля license» — условия использования сайта.
+    license: `${SITE}/en/terms`,
   }
 }

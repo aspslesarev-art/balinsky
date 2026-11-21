@@ -1104,7 +1104,7 @@ export function buildMetadataEn(
     : null
   const title = districtMeta?.title
     ?? (isSectionRoot && opts.totalCount
-      ? `Bali Villas for Sale — ${opts.totalCount} houses with prices, photos & yields | Balinsky`
+      ? `Bali Villas for Sale — ${opts.totalCount} leasehold listings with prices, photos & yields | Balinsky`
       : buildTitleEn(f))
   const description = districtMeta?.description ?? buildDescriptionEn(f, opts.totalCount)
   return {

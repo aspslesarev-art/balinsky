@@ -11,6 +11,13 @@ import { hubPath, hubSegmentsToRu, hubLanguages, type HubSection } from './hub-r
 import { SLUG_TO_DISTRICT } from './seo-routes'
 import { getBuyHeading, getDistrictCopy } from './districts'
 
+// Позиционирование 20.11.2026: всё на сайте — лизхолд для иностранцев.
+// В title — после фразы «купить …», которую реально ищут (Андрей 21.11).
+const LEASEHOLD_TAG: Partial<Record<Lang, string>> = {
+  zh: '租赁产权',
+  uk: 'лізхолд',
+}
+
 type Params = Promise<{ slug: string[] }>
 type MetaOpts = { canonicalPath: string; noIndex: boolean; totalCount?: number }
 
@@ -84,7 +91,7 @@ export function makeHubPage<F>(cfg: HubConfig<F>, lang: Lang) {
     const segs = ruCanonical.slice(cfg.section.length + 1).split('/').filter(Boolean)
     if (lang !== 'en' && lang !== 'ru' && segs.length === 1 && SLUG_TO_DISTRICT[segs[0]]) {
       const name = getDistrictCopy(segs[0], lang)?.name ?? SLUG_TO_DISTRICT[segs[0]]
-      meta.title = `${getBuyHeading(cfg.kind, lang, totalCount, name)} | Balinsky`
+      meta.title = `${getBuyHeading(cfg.kind, lang, totalCount, name)} · ${LEASEHOLD_TAG[lang] ?? 'Leasehold'} | Balinsky`
       if (meta.openGraph) meta.openGraph = { ...meta.openGraph, title: meta.title }
     }
     if (page > 1 && typeof meta.title === 'string') {

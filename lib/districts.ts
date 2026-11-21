@@ -831,13 +831,16 @@ export function getDistrictCommercialMeta(
     const heading = countWord
       ? `Купить ${n.sing} в ${copy.name}, Бали — ${countWord} ${YEAR}`
       : `Купить ${n.sing} в ${copy.name}, Бали — каталог ${YEAR}`
-    const title = `Купить ${n.sing} в ${copy.name}, Бали — цены ${YEAR} | Balinsky`
+    // Позиционирование 20.11.2026: всё в лизхолде, для иностранцев.
+    const title = kind === 'complex'
+      ? `Жилые комплексы в ${copy.name}, Бали — цены ${YEAR}, лизхолд | Balinsky`
+      : `Купить ${n.sing} в ${copy.name}, Бали — цены ${YEAR}, лизхолд | Balinsky`
     const descParts: string[] = [`Купить ${n.sing} в ${copy.name}, Бали`]
     if (countWord) descParts.push(`— ${countWord} от застройщиков`)
     const tail: string[] = []
     if (priceFrom) tail.push(priceFrom)
     if (yieldRange) tail.push(`доходность ${yieldRange}`)
-    tail.push('лизхолд и фрихолд')
+    tail.push('всё в лизхолде, для покупателей без индонезийского паспорта')
     const tailRu = tail.join(', ')
     const description = `${descParts.join(' ')}. ${tailRu.charAt(0).toUpperCase()}${tailRu.slice(1)}. Статус разрешений и зона земли — на каждом объекте.`
     return { title, heading, description }
@@ -854,8 +857,8 @@ export function getDistrictCommercialMeta(
   const forSale = n.plural(2).charAt(0).toUpperCase() + n.plural(2).slice(1)
   // Complexes aren't «for sale» — people search «new developments in <area>».
   const title = kind === 'complex'
-    ? `New Developments in ${copy.name}, Bali — ${YEAR} Prices | Balinsky`
-    : `${forSale} for Sale in ${copy.name}, Bali — ${YEAR} Prices | Balinsky`
+    ? `New Developments in ${copy.name}, Bali — ${YEAR} Prices, Leasehold | Balinsky`
+    : `${forSale} for Sale in ${copy.name}, Bali — ${YEAR} Prices, Leasehold | Balinsky`
   const descParts: string[] = kind === 'complex'
     ? [`${countWord ?? forSale} in ${copy.name}, Bali — new developments with units for sale`]
     : countWord
@@ -864,7 +867,7 @@ export function getDistrictCommercialMeta(
   const tail: string[] = []
   if (priceFrom) tail.push(priceFrom)
   if (yieldRange) tail.push(`yield ${yieldRange}`)
-  tail.push('leasehold and freehold')
+  tail.push('all leasehold, for buyers without an Indonesian passport')
   const tailText = tail.join(', ')
   const description = `${descParts.join(' ')}. ${tailText.charAt(0).toUpperCase()}${tailText.slice(1)}. Permit status and land zone shown on every listing.`
   return { title, heading, description }
