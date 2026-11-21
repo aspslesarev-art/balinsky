@@ -22,6 +22,11 @@ const FADE_MS = 600
 const PRESET_COUNT = 6
 const ANIM_DURATION = 2 * ADVANCE_MS // photo's on-screen lifetime
 
+// Shared across sliders: cards mounted later (infinite scroll) start
+// straight away once the visitor has already interacted with the page.
+let visitorInteracted = false
+const INTERACTION_EVENTS = ['scroll', 'touchstart', 'pointerdown', 'keydown'] as const
+
 export function PhotoSlider({
   photos,
   alt,
@@ -79,6 +84,22 @@ export function PhotoSlider({
     }
   }, [active, trackingId])
 
+  // Auto-start on touch waits for the visitor's first scroll / tap / key.
+  // Starting right at hydration mounted the motion layers while the page
+  // was still loading: the Ken Burns layer paints a hair larger than the
+  // server-rendered photo, so Chrome took it as a new LCP (~6 s on a slow
+  // phone instead of ~1 s) and its downloads raced the first paint. LCP
+  // stops being recorded at the first interaction, so from then on the
+  // slideshow can't move it.
+  const [pageInteracted, setPageInteracted] = useState(false)
+  useEffect(() => {
+    if (visitorInteracted) { setPageInteracted(true); return }
+    const on = () => { visitorInteracted = true; setPageInteracted(true) }
+    const opts = { capture: true, passive: true } as const
+    INTERACTION_EVENTS.forEach(e => window.addEventListener(e, on, opts))
+    return () => INTERACTION_EVENTS.forEach(e => window.removeEventListener(e, on, opts))
+  }, [])
+
   // Viewport observer: stop on scroll-off; on touch devices also auto-start
   // when the card dominates the viewport (TikTok / Reels feel).
   useEffect(() => {
@@ -86,7 +107,7 @@ export function PhotoSlider({
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) { setActive(false); return }
-        if (hoverDevice === false) {
+        if (hoverDevice === false && pageInteracted) {
           if (entry.intersectionRatio >= 0.85) setActive(true)
           else if (entry.intersectionRatio < 0.4) setActive(false)
         }
@@ -95,7 +116,7 @@ export function PhotoSlider({
     )
     obs.observe(ref.current)
     return () => obs.disconnect()
-  }, [hoverDevice])
+  }, [hoverDevice, pageInteracted])
 
   // Once the visitor has activated the slideshow, the layers stay
   // mounted (and animations stay where they were) even when activity
@@ -114,14 +135,10 @@ export function PhotoSlider({
   const markLoaded = (src: string) => setLoaded(prev => (prev.has(src) ? prev : new Set(prev).add(src)))
   const stepRef = useRef(0)
 
-  // Preload all photos in the auto window so swaps never flash.
-  useEffect(() => {
-    if (!active) return
-    photos.slice(0, autoCount).forEach(src => {
-      const img = new Image()
-      img.src = src
-    })
-  }, [active, autoCount, photos])
+  // No separate preload of photos[]: it fetched the full-size originals,
+  // while the layers below render the optimized /_next/image variants, so
+  // the preload was never reused (~250 KB wasted per card). The bottom
+  // layer already loads the next photo a whole step before it is shown.
 
   // Tick driver: every ADVANCE_MS we start the fade, then FADE_MS later
   // commit the step (which swaps physical roles and loads the next photo
@@ -280,9 +297,12 @@ export function PhotoSlider({
         <div className="pointer-events-none absolute left-0 right-0 bottom-0 h-[3px] bg-white/30 z-[4]">
           <div
             key={Math.floor(step / autoCount)}
-            className="h-full bg-white"
+            // scaleX from the left edge looks the same as a width sweep but
+            // runs on the compositor: width re-laid-out and repainted the
+            // card on every frame for as long as the slideshow played.
+            className="h-full origin-left bg-white"
             style={{
-              animation: `photo-progress ${autoCount * ADVANCE_MS}ms linear forwards`,
+              animation: `photo-progress-x ${autoCount * ADVANCE_MS}ms linear forwards`,
               animationPlayState: playState,
             }}
           />

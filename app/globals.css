@@ -203,6 +203,11 @@ body {
   from { width: 0%; }
   to   { width: 100%; }
 }
+/* Same sweep on the compositor (PhotoSlider): scaleX + origin-left. */
+@keyframes photo-progress-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
 
 /* === Pro mode ===
    Default ON. When the visitor flips Pro off, anything tagged
