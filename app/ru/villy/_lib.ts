@@ -115,6 +115,7 @@ export type VillaCard = {
   pricePerSqmUsd: number | null
   pricePerSqmYearUsd: number | null
   leaseYears: number | null
+  landBucket: 'tourism' | 'residential' | 'unknown'
   permit: string | null
   completionYear: string | null
   claimedYieldPct: number | null
@@ -643,6 +644,7 @@ export function toCard(
     verifiedYield: hasVerifiedYield('villa', e.id),
     isTop: e.isTop,
     rentalRestricted: e.landBucket === 'residential',
+    landBucket: e.landBucket,
     views: e.views ?? 0,
   }
 }

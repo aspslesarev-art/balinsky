@@ -58,7 +58,14 @@ async function loadRawKnowledge(): Promise<KnowledgeItem[]> {
     // slug in the sitemap/canonical 301s → GSC "Page with redirect". Cleaning
     // here makes sitemap, canonical and lookup agree. Map keys in
     // enKnowledgeSlug are already dash-clean, so this doesn't disturb EN slugs.
-    return j.items.map(it => ({ ...it, slug: normalizeSlug(it.slug) }))
+    // Ссылки на фото из Airtable подписаны и истекли (Airtable отключён 22.07.2026):
+    // 41 статья отдавала мёртвую картинку в превью соцсетей и разметку Google.
+    // Без фото лучше, чем с 404.
+    return j.items.map(it => ({
+      ...it,
+      slug: normalizeSlug(it.slug),
+      photo: it.photo && /airtableusercontent\.com|dl\.airtable\.com/.test(it.photo) ? null : it.photo,
+    }))
   } catch {
     return []
   }

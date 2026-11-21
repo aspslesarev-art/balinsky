@@ -1,5 +1,7 @@
 'use client'
 
+import { pluralRu } from '@/lib/plural-ru'
+
 import { nPlural, BEDROOMS } from '@/lib/l10n-plural'
 import { VerifiedYieldBadge } from './VerifiedYieldBadge'
 import Link from 'next/link'
@@ -71,6 +73,13 @@ const COPY = {
   uk: { sqm: 'm²', floor: 'Поверх', resale: 'Перепродаж', secondary: 'Вторинний ринок' },
 } as const
 
+const LEASE: Record<Lang, (n: number) => string> = {
+  ru: n => `лизхолд ${n} ${pluralRu(n, ['год', 'года', 'лет'])}`, en: n => `leasehold ${n} yrs`,
+  id: n => `leasehold ${n} thn`, fr: n => `leasehold ${n} ans`, de: n => `Leasehold ${n} J.`,
+  zh: n => `租期${n}年`, nl: n => `leasehold ${n} jr`, ban: n => `leasehold ${n} thn`,
+  pl: n => `leasehold ${n} lat`, uk: n => `лізхолд ${n} р.`,
+}
+
 export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: ApartmentCardData; lang?: Lang; priority?: boolean }) {
   const { currency } = useCurrency()
   const c = pickCopy(COPY, lang)
@@ -87,6 +96,8 @@ export function ApartmentCard({ a, lang = 'ru', priority = false }: { a: Apartme
     a.bedrooms != null ? (lang === 'en' ? `${a.bedrooms} BR` : nPlural(lang, a.bedrooms, BEDROOMS)) : null,
     a.area != null ? `${a.area} ${c.sqm}` : null,
     a.floor ? `${c.floor.toLowerCase()} ${a.floor}` : null,
+    // Срок лизхолда прямо в каталоге (макет CardFacts A, 21.11.2026).
+    a.leaseYears != null && a.leaseYears > 0 ? (LEASE[lang] ?? LEASE.en)(a.leaseYears) : null,
   ].filter(Boolean).join(' · ')
 
   return (
