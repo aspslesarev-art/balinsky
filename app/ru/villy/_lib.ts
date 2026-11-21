@@ -699,11 +699,13 @@ const SLIM_VILLA_FIELDS = [
   ['Заявленная доходность', 'yield_decl'],
 ] as const
 
-const VILLA_SELECT = ['airtable_id', ...SLIM_VILLA_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+const VILLA_SELECT = ['airtable_id', 'synced_at', ...SLIM_VILLA_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
 
 function reassembleVilla(raw: Record<string, unknown>): Row {
   const data: Record<string, unknown> = {}
   for (const [k, a] of SLIM_VILLA_FIELDS) data[k] = raw[a]
+  // Дата последней записи строки — настоящий lastmod для карты сайта.
+  data.synced_at = raw.synced_at
   return { airtable_id: raw.airtable_id as string, data }
 }
 

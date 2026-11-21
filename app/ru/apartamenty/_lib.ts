@@ -564,11 +564,13 @@ const SLIM_APT_FIELDS = [
   ['Последнее обновление', 'last_upd'],
 ] as const
 
-const APT_SELECT = ['airtable_id', ...SLIM_APT_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+const APT_SELECT = ['airtable_id', 'synced_at', ...SLIM_APT_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
 
 function reassembleApt(raw: Record<string, unknown>): Row {
   const data: Record<string, unknown> = {}
   for (const [k, a] of SLIM_APT_FIELDS) data[k] = raw[a]
+  // Дата последней записи строки — настоящий lastmod для карты сайта.
+  data.synced_at = raw.synced_at
   return { airtable_id: raw.airtable_id as string, data }
 }
 

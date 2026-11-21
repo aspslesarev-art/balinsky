@@ -585,7 +585,7 @@ const CPX_CARD_FIELDS = [
   ['Статус EN', 'f_status_en'],
   ['Разрешительные документы EN', 'f_permit_en'],
 ] as const
-const CPX_CARD_SELECT = ['airtable_id, slug, cover_url', ...CPX_CARD_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
+const CPX_CARD_SELECT = ['airtable_id, slug, cover_url, synced_at', ...CPX_CARD_FIELDS.map(([k, a]) => `${a}:data->"${k}"`)].join(',')
 
 // Slim projection for buildPriceIndex (6 fields × ~1100 rows ≈ ~300KB instead
 // of the full `data` column).
@@ -609,6 +609,7 @@ const _loadComplexCardRows = unstable_cache(
     return ((data ?? []) as unknown as Record<string, unknown>[]).map(raw => {
       const d: Record<string, unknown> = {}
       for (const [k, a] of CPX_CARD_FIELDS) d[k] = raw[a]
+      d.synced_at = raw.synced_at
       return {
         airtable_id: raw.airtable_id as string,
         slug: (raw.slug ?? null) as string | null,
@@ -617,7 +618,7 @@ const _loadComplexCardRows = unstable_cache(
       }
     })
   },
-  ['zhilye-complex-card-rows-v2'],
+  ['zhilye-complex-card-rows-v3'],
   { revalidate: 604800, tags: ['content:complexes'] },
 )
 const _loadVillaPriceRows = unstable_cache(
