@@ -239,7 +239,7 @@ const asOf = items.reduce((mx, i) => (typeof i[8] === 'string' && i[8] > mx ? i[
 const index = {
   generatedAt: new Date().toISOString(),
   asOf: asOf || null,
-  source: 'rumah123.com + bali-home-immo.com + propertia.com + villabalisale.com + balivillarealty.com + balitecturerealty.com + prestigepropertybali.com + ppbali.com + betterplace.cc + yollabali.com',
+  source: 'rumah123.com + bali-home-immo.com + propertia.com + villabalisale.com + balivillarealty.com + balitecturerealty.com + prestigepropertybali.com + ppbali.com + betterplace.cc + yollabali.com + exotiqproperty.com',
   idrPerUsd: IDR_PER_USD,
   urlBase: 'https://www.rumah123.com',
   photoBase: 'https://picture.rumah123.com/r123-images/',
