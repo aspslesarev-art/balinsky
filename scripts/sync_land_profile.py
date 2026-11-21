@@ -9,6 +9,9 @@ Usage:
   python scripts/sync_land_profile.py --kind apartment --force
   python scripts/sync_land_profile.py --kind complex --limit 20
   python scripts/sync_land_profile.py --kind all      # do all three sequentially
+
+Земельные данные (RDTR) — бесплатно. Перевод того, чего нет в уже
+переведённых участках, — платно (OpenAI) и только с --yes-paid.
 """
 
 import argparse
@@ -21,6 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from land_profile import make_session, profile_one  # noqa: E402
+from _openai import YES_PAID_FLAG, chat_json, chat_model  # noqa: E402
 
 import requests
 
@@ -31,13 +35,8 @@ KIND_TO_TABLES = {
 }
 
 
-def translate_via_azure(p) -> dict | None:
-    api_key = os.environ.get("AZURE_OPENAI_API_KEY")
-    endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
-    api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview")
-    deployment = os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT", "gpt-5.4")
-    if not api_key or not endpoint:
-        return None
+def translate_via_openai(p) -> dict | None:
+    """Платно (OpenAI). Звать только при --yes-paid."""
 
     src = {
         "kabupaten": p.Kabupaten,
@@ -70,24 +69,9 @@ def translate_via_azure(p) -> dict | None:
     )
     user_msg = "Translate to RU + EN:\n" + json.dumps(src, ensure_ascii=False)
 
-    url = f"{endpoint.rstrip('/')}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
-    body = {
-        "messages": [
-            {"role": "system", "content": sys_prompt},
-            {"role": "user", "content": user_msg},
-        ],
-        "temperature": 0.2,
-        "response_format": {"type": "json_object"},
-    }
-    try:
-        r = requests.post(url, json=body, headers={"api-key": api_key, "Content-Type": "application/json"}, timeout=30)
-        r.raise_for_status()
-        msg = r.json()["choices"][0]["message"]["content"]
-        parsed = json.loads(msg)
-        if isinstance(parsed, dict) and "ru" in parsed and "en" in parsed:
-            return parsed
-    except Exception as e:
-        print(f"  translate failed: {e}", file=sys.stderr)
+    parsed = chat_json(sys_prompt, user_msg)
+    if isinstance(parsed, dict) and "ru" in parsed and "en" in parsed:
+        return parsed
     return None
 
 
@@ -98,7 +82,7 @@ TX_FIELDS = ("kabupaten", "kecamatan", "desa", "zona_name", "subzona_name",
 def build_translation_cache(sb, sb_url: str) -> dict[str, dict[str, dict]]:
     """Переводы, уже сделанные для других участков: поле → исходный текст →
     {ru, en}. Районы, деревни, зоны и регламенты повторяются, поэтому новый
-    участок почти всегда переводится без Azure."""
+    участок почти всегда переводится без платной модели."""
     cache: dict[str, dict[str, dict]] = {f: {} for f in TX_FIELDS}
     for _, dest in KIND_TO_TABLES.values():
         r = sb.get(f"{sb_url}/rest/v1/{dest}?select={','.join(TX_FIELDS)},translations&translations=not.is.null&limit=20000", timeout=60)
@@ -260,6 +244,12 @@ def sync_kind(kind: str, args) -> tuple[int, int]:
         file=sys.stderr,
     )
 
+    if args.yes_paid:
+        print(
+            f"[ПЛАТНО] перевод через OpenAI ({chat_model()}): до {len(queue)} запросов "
+            f"(только участки без перевода в кэше)",
+            file=sys.stderr,
+        )
     profiler = make_session()
     tx_cache = build_translation_cache(sb, SB_URL)
     ok = 0
@@ -272,11 +262,11 @@ def sync_kind(kind: str, args) -> tuple[int, int]:
             failed += 1
             continue
 
-        # Сначала переводы из уже переведённых участков; Azure — только с
-        # явным --allow-azure (платно) и только если чего-то не нашлось.
+        # Сначала переводы из уже переведённых участков; OpenAI — только с
+        # явным --yes-paid (платно) и только если чего-то не нашлось.
         translations, missing = translate_from_cache(p, tx_cache) if p.Zona_Name else (None, [])
-        if missing and args.allow_azure:
-            translations = translate_via_azure(p) or translations
+        if missing and args.yes_paid:
+            translations = translate_via_openai(p) or translations
         elif missing:
             print(f"[{i}/{len(queue)}] {aid} без перевода: {', '.join(missing)}", file=sys.stderr)
 
@@ -356,7 +346,8 @@ def main() -> None:
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--delay", type=float, default=0.4)
-    ap.add_argument("--allow-azure", action="store_true", help="переводить через Azure то, чего нет в уже переведённых участках (платно)")
+    ap.add_argument(YES_PAID_FLAG, dest="yes_paid", action="store_true",
+                    help="переводить через OpenAI то, чего нет в уже переведённых участках (платно, только после «ДА» владельца)")
     args = ap.parse_args()
 
     load_env_local()

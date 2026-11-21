@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Generate investor-language summaries for every real catalog listing +
-// developer, via Azure OpenAI, into public.assistant_kb (migration 040).
+// developer, via OpenAI, into public.assistant_kb (migration 040).
 //
 // The summary is BOTH the embedding source (kb-embed.mjs) and quotable
 // context for the assistant. Rentals are handled by kb-embed.mjs directly
@@ -17,9 +17,12 @@
 //   node scripts/kb-summarize.mjs                         # full run
 //   node scripts/kb-summarize.mjs --force                 # re-summarize everything
 //   node scripts/kb-summarize.mjs --conc=12              # concurrency (default 8)
+//
+// PAID (OpenAI), --sample too: without --yes-paid it prints the item count and
+// stops before any request. --dry-run stays free.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 import {
   loadEnv, sha1, SUMMARY_SYSTEM, summaryUser,
   villaFacts, apartmentFacts, complexFacts, developerFacts,
@@ -37,13 +40,8 @@ const CONC = val('conc') ? parseInt(val('conc'), 10) : 8
 const ONLY = val('only') ? val('only').split(',') : ['villa', 'apartment', 'complex', 'developer']
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
-const PRICE = { input: 1.25, output: 10.0 } // gpt-5.4 USD per 1M
+const CHAT = chatModel()
+const PRICE = { input: 1.25, output: 10.0 } // USD per 1M, local estimate only
 
 const KINDS = {
   villa:     { table: 'raw_villas',     build: villaFacts },
@@ -118,8 +116,7 @@ function trackUsage(pt, ct) {
 }
 
 async function summarize(factText, title) {
-  const r = await ai.chat.completions.create({
-    model: CHAT,
+  const r = await chat({
     messages: [
       { role: 'system', content: SUMMARY_SYSTEM },
       { role: 'user', content: summaryUser(factText, title) },
@@ -213,7 +210,7 @@ async function runPool(items) {
   await Promise.all(Array.from({ length: Math.min(CONC, items.length || 1) }, worker))
 }
 
-console.log(`KB summarize — Azure ${CHAT}, conc=${CONC}${DRY ? ' [DRY]' : ''}${SAMPLE ? ` [SAMPLE ${SAMPLE}]` : ''}${FORCE ? ' [FORCE]' : ''}`)
+console.log(`KB summarize — OpenAI ${CHAT}, conc=${CONC}${DRY ? ' [DRY]' : ''}${SAMPLE ? ` [SAMPLE ${SAMPLE}]` : ''}${FORCE ? ' [FORCE]' : ''}`)
 const start = Date.now()
 let allItems = []
 for (const k of ONLY) {
@@ -223,6 +220,7 @@ for (const k of ONLY) {
   allItems = allItems.concat(items)
 }
 console.log(`Total to summarize: ${allItems.length} (${skipped} unchanged skipped)`)
+if (!DRY) requirePaid({ what: `инвест-саммари базы знаний моделью ${CHAT}`, items: allItems.length })
 await runPool(allItems)
 console.log(`\n========================================`)
 console.log(`Done in ${Math.round((Date.now() - start) / 1000)}s — generated ${generated}, failed ${failed}, skipped ${skipped}`)

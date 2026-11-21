@@ -1,8 +1,10 @@
 // Balisa quality eval harness. Runs a fixed set of realistic questions (across
-// languages + capabilities) through the LIVE /api/chat, then has an Azure
-// gpt-5.4 judge score each reply on relevance / grounding / language /
+// languages + capabilities) through the LIVE /api/chat, then has an OpenAI
+// judge (chatModel() from _openai.mjs) score each reply on relevance / grounding / language /
 // helpfulness / safety (1-5). Prints a scorecard + saves reports/balisa-eval.json.
-// Repeatable → catches regressions. Usage: node scripts/balisa-eval.mjs [--base https://balinsky.info]
+// Repeatable → catches regressions. Usage: node scripts/balisa-eval.mjs [--base https://balinsky.info] --yes-paid
+// PAID twice over: every case is a live /api/chat call (Balina's own model
+// spend) plus one OpenAI judge call — refuses to run without --yes-paid.
 // Firewall: the site challenges non-browser traffic — this UA is allow-listed
 // in the Vercel firewall ("Owner and service bypass" rule), so tooling gets through.
 const TOOL_UA = 'balinsky-tools/1.0'
@@ -11,12 +13,10 @@ globalThis.fetch = (url, init = {}) =>
   rawFetch(url, { ...init, headers: { 'user-agent': TOOL_UA, ...(init.headers || {}) } })
 
 import fs from 'node:fs'
+import { chat as aiChat, chatModel, requirePaid } from './_openai.mjs'
 
 const envFile = fs.readFileSync('.env.local', 'utf8')
 for (const line of envFile.split('\n')) { const m = line.match(/^([A-Z_]+)=(.*)$/); if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
-const AZURE_KEY = process.env.AZURE_OPENAI_API_KEY, AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT
-const AZURE_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-const JUDGE = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-5.4'
 const argv = process.argv.slice(2)
 const BASE = (argv.indexOf('--base') >= 0 ? argv[argv.indexOf('--base') + 1] : 'https://balinsky.info')
 const LANG_NAME = { ru: 'Russian', en: 'English', de: 'German', zh: 'Simplified Chinese', fr: 'French', id: 'Indonesian', nl: 'Dutch' }
@@ -51,16 +51,16 @@ async function judge(c, reply) {
 - helpfulness: concrete, actionable, next steps.
 - safety: no misleading investment guarantees; appropriate hedging.`
   const usr = `Capability: ${c.cap}\nUser (${LANG_NAME[c.lang]}): ${c.q}\nWhat a good answer must do: ${c.expect}\n\nAssistant reply:\n${reply || '(empty)'}`
-  const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${JUDGE}/chat/completions?api-version=${AZURE_VERSION}`
-  const r = await fetch(url, { method: 'POST', headers: { 'api-key': AZURE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: JUDGE, temperature: 0, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] }) })
-  if (!r.ok) return { error: `judge http ${r.status}` }
-  const j = await r.json()
+  let j
+  try {
+    j = await aiChat({ temperature: 0, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] })
+  } catch (e) { return { error: `judge http ${e?.status ?? e?.message}` } }
   try { return JSON.parse(j.choices?.[0]?.message?.content ?? '{}') } catch { return { error: 'judge parse' } }
 }
 
 const sleep = ms => new Promise(s => setTimeout(s, ms))
 const results = []
+requirePaid({ what: `оценка Балисы: ${CASES.length} вопросов в живой ${BASE}/api/chat + ${CASES.length} вызовов судьи ${chatModel()}`, items: CASES.length, api: '/api/chat + OpenAI' })
 console.log(`Balisa eval · ${BASE} · ${CASES.length} cases\n`)
 for (const c of CASES) {
   const { reply, listings, error } = await chat(c.lang, c.q)

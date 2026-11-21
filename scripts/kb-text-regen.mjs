@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Marketing copy regeneration for listings (Azure gpt-5.4 / gpt-5.4-pro).
+// Marketing copy regeneration for listings (OpenAI chatModel() / pro model).
 // Generates N independent variants per listing, then a judge call picks the
 // best one. Facts come from _kb-build.mjs (which already strips the known-bad
 // fields: bogus yields, apartment price/m² off by 30×), enriched with what the
@@ -12,9 +12,13 @@
 //
 // Usage: --dry-run | --limit=N | --only=villa | --force | --conc=4
 //        --variants=3 | --pro | --checkpoint=25
+//
+// PAID (OpenAI), --dry-run too (it generates, just doesn't upload): without
+// --yes-paid it prints the listing count and stops before any request.
+// --pro is a reasoning model billed ~12× the standard one — use on purpose.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { openaiClient, chat, chatModel, requirePaid } from './_openai.mjs'
 import { loadEnv, villaFacts, apartmentFacts, complexFacts } from './_kb-build.mjs'
 
 loadEnv()
@@ -48,20 +52,18 @@ const LANGS = {
 const L = LANGS[LANG]
 if (!L) { console.error(`неизвестный язык: ${LANG}. Доступны: ${Object.keys(LANGS).join(', ')}`); process.exit(1) }
 
-// Rates read off Cost Management 2026-07. pro output is 12× the standard model,
-// so the variant count is the main budget lever.
+// Rates read off Azure Cost Management 2026-07 (gpt-5.4 / gpt-5.4-pro) — a
+// local estimate only, the real figure is in the OpenAI usage page. pro output
+// is 12× the standard model, so the variant count is the main budget lever.
 const RATES = {
   standard: { in: 2.5, out: 15 },
   pro: { in: 30, out: 180 },
 }
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-// gpt-5.4-pro only answers on the Responses API — chat.completions returns
-// "400 The requested operation is unsupported" — and it rejects `temperature`.
-const ai = PRO
-  ? new AzureOpenAI({ apiKey: process.env.AZURE_OPENAI_PRO_API_KEY, endpoint: process.env.AZURE_OPENAI_PRO_ENDPOINT, apiVersion: process.env.AZURE_OPENAI_PRO_API_VERSION ?? '2025-04-01-preview' })
-  : new AzureOpenAI({ apiKey: process.env.AZURE_OPENAI_API_KEY, endpoint: process.env.AZURE_OPENAI_ENDPOINT, apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview' })
-const MODEL = PRO ? (process.env.AZURE_OPENAI_PRO_DEPLOYMENT ?? 'gpt-5.4-pro') : (process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4')
+// The pro model only answers on the Responses API (chat.completions returns
+// 400) and rejects `temperature`.
+const MODEL = PRO ? (process.env.OPENAI_PRO_MODEL || 'gpt-5-pro') : chatModel()
 const RATE = PRO ? RATES.pro : RATES.standard
 
 const SOURCES = {
@@ -136,7 +138,7 @@ async function callOnce(system, user, maxTokens, temperature, schema, schemaName
     // and eat the same max_output_tokens budget, so a tight cap returns
     // `incomplete` before any text is produced. Keep the cap generous and let
     // --effort be the actual cost lever.
-    const r = await ai.responses.create({
+    const r = await openaiClient().responses.create({
       model: MODEL,
       instructions: system,
       input: [{ role: 'user', content: user }],
@@ -148,7 +150,7 @@ async function callOnce(system, user, maxTokens, temperature, schema, schemaName
     if (r.status === 'incomplete') throw new Error(`incomplete: ${r.incomplete_details?.reason ?? 'unknown'}`)
     return JSON.parse(r.output_text)
   }
-  const r = await ai.chat.completions.create({ model: MODEL, messages: [{ role: 'system', content: system }, { role: 'user', content: user }], temperature, max_completion_tokens: maxTokens, response_format: { type: 'json_object' } })
+  const r = await chat({ model: MODEL, messages: [{ role: 'system', content: system }, { role: 'user', content: user }], temperature, max_completion_tokens: maxTokens, response_format: { type: 'json_object' } })
   track(r.usage?.prompt_tokens ?? 0, r.usage?.completion_tokens ?? 0)
   return JSON.parse(r.choices[0].message.content)
 }
@@ -226,11 +228,12 @@ async function uploadManifest(bucket, key, obj) {
   return !error
 }
 
-async function processKind(kind) {
+// Plan (free): Supabase reads only — what each kind would send to the model.
+async function planKind(kind) {
   const { table, bucket, facts: factsOf } = SOURCES[kind]
   console.log(`\n=== ${kind} (${table}) ===`)
   const { data: rows, error } = await sb.from(table).select('airtable_id, data')
-  if (error) { console.error('  load err', error.message); return }
+  if (error) { console.error('  load err', error.message); return null }
 
   const vision = (await downloadManifest(bucket, '_vision.json')) ?? {}
   const existing = (await downloadManifest(bucket, OUT_KEY)) ?? {}
@@ -239,8 +242,11 @@ async function processKind(kind) {
   skipped += candidates.length - todo.length
   const work = LIMIT ? todo.slice(0, LIMIT) : todo
   console.log(`  ${candidates.length} listings, ${work.length} to write, ${candidates.length - todo.length} already done`)
-  if (!work.length) return
+  if (!work.length) return null
+  return { kind, bucket, vision, existing, work }
+}
 
+async function runKind({ bucket, vision, existing, work }) {
   const results = new Map()
   const merged = () => Object.fromEntries(
     [...new Set([...Object.keys(existing), ...results.keys()])]
@@ -275,6 +281,10 @@ async function processKind(kind) {
 
 console.log(`KB text regen [${LANG}] — ${MODEL}${DRY ? ' [DRY]' : ''}${FORCE ? ' [FORCE]' : ''} variants=${VARIANTS} conc=${CONC}${LIMIT ? ` limit=${LIMIT}` : ''}`)
 const start = Date.now()
-for (const k of ONLY) { if (SOURCES[k]) await processKind(k) }
+const plans = []
+for (const k of ONLY) { if (SOURCES[k]) { const plan = await planKind(k); if (plan) plans.push(plan) } }
+const listings = plans.reduce((a, p) => a + p.work.length, 0)
+requirePaid({ what: `тексты карточек моделью ${MODEL}: ${VARIANTS} вариант(а) + судья на объект`, items: listings })
+for (const plan of plans) await runKind(plan)
 console.log(`\nDone in ${Math.round((Date.now() - start) / 1000)}s — written ${made}, failed ${failed}, skipped ${skipped} — spent $${cost.toFixed(2)}`)
 if (!DRY) await new Promise(r => setTimeout(r, 1200))

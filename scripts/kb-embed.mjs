@@ -11,9 +11,15 @@
 //   node scripts/kb-embed.mjs --only=rental   # just (re)ingest + embed rentals
 //   node scripts/kb-embed.mjs --skip-rentals  # embed pending catalog/dev/aggregates only
 //   node scripts/kb-embed.mjs --force         # re-embed all rows
+//
+// PAID (OpenAI): the rental plan and pending count are read first (free);
+// without --yes-paid the script prints the count and stops before writing
+// anything — ingesting rentals nulls their embedding, so it must not run
+// without the embed step that follows. Model pinned in _openai.mjs:
+// text-embedding-3-large @1536.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { embed, EMBEDDINGS_MODEL, EMBEDDING_DIMS, requirePaid } from './_openai.mjs'
 import { loadEnv, rentalEmbedRecord } from './_kb-build.mjs'
 
 loadEnv()
@@ -25,20 +31,14 @@ const ONLY = val('only') ? val('only').split(',') : null
 const SKIP_RENTALS = has('--skip-rentals') || (ONLY && !ONLY.includes('rental'))
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const DEPL = process.env.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT ?? 'text-embedding-3-large'
-const DIMS = 1536
+const DEPL = EMBEDDINGS_MODEL
 const PRICE_IN = 0.13 // text-embedding-3-large USD per 1M
 
 let totalTokens = 0, embedded = 0
 
 let usageLogDisabled = false
 async function embedBatch(texts) {
-  const r = await ai.embeddings.create({ model: DEPL, input: texts.map(t => (t || ' ').slice(0, 8000)), dimensions: DIMS })
+  const r = await embed(texts.map(t => (t || ' ').slice(0, 8000)))
   totalTokens += r.usage?.prompt_tokens ?? 0
   if (r.usage?.prompt_tokens && !usageLogDisabled) {
     sb.from('balina_usage').insert({
@@ -53,10 +53,11 @@ async function embedBatch(texts) {
 }
 
 // ---- 1. Ingest rentals from the manifest -------------------------------
-async function ingestRentals() {
+// Plan (free): which rentals are new/changed. Nothing is written here.
+async function planRentals() {
   console.log('\n=== rentals (manifest → assistant_kb) ===')
   const { data, error } = await sb.storage.from('rental').download('_rental.json')
-  if (error) { console.error('  manifest download failed:', error.message); return }
+  if (error) { console.error('  manifest download failed:', error.message); return { batch: [], total: 0 } }
   const arr = JSON.parse(await data.text())
   const list = Array.isArray(arr) ? arr : (arr.items || arr.rentals || arr.listings || [])
   // Existing hashes to skip unchanged rentals.
@@ -68,7 +69,6 @@ async function ingestRentals() {
       if (!rows || rows.length < 1000) break
     }
   }
-  let upserted = 0
   const batch = []
   for (const r of list) {
     const rec = rentalEmbedRecord(r)
@@ -80,10 +80,28 @@ async function ingestRentals() {
       embedding: null, embedding_text: null, embedded_at: null,
       updated_at: new Date().toISOString(),
     })
-    if (batch.length >= 500) { await flush(batch); upserted += batch.length; batch.length = 0; process.stdout.write(`\r  upserted ${upserted}`) }
   }
-  if (batch.length) { await flush(batch); upserted += batch.length }
-  console.log(`\n  rentals upserted (new/changed): ${upserted} of ${list.length}`)
+  console.log(`  rentals new/changed: ${batch.length} of ${list.length}`)
+  return { batch, total: list.length }
+}
+async function ingestRentals({ batch, total }) {
+  let upserted = 0
+  for (let i = 0; i < batch.length; i += 500) {
+    const slice = batch.slice(i, i + 500)
+    await flush(slice); upserted += slice.length
+    process.stdout.write(`\r  upserted ${upserted}`)
+  }
+  console.log(`\n  rentals upserted (new/changed): ${upserted} of ${total}`)
+}
+
+// Free count of rows the embed step will send.
+async function countPending() {
+  let q = sb.from('assistant_kb').select('id', { count: 'exact', head: true })
+  if (!FORCE) q = q.is('embedding', null)
+  if (ONLY) q = q.in('kind', ONLY)
+  const { count, error } = await q
+  if (error) throw new Error(`count assistant_kb: ${error.message}`)
+  return count ?? 0
 }
 async function flush(batch) {
   const { error } = await sb.from('assistant_kb').upsert(batch, { onConflict: 'kind,ref_id' })
@@ -124,9 +142,13 @@ async function embedPending() {
   console.log()
 }
 
-console.log(`KB embed — Azure ${DEPL}${FORCE ? ' [FORCE]' : ''}`)
+console.log(`KB embed — OpenAI ${DEPL}@${EMBEDDING_DIMS}${FORCE ? ' [FORCE]' : ''}`)
 const start = Date.now()
-if (!SKIP_RENTALS) await ingestRentals()
+const rentals = SKIP_RENTALS ? null : await planRentals()
+const pendingNow = await countPending()
+// Upper bound: a changed rental that is already pending is counted twice.
+requirePaid({ what: `эмбеддинги базы знаний ${DEPL}@${EMBEDDING_DIMS}`, items: pendingNow + (rentals?.batch.length ?? 0) })
+if (rentals) await ingestRentals(rentals)
 await embedPending()
 console.log(`\nDone in ${Math.round((Date.now() - start) / 1000)}s — embedded ${embedded}, ${totalTokens} tokens, est $${((totalTokens / 1e6) * PRICE_IN).toFixed(3)}`)
 await new Promise(r => setTimeout(r, 1500))

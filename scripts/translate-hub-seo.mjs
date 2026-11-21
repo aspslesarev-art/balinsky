@@ -8,19 +8,16 @@
 //
 //   node scripts/translate-hub-seo.mjs                       # all kinds, all langs
 //   node scripts/translate-hub-seo.mjs --kind villas --lang de
-//   node scripts/translate-hub-seo.mjs --dry-run             # print, write nothing
+//   node scripts/translate-hub-seo.mjs --dry-run             # translate, write nothing
+// PAID (OpenAI), --dry-run included: every kind×lang pair is one request.
+// Without --yes-paid it prints the count and stops before any request.
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { loadEnv } from './_kb-build.mjs'
+import { chat, requirePaid } from './_openai.mjs'
 
 loadEnv()
-
-const AZURE_KEY = process.env.AZURE_OPENAI_API_KEY
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT
-const AZURE_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-const AZURE_MODEL = process.env.AZURE_OPENAI_TRANSLATE_DEPLOYMENT || process.env.AZURE_OPENAI_CHAT_DEPLOYMENT
-if (!AZURE_KEY || !AZURE_ENDPOINT || !AZURE_MODEL) throw new Error('Azure env not set')
 
 const LANGS = {
   en: 'English',
@@ -64,29 +61,18 @@ Rules:
 - Return JSON only. No markdown fences, no commentary.`
 }
 
-async function callAzure(system, payload) {
-  const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${AZURE_MODEL}/chat/completions?api-version=${AZURE_VERSION}`
+async function callAI(system, payload) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'api-key': AZURE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: AZURE_MODEL,
-          response_format: { type: 'json_object' },
-          messages: [{ role: 'system', content: system }, { role: 'user', content: JSON.stringify(payload) }],
-        }),
+      const j = await chat({
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'system', content: system }, { role: 'user', content: JSON.stringify(payload) }],
       })
-      if (!r.ok) {
-        if (r.status === 429 || r.status >= 500) { await new Promise(s => setTimeout(s, 2000 * (attempt + 1))); continue }
-        throw new Error(`azure ${r.status}: ${(await r.text()).slice(0, 200)}`)
-      }
-      const j = await r.json()
       const content = j.choices?.[0]?.message?.content
       if (!content) throw new Error('empty completion')
       return JSON.parse(content)
     } catch (err) {
-      if (attempt === 2) throw err
+      if (attempt === 2 || (err?.status && err.status < 500 && err.status !== 429)) throw err
       await new Promise(s => setTimeout(s, 2000 * (attempt + 1)))
     }
   }
@@ -121,11 +107,15 @@ function serialise(kind, lang, data) {
     `const copy: HubLongCopy = ${JSON.stringify(data, null, 2)}\n\nexport default copy\n`
 }
 
-for (const kind of onlyKind ? [onlyKind] : Object.keys(KINDS)) {
+const kinds = onlyKind ? [onlyKind] : Object.keys(KINDS)
+const langs = onlyLang ? [onlyLang] : Object.keys(LANGS)
+requirePaid({ what: `перевод SEO-текстов хабов (${kinds.join(',')} × ${langs.join(',')})`, items: kinds.length * langs.length })
+
+for (const kind of kinds) {
   const src = (await import(pathToFileURL(fileFor(kind, 'ru')).href)).default
-  for (const lang of onlyLang ? [onlyLang] : Object.keys(LANGS)) {
+  for (const lang of langs) {
     process.stdout.write(`${kind}/${lang} … `)
-    const out = await callAzure(systemPrompt(lang, kind), src)
+    const out = await callAI(systemPrompt(lang, kind), src)
     assertSameShape(src, out)
     if (DRY) { console.log('ok (dry-run)'); continue }
     fs.writeFileSync(fileFor(kind, lang), serialise(kind, lang, out))

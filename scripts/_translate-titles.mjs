@@ -1,17 +1,14 @@
-// Targeted: translate missing EN listing TITLES (SEO:Title / ИИ Имя) via Azure
+// Targeted: translate missing EN listing TITLES (SEO:Title / ИИ Имя) via OpenAI
 // into the same feeds/_translations-<section>.json cache the site + consultant
 // read. Non-destructive: merges title fields into existing cache entries,
 // preserving already-translated body fields. Batched for speed.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
+import { chat, requirePaid } from './_openai.mjs'
 
 const e = fs.readFileSync('/Users/andrei/balinsky/.env.local', 'utf8')
 for (const l of e.split('\n')) { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '') }
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const AZURE_KEY = process.env.AZURE_OPENAI_API_KEY
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT
-const AZURE_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-const AZURE_MODEL = process.env.AZURE_OPENAI_TRANSLATE_DEPLOYMENT || process.env.AZURE_OPENAI_CHAT_DEPLOYMENT
 
 const uw = v => { if (v == null) return null; if (typeof v === 'string') return v.trim() || null; if (Array.isArray(v)) { for (const x of v) { const u = uw(x); if (u) return u } return null } if (typeof v === 'object' && 'value' in v) return uw(v.value); return null }
 const clean = t => t ? t.replace(/\s*\|\s*Balinsky\s*$/i, '').trim() : t
@@ -31,18 +28,10 @@ Rules:
 - Pattern like "{Project} {Type} in {District}, Bali — {Area} m², {N}-Bedroom" or "{N}-Bedroom {Type} in {District}, Bali". Do not calque Russian word order.
 - Preserve numbers/units (m², bedrooms).`
 
-async function callAzure(titles) {
-  const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${AZURE_MODEL}/chat/completions?api-version=${AZURE_VERSION}`
+async function callAI(titles) {
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'api-key': AZURE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'system', content: SYS }, { role: 'user', content: JSON.stringify(titles) }], temperature: 0.3, response_format: { type: 'json_object' } }),
-      })
-      if (r.status === 429) { await new Promise(s => setTimeout(s, 4000 * (attempt + 1))); continue }
-      if (!r.ok) throw new Error(`azure ${r.status}: ${(await r.text()).slice(0, 200)}`)
-      const j = await r.json()
+      const j = await chat({ messages: [{ role: 'system', content: SYS }, { role: 'user', content: JSON.stringify(titles) }], temperature: 0.3, response_format: { type: 'json_object' } })
       const out = JSON.parse(j.choices[0].message.content)
       const arr = Array.isArray(out) ? out : out.titles
       if (!Array.isArray(arr) || arr.length !== titles.length) throw new Error(`length mismatch ${arr?.length} vs ${titles.length}`)
@@ -57,6 +46,9 @@ async function loadCache(name) {
   try { return JSON.parse(await data.text()) } catch { return {} }
 }
 
+// Pass 1 (free, Supabase only): build the plan for every section, so the
+// paid-run guard can show the full count before a single OpenAI request.
+const plans = []
 for (const { name, table } of SECTIONS) {
   const cache = await loadCache(name)
   const rows = []
@@ -76,12 +68,20 @@ for (const { name, table } of SECTIONS) {
     if (!ru) continue
     plan.push({ id, ru })
   }
-  console.log(`\n=== ${name}: rows=${rows.length}, need EN title=${plan.length} ===`)
-  const BATCH = 15
+  console.log(`=== ${name}: rows=${rows.length}, need EN title=${plan.length} ===`)
+  plans.push({ name, cache, plan })
+}
+const BATCH = 15
+const totalTitles = plans.reduce((a, p) => a + p.plan.length, 0)
+const totalCalls = plans.reduce((a, p) => a + Math.ceil(p.plan.length / BATCH), 0)
+requirePaid({ what: `EN-заголовки листингов (запросов: ${totalCalls}, по ${BATCH} в каждом)`, items: totalTitles })
+
+for (const { name, cache, plan } of plans) {
+  console.log(`\n=== ${name}: translating ${plan.length} ===`)
   let done = 0
   for (let i = 0; i < plan.length; i += BATCH) {
     const chunk = plan.slice(i, i + BATCH)
-    const en = await callAzure(chunk.map(p => p.ru))
+    const en = await callAI(chunk.map(p => p.ru))
     chunk.forEach((p, k) => {
       const title = clean(en[k])
       if (!title) return

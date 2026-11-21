@@ -8,9 +8,13 @@
 //  - every photo is labelled ext/int by the same vision prompt as
 //    scripts/vision-exterior.mjs, keyed by the URL it will be served under.
 //
-//   node scripts/places-photos.mjs [--dry] [--limit=N] [--all]
+//   node scripts/places-photos.mjs [--dry] [--limit=N] [--all] [--yes-paid]
+//
+// PAID twice over: Google Places (search + photo media per complex) and
+// OpenAI (photo labels). --dry is free; a real run without --yes-paid prints
+// the complex count and stops before any request.
 import fs from 'node:fs'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 import { createClient } from '@supabase/supabase-js'
 
 for (const line of fs.readFileSync(new URL('../.env.local', import.meta.url), 'utf8').split('\n')) {
@@ -33,12 +37,7 @@ const BATCH = 8
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const KEY = process.env.GOOGLE_PLACES_KEY
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+const CHAT = chatModel()
 
 const SYS = `You label real-estate photos for a developer's public page.
 For each image answer "ext" or "int".
@@ -76,7 +75,7 @@ let cost = 0
 async function labelPhotos(urls) {
   const content = [{ type: 'text', text: `Label these ${urls.length} photos.` }]
   for (const u of urls) content.push({ type: 'image_url', image_url: { url: u, detail: 'low' } })
-  const r = await ai.chat.completions.create({
+  const r = await chat({
     model: CHAT, messages: [{ role: 'system', content: SYS }, { role: 'user', content }],
     temperature: 0, max_completion_tokens: 300, response_format: { type: 'json_object' },
   })
@@ -123,6 +122,7 @@ async function main() {
   const work = LIMIT ? need.slice(0, LIMIT) : need
   console.log(`комплексов без ${NEED_PHOTOS} кадров: ${need.length} | обрабатываем: ${work.length}`)
   if (DRY) return
+  requirePaid({ what: `фото ЖК из Google Places (до ${MAX_PHOTOS} кадров) + разметка ext/int моделью ${CHAT}`, items: work.length, api: 'Google Places + OpenAI' })
 
   let matched = 0, rejectedMatch = 0, kept = 0, seen = 0
   for (const c of work) {
@@ -162,7 +162,7 @@ async function main() {
       name: p.name,
       attribution: (p.authorAttributions ?? []).map(x => x.displayName).join(', ') || null,
     }))
-    // Azure's image fetcher can't read our proxy, so ask Google for the direct
+    // The model API's image fetcher can't read our proxy, so ask Google for the direct
     // media URL just for labelling. The site still serves through the proxy —
     // these direct links expire.
     const urls = []
@@ -201,7 +201,7 @@ async function main() {
   const payload = { generatedAt: new Date().toISOString().slice(0, 10), count: Object.keys(out).length, items: out }
   await sb.storage.from('complex-photos').upload('_places.json', JSON.stringify(payload), { contentType: 'application/json', upsert: true })
   console.log(`\nсовпало ${matched}, отклонено по совпадению ${rejectedMatch}`)
-  console.log(`кадров просмотрено ${seen}, экстерьеров оставлено ${kept}, Azure $${cost.toFixed(2)}`)
+  console.log(`кадров просмотрено ${seen}, экстерьеров оставлено ${kept}, OpenAI ~$${cost.toFixed(2)}`)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

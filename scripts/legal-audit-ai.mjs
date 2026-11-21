@@ -1,4 +1,4 @@
-// Юр-разбор документов объекта через Azure: скачиваем due-diligence из Google
+// Юр-разбор документов объекта через OpenAI: скачиваем due-diligence из Google
 // Drive, извлекаем текст и получаем структурный вердикт — зелёные флаги
 // (что в порядке) и красные (что спрашивать у застройщика).
 //
@@ -14,6 +14,10 @@
 //   node scripts/legal-audit-ai.mjs --limit 5 --refresh
 //   node scripts/legal-audit-ai.mjs --apply             # записать в пустые поля
 //   node scripts/legal-audit-ai.mjs --apply --force     # перетереть и заполненные
+//
+// Платно (OpenAI): если хоть один ЖК пойдёт к модели (нет analysis.json или
+// --refresh/--reanalyze), без --yes-paid скрипт печатает их число и
+// останавливается до запросов.
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -21,6 +25,7 @@ import {
   parseDriveLink, downloadDriveFile, exportGoogleDoc, listDriveFolder,
   extractText, pdfPagesToPng,
 } from './_drive-doc.mjs'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 
 const envFile = fs.readFileSync('.env.local', 'utf8')
 for (const line of envFile.split('\n')) {
@@ -29,12 +34,8 @@ for (const line of envFile.split('\n')) {
 }
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
-const AZURE_KEY = process.env.AZURE_OPENAI_API_KEY
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT
-const AZURE_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-const AZURE_MODEL = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-5.4'
 const DRIVE_KEY = process.env.GOOGLE_DRIVE_KEY || null
-if (!SUPABASE_URL || !SERVICE_KEY || !AZURE_KEY || !AZURE_ENDPOINT) throw new Error('env not set')
+if (!SUPABASE_URL || !SERVICE_KEY) throw new Error('Supabase env not set')
 const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 
 const DD_FIELD = 'Due diligence'
@@ -108,24 +109,13 @@ verdict: red — есть высокий риск (nominee, обременени
 
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
-async function callAzure(messages, { maxTokens = 4000 } = {}) {
-  const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${AZURE_MODEL}/chat/completions?api-version=${AZURE_VERSION}`
+async function callAI(messages, { maxTokens = 4000 } = {}) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'api-key': AZURE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: AZURE_MODEL, temperature: 0.2, max_completion_tokens: maxTokens, messages }),
-      })
-      if (!res.ok) {
-        const body = (await res.text()).slice(0, 200)
-        if (res.status === 429 || res.status >= 500) { await sleep(2000 * (attempt + 1)); continue }
-        throw new Error(`azure ${res.status}: ${body}`)
-      }
-      const json = await res.json()
+      const json = await chat({ temperature: 0.2, max_completion_tokens: maxTokens, messages })
       return json.choices?.[0]?.message?.content ?? ''
     } catch (e) {
-      if (attempt === 2) throw e
+      if (attempt === 2 || (e?.status && e.status < 500 && e.status !== 429)) throw e
       await sleep(2000 * (attempt + 1))
     }
   }
@@ -194,7 +184,7 @@ async function ocrScan(buffer, dir) {
     const b64 = fs.readFileSync(p).toString('base64')
     content.push({ type: 'image_url', image_url: { url: `data:image/png;base64,${b64}` } })
   }
-  return await callAzure(
+  return await callAI(
     [{ role: 'system', content: 'Ты — OCR документов. Возвращай только извлечённый текст на языке оригинала.' },
      { role: 'user', content }],
     { maxTokens: 12_000 },
@@ -213,7 +203,7 @@ async function analyze(row, text, dir) {
     `Заявлено в карточке: разрешения «${firstString(row.data['Разрешительные документы']) ?? '—'}», статус «${firstString(row.data['Статус']) ?? '—'}», leasehold ${firstString(row.data['Leasehold']) ?? '—'} лет.`,
   ].join('\n')
 
-  const raw = await callAzure([
+  const raw = await callAI([
     { role: 'system', content: SYSTEM },
     { role: 'user', content: `${context}\n\n=== ДОКУМЕНТ ===\n${text.slice(0, MAX_DOC_CHARS)}` },
   ])
@@ -270,6 +260,9 @@ const targets = rows
   .slice(0, LIMIT ?? undefined)
 
 console.log(`ЖК с ссылкой на документы: ${targets.length}${APPLY ? ' | режим записи' : ' | только отчёт'}`)
+const toModel = targets.filter(r =>
+  REFRESH || REANALYZE || !fs.existsSync(path.join(OUT_DIR, r.airtable_id, 'analysis.json')))
+requirePaid({ what: `юр-разбор документов ЖК моделью ${chatModel()} (сканы — ещё OCR до ${MAX_OCR_PAGES} стр.)`, items: toModel.length })
 
 const results = []
 for (const row of targets) {

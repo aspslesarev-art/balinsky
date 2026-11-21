@@ -3,10 +3,12 @@
 // feeds/_complex-legal-<lang>.json = { [airtable_id]: { ok, questions, balance } },
 // one translated string per authored line. Read at runtime by
 // lib/complex-legal-i18n.ts. Idempotent via content hash.
-// Usage: node scripts/translate-complex-legal.mjs --lang en [--only <slug>] [--force] [--dry-run]
+// Usage: node scripts/translate-complex-legal.mjs --lang en [--only <slug>] [--force] [--dry-run] --yes-paid
+// PAID (OpenAI): without --yes-paid it prints the count and stops before any request.
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import { chat, requirePaid } from './_openai.mjs'
 
 const envFile = fs.readFileSync('.env.local', 'utf8')
 for (const line of envFile.split('\n')) {
@@ -15,11 +17,7 @@ for (const line of envFile.split('\n')) {
 }
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
-const AZURE_KEY = process.env.AZURE_OPENAI_API_KEY
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT
-const AZURE_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-const AZURE_MODEL = process.env.AZURE_OPENAI_TRANSLATE_DEPLOYMENT || process.env.AZURE_OPENAI_CHAT_DEPLOYMENT
-if (!SUPABASE_URL || !SERVICE_KEY || !AZURE_KEY || !AZURE_ENDPOINT || !AZURE_MODEL) throw new Error('env not set')
+if (!SUPABASE_URL || !SERVICE_KEY) throw new Error('Supabase env not set')
 const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 
 const OK_FIELD = 'Юр-проверка: в порядке'
@@ -60,21 +58,21 @@ const toLines = raw => (raw ? raw.split(/\r?\n/).map(l => l.trim()).filter(Boole
 
 const SYS = `You translate Bali real-estate legal due-diligence notes from Russian into ${LANGS[lang]} for balinsky.info. Input is a JSON object whose keys are among "ok", "questions", "balance", "permit_hotel", "permit_villa", "permit_kos", "permit_restaurant", "permit_str", each mapping to an array of strings — each item is one short due-diligence or permit point. Return ONE JSON object with the SAME keys and the SAME number of items in each array, each item translated into natural, professional ${LANGS[lang]} in a real-estate lawyer/broker tone. Rules: faithful — do NOT add, drop, merge or reorder items; keep every number, date, price, %, m², area and year exactly; keep in Latin all Bali place names (Ubud, Sayan, Canggu…), person/company proper names (Ida Bagus…, Oleg Mikhailov, Filipp Orlov, LB Group, PT PMA…) and Indonesian legal/permit terms (BPN, SHM, PBG, SLF, NIB, KBLI, PKKPR, PKPLH, UKL-UPL, Amdalnet, SIMBG, PBB, PPh, bukti potong, Pasal, leasehold, freehold, KDB, KLB, addendum); preserve each item's structure — a short lead phrase, then a sentence break, then the detail. ${lang === 'zh' ? 'Simplified Chinese, no plurals.' : 'Native register.'} Return JSON only, no markdown fences.`
 
-async function callAzure(obj) {
-  const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${AZURE_MODEL}/chat/completions?api-version=${AZURE_VERSION}`
+async function callAI(obj) {
   for (let a = 0; a < 3; a++) {
     try {
-      const r = await fetch(url, { method: 'POST', headers: { 'api-key': AZURE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: AZURE_MODEL, temperature: 0.2, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: SYS }, { role: 'user', content: JSON.stringify(obj) }] }) })
-      if (!r.ok) { if (r.status === 429 || r.status >= 500) { await new Promise(s => setTimeout(s, 1500 * (a + 1))); continue } throw new Error(`azure ${r.status}: ${(await r.text()).slice(0, 150)}`) }
-      const j = await r.json(); const c = j.choices?.[0]?.message?.content
+      const j = await chat({ temperature: 0.2, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: SYS }, { role: 'user', content: JSON.stringify(obj) }] })
+      const c = j.choices?.[0]?.message?.content
       if (!c) return null
       const parsed = JSON.parse(c)
       const arr = k => (Array.isArray(parsed[k]) ? parsed[k].map(String) : [])
       const permits = {}
       for (const u of PERMIT_USES) { const v = arr(PERMIT_KEY(u)); if (v.length) permits[u] = v }
       return { ok: arr('ok'), questions: arr('questions'), balance: arr('balance'), permits }
-    } catch (e) { if (a === 2) throw e; await new Promise(s => setTimeout(s, 1500 * (a + 1))) }
+    } catch (e) {
+      if (a === 2 || (e?.status && e.status < 500 && e.status !== 429)) throw e
+      await new Promise(s => setTimeout(s, 1500 * (a + 1)))
+    }
   }
   return null
 }
@@ -108,10 +106,11 @@ for (const r of rows) {
 console.log(`${lang}: ${rows.length} complexes with legal notes, ${todo.length} to translate${DRY ? ' (dry)' : ''}`)
 if (DRY || todo.length === 0) process.exit(0)
 
+requirePaid({ what: `перевод юр-проверки ЖК на ${lang}`, items: todo.length })
 let done = 0, failed = 0
 for (const it of todo) {
   try {
-    const out = await callAzure(it.obj)
+    const out = await callAI(it.obj)
     if (out) { cache[it.id] = { _hash: it.h, ok: out.ok, questions: out.questions, balance: out.balance, permits: out.permits }; done++ }
     else failed++
   } catch (e) { failed++; console.error('  fail', it.slug, e.message) }

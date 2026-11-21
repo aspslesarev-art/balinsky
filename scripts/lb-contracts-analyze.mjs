@@ -1,28 +1,26 @@
-// Разбор драфтов договоров LB Group через Azure: зелёные/красные флаги
+// Разбор драфтов договоров LB Group через OpenAI: зелёные/красные флаги
 // + оценка баланса интересов «покупатель / застройщик».
 //
 // Вход — тексты, выкачанные scripts/lb-contracts-fetch.mjs в reports/lb-legal/.
 // Выход по умолчанию НИКУДА не публикуется: _verdict.json на проект + сводка
 // REVIEW.md. Запись в поля ЖК — только по --apply (как в legal-audit-ai.mjs).
 //
-//   node scripts/lb-contracts-analyze.mjs [--only <slug>] [--refresh] [--apply] [--force]
+//   node scripts/lb-contracts-analyze.mjs [--only <slug>] [--refresh] [--apply] [--force] [--yes-paid]
 //
 // Готовый _verdict.json переиспользуется — заново к модели ходим по --refresh.
+// Платно (OpenAI): если хоть один проект пойдёт к модели, без --yes-paid
+// скрипт печатает их число и останавливается до запросов.
 
 import { createClient } from '@supabase/supabase-js'
 import fs from 'node:fs'
 import path from 'node:path'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 
 const envFile = fs.readFileSync('.env.local', 'utf8')
 for (const line of envFile.split('\n')) {
   const m = line.match(/^([A-Z_]+)=(.*)$/)
   if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '')
 }
-const AZURE_KEY = process.env.AZURE_OPENAI_API_KEY
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT
-const AZURE_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-const AZURE_MODEL = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-5.4'
-if (!AZURE_KEY || !AZURE_ENDPOINT) throw new Error('нет AZURE_OPENAI_* в .env.local')
 
 const IN_DIR = 'reports/lb-legal'
 const MAX_DOC_CHARS = 45_000
@@ -129,26 +127,13 @@ ${RUBRIC}
 • Каждый пункт — ОДНА строка, начинается с короткого заголовка, дальше «. » и детали.
   Внутри пункта не переноси строки и не используй списки и markdown.`
 
-async function askAzure(messages, maxTokens = 8000) {
-  const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${AZURE_MODEL}/chat/completions?api-version=${AZURE_VERSION}`
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'api-key': AZURE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: AZURE_MODEL, temperature: 0.1, max_completion_tokens: maxTokens,
-        response_format: { type: 'json_object' }, messages,
-      }),
-    })
-    if (res.ok) {
-      const json = await res.json()
-      return json.choices?.[0]?.message?.content ?? ''
-    }
-    const body = (await res.text()).slice(0, 300)
-    if (res.status !== 429 && res.status < 500) throw new Error(`azure ${res.status}: ${body}`)
-    await new Promise(r => setTimeout(r, 3000 * (attempt + 1)))
-  }
-  throw new Error('azure: три попытки не прошли')
+// Повторы на 429/5xx делает сам SDK.
+async function askAI(messages, maxTokens = 8000) {
+  const json = await chat({
+    temperature: 0.1, max_completion_tokens: maxTokens,
+    response_format: { type: 'json_object' }, messages,
+  })
+  return json.choices?.[0]?.message?.content ?? ''
 }
 
 function buildUserMessage(index, docs) {
@@ -188,7 +173,7 @@ async function analyze(slug) {
   if (docs.length === 0) throw new Error('нет пригодных документов')
   console.log(`  документы: ${docs.map(d => `${d.name} (${d.chars})`).join('; ')}`)
 
-  const raw = await askAzure([
+  const raw = await askAI([
     { role: 'system', content: SYSTEM },
     { role: 'user', content: buildUserMessage(index, docs) },
   ])
@@ -266,6 +251,8 @@ function writeReview(verdicts) {
 async function run() {
   const slugs = (only ? [only] : fs.readdirSync(IN_DIR))
     .filter(s => fs.existsSync(path.join(IN_DIR, s, '_index.json')))
+  const toModel = slugs.filter(s => refresh || !fs.existsSync(path.join(IN_DIR, s, '_verdict.json')))
+  requirePaid({ what: `разбор договоров LB Group моделью ${chatModel()} (до ${MAX_TOTAL_CHARS} знаков на проект)`, items: toModel.length })
   const verdicts = []
   for (const slug of slugs) {
     console.log(`\n## ${slug}`)

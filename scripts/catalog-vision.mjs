@@ -13,9 +13,12 @@
 // Usage:
 //   node scripts/catalog-vision.mjs --dry-run --sample=3 --only=complex
 //   node scripts/catalog-vision.mjs --only=complex,villa,apartment --conc=20
+//
+// Платно (OpenAI), --dry-run тоже: он зовёт модель, только не пишет манифест.
+// Без --yes-paid скрипт печатает число объектов и останавливается до запросов.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 import { loadEnv } from './_kb-build.mjs'
 import { VISION_SCHEMA, visionSystemPrompt, pickPhotos } from './_product-vision.mjs'
 
@@ -32,6 +35,7 @@ const CONC = val('conc') ? parseInt(val('conc'), 10) : 12
 const MAXPHOTOS = val('maxphotos') ? parseInt(val('maxphotos'), 10) : 6
 const ONLY = val('only') ? val('only').split(',') : ['complex', 'villa', 'apartment']
 
+// Ставки Azure gpt-5.4 (июль 2026) — для OpenAI только оценка.
 const PRICE_IN = 2.50 / 1e6
 const PRICE_OUT = 15.00 / 1e6
 const BUCKETS = { villa: 'villa-photos', apartment: 'apartment-photos', complex: 'complex-photos' }
@@ -45,12 +49,7 @@ const CONTEXT = {
 }
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const MODEL = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+const MODEL = chatModel()
 
 let done = 0, failed = 0, tokIn = 0, tokOut = 0
 const started = Date.now()
@@ -61,7 +60,7 @@ let pauseUntil = 0
 async function analyze(urls, kind) {
   const content = [{ type: 'text', text: `Analyze these ${urls.length} photos of one listing.` }]
   for (const u of urls) content.push({ type: 'image_url', image_url: { url: u } })
-  const r = await ai.chat.completions.create({
+  const r = await chat({
     model: MODEL,
     messages: [{ role: 'system', content: visionSystemPrompt(CONTEXT[kind]) }, { role: 'user', content }],
     temperature: 0.1,
@@ -117,18 +116,23 @@ async function uploadManifest(bucket, key, obj) {
   if (error) console.error('  upload err', bucket, error.message)
 }
 
-async function processKind(kind) {
+// План (бесплатно): только чтение Storage.
+async function planKind(kind) {
   const bucket = BUCKETS[kind]
-  if (!bucket) return
+  if (!bucket) return null
   console.log(`\n=== ${kind} (${bucket}) ===`)
   const photos = await downloadManifest(bucket, '_manifest.json')
-  if (!photos) { console.error('  нет _manifest.json'); return }
+  if (!photos) { console.error('  нет _manifest.json'); return null }
   const out = FORCE ? {} : (await downloadManifest(bucket, OUT_KEY)) ?? {}
   const ids = Object.keys(photos).filter(id => (photos[id]?.length ?? 0) >= 3)
   const todo = ids.filter(id => FORCE || !out[id]?.vision)
   const work = SAMPLE ? todo.slice(0, SAMPLE) : todo
   console.log(`  ${ids.length} с фото, ${work.length} к разбору`)
+  return { kind, bucket, photos, out, work }
+}
 
+async function runKind({ kind, bucket, photos, out, work }) {
+  console.log(`\n=== ${kind}: разбор ${work.length} ===`)
   let idx = 0
   const worker = async () => {
     while (idx < work.length) {
@@ -154,6 +158,9 @@ async function processKind(kind) {
   }
 }
 
-console.log(`catalog-vision — Azure ${MODEL}${DRY ? ' [DRY]' : ''} conc=${CONC} maxphotos=${MAXPHOTOS}`)
-for (const kind of ONLY) await processKind(kind)
+console.log(`catalog-vision — OpenAI ${MODEL}${DRY ? ' [DRY]' : ''} conc=${CONC} maxphotos=${MAXPHOTOS}`)
+const plans = []
+for (const kind of ONLY) { const plan = await planKind(kind); if (plan) plans.push(plan) }
+requirePaid({ what: `разбор фото каталога (до ${MAXPHOTOS} на объект) моделью ${MODEL}`, items: plans.reduce((a, p) => a + p.work.length, 0) })
+for (const plan of plans) await runKind(plan)
 console.log(`\nDone: ${done} разобрано, ${failed} ошибок, ${Math.round((Date.now() - started) / 1000)}s — $${cost().toFixed(2)}`)

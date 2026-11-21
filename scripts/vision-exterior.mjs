@@ -10,9 +10,12 @@
 // frames — those are the galleries that need filling. Resumable: URLs already
 // labelled are skipped.
 //
-//   node scripts/vision-exterior.mjs [--dry] [--limit=N] [--all]
+//   node scripts/vision-exterior.mjs [--dry] [--limit=N] [--all] [--yes-paid]
+//
+// PAID (OpenAI): --dry is free; a real run without --yes-paid prints the
+// request count and stops before any request.
 import fs from 'node:fs'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 
 // dotenv isn't a dependency here; read .env.local the same way the other
 // one-off scripts in this repo do.
@@ -32,12 +35,7 @@ const CONCURRENCY = 4
 const NEED_PHOTOS = 5
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+const CHAT = chatModel()
 
 const SYS = `You label real-estate photos for a developer's public page.
 For each image answer "ext" or "int".
@@ -75,7 +73,7 @@ async function download(bucket, key) {
 async function label(urls) {
   const content = [{ type: 'text', text: `Label these ${urls.length} photos.` }]
   for (const u of urls) content.push({ type: 'image_url', image_url: { url: u, detail: 'low' } })
-  const r = await ai.chat.completions.create({
+  const r = await chat({
     model: CHAT,
     messages: [{ role: 'system', content: SYS }, { role: 'user', content }],
     temperature: 0, max_completion_tokens: 300, response_format: { type: 'json_object' },
@@ -136,6 +134,7 @@ async function main() {
   const total = work.reduce((s, b) => s + b.length, 0)
   console.log(`вилл в выборке: ${wanted.size} | кадров к разметке: ${total} | запросов: ${work.length}`)
   if (DRY) return
+  requirePaid({ what: `разметка ext/int: ${total} кадров пачками по ${BATCH}, модель ${CHAT}`, items: work.length })
 
   let idx = 0
   async function worker() {

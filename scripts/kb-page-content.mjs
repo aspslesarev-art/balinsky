@@ -7,9 +7,11 @@
 //
 // Idempotent: skips rows that already have page_body unless --force.
 // Usage: --dry-run | --sample=N | --only=villa | --force | --conc=8
+// PAID (OpenAI), --dry-run and --sample too: two requests per item (RU + EN).
+// Without --yes-paid it prints the item count and stops before any request.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 import { loadEnv, villaFacts, apartmentFacts, complexFacts, developerFacts } from './_kb-build.mjs'
 
 loadEnv()
@@ -22,8 +24,7 @@ const CONC = val('conc') ? parseInt(val('conc'), 10) : 8
 const ONLY = val('only') ? val('only').split(',') : ['villa', 'apartment', 'complex', 'developer']
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({ apiKey: process.env.AZURE_OPENAI_API_KEY, endpoint: process.env.AZURE_OPENAI_ENDPOINT, apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview' })
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+const CHAT = chatModel()
 const PRICE = { input: 1.25, output: 10.0 }
 
 const KINDS = {
@@ -50,8 +51,7 @@ function track(pt, ct) {
   sb.from('balina_usage').insert({ feature: 'other', deployment: CHAT, prompt_tokens: pt, completion_tokens: ct, audio_seconds: 0, cost_usd: (pt / 1e6) * PRICE.input + (ct / 1e6) * PRICE.output, meta: { job: 'kb-page-content' } }).then(({ error }) => { if (error && !usageOff) { usageOff = true; console.error('  (usage log off:', error.message + ')') } })
 }
 async function ask(system, user) {
-  const r = await ai.chat.completions.create({
-    model: CHAT,
+  const r = await chat({
     messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     temperature: 0.4, max_completion_tokens: 2000, response_format: { type: 'json_object' },
   })
@@ -120,11 +120,12 @@ async function pool(items) {
   await Promise.all(Array.from({ length: Math.min(CONC, items.length || 1) }, worker))
 }
 
-console.log(`KB page-content — Azure ${CHAT}${DRY?' [DRY]':''}${SAMPLE?` [SAMPLE ${SAMPLE}]`:''}${FORCE?' [FORCE]':''}`)
+console.log(`KB page-content — OpenAI ${CHAT}${DRY?' [DRY]':''}${SAMPLE?` [SAMPLE ${SAMPLE}]`:''}${FORCE?' [FORCE]':''}`)
 const start = Date.now()
 let all = []
 for (const k of ONLY) { if (!KINDS[k]) continue; const items = await collect(k); console.log(`  ${k}: ${items.length} to build`); all = all.concat(items) }
 console.log(`Total: ${all.length} (skipped ${skipped} already done)`)
+requirePaid({ what: `контент страниц (RU + EN, 2 запроса на объект) моделью ${CHAT}`, items: all.length })
 await pool(all)
 console.log(`\nDone in ${Math.round((Date.now()-start)/1000)}s — generated ${generated}, failed ${failed} — est $${totalCost.toFixed(2)}`)
 if (!DRY) await new Promise(r => setTimeout(r, 1500))
