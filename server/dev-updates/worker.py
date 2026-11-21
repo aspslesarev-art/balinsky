@@ -500,9 +500,17 @@ def collect(dry=False):
         "chat_id": f"in.({','.join(str(c) for c in devs)})",
         "direction": "eq.in", "created_at": f"gte.{since}", "order": "id.asc", "limit": "2000",
     })
+    # Ответы застройщика на сверку цен (price_checks.py) — не новости, пропускаем.
+    eaten = set()
+    for c in sb_get("dev_price_checks", {"select": "msg_ids", "asked_at": f"gte.{since}"}):
+        eaten.update(c.get("msg_ids") or [])
+    # Пока сверка открыта, чат целиком её: ответ «да» иначе стал бы карточкой новости.
+    busy = {c["chat_id"] for c in sb_get("dev_price_checks", {"select": "chat_id", "state": "in.(asked,clarifying,confirming)"})}
     by_chat = {}
     for m in msgs:
-        if m["id"] <= cursor.get(m["chat_id"], 0) or m.get("sender_id") == OWNER or m.get("media_type") == "sticker":
+        if m["chat_id"] in busy:
+            continue
+        if m["id"] in eaten or m["id"] <= cursor.get(m["chat_id"], 0) or m.get("sender_id") == OWNER or m.get("media_type") == "sticker":
             continue
         by_chat.setdefault(m["chat_id"], []).append(m)
 
