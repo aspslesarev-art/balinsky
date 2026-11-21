@@ -13,6 +13,8 @@ import { ReviewsHeatLayer, ReviewsHeatToggle } from './ReviewsHeatLayer'
 import type { HeatCell } from '@/lib/reviews-heat'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+import { likelyBot } from '@/lib/likely-bot'
+import { MapLoadPrompt } from './MapLoadPrompt'
 import { useCurrency } from './CurrencyContext'
 import { formatPrice } from '@/lib/currency'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
@@ -344,6 +346,9 @@ export function ApartmentsMap({
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [showHeat, setShowHeat] = useState(false)
+  // Человеку карта грузится сразу, роботу — только по кнопке (загрузка платная).
+  const [wanted, setWanted] = useState<boolean | null>(null)
+  useEffect(() => { setWanted(!likelyBot()) }, [])
   const selected = useMemo(
     () => groups.find(g => g.key === selectedKey) ?? null,
     [groups, selectedKey],
@@ -371,6 +376,8 @@ export function ApartmentsMap({
       {heatCells.length > 0 && (
         <ReviewsHeatToggle on={showHeat} onToggle={() => setShowHeat(v => !v)} lang={lang} />
       )}
+      {wanted === false && <MapLoadPrompt lang={lang} onLoad={() => setWanted(true)} />}
+      {wanted && (
       <APIProvider apiKey={apiKey} language={lang}>
         <Map
           defaultCenter={BALI_CENTER}
@@ -408,6 +415,7 @@ export function ApartmentsMap({
           )}
         </Map>
       </APIProvider>
+      )}
     </div>
   )
 }

@@ -15,7 +15,17 @@ const CACHE = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=8640
 /** Google serves photo media from these hosts; anything else is an open redirect. */
 const ALLOWED_HOST = /(^|\.)(googleusercontent\.com|ggpht\.com|google\.com)$/
 
+// Каждый вызов Places Photo платный (владелец 21.11.2026: роботы не должны
+// тратить деньги). Фото показывают только страницы самого сайта — чужие
+// запросы и роботов не пускаем.
+const SITE_REFERER = /^https?:\/\/([a-z0-9-]+\.)*(balinsky\.info|localhost)(:\d+)?\//i
+const BOT_UA = /bot|crawl|spider|slurp|headless|preview|python|curl|wget|node-fetch|axios|go-http/i
+
 export async function GET(req: Request) {
+  const ref = req.headers.get('referer') ?? ''
+  if (!SITE_REFERER.test(ref) || BOT_UA.test(req.headers.get('user-agent') ?? '')) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
   const name = new URL(req.url).searchParams.get('name') ?? ''
   // Anchored allowlist, not a substring check: this value is pasted straight
   // into an outbound URL and would otherwise be an SSRF hole.

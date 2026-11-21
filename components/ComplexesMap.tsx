@@ -14,6 +14,8 @@ import type { HeatCell } from '@/lib/reviews-heat'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hasCyrillic, translitPreserveCase } from '@/lib/translit'
 import { BALINSKY_MAP_STYLE } from '@/lib/google-map-style'
+import { likelyBot } from '@/lib/likely-bot'
+import { MapLoadPrompt } from './MapLoadPrompt'
 
 // De-Cyrillic a raw listing name on non-RU maps (last-resort, no translation).
 const displayName = (t: string, lang: Lang) =>
@@ -295,6 +297,9 @@ export function ComplexesMap({
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [showHeat, setShowHeat] = useState(false)
+  // Человеку карта грузится сразу, роботу — только по кнопке (загрузка платная).
+  const [wanted, setWanted] = useState<boolean | null>(null)
+  useEffect(() => { setWanted(!likelyBot()) }, [])
   const selected = useMemo(
     () => groups.find(g => g.key === selectedKey) ?? null,
     [groups, selectedKey],
@@ -322,6 +327,8 @@ export function ComplexesMap({
       {heatCells.length > 0 && (
         <ReviewsHeatToggle on={showHeat} onToggle={() => setShowHeat(v => !v)} lang={lang} />
       )}
+      {wanted === false && <MapLoadPrompt lang={lang} onLoad={() => setWanted(true)} />}
+      {wanted && (
       <APIProvider apiKey={apiKey} language={lang}>
         <Map
           defaultCenter={BALI_CENTER}
@@ -359,6 +366,7 @@ export function ComplexesMap({
           )}
         </Map>
       </APIProvider>
+      )}
     </div>
   )
 }
