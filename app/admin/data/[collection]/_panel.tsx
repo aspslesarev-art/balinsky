@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Copy } from 'lucide-react'
+import { X, Save, Trash2, Loader2, AlertTriangle, Plus, Link2, Search, Copy, Archive, ArchiveRestore } from 'lucide-react'
 import type { CollectionConfig, FieldDef, FieldType, RecordRow } from '@/lib/admin/adapters/types'
 import { resolveRecordFields, percentToInput, inputToPercent, linkPatch, linkSelection, type LinkOption } from '@/lib/admin/fields'
 import { toBaliInput, fromBaliInput } from '@/lib/datetime'
@@ -118,13 +118,33 @@ export function RecordPanel({
       .sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0))
   }, [cfg, fields, typeHints, restrictToCreateFields])
 
+  // softDelete collections archive instead of deleting, and can restore.
+  const soft = cfg.softDelete
+  const archivedAt = soft && typeof fields[soft.column] === 'string' ? (fields[soft.column] as string) : null
+
   const del = async () => {
-    if (!confirm('Удалить запись безвозвратно?')) return
+    const question = soft
+      ? `Убрать «${title}» в архив?\n\nЗапись снимется с публикации и пропадёт с сайта и из списка. Ничего не удаляется: её можно вернуть кнопкой «Восстановить» в разделе «Архив».`
+      : 'Удалить запись безвозвратно?'
+    if (!confirm(question)) return
     setSaving(true); setError(null)
     try {
       const res = await fetch(`/api/admin/data/${cfg.key}/${encodeURIComponent(id)}`, { method: 'DELETE' })
       const j = await res.json()
       if (!res.ok) { setError(j.error ?? 'delete_failed'); setSaving(false); return }
+      onDeleted(id as string)
+    } catch {
+      setError('network_error'); setSaving(false)
+    }
+  }
+
+  const restore = async () => {
+    if (!confirm(`Вернуть «${title}» из архива? Публикация станет такой, какой была до архива.`)) return
+    setSaving(true); setError(null)
+    try {
+      const res = await fetch(`/api/admin/data/${cfg.key}/${encodeURIComponent(id)}/restore`, { method: 'POST' })
+      const j = await res.json()
+      if (!res.ok) { setError(j.error ?? 'restore_failed'); setSaving(false); return }
       onDeleted(id as string)
     } catch {
       setError('network_error'); setSaving(false)
@@ -144,6 +164,12 @@ export function RecordPanel({
         </header>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
+          {archivedAt && (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-[12.5px] text-[var(--ax-fg)]">
+              <Archive size={14} className="mt-0.5 shrink-0 text-amber-600" />
+              <span>В архиве с {new Date(archivedAt).toLocaleDateString('ru-RU')}. На сайте не показывается. Чтобы вернуть — «Восстановить» внизу.</span>
+            </div>
+          )}
           {loading ? (
             <div className="flex items-center gap-2 text-[13px] text-[var(--ax-fg-muted)]"><Loader2 size={15} className="animate-spin" /> Загрузка…</div>
           ) : (
@@ -201,10 +227,16 @@ export function RecordPanel({
               <Copy size={15} /> Дублировать
             </button>
           )}
-          {!isNew && cfg.caps.delete && (
-            <button type="button" onClick={del} disabled={saving}
+          {!isNew && archivedAt && (
+            <button type="button" onClick={restore} disabled={saving || loading}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] border border-[var(--ax-border)] text-[var(--ax-fg)] hover:bg-[var(--ax-hover)] disabled:opacity-40 ml-auto">
+              <ArchiveRestore size={15} /> Восстановить
+            </button>
+          )}
+          {!isNew && cfg.caps.delete && !archivedAt && (
+            <button type="button" onClick={del} disabled={saving || loading}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] text-red-500 hover:bg-red-500/10 disabled:opacity-40 ml-auto">
-              <Trash2 size={15} /> Удалить
+              {soft ? <><Archive size={15} /> В архив</> : <><Trash2 size={15} /> Удалить</>}
             </button>
           )}
         </footer>

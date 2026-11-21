@@ -33,6 +33,9 @@ function numberOrNull(v: unknown): number | null {
 
 /** Поле каноничной цены, объявленное в конфиге коллекции (или null). */
 function priceFieldOf(cfg: CollectionConfig): string | null {
+  // Only the raw_* listings carry the legacy trio. A manifest with its own
+  // `price` (competitors: nightly rate) must not grow a `Цена` key.
+  if (cfg.store !== 'sql_jsonb') return null
   return PRICE_FIELDS.find(key => cfg.fields.some(f => f.key === key)) ?? null
 }
 

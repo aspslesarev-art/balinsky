@@ -6,6 +6,7 @@
 import type { CollectionConfig, DataSourceAdapter, ListQuery, ListResult, RecordRow } from './types'
 import { adminSb, supabaseUrl } from '../sb'
 import { slugifyTitle, uniqueSlug } from '@/lib/slugify'
+import { MANIFEST_WRITE_HOOKS } from '../competitor-cells'
 
 type Manifest = { generatedAt?: string; count?: number; items: Record<string, unknown>[] }
 
@@ -17,14 +18,16 @@ function loc(cfg: CollectionConfig) {
 async function loadItems(cfg: CollectionConfig): Promise<Record<string, unknown>[]> {
   const { bucket, key } = loc(cfg)
   const url = `${supabaseUrl()}/storage/v1/object/public/${bucket}/${key}?t=${Date.now()}`
-  try {
-    const res = await fetch(url, { cache: 'no-store' })
-    if (!res.ok) return []
-    const j = await res.json() as Manifest
-    return Array.isArray(j.items) ? j.items : []
-  } catch {
-    return []
-  }
+  // Only a missing file means "no items yet". Any other failure must throw:
+  // every write is read-modify-write of the WHOLE file, so treating a network
+  // hiccup as an empty list would save a one-item manifest over thousands of
+  // records (competitors holds ~14 000).
+  const res = await fetch(url, { cache: 'no-store' })
+  if (res.status === 404 || res.status === 400) return []
+  if (!res.ok) throw new Error(`manifest(${bucket}/${key}): HTTP ${res.status}`)
+  const j = await res.json() as Manifest
+  if (!Array.isArray(j.items)) throw new Error(`manifest(${bucket}/${key}): no items array`)
+  return j.items
 }
 
 async function saveItems(cfg: CollectionConfig, items: Record<string, unknown>[]): Promise<void> {
@@ -34,6 +37,19 @@ async function saveItems(cfg: CollectionConfig, items: Record<string, unknown>[]
     contentType: 'application/json', upsert: true, cacheControl: '60',
   })
   if (error) throw new Error(`storage(${bucket}/${key}): ${error.message}`)
+}
+
+// Derived files some manifests carry (competitor tiles). Runs after the
+// manifest itself is saved, with the items already in memory — re-reading a
+// 14 MB manifest just to rebuild one tile would triple the cost of an edit.
+async function afterWrite(
+  cfg: CollectionConfig,
+  items: Record<string, unknown>[],
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown> | null,
+): Promise<void> {
+  const hook = MANIFEST_WRITE_HOOKS[cfg.key]
+  if (hook) await hook(items, before, after)
 }
 
 const isEmpty = (v: unknown) => v == null || v === ''
@@ -165,6 +181,7 @@ export const storageManifestAdapter: DataSourceAdapter = {
     }
     items.unshift(item)
     await saveItems(cfg, items)
+    await afterWrite(cfg, items, null, item)
     return { id, fields: item }
   },
 
@@ -178,14 +195,18 @@ export const storageManifestAdapter: DataSourceAdapter = {
     // editor blanked out. A slug that is already set stays untouched.
     const slug = derivedSlug(cfg, next, items, id)
     if (slug) next[SLUG_KEY] = slug
+    const before = items[idx]
     items[idx] = next
     await saveItems(cfg, items)
+    await afterWrite(cfg, items, before, next)
   },
 
   async remove(cfg, id): Promise<void> {
     const { idKey } = loc(cfg)
     const items = await loadItems(cfg)
+    const before = items.find(it => String(it[idKey] ?? '') === id) ?? null
     const next = items.filter(it => String(it[idKey] ?? '') !== id)
     await saveItems(cfg, next)
+    await afterWrite(cfg, next, before, null)
   },
 }

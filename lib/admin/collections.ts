@@ -171,7 +171,14 @@ const complexes: CollectionConfig = {
     { key: 'Статус', label: 'Статус', type: 'enum', showInGrid: true, width: 130 },
     { key: 'Статус продаж', label: 'Продажи', type: 'enum', showInGrid: true, width: 130 },
     { key: 'Готовность', label: 'Готовность, %', type: 'percent', showInGrid: true, width: 130 },
-    { key: 'price_usd', label: 'Цена $', type: 'number', showInGrid: true, width: 110 },
+    {
+      key: 'price_usd', label: 'Цена $', type: 'number', showInGrid: true, width: 110,
+      help: 'Считается сама: минимальная цена опубликованных вилл и апартаментов комплекса. Вручную — только если юнитов в базе нет.',
+    },
+    // Итоги по юнитам — считает база (миграция 149) при любой правке виллы или
+    // апартаментов, как раньше это делал rollup в Airtable.
+    { key: 'Юнитов в каталоге', label: 'Юнитов на сайте', type: 'number', readOnly: true, showInGrid: true, width: 120 },
+    { key: 'Цена до', label: 'Цена до $', type: 'number', readOnly: true },
     { key: 'Year of completion', label: 'Год сдачи', type: 'enum' },
     { key: 'price', label: 'Цена', type: 'number' },
     { key: 'Location', label: 'Локация', type: 'enum' },
@@ -258,16 +265,23 @@ const parserUnits: CollectionConfig = {
   store: 'sql_jsonb',
   table: 'parser_units',
   primaryKey: 'unit_key',
-  caps: { create: false, update: true, delete: true },
+  caps: { create: true, update: true, delete: true },
   titleField: 'Name',
   defaultSort: { field: 'Комплекс', dir: 'asc' },
+  touchColumn: 'updated_at',
+  // `<complex_id>#<gid>#<Name>` — the shape the parser used. Units added by
+  // hand get gid `manual` (lib/admin/parser-units.ts fills it and complex_id).
+  createIdFrom: ['complex_id', 'gid', 'Name'],
+  createFields: ['Комплекс', 'Name', 'Тип', 'Статус', 'Спальни', 'Площадь', 'Цена', 'Заблокировано'],
+  duplicateSkip: ['Name'],
   fields: [
     // Защита: если включено — парсер НЕ перезаписывает и не удаляет эту
     // запись (данные админа приоритетнее), а при расхождении с листом шлёт
     // алерт в Telegram.
     { key: 'Заблокировано', label: '🔒 Защита', type: 'bool', showInGrid: true, width: 90 },
-    { key: 'Комплекс', label: 'Комплекс', type: 'text', showInGrid: true, width: 200 },
-    { key: 'Name', label: 'Юнит', type: 'text', showInGrid: true, width: 90 },
+    // Хранится строкой-названием ЖК; complex_id подставляется по выбору.
+    { key: 'Комплекс', label: 'Комплекс', type: 'link', link: { collection: 'complexes', store: 'name' }, showInGrid: true, width: 200 },
+    { key: 'Name', label: 'Юнит', type: 'text', showInGrid: true, width: 90, help: 'Номер юнита как в шахматке, напр. A118' },
     { key: 'Тип', label: 'Тип', type: 'enum', enumOptions: ['Вилла', 'Апартаменты'], showInGrid: true, width: 130 },
     { key: 'Статус', label: 'Статус', type: 'enum', enumOptions: ['Доступна', 'Бронь', 'Продана', 'Блок', 'Resale'], showInGrid: true, width: 120 },
     { key: 'Спальни', label: 'Спальни', type: 'number', showInGrid: true, width: 90 },
@@ -286,9 +300,11 @@ const developers: CollectionConfig = {
   primaryKey: 'airtable_id',
   // Migration 010 granted service_role full privileges on raw_developers, so
   // the old UPDATE-only restriction is gone and a new developer can be listed
-  // here. Delete stays off: complexes/villas/news link to a developer by name
-  // and slug, so removing a row would silently orphan those references.
-  caps: { create: true, update: true, delete: false },
+  // here. «Удалить» archives (softDelete below) rather than deleting:
+  // complexes/villas/news link to a developer by name and slug, so removing a
+  // row would silently orphan those references.
+  caps: { create: true, update: true, delete: true },
+  softDelete: { column: 'archived_at' },
   titleField: 'Developer',
   // News/promo/events link here with `store: 'name-slug'` and need this slug —
   // it is what the public pages filter those manifests by.
@@ -297,7 +313,8 @@ const developers: CollectionConfig = {
   defaultSort: { field: 'Developer', dir: 'asc' },
   revalidateKind: 'developers',
   uploadBucket: 'developer-logos',
-  hideFields: ['Logo'],
+  hideFields: ['Logo', 'archived_at', '_archived_published'],
+  duplicateSkip: ['archived_at', '_archived_published'],
   fields: [
     { key: 'logo_url', label: 'Логотип', type: 'image', column: true, showInGrid: true, width: 80 },
     { key: 'Публикация', label: 'Публикация', type: 'bool', showInGrid: true, width: 90 },
@@ -455,6 +472,9 @@ const rental: CollectionConfig = {
   bucket: 'rental',
   manifestKey: '_rental.json',
   itemIdKey: 'id',
+  // Photos are a URL array on the item itself; new uploads go to the same
+  // bucket the existing 14k rental photos live in.
+  photo: { bucket: 'rental-photos', field: 'photos' },
   caps: { create: true, update: true, delete: true },
   titleField: 'title',
   defaultSort: { field: 'updatedAt', dir: 'desc' },
@@ -471,7 +491,8 @@ const rental: CollectionConfig = {
     { key: 'telegram', label: 'Telegram', type: 'text' },
     { key: 'createdTime', label: 'Создано', type: 'date', readOnly: true },
     { key: 'updatedAt', label: 'Обновлено', type: 'date', readOnly: true },
-    { key: 'photos', label: 'Фото (массив URL)', type: 'json', readOnly: true },
+    // Managed by the photo block of the card (upload / order / delete).
+    { key: 'photos', label: 'Фото', type: 'json', hidden: true },
   ],
 }
 
@@ -625,6 +646,42 @@ const videos: CollectionConfig = {
   ],
 }
 
+// Соседи по аренде (Booking) — манифест competitors/_competitors.json кормит
+// тепловую карту, блок «соседи» и инвест-оценку. Раньше его писал только
+// Airtable-синк; после отключения Airtable правка — здесь. Тайлы
+// competitors/_cells/*.json, из которых страницы берут соседей, пересобираются
+// после каждой правки (lib/admin/competitor-cells.ts).
+const competitors: CollectionConfig = {
+  key: 'competitors',
+  label: 'Конкуренты (аренда)',
+  store: 'storage_manifest',
+  bucket: 'competitors',
+  manifestKey: '_competitors.json',
+  itemIdKey: 'id',
+  caps: { create: true, update: true, delete: true },
+  titleField: 'name',
+  defaultSort: { field: 'date', dir: 'desc' },
+  revalidateKind: 'competitors',
+  createFields: ['name', 'complex', 'lat', 'lng', 'price', 'bedrooms', 'area', 'pool', 'view', 'rating', 'reviews', 'photo', 'url', 'date'],
+  fields: [
+    { key: 'name', label: 'Название', type: 'text', showInGrid: true, width: 260 },
+    { key: 'complex', label: 'Объект', type: 'text', showInGrid: true, width: 220 },
+    { key: 'price', label: 'Цена/ночь $', type: 'number', showInGrid: true, width: 110 },
+    { key: 'bedrooms', label: 'Спальни', type: 'number', showInGrid: true, width: 90 },
+    { key: 'area', label: 'Площадь', type: 'number', showInGrid: true, width: 90 },
+    { key: 'rating', label: 'Рейтинг', type: 'number', showInGrid: true, width: 90 },
+    { key: 'reviews', label: 'Отзывы', type: 'number', showInGrid: true, width: 90 },
+    { key: 'lat', label: 'Широта (lat)', type: 'number', help: 'Например -8.6765. Без координат объект не попадёт на карту.' },
+    { key: 'lng', label: 'Долгота (lng)', type: 'number', help: 'Например 115.1591' },
+    { key: 'address', label: 'Адрес', type: 'text' },
+    { key: 'pool', label: 'Бассейн', type: 'enum' },
+    { key: 'view', label: 'Вид', type: 'enum' },
+    { key: 'photo', label: 'Фото (ссылка)', type: 'text' },
+    { key: 'url', label: 'Ссылка Booking', type: 'text' },
+    { key: 'date', label: 'Дата сбора', type: 'date', showInGrid: true, width: 120 },
+  ],
+}
+
 export const COLLECTIONS: Record<string, CollectionConfig> = {
   villas,
   apartments,
@@ -640,6 +697,7 @@ export const COLLECTIONS: Record<string, CollectionConfig> = {
   knowledge,
   managers,
   videos,
+  competitors,
   baliforum_places: baliforumPlaces,
 }
 

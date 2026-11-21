@@ -16,6 +16,8 @@ Kept (not moved here) because they read Supabase only and are still live:
 - `scripts/sync-detail-indexes.mjs` — slug → id indexes, nightly safety net
 - `scripts/translate-missing.mjs` — fills missing translations
 - `scripts/sync-nearby-places.mjs`, `sync-baliforum-places.mjs`, `sync-redirects-index.mjs`
+- `scripts/export_to_aggregator.py` — moved back out on 2026-11-21: it now reads the
+  aggregator texts from `raw_villas` instead of Airtable (local XML only)
 
 Removed along with these scripts: `.github/workflows/sync-fast.yml`,
 `sync-heavy.yml`, `sync-once-maison.yml`, `app/api/webhook/airtable/`,

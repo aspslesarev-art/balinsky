@@ -25,14 +25,29 @@ function columnKeys(cfg: CollectionConfig): string[] {
 }
 function selectList(cfg: CollectionConfig): string {
   const pk = cfg.primaryKey ?? 'airtable_id'
-  return [pk, 'data', ...columnKeys(cfg)].join(', ')
+  const archive = cfg.softDelete ? [cfg.softDelete.column] : []
+  return [pk, 'data', ...columnKeys(cfg), ...archive].join(', ')
 }
 // Merge `data` keys + exposed column values into one flat field map.
 function flatten(cfg: CollectionConfig, r: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = { ...((r.data as Record<string, unknown>) ?? {}) }
   for (const k of columnKeys(cfg)) out[k] = r[k]
+  // The archive stamp rides along so the panel can say «в архиве» and offer
+  // «Восстановить». Collections list it in hideFields, so it is never edited
+  // as a plain field.
+  if (cfg.softDelete) out[cfg.softDelete.column] = r[cfg.softDelete.column] ?? null
   return out
 }
+
+// Timestamp column every write stamps (raw_* → synced_at). parser_units has
+// no synced_at, and writing one made every edit there fail.
+function touchColumn(cfg: CollectionConfig): string {
+  return cfg.touchColumn ?? 'synced_at'
+}
+
+// Where the previous publication flag is parked while a row is archived, so
+// «Восстановить» returns it exactly as it was (an unpublished draft stays one).
+const ARCHIVED_PUBLISHED_KEY = '_archived_published'
 
 export const sqlJsonbAdapter: DataSourceAdapter = {
   async list(cfg, q: ListQuery): Promise<ListResult> {
@@ -40,6 +55,10 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const page = q.page ?? 0
     const pageSize = q.pageSize ?? DEFAULT_PAGE_SIZE
     let query = adminSb().from(cfg.table!).select(selectList(cfg), { count: 'exact' })
+    if (cfg.softDelete) {
+      const col = cfg.softDelete.column
+      query = q.archived ? query.not(col, 'is', null) : query.is(col, null)
+    }
 
     if (q.q && q.q.trim()) {
       // Search the title field (the realistic "find by name" case).
@@ -78,7 +97,7 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
 
   async create(cfg, fields): Promise<RecordRow> {
     const pk = cfg.primaryKey ?? 'airtable_id'
-    const id = `adm_${randomId()}`
+    const id = cfg.createIdFrom ? composedId(cfg.createIdFrom, fields) : `adm_${randomId()}`
     const cols = new Set(columnKeys(cfg))
     const dataFields: Record<string, unknown> = {}
     const colFields: Record<string, unknown> = {}
@@ -105,9 +124,14 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     if (slugKey && !cols.has(slugKey) && !asText(dataFields[slugKey])) {
       dataFields[slugKey] = await freeSlug(cfg, slugKey, slugBase || id)
     }
-    const insert: Record<string, unknown> = { [pk]: id, data: dataFields, ...colFields, synced_at: new Date().toISOString() }
+    const insert: Record<string, unknown> = { [pk]: id, data: dataFields, ...colFields, [touchColumn(cfg)]: new Date().toISOString() }
     const { error } = await adminSb().from(cfg.table!).insert(insert)
-    if (error) throw new Error(error.message)
+    if (error) {
+      // A composed key collides when the same unit is entered twice — say so
+      // in words rather than surfacing the Postgres constraint name.
+      if (cfg.createIdFrom && error.code === '23505') throw new Error(`Запись ${id} уже есть`)
+      throw new Error(error.message)
+    }
     return { id, fields }
   },
 
@@ -119,7 +143,7 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
     const colPatch: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(patch)) (cols.has(k) ? colPatch : dataPatch)[k] = v
 
-    const update: Record<string, unknown> = { synced_at: new Date().toISOString(), ...colPatch }
+    const update: Record<string, unknown> = { [touchColumn(cfg)]: new Date().toISOString(), ...colPatch }
     if (Object.keys(dataPatch).length) {
       // Read-modify-write the `data` blob so un-edited keys survive.
       const { data: existing, error: readErr } = await sb
@@ -133,9 +157,62 @@ export const sqlJsonbAdapter: DataSourceAdapter = {
 
   async remove(cfg, id): Promise<void> {
     const pk = cfg.primaryKey ?? 'airtable_id'
+    if (cfg.softDelete) {
+      // Archive, never delete: complexes, villas, news and managers point at a
+      // developer by name and slug, so a hard delete would orphan them with no
+      // way back. Unpublishing takes the row off every public page.
+      const sb = adminSb()
+      const { data: existing, error: readErr } = await sb
+        .from(cfg.table!).select('data').eq(pk, id).maybeSingle()
+      if (readErr) throw new Error(readErr.message)
+      if (!existing) throw new Error('not_found')
+      const data = { ...((existing as { data?: Record<string, unknown> }).data ?? {}) }
+      if (cfg.publishedField) {
+        data[ARCHIVED_PUBLISHED_KEY] = data[cfg.publishedField] ?? null
+        data[cfg.publishedField] = false
+      }
+      const now = new Date().toISOString()
+      const { error } = await sb.from(cfg.table!)
+        .update({ data, [cfg.softDelete.column]: now, [touchColumn(cfg)]: now })
+        .eq(pk, id)
+      if (error) throw new Error(error.message)
+      return
+    }
     const { error } = await adminSb().from(cfg.table!).delete().eq(pk, id)
     if (error) throw new Error(error.message)
   },
+
+  async restore(cfg, id): Promise<void> {
+    if (!cfg.softDelete) throw new Error('restore_not_supported')
+    const pk = cfg.primaryKey ?? 'airtable_id'
+    const sb = adminSb()
+    const { data: existing, error: readErr } = await sb
+      .from(cfg.table!).select('data').eq(pk, id).maybeSingle()
+    if (readErr) throw new Error(readErr.message)
+    if (!existing) throw new Error('not_found')
+    const data = { ...((existing as { data?: Record<string, unknown> }).data ?? {}) }
+    if (cfg.publishedField && ARCHIVED_PUBLISHED_KEY in data) {
+      data[cfg.publishedField] = data[ARCHIVED_PUBLISHED_KEY]
+    }
+    delete data[ARCHIVED_PUBLISHED_KEY]
+    const { error } = await sb.from(cfg.table!)
+      .update({ data, [cfg.softDelete.column]: null, [touchColumn(cfg)]: new Date().toISOString() })
+      .eq(pk, id)
+    if (error) throw new Error(error.message)
+  },
+}
+
+// Primary key built from the record's own fields (parser_units:
+// `<complex_id>#<gid>#<Name>`). Every part is required — a key with a blank
+// segment would collide with the next unit entered the same way.
+function composedId(keys: string[], fields: Record<string, unknown>): string {
+  const parts = keys.map(k => {
+    const v = fields[k]
+    return typeof v === 'number' ? String(v) : asText(v)
+  })
+  const missing = keys.filter((_, i) => !parts[i])
+  if (missing.length) throw new Error(`Заполните: ${missing.join(', ')}`)
+  return parts.join('#')
 }
 
 function asText(v: unknown): string {

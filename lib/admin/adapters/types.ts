@@ -105,7 +105,10 @@ export type CollectionConfig = {
   manifestKey?: string // '_news.json'
   itemIdKey?: string // property used as record id inside items[]
   // photos (optional):
-  photo?: { bucket: string; manifestKey?: string /* default _manifest.json */ }
+  /** `field` set → the photo list lives on the record itself (an array of
+   *  URLs under that key, e.g. rental `photos`) instead of a per-bucket
+   *  `_manifest.json` keyed by record id. */
+  photo?: { bucket: string; manifestKey?: string /* default _manifest.json */; field?: string }
   /** Storage bucket for single-image (`image`) field uploads. */
   uploadBucket?: string
   caps: Caps
@@ -135,6 +138,18 @@ export type CollectionConfig = {
    *  unique. The primary key and the slug are handled by the duplicate
    *  endpoint itself. */
   duplicateSkip?: string[]
+  /** sql_jsonb only: «Удалить» archives instead of deleting. The row gets a
+   *  timestamp in this column and is unpublished (publishedField → false);
+   *  «Восстановить» clears it and puts the publication flag back. Archived
+   *  rows are hidden from the grid and link pickers unless asked for. */
+  softDelete?: { column: string }
+  /** sql_jsonb only: timestamp column stamped on every write. Defaults to
+   *  `synced_at` (raw_* tables); parser_units has `updated_at` instead. */
+  touchColumn?: string
+  /** sql_jsonb only: build the new row's primary key from these fields,
+   *  joined with '#', instead of a random `adm_…` id. parser_units keys are
+   *  `<complex_id>#<gid>#<Name>` and that shape is what keeps them unique. */
+  createIdFrom?: string[]
   fields: FieldDef[]
 }
 
@@ -151,6 +166,8 @@ export type ListQuery = {
   q?: string
   /** Per-column "contains" filters (AND-ed). */
   filters?: ColumnFilter[]
+  /** softDelete collections: list the archive instead of live rows. */
+  archived?: boolean
 }
 
 export type ListResult = { rows: RecordRow[]; total: number }
@@ -163,4 +180,6 @@ export interface DataSourceAdapter {
   create(cfg: CollectionConfig, fields: Record<string, unknown>): Promise<RecordRow>
   update(cfg: CollectionConfig, id: string, patch: Record<string, unknown>): Promise<void>
   remove(cfg: CollectionConfig, id: string): Promise<void>
+  /** softDelete collections: bring an archived row back. */
+  restore?(cfg: CollectionConfig, id: string): Promise<void>
 }

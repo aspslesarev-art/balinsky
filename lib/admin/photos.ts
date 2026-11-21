@@ -8,6 +8,7 @@
 import { adminSb, supabaseUrl } from './sb'
 import { cdnRewrite, cdnBucketBase } from '@/lib/photo-cdn'
 import type { CollectionConfig } from './adapters/types'
+import { adapterFor } from './adapters'
 
 function manifestPath(cfg: CollectionConfig): { bucket: string; key: string } {
   if (!cfg.photo) throw new Error('collection has no photo bucket')
@@ -40,8 +41,20 @@ async function saveManifest(cfg: CollectionConfig, manifest: Manifest): Promise<
   if (error) throw new Error(`storage(${bucket}/${key}): ${error.message}`)
 }
 
+// Photos kept on the record itself (`photo.field`, e.g. rental `photos`):
+// the list is just another field, read and written through the adapter.
+function photoField(cfg: CollectionConfig): string | null {
+  return cfg.photo?.field ?? null
+}
+
 // Photos for one record, with Supabase URLs rewritten to the CDN host.
 export async function getPhotos(cfg: CollectionConfig, id: string): Promise<string[]> {
+  const field = photoField(cfg)
+  if (field) {
+    const row = await adapterFor(cfg).get(cfg, id)
+    const urls = row?.fields[field]
+    return Array.isArray(urls) ? urls.filter((u): u is string => typeof u === 'string') : []
+  }
   const manifest = await loadManifest(cfg)
   const urls = manifest[id] ?? []
   return urls.map(u => cdnRewrite(u) ?? u)
@@ -49,6 +62,11 @@ export async function getPhotos(cfg: CollectionConfig, id: string): Promise<stri
 
 // Replace the full photo list for one record (used for add / remove / reorder).
 export async function setPhotos(cfg: CollectionConfig, id: string, urls: string[]): Promise<void> {
+  const field = photoField(cfg)
+  if (field) {
+    await adapterFor(cfg).update(cfg, id, { [field]: urls })
+    return
+  }
   const manifest = await loadManifest(cfg)
   manifest[id] = urls
   await saveManifest(cfg, manifest)

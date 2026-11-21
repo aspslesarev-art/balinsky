@@ -4,9 +4,12 @@
 Schema target: realting.com `<object type="3">` (sample_import_object_ru.xml).
 
 Data source:
-  - Villa records: Airtable directly (uses AIRTABLE_TOKEN)
-  - Descriptions RU/EN: from Airtable columns ` Aggregator:RU ` / `Aggregator:EN`
-    (manually rewritten by user — no Claude call here)
+  - Villa records: Supabase `raw_villas` (the only source since Airtable was
+    switched off on 21.11.2026). Reads a JSON projection of the few keys used
+    here, not the whole ~60 KB `data` blob per villa. Needs
+    SUPABASE_SERVICE_KEY (raw_* tables are closed to the anon key).
+  - Descriptions RU/EN: `data` keys ` Aggregator:RU ` / `Aggregator:EN`
+    (manually rewritten by user — no Claude call here; edit them in /admin/data)
   - Photos: Supabase Storage public manifest
   - Nearby places (for location tags): Supabase Storage public manifest
 
@@ -15,13 +18,18 @@ SEO-protection per villa:
   - Coords rounded to 2 decimals (~1km accuracy)
   - Address truncated to "district, country" (no streets)
   - <external_url> NOT emitted (no backlink to deep pages)
-  - Descriptions taken as-is from Airtable (already rewritten by user)
+  - Descriptions taken as-is from the database (already rewritten by user)
+
+Writes a local file only (scripts/out/villas-aggregator.xml). Publishing it is
+a separate, deliberate step: scripts/upload-aggregator-xml.mjs.
 
 Usage:
   pip install -r scripts/requirements.txt
   python scripts/export_to_aggregator.py --dry-run     # first 3 villas
   python scripts/export_to_aggregator.py               # full 100 villas
 """
+
+from __future__ import annotations
 
 import argparse
 import json
@@ -48,11 +56,9 @@ DRY_RUN_LIMIT = 3
 
 TARGET_LANGS = ['ru', 'en']
 
-AIRTABLE_BASE = 'appAwgCAwOIQs2DJh'
-AIRTABLE_TABLE = 'tblRD00AhDNrpW3DA'
-
-# Aggregator-specific Airtable column names (note the leading/trailing space in `Aggregator:RU `)
-COL_AGG_RU = ' Aggregator:RU '   # Airtable preserves spaces — match exactly
+# Aggregator-specific `data` keys, Airtable-era names (note the leading and
+# trailing space in ` Aggregator:RU ` — the key keeps it, match exactly)
+COL_AGG_RU = ' Aggregator:RU '
 COL_AGG_EN = 'Aggregator:EN'
 COL_AGG_TITLE_RU = 'Aggregator:Title:RU'
 COL_AGG_TITLE_EN = 'Aggregator:Title:EN'
@@ -208,29 +214,54 @@ def detect_additionally_tags(leasehold_years: float | None) -> list[int]:
     return tags
 
 
-# --- airtable data load
+# --- supabase data load
 
-def fetch_villas_from_airtable(token: str) -> list[dict]:
-    """Returns Airtable records (with `id` and `fields`)."""
+# Every `data` key extract_villa() reads. Pulled as a JSON projection so the
+# export downloads a few KB per villa instead of the full row.
+VILLA_KEYS = [
+    'Опубликовать', 'Geo', 'Geo 2', 'price', 'Цена', 'currency',
+    COL_AGG_RU, COL_AGG_RU.strip(), COL_AGG_EN, COL_AGG_TITLE_RU, COL_AGG_TITLE_EN,
+    'SEO:Title', 'ИИ Имя', 'SEO_Title_EN', 'Имя ENG',
+    'Комнаты', 'Площадь', 'Земля', 'Year of completion',
+    'Location 2', 'Location', 'Leasehold', 'Leashold',
+    'SEO Text', 'Notes', 'Post Text', 'Бассейн', 'Pool',
+]
+PAGE = 500
+
+
+def fetch_villas_from_supabase(base_url: str, service_key: str) -> list[dict]:
+    """Published villas from raw_villas, shaped like the old Airtable records
+    (`id` + `fields`) so the mapping below stays unchanged."""
+    select = ','.join(['airtable_id'] + [f'f{i}:data->"{k}"' for i, k in enumerate(VILLA_KEYS)])
+    headers = {
+        'apikey': service_key,
+        'Authorization': f'Bearer {service_key}',
+        'User-Agent': 'balinsky-tools/1.0',
+    }
     out = []
-    offset = None
+    offset = 0
     while True:
-        params = {'pageSize': '100'}
-        if offset:
-            params['offset'] = offset
         r = requests.get(
-            f'https://api.airtable.com/v0/{AIRTABLE_BASE}/{AIRTABLE_TABLE}',
-            headers={'Authorization': f'Bearer {token}'},
-            params=params,
+            f'{base_url}/rest/v1/raw_villas',
+            headers=headers,
+            params={
+                'select': select,
+                'data->>Опубликовать': 'eq.true',
+                'order': 'airtable_id',
+                'limit': str(PAGE),
+                'offset': str(offset),
+            },
             timeout=60,
         )
         if not r.ok:
-            sys.exit(f'Airtable {r.status_code}: {r.text[:200]}')
-        j = r.json()
-        out.extend(j.get('records', []))
-        offset = j.get('offset')
-        if not offset:
+            sys.exit(f'Supabase raw_villas {r.status_code}: {r.text[:200]}')
+        rows = r.json()
+        for row in rows:
+            fields = {k: row.get(f'f{i}') for i, k in enumerate(VILLA_KEYS) if row.get(f'f{i}') is not None}
+            out.append({'id': row['airtable_id'], 'fields': fields})
+        if len(rows) < PAGE:
             break
+        offset += PAGE
     return out
 
 
@@ -272,7 +303,7 @@ def extract_villa(record: dict, photo_manifest: dict, nearby_places: dict) -> di
     if len(photos) < MIN_PHOTOS:
         return None
 
-    # Aggregator-specific descriptions (manually written by user in Airtable)
+    # Aggregator-specific descriptions (manually written by the owner)
     desc_agg_ru = first_string(d.get(COL_AGG_RU)) or first_string(d.get(COL_AGG_RU.strip()))
     desc_agg_en = first_string(d.get(COL_AGG_EN))
     if not desc_agg_ru and not desc_agg_en:
@@ -434,19 +465,19 @@ def main() -> int:
 
     load_env()
     sb_url = os.environ['NEXT_PUBLIC_SUPABASE_URL']
-    airtable_token = os.environ.get('AIRTABLE_TOKEN')
-    if not airtable_token:
-        sys.exit('AIRTABLE_TOKEN not set in .env.local')
+    service_key = os.environ.get('SUPABASE_SERVICE_KEY')
+    if not service_key:
+        sys.exit('SUPABASE_SERVICE_KEY not set in .env.local')
 
     print('▶ loading data ...')
-    records = fetch_villas_from_airtable(airtable_token)
+    records = fetch_villas_from_supabase(sb_url, service_key)
     photo_manifest = fetch_photo_manifest(sb_url)
     nearby_places = fetch_nearby_places(sb_url)
     published = [r for r in records if (r.get('fields') or {}).get('Опубликовать') is True]
     has_agg = [r for r in published
                if first_string((r.get('fields') or {}).get(COL_AGG_RU))
                or first_string((r.get('fields') or {}).get(COL_AGG_EN))]
-    print(f'  airtable total:           {len(records)}')
+    print(f'  published villas loaded:  {len(records)}')
     print(f'  published:                {len(published)}')
     print(f'  with Aggregator:RU/EN:    {len(has_agg)}')
     print(f'  photo manifest entries:   {len(photo_manifest)}')
