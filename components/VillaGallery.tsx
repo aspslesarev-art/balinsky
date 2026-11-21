@@ -333,7 +333,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
         </>}
         {wishlistItem && <WishlistButton item={wishlistItem} className="absolute top-4 right-4 z-10" />}
         {topRight && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 mx-auto w-full max-w-[1280px] px-4 pt-4 md:px-6 md:pt-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] mx-auto w-full max-w-[1280px] px-4 pt-4 md:px-6 md:pt-5">
             <div className="pointer-events-auto ml-auto w-fit">{topRight}</div>
           </div>
         )}
