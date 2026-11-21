@@ -1085,7 +1085,7 @@ async function _loadComplexById(id: string): Promise<ComplexRow | null> {
   const c = _complexByIdCache.get(id)
   if (c && c.rev === rev && Date.now() - c.ts < 5 * 60 * 1000) return c.row
   const [{ data, error }, enCache] = await Promise.all([
-    sb.from('raw_complexes').select('airtable_id, data, slug, cover_url').eq('airtable_id', id).maybeSingle(),
+    sb.from('raw_complexes').select('airtable_id, data:web_data, slug, cover_url').eq('airtable_id', id).maybeSingle(),
     loadAllTranslations('complexes'),
   ])
   // Сбой базы — не «ЖК нет»: бросаем, а не кэшируем null.

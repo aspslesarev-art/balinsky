@@ -12,12 +12,12 @@ export async function loadComplexMedia(complexAirtableId: string | null, complex
   // в raw_complexes нет; тогда ищем комплекс по названию («Комплекс 1»).
   let row: { airtable_id: unknown; slug: unknown; data: unknown } | null = null
   if (complexAirtableId) {
-    const { data } = await sb.from('raw_complexes').select('airtable_id, slug, data').eq('airtable_id', complexAirtableId).maybeSingle()
+    const { data } = await sb.from('raw_complexes').select('airtable_id, slug, data:web_data').eq('airtable_id', complexAirtableId).maybeSingle()
     row = data
   }
   const name = complexName?.trim()
   if (!row && name && name.length > 2) {
-    const { data } = await sb.from('raw_complexes').select('airtable_id, slug, data').ilike('data->>Project', name).limit(1)
+    const { data } = await sb.from('raw_complexes').select('airtable_id, slug, data:web_data').ilike('data->>Project', name).limit(1)
     row = data?.[0] ?? null
   }
   if (!row) return none

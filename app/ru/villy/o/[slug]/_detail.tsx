@@ -818,7 +818,7 @@ async function _loadVillaById(id: string): Promise<Row | null> {
   const cached = _byIdCache.get(id)
   if (cached && cached.rev === rev && Date.now() - cached.ts < BY_ID_TTL_MS) return cached.row
   const [{ data, error }, enCache] = await Promise.all([
-    sb.from('raw_villas').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
+    sb.from('raw_villas').select('airtable_id, data:web_data').eq('airtable_id', id).maybeSingle(),
     loadAllTranslations('villas'),
   ])
   // Сбой базы — не «виллы нет»: бросаем (5xx, ISR оставит прошлую версию),
@@ -1368,7 +1368,7 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
     const slugs = [...new Set(hotspots.map(h => h.targetUnitSlug).filter((x): x is string => !!x))]
     const idx = await _loadVillaIndex().catch(() => [] as IndexEntry[])
     const idBySlug = new Map(idx.filter(e => slugs.includes(e.slug)).map(e => [e.slug, e.id]))
-    const { data: rows } = await sb.from('raw_villas').select('airtable_id, data').in('airtable_id', [...idBySlug.values()])
+    const { data: rows } = await sb.from('raw_villas').select('airtable_id, data:web_data').in('airtable_id', [...idBySlug.values()])
     const rowById = new Map((rows ?? []).map(r => [r.airtable_id as string, r.data as Record<string, unknown>]))
     const unitsBySlug: Record<string, { kind: 'villa'; slug: string; title: string; bedrooms: number | null; area: number | null; priceUsd: number | null; url: string; photoUrl: string | null }> = {}
     for (const [s2, id] of idBySlug) {

@@ -672,7 +672,7 @@ const _loadApartmentIndex = revisionedCache(['apartments'], 30 * 60 * 1000, asyn
 const _loadApartmentById = unstable_cache(
   async (id: string): Promise<Row | null> => {
     const [{ data, error }, enCache] = await Promise.all([
-      sb.from('raw_apartments').select('airtable_id, data').eq('airtable_id', id).maybeSingle(),
+      sb.from('raw_apartments').select('airtable_id, data:web_data').eq('airtable_id', id).maybeSingle(),
       loadAllTranslations('apartments'),
     ])
     // Сбой базы бросаем: unstable_cache не запишет null на сутки, а страница
