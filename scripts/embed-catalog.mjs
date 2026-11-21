@@ -8,10 +8,15 @@
 //
 // Cost ballpark: ~1.5k villas + ~5k apartments + ~200 complexes =
 // ~7k rows × ~2-3k chars each ≈ 15M tokens × $0.13/M = ~$2.
+//
+// PAID (OpenAI): rows are collected first (free), then without --yes-paid
+// the script prints the count and stops before any embedding request.
+// Model is pinned in _openai.mjs: text-embedding-3-large @1536 — the same
+// vector space as the existing index.
 
 import fs from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { embed, EMBEDDINGS_MODEL, EMBEDDING_DIMS, requirePaid } from './_openai.mjs'
 
 // Manual .env.local loader so the script runs without extra setup.
 try {
@@ -27,12 +32,6 @@ const onlyArg = process.argv.find(a => a.startsWith('--only='))
 const only = onlyArg ? onlyArg.slice('--only='.length).split(',') : ['villa', 'apartment', 'complex']
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const DEPL = process.env.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT ?? 'text-embedding-3-large'
 
 function fs1(v) {
   if (typeof v === 'string') return v.trim() || null
@@ -83,21 +82,18 @@ function buildComplexText(row) {
 
 // HNSW caps at 2000 dims; text-embedding-3-large natively outputs 3072
 // but is Matryoshka-trained so we can request 1536 with negligible
-// quality loss. Must match vector(1536) in migration 023.
-const EMBEDDING_DIMS = 1536
+// quality loss. Must match vector(1536) in migration 023 — EMBEDDING_DIMS
+// comes from _openai.mjs, which pins it.
 
 async function embedBatch(texts) {
-  const r = await ai.embeddings.create({
-    model: DEPL,
-    input: texts.map(t => t.slice(0, 8000) || ' '),
-    dimensions: EMBEDDING_DIMS,
-  })
+  const r = await embed(texts.map(t => t.slice(0, 8000) || ' '))
   return r.data.map(d => d.embedding)
 }
 
-async function processTable(table, buildText, label, kind) {
-  console.log(`\n=== ${label} ===`)
-  let processed = 0, embedded = 0, skipped = 0
+// Pass 1 (free): read the table, build text per row, keep what changed.
+async function collectTable(table, buildText, label, kind) {
+  let processed = 0, skipped = 0
+  const queue = []
   const PAGE = 200
   for (let from = 0; from < 10000; from += PAGE) {
     const { data, error } = await sb.from(table)
@@ -105,44 +101,52 @@ async function processTable(table, buildText, label, kind) {
       .range(from, from + PAGE - 1)
     if (error) { console.error(error); break }
     if (!data || data.length === 0) break
-    // Build text per row, filter what's already up-to-date.
-    const queue = []
     for (const row of data) {
       processed++
       const text = kind === 'complex' ? buildText(row) : buildText(row, kind)
       if (!force && row.embedding_text === text) { skipped++; continue }
       queue.push({ id: row.airtable_id, text })
     }
-    // Embed in groups of 16.
-    const BATCH = 16
-    for (let i = 0; i < queue.length; i += BATCH) {
-      const batch = queue.slice(i, i + BATCH)
-      const vectors = await embedBatch(batch.map(b => b.text))
-      // Update rows one by one (Supabase upsert is heavy for vector).
-      for (let j = 0; j < batch.length; j++) {
-        const literal = '[' + vectors[j].join(',') + ']'
-        const { error: upErr } = await sb.from(table).update({
-          embedding: literal,
-          embedding_text: batch[j].text,
-          embedded_at: new Date().toISOString(),
-        }).eq('airtable_id', batch[j].id)
-        if (upErr) { console.error('  upd err', batch[j].id, upErr.message); continue }
-        embedded++
-      }
-      process.stdout.write(`\r  ${embedded}/${processed} embedded (${skipped} unchanged)`)
-    }
     if (data.length < PAGE) break
+  }
+  console.log(`  ${label}: ${queue.length} to embed, ${skipped} unchanged, ${processed} total`)
+  return { table, label, queue, processed, skipped }
+}
+
+// Pass 2 (paid): embed in groups of 16 and write back.
+async function embedTable({ table, label, queue, processed, skipped }) {
+  console.log(`\n=== ${label} ===`)
+  let embedded = 0
+  const BATCH = 16
+  for (let i = 0; i < queue.length; i += BATCH) {
+    const batch = queue.slice(i, i + BATCH)
+    const vectors = await embedBatch(batch.map(b => b.text))
+    // Update rows one by one (Supabase upsert is heavy for vector).
+    for (let j = 0; j < batch.length; j++) {
+      const literal = '[' + vectors[j].join(',') + ']'
+      const { error: upErr } = await sb.from(table).update({
+        embedding: literal,
+        embedding_text: batch[j].text,
+        embedded_at: new Date().toISOString(),
+      }).eq('airtable_id', batch[j].id)
+      if (upErr) { console.error('  upd err', batch[j].id, upErr.message); continue }
+      embedded++
+    }
+    process.stdout.write(`\r  ${embedded}/${queue.length} embedded (${skipped} unchanged)`)
   }
   console.log()
   console.log(`  done: ${embedded} embedded, ${skipped} unchanged, ${processed} total`)
 }
 
-console.log('Catalog embedding backfill — Azure OpenAI', DEPL)
+console.log('Catalog embedding backfill — OpenAI', EMBEDDINGS_MODEL, `@${EMBEDDING_DIMS}`)
 if (force) console.log('--force: re-embedding every row regardless of cache')
 const start = Date.now()
 
-if (only.includes('villa'))     await processTable('raw_villas',     buildUnitText,    'villas (raw_villas)',         'villa')
-if (only.includes('apartment')) await processTable('raw_apartments', buildUnitText,    'apartments (raw_apartments)', 'apartment')
-if (only.includes('complex'))   await processTable('raw_complexes',  buildComplexText, 'complexes (raw_complexes)',   'complex')
+const tables = []
+if (only.includes('villa'))     tables.push(await collectTable('raw_villas',     buildUnitText,    'villas (raw_villas)',         'villa'))
+if (only.includes('apartment')) tables.push(await collectTable('raw_apartments', buildUnitText,    'apartments (raw_apartments)', 'apartment'))
+if (only.includes('complex'))   tables.push(await collectTable('raw_complexes',  buildComplexText, 'complexes (raw_complexes)',   'complex'))
+requirePaid({ what: `эмбеддинги каталога ${EMBEDDINGS_MODEL}@${EMBEDDING_DIMS}`, items: tables.reduce((a, t) => a + t.queue.length, 0) })
+for (const t of tables) await embedTable(t)
 
 console.log(`\ndone in ${Math.round((Date.now() - start) / 1000)}s`)

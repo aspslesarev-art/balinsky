@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Photo audit pass over listing photos (Azure gpt-5.4 multimodal). Complements
+// Photo audit pass over listing photos (OpenAI chatModel(), multimodal). Complements
 // kb-vision.mjs: that one writes features + per-photo alt, this one answers
 // "which photo should be the cover, which ones are junk, do the photos match
 // the description?".
@@ -11,9 +11,11 @@
 //
 // Usage: --dry-run | --sample=N | --only=villa | --force | --conc=6
 //        --maxphotos=12 | --checkpoint=50
+// PAID (OpenAI), --dry-run and --sample too: without --yes-paid it prints the
+// listing count and stops before any request.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 import { loadEnv } from './_kb-build.mjs'
 
 loadEnv()
@@ -27,14 +29,13 @@ const MAXPHOTOS = val('maxphotos') ? parseInt(val('maxphotos'), 10) : 12
 const CHECKPOINT = val('checkpoint') ? parseInt(val('checkpoint'), 10) : 50
 const ONLY = val('only') ? val('only').split(',') : ['villa', 'apartment', 'complex']
 
-// Real Azure rates for gpt-5.4, read off Cost Management 2026-07 (the older
-// 1.25/10 figures in kb-vision.mjs under-report by 2x).
+// Azure rates for gpt-5.4, read off Cost Management 2026-07 — a local
+// estimate only; the real figure is in the OpenAI usage page.
 const USD_IN_PER_M = 2.5
 const USD_OUT_PER_M = 15
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({ apiKey: process.env.AZURE_OPENAI_API_KEY, endpoint: process.env.AZURE_OPENAI_ENDPOINT, apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview' })
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+const CHAT = chatModel()
 const BUCKETS = { villa: 'villa-photos', apartment: 'apartment-photos', complex: 'complex-photos' }
 // Title fields are internal codes for villas/apartments (V00771, A3), so the
 // SEO description is the only usable listing text for the mismatch check.
@@ -65,7 +66,7 @@ function track(pt, ct) {
     .then(({ error }) => { if (error && !usageOff) { usageOff = true; console.error('  (usage log off)') } })
 }
 
-// Azure fetches the image URLs itself, and the photo CDN times out on cold
+// The model API fetches the image URLs itself, and the photo CDN times out on cold
 // objects often enough that a single attempt loses ~1 listing in 3.
 const RETRIES = 3
 const isTransient = msg => /timed out|timeout|429|500|502|503|504|ECONNRESET|fetch failed/i.test(msg ?? '')
@@ -80,7 +81,7 @@ async function audit(urls, descr) {
   let lastError = null
   for (let attempt = 1; attempt <= RETRIES; attempt++) {
     try {
-      const r = await ai.chat.completions.create({ model: CHAT, messages: [{ role: 'system', content: SYS }, { role: 'user', content }], temperature: 0.2, max_completion_tokens: 900, response_format: { type: 'json_object' } })
+      const r = await chat({ model: CHAT, messages: [{ role: 'system', content: SYS }, { role: 'user', content }], temperature: 0.2, max_completion_tokens: 900, response_format: { type: 'json_object' } })
       track(r.usage?.prompt_tokens ?? 0, r.usage?.completion_tokens ?? 0)
       return JSON.parse(r.choices[0].message.content)
     } catch (e) {
@@ -132,11 +133,12 @@ async function loadDescriptions(kind) {
   return new Map(data.map(r => [r.airtable_id, r.descr ?? null]))
 }
 
-async function processKind(kind) {
+// Plan (free): Storage + Supabase reads only.
+async function planKind(kind) {
   const bucket = BUCKETS[kind]
   console.log(`\n=== ${kind} (${bucket}) ===`)
   const photos = await downloadManifest(bucket, '_manifest.json')
-  if (!photos) { console.error('  no _manifest.json'); return }
+  if (!photos) { console.error('  no _manifest.json'); return null }
   const vision = (await downloadManifest(bucket, '_vision.json')) ?? {}
   const descriptions = await loadDescriptions(kind)
 
@@ -145,7 +147,12 @@ async function processKind(kind) {
   skipped += ids.length - todo.length
   const work = SAMPLE ? todo.slice(0, SAMPLE) : todo
   console.log(`  ${ids.length} with photos, ${work.length} to audit, ${ids.length - todo.length} already done`)
-  if (!work.length) return
+  if (!work.length) return null
+  return { kind, bucket, photos, vision, descriptions, work }
+}
+
+async function runKind({ kind, bucket, photos, vision, descriptions, work }) {
+  console.log(`\n=== ${kind}: auditing ${work.length} ===`)
 
   // Results are collected separately and merged at write time, so a crash can
   // never leave _vision.json half-rewritten and features/alt stay untouched.
@@ -182,8 +189,11 @@ async function processKind(kind) {
   }
 }
 
-console.log(`KB photo audit — Azure ${CHAT}${DRY ? ' [DRY]' : ''}${SAMPLE ? ` [SAMPLE ${SAMPLE}]` : ''}${FORCE ? ' [FORCE]' : ''} maxphotos=${MAXPHOTOS} conc=${CONC}`)
+console.log(`KB photo audit — OpenAI ${CHAT}${DRY ? ' [DRY]' : ''}${SAMPLE ? ` [SAMPLE ${SAMPLE}]` : ''}${FORCE ? ' [FORCE]' : ''} maxphotos=${MAXPHOTOS} conc=${CONC}`)
 const start = Date.now()
-for (const k of ONLY) { if (BUCKETS[k]) await processKind(k) }
+const plans = []
+for (const k of ONLY) { if (BUCKETS[k]) { const plan = await planKind(k); if (plan) plans.push(plan) } }
+requirePaid({ what: `аудит фото (до ${MAXPHOTOS} на объект) моделью ${CHAT}`, items: plans.reduce((a, p) => a + p.work.length, 0) })
+for (const plan of plans) await runKind(plan)
 console.log(`\nDone in ${Math.round((Date.now() - start) / 1000)}s — audited ${made}, failed ${failed}, skipped ${skipped} — spent $${cost.toFixed(2)}`)
 if (!DRY) await new Promise(r => setTimeout(r, 1200))

@@ -7,10 +7,12 @@
 // heading/description light up for every district with zero per-page DB calls.
 //
 // Usage: --dry-run | --force  (idempotent: keeps existing JSON, fills missing)
+// PAID (OpenAI): without --yes-paid a real run prints the district count and
+// stops before any request. --dry-run stays free.
 
 import fs from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, requirePaid } from './_openai.mjs'
 import { loadEnv } from './_kb-build.mjs'
 
 loadEnv()
@@ -18,8 +20,6 @@ const argv = process.argv.slice(2)
 const DRY = argv.includes('--dry-run'), FORCE = argv.includes('--force')
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({ apiKey: process.env.AZURE_OPENAI_API_KEY, endpoint: process.env.AZURE_OPENAI_ENDPOINT, apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview' })
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
 
 // Mirror of lib/seo-routes.ts DISTRICT_TO_SLUG (name -> slug) and the hardcoded
 // districts in lib/districts.ts (we DON'T override those — they're curated).
@@ -60,6 +60,15 @@ try { out = JSON.parse(fs.readFileSync(PATH, 'utf8')) } catch {}
 const { data: rows, error } = await sb.from('assistant_kb').select('ref_id, title, meta, summary').eq('kind', 'district')
 if (error) { console.error(error.message); process.exit(1) }
 console.log(`district kb rows: ${rows.length}`)
+if (!DRY) {
+  const toMake = rows.filter(r => {
+    const name = r.meta?.district
+    if (!name) return false
+    const slug = slugOf(name)
+    return !HARDCODED.has(slug) && (FORCE || !out[slug])
+  }).length
+  requirePaid({ what: 'редакционные блоки районов (RU+EN)', items: toMake })
+}
 
 let made = 0, skipped = 0, cost = 0
 for (const r of rows) {
@@ -76,7 +85,7 @@ for (const r of rows) {
   const user = `Район: ${name}\nЦифры: ${statLines}\nСводка: ${r.summary}`
   if (DRY) { console.log(`\n[${slug}] ${name} — stats: ${statLines}`); made++; continue }
   try {
-    const resp = await ai.chat.completions.create({ model: CHAT, messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }], temperature: 0.4, max_completion_tokens: 1500, response_format: { type: 'json_object' } })
+    const resp = await chat({ messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }], temperature: 0.4, max_completion_tokens: 1500, response_format: { type: 'json_object' } })
     const u = resp.usage; cost += ((u?.prompt_tokens ?? 0) / 1e6) * 1.25 + ((u?.completion_tokens ?? 0) / 1e6) * 10
     const j = JSON.parse(resp.choices[0].message.content)
     out[slug] = {

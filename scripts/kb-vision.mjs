@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Vision pass over listing photos (Azure gpt-5.4 multimodal). Per listing,
+// Vision pass over listing photos (OpenAI chatModel(), multimodal). Per listing,
 // sends up to N photos and extracts a CONTROLLED-VOCABULARY feature set
 // (pool/view/amenities/condition/style) that powers new catalog filters, plus
 // per-photo alt text (RU+EN) for image SEO/accessibility.
@@ -9,10 +9,12 @@
 // No DB migration (mirrors villa-photos/_styles.json).
 //
 // Usage: --dry-run | --sample=N | --only=villa | --force | --conc=6 | --maxphotos=5
+// PAID (OpenAI), --dry-run and --sample too: without --yes-paid it prints the
+// listing count and stops before any request.
 
 import fs from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 import { loadEnv } from './_kb-build.mjs'
 
 loadEnv()
@@ -26,8 +28,7 @@ const MAXPHOTOS = val('maxphotos') ? parseInt(val('maxphotos'), 10) : 5
 const ONLY = val('only') ? val('only').split(',') : ['villa', 'apartment', 'complex']
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({ apiKey: process.env.AZURE_OPENAI_API_KEY, endpoint: process.env.AZURE_OPENAI_ENDPOINT, apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview' })
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+const CHAT = chatModel()
 const BUCKETS = { villa: 'villa-photos', apartment: 'apartment-photos', complex: 'complex-photos' }
 
 // Controlled vocabulary — keep keys STABLE; the catalog filters key off these.
@@ -58,7 +59,7 @@ function track(pt, ct) {
 async function analyze(urls) {
   const content = [{ type: 'text', text: `Analyze these ${urls.length} photos of one listing.` }]
   for (const u of urls) content.push({ type: 'image_url', image_url: { url: u } })
-  const r = await ai.chat.completions.create({ model: CHAT, messages: [{ role: 'system', content: SYS }, { role: 'user', content }], temperature: 0.2, max_completion_tokens: 1500, response_format: { type: 'json_object' } })
+  const r = await chat({ model: CHAT, messages: [{ role: 'system', content: SYS }, { role: 'user', content }], temperature: 0.2, max_completion_tokens: 1500, response_format: { type: 'json_object' } })
   track(r.usage?.prompt_tokens ?? 0, r.usage?.completion_tokens ?? 0)
   return JSON.parse(r.choices[0].message.content)
 }
@@ -73,11 +74,12 @@ async function uploadManifest(bucket, key, obj) {
   if (error) console.error('  upload err', bucket, error.message)
 }
 
-async function processKind(kind) {
+// Plan (free): Storage reads only.
+async function planKind(kind) {
   const bucket = BUCKETS[kind]
   console.log(`\n=== ${kind} (${bucket}) ===`)
   const photos = await downloadManifest(bucket, '_manifest.json')
-  if (!photos) { console.error('  no _manifest.json'); return }
+  if (!photos) { console.error('  no _manifest.json'); return null }
   const out = (FORCE || SAMPLE) ? {} : (await downloadManifest(bucket, '_vision.json')) ?? {}
   const ids = Object.keys(photos).filter(id => (photos[id]?.length ?? 0) > 0)
   // Key on `features`, not on the entry: kb-photo-audit.mjs also writes into
@@ -86,7 +88,11 @@ async function processKind(kind) {
   skipped += ids.length - todo.length
   const work = SAMPLE ? todo.slice(0, SAMPLE) : todo
   console.log(`  ${ids.length} with photos, ${work.length} to analyze`)
+  return { kind, bucket, photos, out, work }
+}
 
+async function runKind({ kind, bucket, photos, out, work }) {
+  console.log(`\n=== ${kind}: analyzing ${work.length} ===`)
   let idx = 0, aborted = false
   async function worker() {
     while (idx < work.length && !aborted) {
@@ -106,8 +112,11 @@ async function processKind(kind) {
   if (!DRY && made > 0) { await uploadManifest(bucket, '_vision.json', out); console.log(`\n  uploaded ${bucket}/_vision.json (${Object.keys(out).length} listings)`) }
 }
 
-console.log(`KB vision — Azure ${CHAT}${DRY ? ' [DRY]' : ''}${SAMPLE ? ` [SAMPLE ${SAMPLE}]` : ''}${FORCE ? ' [FORCE]' : ''} maxphotos=${MAXPHOTOS}`)
+console.log(`KB vision — OpenAI ${CHAT}${DRY ? ' [DRY]' : ''}${SAMPLE ? ` [SAMPLE ${SAMPLE}]` : ''}${FORCE ? ' [FORCE]' : ''} maxphotos=${MAXPHOTOS}`)
 const start = Date.now()
-for (const k of ONLY) { if (BUCKETS[k]) await processKind(k) }
+const plans = []
+for (const k of ONLY) { if (BUCKETS[k]) { const plan = await planKind(k); if (plan) plans.push(plan) } }
+requirePaid({ what: `разбор фото (до ${MAXPHOTOS} на объект) моделью ${CHAT}`, items: plans.reduce((a, p) => a + p.work.length, 0) })
+for (const plan of plans) await runKind(plan)
 console.log(`\nDone in ${Math.round((Date.now() - start) / 1000)}s — analyzed ${made}, failed ${failed}, skipped ${skipped} — est $${cost.toFixed(2)}`)
 if (!DRY) await new Promise(r => setTimeout(r, 1200))

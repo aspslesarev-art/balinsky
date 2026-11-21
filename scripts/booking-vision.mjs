@@ -15,9 +15,12 @@
 //   node scripts/booking-vision.mjs --limit=200 --conc=16
 //   node scripts/booking-vision.mjs --only-modelable        # сначала те, где есть цена+загрузка
 //   node scripts/booking-vision.mjs                          # всё, что осталось
+//
+// Платно (OpenAI), --dry-run тоже: он зовёт модель, только не пишет в базу.
+// Без --yes-paid скрипт печатает число объектов и останавливается до запросов.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 import { loadEnv } from './_kb-build.mjs'
 
 loadEnv()
@@ -33,17 +36,13 @@ const CONC = val('conc') ? parseInt(val('conc'), 10) : 12
 const MAXPHOTOS = val('maxphotos') ? parseInt(val('maxphotos'), 10) : 6
 const BATCH = 300
 
-// Реальные ставки Azure на gpt-5.4 (Cost Management, июль 2026).
+// Ставки Azure на gpt-5.4 (Cost Management, июль 2026) — для OpenAI это
+// только оценка; точная цифра — в usage кабинета OpenAI.
 const PRICE_IN = 2.50 / 1e6
 const PRICE_OUT = 15.00 / 1e6
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const MODEL = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
+const MODEL = chatModel()
 
 // ─── Контролируемый словарь ────────────────────────────────────────────────
 // Ключи и значения СТАБИЛЬНЫ: на них считается аналитика и строятся сравнения
@@ -136,7 +135,7 @@ function pickPhotos(images) {
 async function analyze(urls) {
   const content = [{ type: 'text', text: `Analyze these ${urls.length} photos of one Bali rental listing.` }]
   for (const u of urls) content.push({ type: 'image_url', image_url: { url: u } })
-  const r = await ai.chat.completions.create({
+  const r = await chat({
     model: MODEL,
     messages: [{ role: 'system', content: SYS }, { role: 'user', content }],
     temperature: 0.1,
@@ -213,8 +212,15 @@ async function fetchBatch() {
 }
 
 async function main() {
-  console.log(`booking-vision — Azure ${MODEL}${DRY ? ' [DRY]' : ''} conc=${CONC} maxphotos=${MAXPHOTOS}${ONLY_MODELABLE ? ' [modelable only]' : ''}`)
+  console.log(`booking-vision — OpenAI ${MODEL}${DRY ? ' [DRY]' : ''} conc=${CONC} maxphotos=${MAXPHOTOS}${ONLY_MODELABLE ? ' [modelable only]' : ''}`)
   const buffer = []
+
+  let cq = sb.from('booking_data_vision_todo').select('id', { count: 'exact', head: true })
+  if (ONLY_MODELABLE) cq = cq.eq('modelable', true)
+  const { count: todoCount, error: countErr } = await cq
+  if (countErr) throw new Error(`booking_data_vision_todo: ${countErr.message}`)
+  const planned = DRY ? Math.min(todoCount ?? 0, LIMIT, BATCH) : Math.min(todoCount ?? 0, LIMIT)
+  requirePaid({ what: `разбор фото Booking (до ${MAXPHOTOS} на объект) моделью ${MODEL}`, items: planned })
 
   while (done + failed < LIMIT) {
     const batch = await fetchBatch()

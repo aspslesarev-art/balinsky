@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Aggregate knowledge layer for Балиса: per-district investor guides + a
 // market overview, generated from REAL numbers across the catalog + rentals
-// and written up by Azure OpenAI. Stored in assistant_kb as kind='district'
+// and written up by OpenAI. Stored in assistant_kb as kind='district'
 // / kind='market', so kb_search surfaces them alongside listings.
 //
 // These answer the questions individual listings can't: "what's Canggu vs
@@ -11,9 +11,11 @@
 // Run AFTER kb-summarize (independent of it, but logically the macro layer).
 //   node scripts/kb-aggregates.mjs            # build + embed district/market docs
 //   node scripts/kb-aggregates.mjs --dry-run  # print stats + prompts, 0 tokens
+// PAID (OpenAI, chat + embedding per doc): without --yes-paid a real run
+// prints the doc count and stops before any request. --dry-run stays free.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
+import { chat, chatModel, embed as embedTexts, requirePaid } from './_openai.mjs'
 import { loadEnv, sha1, villaFacts, apartmentFacts, complexFacts, SITE_URL } from './_kb-build.mjs'
 
 loadEnv()
@@ -22,14 +24,6 @@ const DRY = argv.includes('--dry-run')
 const MIN_LISTINGS = 3
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const CHAT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
-const EMBED = process.env.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT ?? 'text-embedding-3-large'
-const DIMS = 1536
 
 // Normalize "Canggu (Tibubeneng)" / " Berawa " → "Canggu" / "Berawa".
 function normDistrict(s) {
@@ -106,15 +100,14 @@ const DISTRICT_SYSTEM = `Ты — Балиса, эксперт по рынку �
 const MARKET_SYSTEM = `Ты — Балиса, эксперт по рынку недвижимости Бали. Тебе дают сводную статистику по районам из нашей базы. Напиши краткий обзор рынка (6–10 предложений) для внутренней базы знаний: какие районы самые ёмкие по предложению, диапазоны цен, где дешевле/дороже вход, где силён сегмент аренды. По-русски, только по цифрам, без выдумок, без ссылок и эмодзи.`
 
 async function summarizeDoc(system, user) {
-  const r = await ai.chat.completions.create({
-    model: CHAT,
+  const r = await chat({
     messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     temperature: 0.3, max_completion_tokens: 1500,
   })
   return r.choices[0]?.message?.content?.trim() ?? ''
 }
 async function embed(text) {
-  const r = await ai.embeddings.create({ model: EMBED, input: [text.slice(0, 8000)], dimensions: DIMS })
+  const r = await embedTexts([text.slice(0, 8000)])
   return r.data[0].embedding
 }
 
@@ -122,6 +115,7 @@ const districts = [...D.values()]
   .filter(b => (b.villaPrices.length + b.aptPrices.length) >= MIN_LISTINGS || b.rentalCount >= MIN_LISTINGS)
   .sort((a, b) => (b.villaPrices.length + b.aptPrices.length + b.rentalCount) - (a.villaPrices.length + a.aptPrices.length + a.rentalCount))
 console.log(`Districts worth a guide: ${districts.length}`)
+if (!DRY) requirePaid({ what: `гайды районов + обзор рынка (${chatModel()} + эмбеддинг на каждый)`, items: districts.length + 1 })
 
 let done = 0
 for (const b of districts) {

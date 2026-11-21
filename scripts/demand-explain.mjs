@@ -14,10 +14,13 @@
 //   node scripts/demand-explain.mjs --dry-run --limit=3
 //   node scripts/demand-explain.mjs --force        # переписать всё
 //   node scripts/demand-explain.mjs                # дописать недостающее
+//
+// Платно (OpenAI), --dry-run тоже: он зовёт модель, только не пишет в базу.
+// Без --yes-paid скрипт печатает число объектов и останавливается до запросов.
 
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
 import { loadEnv } from './_kb-build.mjs'
+import { chat, chatModel, requirePaid } from './_openai.mjs'
 
 loadEnv()
 
@@ -30,16 +33,12 @@ const FORCE = has('--force')
 const LIMIT = val('limit') ? parseInt(val('limit'), 10) : Infinity
 const CONC = val('conc') ? parseInt(val('conc'), 10) : 8
 
+// Ставки Azure gpt-5.4 (июль 2026) — для OpenAI это верхняя оценка; точная
+// цифра — в usage кабинета OpenAI.
 const PRICE_IN = 2.50 / 1e6
 const PRICE_OUT = 15.00 / 1e6
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview',
-})
-const MODEL = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT ?? 'gpt-5.4'
 
 // Человеческие имена признаков: модель не должна догадываться, что значит
 // `outdoor_living_hi`, иначе начнёт сочинять.
@@ -144,13 +143,13 @@ const pending = rows
 
 console.log(`К разбору: ${pending.length} из ${rows.length}`)
 if (!pending.length) process.exit(0)
+requirePaid({ what: `тексты «почему» (ru+en) моделью ${chatModel()}`, items: pending.length })
 
 let done = 0, failed = 0, tokIn = 0, tokOut = 0
 const results = []
 
 async function explain(row) {
-  const res = await ai.chat.completions.create({
-    model: MODEL,
+  const res = await chat({
     messages: [
       { role: 'system', content: SYSTEM },
       { role: 'user', content: buildPrompt(row) },

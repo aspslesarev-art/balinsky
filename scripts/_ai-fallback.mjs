@@ -1,6 +1,6 @@
-// Shared Azure-OpenAI fallback for Airtable AI fields. When a record
+// Shared OpenAI fallback for Airtable AI fields. When a record
 // contains `{state: 'error', errorType: 'monthlyConsumptionLimited',
-// value: null}`, we ask Azure to regenerate the affected field(s) from
+// value: null}`, we ask OpenAI to regenerate the affected field(s) from
 // the surrounding context, then write the result straight into the
 // record so the rest of the sync pipeline never has to know.
 //
@@ -8,10 +8,15 @@
 // id + a hash of the contextual fields the prompt was built from —
 // running the sync ten times in a row only burns tokens once per
 // changed record.
+//
+// Only the disabled scripts in scripts/legacy-airtable/ import this. PAID:
+// the generating step runs only when the calling script got --yes-paid;
+// otherwise it prints how many records would go out and skips them.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { chat, hasYesPaid, YES_PAID_FLAG } from './_openai.mjs'
 
 const CACHE_FILE = path.resolve('scripts', '_ai-fallback-cache.json')
 
@@ -79,44 +84,17 @@ function hashKey(recordId, missing, ctx) {
   return h.digest('hex').slice(0, 16)
 }
 
-// Env is read lazily — the sync scripts load .env.local AFTER importing
-// this module, so capturing process.env at module init would always
-// see undefined. Reading at call time keeps the module import-safe.
-function azureConfig() {
-  const key = process.env.AZURE_OPENAI_API_KEY
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT
-  const version = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-  const model = process.env.AZURE_OPENAI_FALLBACK_DEPLOYMENT
-    || process.env.AZURE_OPENAI_CHAT_DEPLOYMENT
-    || 'gpt-5.4'
-  return { key, endpoint, version, model }
-}
-
-async function callAzure(systemPrompt, userPayload) {
-  const { key, endpoint, version, model } = azureConfig()
-  if (!key || !endpoint) {
-    throw new Error('Azure OpenAI env not configured')
-  }
-  const url = `${endpoint.replace(/\/$/, '')}/openai/deployments/${model}/chat/completions?api-version=${version}`
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: { 'api-key': key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: JSON.stringify(userPayload) },
-      ],
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-    }),
+async function callAI(systemPrompt, userPayload) {
+  const j = await chat({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: JSON.stringify(userPayload) },
+    ],
+    temperature: 0.4,
+    response_format: { type: 'json_object' },
   })
-  if (!r.ok) {
-    const body = await r.text().catch(() => '')
-    throw new Error(`azure ${r.status}: ${body.slice(0, 200)}`)
-  }
-  const j = await r.json()
   const msg = j?.choices?.[0]?.message?.content
-  if (!msg) throw new Error('azure: empty content')
+  if (!msg) throw new Error('openai: empty content')
   return JSON.parse(msg)
 }
 
@@ -160,7 +138,7 @@ export async function backfillAiFields(record, entityKind) {
       context: ctx,
       fields_to_generate: missing,
     }
-    generated = await callAzure(systemPrompt, payload)
+    generated = await callAI(systemPrompt, payload)
     cache[key] = generated
     saveCache()
   }
@@ -186,7 +164,7 @@ export async function backfillAiFields(record, entityKind) {
 // returns counts.
 export async function applyAiFallback(records, entityKind, opts = {}) {
   const concurrency = opts.concurrency ?? 4
-  // Cost guard: hard-cap how many Azure calls one sync run can fire.
+  // Cost guard: hard-cap how many OpenAI calls one sync run can fire.
   // Cache writes accumulate across runs, so the next sync will pick up
   // where this one left off without re-burning tokens on already-done
   // rows. Override via env when intentionally backfilling a big batch.
@@ -202,7 +180,7 @@ export async function applyAiFallback(records, entityKind, opts = {}) {
     const ctx = buildContext(r.fields, new Set(missing))
     const key = hashKey(r.id, missing, ctx)
     if (cache[key]) {
-      // Still apply the cached fix — cheap, no Azure call.
+      // Still apply the cached fix — cheap, no OpenAI call.
       try { await backfillAiFields(r, entityKind) } catch {}
     } else {
       stillNeeded.push(r)
@@ -213,7 +191,11 @@ export async function applyAiFallback(records, entityKind, opts = {}) {
     return { processed: errored.length, filled: 0, failed: 0 }
   }
   const queue = stillNeeded.slice(0, limit)
-  console.log(`  AI fallback: ${stillNeeded.length} record(s) need Azure; processing ${queue.length} this run (cap = ${limit})`)
+  if (!hasYesPaid()) {
+    console.log(`  [ПЛАТНО] AI fallback: ${stillNeeded.length} record(s) need OpenAI (${queue.length} this run) — skipped, needs ${YES_PAID_FLAG}`)
+    return { processed: 0, filled: 0, failed: 0 }
+  }
+  console.log(`  [ПЛАТНО] AI fallback: ${stillNeeded.length} record(s) need OpenAI; processing ${queue.length} this run (cap = ${limit})`)
   errored = queue
   let filled = 0, failed = 0
   for (let i = 0; i < errored.length; i += concurrency) {

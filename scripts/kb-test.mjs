@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 // Smoke-test kb_search quality across kinds with realistic investor queries.
+// Embeds 6 queries via OpenAI (paid, tiny) — refuses to run without --yes-paid.
 import { createClient } from '@supabase/supabase-js'
-import { AzureOpenAI } from 'openai'
 import { loadEnv } from './_kb-build.mjs'
+import { embed, requirePaid } from './_openai.mjs'
 loadEnv()
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ai = new AzureOpenAI({ apiKey: process.env.AZURE_OPENAI_API_KEY, endpoint: process.env.AZURE_OPENAI_ENDPOINT, apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? '2024-12-01-preview' })
-const EMBED = process.env.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT ?? 'text-embedding-3-large'
+requirePaid({ what: 'эмбеддинги тестовых запросов kb_search', items: 6 })
 
 async function search(q, kinds, n = 5) {
-  const r = await ai.embeddings.create({ model: EMBED, input: [q], dimensions: 1536 })
+  const r = await embed([q])
   const lit = '[' + r.data[0].embedding.join(',') + ']'
   const { data, error } = await sb.rpc('kb_search', { query_embedding: lit, match_count: n, kinds: kinds ?? null })
   if (error) { console.log('  ERR', error.message); return }

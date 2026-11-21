@@ -4,10 +4,12 @@
 // so listings whose only long-form body is the EN-only KB write-up render
 // natively on non-RU pages. Idempotent via content hash.
 //
-// Usage: node scripts/kb-translate-body.mjs --lang de [--limit N] [--force] [--dry-run]
+// Usage: node scripts/kb-translate-body.mjs --lang de [--limit N] [--force] [--dry-run] --yes-paid
+// PAID (OpenAI): without --yes-paid it prints the count and stops before any request.
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import { chat, requirePaid } from './_openai.mjs'
 
 const envFile = fs.readFileSync('.env.local', 'utf8')
 for (const line of envFile.split('\n')) {
@@ -16,12 +18,7 @@ for (const line of envFile.split('\n')) {
 }
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
-const AZURE_KEY = process.env.AZURE_OPENAI_API_KEY
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT
-const AZURE_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview'
-const AZURE_MODEL = process.env.AZURE_OPENAI_TRANSLATE_DEPLOYMENT || process.env.AZURE_OPENAI_CHAT_DEPLOYMENT
 if (!SUPABASE_URL || !SERVICE_KEY) throw new Error('Supabase env not set')
-if (!AZURE_KEY || !AZURE_ENDPOINT || !AZURE_MODEL) throw new Error('Azure env not set')
 const sb = createClient(SUPABASE_URL, SERVICE_KEY)
 
 const LANGS = { de: 'German', zh: 'Simplified Chinese', nl: 'Dutch', fr: 'French', id: 'Indonesian', pl: 'Polish', uk: 'Ukrainian' }
@@ -57,19 +54,15 @@ Rules:
 - Bali place names (Canggu, Pererenan, Ubud, Uluwatu, Bukit, Nusa Dua, Sanur, Berawa, Batu Bolong…) and project/developer proper names stay in Latin script.
 - ${lang === 'zh' ? 'Simplified Chinese has no plurals; keep Latin place/brand names.' : 'Keep the register a native buyer would read.'}`
 
-async function callAzure(text) {
-  const url = `${AZURE_ENDPOINT.replace(/\/$/, '')}/openai/deployments/${AZURE_MODEL}/chat/completions?api-version=${AZURE_VERSION}`
+async function callAI(text) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'api-key': AZURE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: AZURE_MODEL, temperature: 0.3, messages: [{ role: 'system', content: SYS }, { role: 'user', content: text }] }),
-      })
-      if (!r.ok) { if (r.status === 429 || r.status >= 500) { await new Promise(s => setTimeout(s, 1500 * (attempt + 1))); continue } throw new Error(`azure ${r.status}: ${(await r.text()).slice(0, 200)}`) }
-      const j = await r.json()
+      const j = await chat({ temperature: 0.3, messages: [{ role: 'system', content: SYS }, { role: 'user', content: text }] })
       return j.choices?.[0]?.message?.content?.trim() ?? null
-    } catch (e) { if (attempt === 2) throw e; await new Promise(s => setTimeout(s, 1500 * (attempt + 1))) }
+    } catch (e) {
+      if (attempt === 2 || (e?.status && e.status < 500 && e.status !== 429)) throw e
+      await new Promise(s => setTimeout(s, 1500 * (attempt + 1)))
+    }
   }
   return null
 }
@@ -106,11 +99,12 @@ if (dryRun || todo.length === 0) process.exit(0)
 const CONC = 6
 let done = 0, failed = 0
 const batch = todo.slice(0, limit === Infinity ? todo.length : limit)
+requirePaid({ what: `перевод KB page-body на ${lang}`, items: batch.length })
 for (let i = 0; i < batch.length; i += CONC) {
   const slice = batch.slice(i, i + CONC)
   await Promise.all(slice.map(async item => {
     try {
-      const out = await callAzure(item.en)
+      const out = await callAI(item.en)
       if (out) { cache[item.ref_id] = { _hash: item.h, body: out }; done++ }
       else failed++
     } catch (e) { failed++; console.error('  fail', item.ref_id, e.message) }
