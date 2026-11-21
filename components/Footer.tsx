@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Send, Play } from 'lucide-react'
 import { pickCopy, switchLangPath, langToSegment, LANGS, type Lang } from '@/lib/i18n'
+
+// Подвал «Журнал» — вариант A из макета (владелец 21.11.2026,
+// https://claude.ai/artifact/2PonCGZduofYcuwwn6zQMe): толстая чёрная линия
+// сверху, шесть колонок с номерами 01–06, строка языков, юридический низ.
 
 // Самоназвания языков: это стандарт для переключателя (человек ищет свой язык
 // на своём языке, а не «French») и одновременно осмысленный текст ссылки —
@@ -11,606 +14,419 @@ const LANG_NATIVE_NAME: Record<Lang, string> = {
   zh: '中文', nl: 'Nederlands', ban: 'Basa Bali', pl: 'Polski', uk: 'Українська',
 }
 
-type Col = { title: string; links: { label: string; href: string }[] }
+type LinkId =
+  | 'villas' | 'apartments' | 'complexes' | 'resale' | 'rental'
+  | 'developers' | 'agents' | 'events' | 'promo'
+  | 'howToBuy' | 'reservation' | 'trip' | 'living'
+  | 'prices' | 'rentPrices' | 'investment' | 'methodology'
+  | 'news' | 'knowledge' | 'about' | 'contact'
+  | 'listProject' | 'devPartner' | 'agencyPartner' | 'advertising' | 'reportError'
+  | 'privacy' | 'terms' | 'cookie'
 
-const COLS_BY_LANG: Record<Lang, Col[]> = {
-  ru: [
-    {
-      title: 'Застройщики',
-      links: [
-        { label: 'Каталог', href: '/ru/zastrojshhiki' },
-        { label: 'Мероприятия', href: '/ru/meropriyatiya' },
-        { label: 'Акции', href: '/ru/akcii' },
-      ],
-    },
-    {
-      title: 'Недвижимость',
-      links: [
-        { label: 'Жилые комплексы', href: '/ru/zhilye-kompleksy' },
-        { label: 'Виллы', href: '/ru/villy' },
-        { label: 'Апартаменты', href: '/ru/apartamenty' },
-        { label: 'Аренда', href: '/ru/arenda' },
-        { label: 'Перепродажа', href: '/ru/pereprodazha' },
-      ],
-    },
-    {
-      title: 'Информация',
-      links: [
-        { label: 'Инвестиции в недвижимость Бали', href: '/ru/investicii-v-nedvizhimost-bali' },
-        { label: 'Цены на недвижимость по районам', href: '/ru/tseny-na-nedvizhimost-bali' },
-        { label: 'Цены аренды на Бали', href: '/ru/tseny-arendy-na-bali' },
-        { label: 'Как мы считаем', href: '/ru/metodologiya' },
-        { label: 'Жизнь на Бали — ВНЖ и налоги', href: '/ru/zhizn-na-bali' },
-        { label: 'Как купить на Бали', href: '/ru/kak-kupit' },
-        { label: 'Поездка на осмотр', href: '/ru/invest-tour' },
-        { label: 'Как устроена бронь у застройщика', href: '/ru/rezervirovanie' },
-        { label: 'Новости', href: '/ru/novosti' },
-        { label: 'Знания', href: '/ru/znaniya' },
-      ],
-    },
-    {
-      title: 'Каталог',
-      links: [
-        { label: 'Агенты', href: '/ru/zastrojshhiki' },
-      ],
-    },
-    {
-      title: 'Сотрудничество',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Разместить проект', href: '/ru/kontakty' },
-        { label: 'Сообщить об ошибке в данных', href: '/ru/kontakty' },
-      ],
-    },
-  ],
-  en: [
-    {
-      title: 'Developers',
-      links: [
-        { label: 'Bali property developers', href: '/en/developers' },
-        { label: 'Events', href: '/en/events' },
-        { label: 'Promotions', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Real estate',
-      links: [
-        { label: 'Residential complexes', href: '/en/complexes' },
-        { label: 'Villas', href: '/en/villas' },
-        { label: 'Apartments', href: '/en/apartments' },
-        { label: 'Long-term rental', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Information',
-      links: [
-        { label: 'Bali property investment', href: '/en/bali-property-investment' },
-        { label: 'Property prices by area', href: '/en/bali-property-prices' },
-        { label: 'Rent prices in Bali', href: '/en/bali-rent-prices' },
-        { label: 'How we calculate', href: '/en/methodology' },
-        { label: 'Living in Bali — visas & taxes', href: '/en/living-in-bali' },
-        { label: 'How to buy in Bali', href: '/en/how-to-buy' },
-        { label: 'Viewing trip', href: '/en/invest-tour' },
-        { label: 'How developer reservations work', href: '/en/reservation' },
-        { label: 'News', href: '/en/news' },
-        { label: 'Knowledge', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Catalogue',
-      links: [
-        { label: 'Agents', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Partnership',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'List your project', href: '/en/contact' },
-        { label: 'Report a data error', href: '/en/contact' },
-      ],
-    },
-  ],
-  id: [
-    {
-      title: 'Pengembang',
-      links: [
-        { label: 'Pengembang properti Bali', href: '/en/developers' },
-        { label: 'Acara', href: '/en/events' },
-        { label: 'Promo', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Properti',
-      links: [
-        { label: 'Kompleks hunian', href: '/en/complexes' },
-        { label: 'Vila', href: '/en/villas' },
-        { label: 'Apartemen', href: '/en/apartments' },
-        { label: 'Sewa jangka panjang', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Informasi',
-      links: [
-        { label: 'Investasi properti Bali', href: '/en/bali-property-investment' },
-        { label: 'Harga properti per kawasan', href: '/en/bali-property-prices' },
-        { label: 'Harga sewa di Bali', href: '/en/bali-rent-prices' },
-        { label: 'Cara kami menghitung', href: '/en/methodology' },
-        { label: 'Tinggal di Bali — visa & pajak', href: '/en/living-in-bali' },
-        { label: 'Cara membeli di Bali', href: '/en/how-to-buy' },
-        { label: 'Perjalanan peninjauan', href: '/en/invest-tour' },
-        { label: 'Cara kerja reservasi pengembang', href: '/en/reservation' },
-        { label: 'Berita', href: '/en/news' },
-        { label: 'Pengetahuan', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Katalog',
-      links: [
-        { label: 'Agen', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Kerja sama',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Pasang proyek Anda', href: '/en/contact' },
-        { label: 'Laporkan kekeliruan data', href: '/en/contact' },
-      ],
-    },
-  ],
-  fr: [
-    {
-      title: 'Promoteurs',
-      links: [
-        { label: 'Promoteurs immobiliers à Bali', href: '/en/developers' },
-        { label: 'Événements', href: '/en/events' },
-        { label: 'Promotions', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Immobilier',
-      links: [
-        { label: 'Complexes résidentiels', href: '/en/complexes' },
-        { label: 'Villas', href: '/en/villas' },
-        { label: 'Appartements', href: '/en/apartments' },
-        { label: 'Location longue durée', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Informations',
-      links: [
-        { label: 'Investissement immobilier à Bali', href: '/en/bali-property-investment' },
-        { label: 'Prix de l’immobilier par quartier', href: '/en/bali-property-prices' },
-        { label: 'Prix des locations à Bali', href: '/en/bali-rent-prices' },
-        { label: 'Notre méthode', href: '/en/methodology' },
-        { label: 'Vivre à Bali — visas & impôts', href: '/en/living-in-bali' },
-        { label: 'Comment acheter à Bali', href: '/en/how-to-buy' },
-        { label: 'Voyage de visite', href: '/en/invest-tour' },
-        { label: 'Comment fonctionne la réservation', href: '/en/reservation' },
-        { label: 'Actualités', href: '/en/news' },
-        { label: 'Savoir', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Catalogue',
-      links: [
-        { label: 'Agents', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Partenariat',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Référencer votre projet', href: '/en/contact' },
-        { label: 'Signaler une erreur de données', href: '/en/contact' },
-      ],
-    },
-  ],
-  de: [
-    {
-      title: 'Bauträger',
-      links: [
-        { label: 'Verzeichnis', href: '/en/developers' },
-        { label: 'Veranstaltungen', href: '/en/events' },
-        { label: 'Aktionen', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Immobilien',
-      links: [
-        { label: 'Wohnanlagen', href: '/en/complexes' },
-        { label: 'Villen', href: '/en/villas' },
-        { label: 'Apartments', href: '/en/apartments' },
-        { label: 'Langzeitmiete', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Informationen',
-      links: [
-        { label: 'Immobilieninvestment auf Bali', href: '/en/bali-property-investment' },
-        { label: 'Immobilienpreise nach Gegend', href: '/en/bali-property-prices' },
-        { label: 'Mietpreise auf Bali', href: '/en/bali-rent-prices' },
-        { label: 'So rechnen wir', href: '/en/methodology' },
-        { label: 'Leben auf Bali — Visa & Steuern', href: '/en/living-in-bali' },
-        { label: 'Kaufen auf Bali', href: '/en/how-to-buy' },
-        { label: 'Besichtigungsreise', href: '/en/invest-tour' },
-        { label: 'So funktioniert die Reservierung', href: '/en/reservation' },
-        { label: 'Neuigkeiten', href: '/en/news' },
-        { label: 'Wissen', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Katalog',
-      links: [
-        { label: 'Makler', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Zusammenarbeit',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Projekt eintragen', href: '/en/contact' },
-        { label: 'Datenfehler melden', href: '/en/contact' },
-      ],
-    },
-  ],
-  zh: [
-    {
-      title: '开发商',
-      links: [
-        { label: '开发商目录', href: '/en/developers' },
-        { label: '活动', href: '/en/events' },
-        { label: '促销优惠', href: '/en/promo' },
-      ],
-    },
-    {
-      title: '房产',
-      links: [
-        { label: '住宅综合体', href: '/en/complexes' },
-        { label: '别墅', href: '/en/villas' },
-        { label: '公寓', href: '/en/apartments' },
-        { label: '长期租赁', href: '/en/rental' },
-      ],
-    },
-    {
-      title: '信息',
-      links: [
-        { label: '巴厘岛房产投资', href: '/en/bali-property-investment' },
-        { label: '各区域房产价格', href: '/en/bali-property-prices' },
-        { label: '巴厘岛租金价格', href: '/en/bali-rent-prices' },
-        { label: '我们如何计算', href: '/en/methodology' },
-        { label: '在巴厘岛生活 — 签证与税务', href: '/en/living-in-bali' },
-        { label: '如何在巴厘岛购房', href: '/en/how-to-buy' },
-        { label: '看房之行', href: '/en/invest-tour' },
-        { label: '开发商预订如何运作', href: '/en/reservation' },
-        { label: '新闻', href: '/en/news' },
-        { label: '知识库', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: '目录',
-      links: [
-        { label: '经纪人', href: '/en/developers' },
-      ],
-    },
-    {
-      title: '合作',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: '刊登您的项目', href: '/en/contact' },
-        { label: '报告数据错误', href: '/en/contact' },
-      ],
-    },
-  ],
-  nl: [
-    {
-      title: 'Projectontwikkelaars',
-      links: [
-        { label: 'Overzicht', href: '/en/developers' },
-        { label: 'Evenementen', href: '/en/events' },
-        { label: 'Acties', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Vastgoed',
-      links: [
-        { label: 'Wooncomplexen', href: '/en/complexes' },
-        { label: "Villa's", href: '/en/villas' },
-        { label: 'Appartementen', href: '/en/apartments' },
-        { label: 'Langlopende verhuur', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Informatie',
-      links: [
-        { label: 'Investeren in vastgoed op Bali', href: '/en/bali-property-investment' },
-        { label: 'Vastgoedprijzen per gebied', href: '/en/bali-property-prices' },
-        { label: 'Huurprijzen op Bali', href: '/en/bali-rent-prices' },
-        { label: 'Hoe we rekenen', href: '/en/methodology' },
-        { label: 'Wonen op Bali — visa & belastingen', href: '/en/living-in-bali' },
-        { label: 'Kopen op Bali', href: '/en/how-to-buy' },
-        { label: 'Bezichtigingsreis', href: '/en/invest-tour' },
-        { label: 'Hoe een reservering werkt', href: '/en/reservation' },
-        { label: 'Nieuws', href: '/en/news' },
-        { label: 'Kennisbank', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Catalogus',
-      links: [
-        { label: 'Makelaars', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Samenwerking',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Uw project plaatsen', href: '/en/contact' },
-        { label: 'Een fout in de gegevens melden', href: '/en/contact' },
-      ],
-    },
-  ],
-  ban: [
-    {
-      title: 'Pengembang',
-      links: [
-        { label: 'Direktori', href: '/en/developers' },
-        { label: 'Acara', href: '/en/events' },
-        { label: 'Promo', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Properti',
-      links: [
-        { label: 'Kompleks hunian', href: '/en/complexes' },
-        { label: 'Vila', href: '/en/villas' },
-        { label: 'Apartemen', href: '/en/apartments' },
-        { label: 'Sewa jangka panjang', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Informasi',
-      links: [
-        { label: 'Investasi properti Bali', href: '/en/bali-property-investment' },
-        { label: 'Harga properti per kawasan', href: '/en/bali-property-prices' },
-        { label: 'Harga sewa di Bali', href: '/en/bali-rent-prices' },
-        { label: 'Cara kami menghitung', href: '/en/methodology' },
-        { label: 'Tinggal di Bali — visa & pajak', href: '/en/living-in-bali' },
-        { label: 'Cara meli di Bali', href: '/en/how-to-buy' },
-        { label: 'Palancaran nyingakin', href: '/en/invest-tour' },
-        { label: 'Cara kerja reservasi pengembang', href: '/en/reservation' },
-        { label: 'Berita', href: '/en/news' },
-        { label: 'Kaweruh', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Katalog',
-      links: [
-        { label: 'Agen', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Kerja sama',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Ngedaftarang proyek Ragane', href: '/en/contact' },
-        { label: 'Nguningayang iwang data', href: '/en/contact' },
-      ],
-    },
-  ],
-  pl: [
-    {
-      title: 'Deweloperzy',
-      links: [
-        { label: 'Katalog', href: '/en/developers' },
-        { label: 'Wydarzenia', href: '/en/events' },
-        { label: 'Promocje', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Nieruchomości',
-      links: [
-        { label: 'Kompleksy mieszkaniowe', href: '/en/complexes' },
-        { label: 'Wille', href: '/en/villas' },
-        { label: 'Apartamenty', href: '/en/apartments' },
-        { label: 'Wynajem długoterminowy', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Informacje',
-      links: [
-        { label: 'Inwestycje w nieruchomości na Bali', href: '/en/bali-property-investment' },
-        { label: 'Ceny nieruchomości według rejonów', href: '/en/bali-property-prices' },
-        { label: 'Ceny najmu na Bali', href: '/en/bali-rent-prices' },
-        { label: 'Jak liczymy', href: '/en/methodology' },
-        { label: 'Życie na Bali — wizy i podatki', href: '/en/living-in-bali' },
-        { label: 'Jak kupić na Bali', href: '/en/how-to-buy' },
-        { label: 'Wyjazd na oglądanie', href: '/en/invest-tour' },
-        { label: 'Jak działa rezerwacja', href: '/en/reservation' },
-        { label: 'Aktualności', href: '/en/news' },
-        { label: 'Wiedza', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Katalog',
-      links: [
-        { label: 'Agenci', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Współpraca',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Dodaj swój projekt', href: '/en/contact' },
-        { label: 'Zgłoś błąd w danych', href: '/en/contact' },
-      ],
-    },
-  ],
-  uk: [
-    {
-      title: 'Забудовники',
-      links: [
-        { label: 'Каталог', href: '/en/developers' },
-        { label: 'Заходи', href: '/en/events' },
-        { label: 'Акції', href: '/en/promo' },
-      ],
-    },
-    {
-      title: 'Нерухомість',
-      links: [
-        { label: 'Житлові комплекси', href: '/en/complexes' },
-        { label: 'Вілли', href: '/en/villas' },
-        { label: 'Апартаменти', href: '/en/apartments' },
-        { label: 'Довгострокова оренда', href: '/en/rental' },
-      ],
-    },
-    {
-      title: 'Інформація',
-      links: [
-        { label: 'Інвестиції в нерухомість Балі', href: '/en/bali-property-investment' },
-        { label: 'Ціни на нерухомість за районами', href: '/en/bali-property-prices' },
-        { label: 'Ціни оренди на Балі', href: '/en/bali-rent-prices' },
-        { label: 'Як ми рахуємо', href: '/en/methodology' },
-        { label: 'Життя на Балі — візи та податки', href: '/en/living-in-bali' },
-        { label: 'Як купити на Балі', href: '/en/how-to-buy' },
-        { label: 'Поїздка на огляд', href: '/en/invest-tour' },
-        { label: 'Як влаштована бронь у забудовника', href: '/en/reservation' },
-        { label: 'Новини', href: '/en/news' },
-        { label: 'Знання', href: '/en/knowledge' },
-      ],
-    },
-    {
-      title: 'Каталог',
-      links: [
-        { label: 'Агенти', href: '/en/developers' },
-      ],
-    },
-    {
-      title: 'Співпраця',
-      links: [
-        // Раздел найма убран: площадка никого не нанимает. Осталась
-        // точка входа для застройщика, который хочет добавить проект
-        // в каталог, и для читателя, нашедшего ошибку в данных.
-        { label: 'Розмістити проєкт', href: '/en/contact' },
-        { label: 'Повідомити про помилку в даних', href: '/en/contact' },
-      ],
-    },
-  ],
+// Адреса в русской форме; switchLangPath переводит их в сегменты языка
+// страницы (/ru/villy → /en/villas → /de/villen).
+const HREF: Record<LinkId, string> = {
+  villas: '/ru/villy',
+  apartments: '/ru/apartamenty',
+  complexes: '/ru/zhilye-kompleksy',
+  resale: '/ru/pereprodazha',
+  rental: '/ru/arenda',
+  developers: '/ru/zastrojshhiki',
+  // Раньше вёл на каталог застройщиков. Отдельного каталога агентов на сайте
+  // нет; страница агента — кабинет, где он сам добавляет свои объекты
+  // (гость попадает на вход и возвращается сюда же). Не переводится:
+  // кабинет один на все языки.
+  agents: '/kabinet/objekty',
+  events: '/ru/meropriyatiya',
+  promo: '/ru/akcii',
+  howToBuy: '/ru/kak-kupit',
+  reservation: '/ru/rezervirovanie',
+  trip: '/ru/invest-tour',
+  living: '/ru/zhizn-na-bali',
+  prices: '/ru/tseny-na-nedvizhimost-bali',
+  rentPrices: '/ru/tseny-arendy-na-bali',
+  investment: '/ru/investicii-v-nedvizhimost-bali',
+  methodology: '/ru/metodologiya',
+  news: '/ru/novosti',
+  knowledge: '/ru/znaniya',
+  about: '/ru/o-balinsky',
+  contact: '/ru/kontakty',
+  // Раздел найма убран: площадка никого не нанимает. Осталась точка входа
+  // для застройщика, который хочет добавить проект в каталог, и для
+  // читателя, нашедшего ошибку в данных.
+  listProject: '/ru/kontakty',
+  devPartner: '/ru/kontakty',
+  agencyPartner: '/ru/kontakty',
+  advertising: '/ru/kontakty',
+  reportError: '/ru/kontakty',
+  privacy: '/ru/politika-konfidencialnosti',
+  terms: '/ru/usloviya',
+  cookie: '/ru/cookie',
 }
 
-const BOTTOM_BY_LANG: Record<Lang, { label: string; href: string }[]> = {
-  ru: [
-    { label: 'О нас', href: '/ru/o-balinsky' },
-    { label: 'Сотрудничество с застройщиками', href: '/ru/kontakty' },
-    { label: 'Сотрудничество с агентствами', href: '/ru/kontakty' },
-    { label: 'Политика конфиденциальности', href: '/ru/politika-konfidencialnosti' },
-    { label: 'Условия использования', href: '/ru/usloviya' },
-    { label: 'Cookie', href: '/ru/cookie' },
-    { label: 'Связаться', href: '/ru/kontakty' },
-  ],
-  en: [
-    { label: 'About', href: '/en/about' },
-    { label: 'Developer partnerships', href: '/en/contact' },
-    { label: 'Agency partnerships', href: '/en/contact' },
-    { label: 'Privacy policy', href: '/en/privacy' },
-    { label: 'Terms of use', href: '/en/terms' },
-    { label: 'Cookie', href: '/en/cookie' },
-    { label: 'Contact', href: '/en/contact' },
-  ],
-  id: [
-    { label: 'Tentang kami', href: '/en/about' },
-    { label: 'Periklanan', href: '/en/contact' },
-    { label: 'Kemitraan dengan pengembang', href: '/en/contact' },
-    { label: 'Kemitraan dengan agensi', href: '/en/contact' },
-    { label: 'Kebijakan privasi', href: '/en/privacy' },
-    { label: 'Ketentuan penggunaan', href: '/en/terms' },
-    { label: 'Cookie', href: '/en/cookie' },
-    { label: 'Kontak', href: '/en/contact' },
-  ],
-  fr: [
-    { label: 'À propos', href: '/en/about' },
-    { label: 'Partenariats avec les promoteurs', href: '/en/contact' },
-    { label: 'Partenariats avec les agences', href: '/en/contact' },
-    { label: 'Politique de confidentialité', href: '/en/privacy' },
-    { label: "Conditions d'utilisation", href: '/en/terms' },
-    { label: 'Cookies', href: '/en/cookie' },
-    { label: 'Contact', href: '/en/contact' },
-  ],
-  de: [
-    { label: 'Über uns', href: '/en/about' },
-    { label: 'Partnerschaft mit Bauträgern', href: '/en/contact' },
-    { label: 'Partnerschaft mit Agenturen', href: '/en/contact' },
-    { label: 'Datenschutzerklärung', href: '/en/privacy' },
-    { label: 'Nutzungsbedingungen', href: '/en/terms' },
-    { label: 'Cookies', href: '/en/cookie' },
-    { label: 'Kontakt', href: '/en/contact' },
-  ],
-  zh: [
-    { label: '关于我们', href: '/en/about' },
-    { label: '广告合作', href: '/en/contact' },
-    { label: '开发商合作', href: '/en/contact' },
-    { label: '代理机构合作', href: '/en/contact' },
-    { label: '隐私政策', href: '/en/privacy' },
-    { label: '使用条款', href: '/en/terms' },
-    { label: 'Cookie', href: '/en/cookie' },
-    { label: '联系我们', href: '/en/contact' },
-  ],
-  nl: [
-    { label: 'Over ons', href: '/en/about' },
-    { label: 'Samenwerking met ontwikkelaars', href: '/en/contact' },
-    { label: 'Samenwerking met bureaus', href: '/en/contact' },
-    { label: 'Privacybeleid', href: '/en/privacy' },
-    { label: 'Gebruiksvoorwaarden', href: '/en/terms' },
-    { label: 'Cookies', href: '/en/cookie' },
-    { label: 'Contact', href: '/en/contact' },
-  ],
-  ban: [
-    { label: 'Indik kami', href: '/en/about' },
-    { label: 'Periklanan', href: '/en/contact' },
-    { label: 'Kemitraan sareng pengembang', href: '/en/contact' },
-    { label: 'Kemitraan sareng agensi', href: '/en/contact' },
-    { label: 'Kebijakan privasi', href: '/en/privacy' },
-    { label: 'Ketentuan panganggo', href: '/en/terms' },
-    { label: 'Cookie', href: '/en/cookie' },
-    { label: 'Kontak', href: '/en/contact' },
-  ],
-  pl: [
-    { label: 'O nas', href: '/en/about' },
-    { label: 'Współpraca z deweloperami', href: '/en/contact' },
-    { label: 'Współpraca z agencjami', href: '/en/contact' },
-    { label: 'Polityka prywatności', href: '/en/privacy' },
-    { label: 'Warunki korzystania', href: '/en/terms' },
-    { label: 'Cookie', href: '/en/cookie' },
-    { label: 'Kontakt', href: '/en/contact' },
-  ],
-  uk: [
-    { label: 'Про нас', href: '/en/about' },
-    { label: 'Співпраця із забудовниками', href: '/en/contact' },
-    { label: 'Співпраця з агентствами', href: '/en/contact' },
-    { label: 'Політика конфіденційності', href: '/en/privacy' },
-    { label: 'Умови використання', href: '/en/terms' },
-    { label: 'Cookie', href: '/en/cookie' },
-    { label: 'Контакти', href: '/en/contact' },
-  ],
+const NON_LOCALIZED = new Set<LinkId>(['agents'])
+
+// Подписи ссылок. Нет подписи — нет ссылки в этом языке (перепродажа есть
+// только по-русски, «Реклама» — там, где она была).
+const LABELS: Record<Lang, Partial<Record<LinkId, string>>> = {
+  ru: {
+    developers: 'Каталог',
+    events: 'Мероприятия',
+    promo: 'Акции',
+    complexes: 'Жилые комплексы',
+    villas: 'Виллы',
+    apartments: 'Апартаменты',
+    rental: 'Аренда',
+    resale: 'Перепродажа',
+    investment: 'Инвестиции в недвижимость Бали',
+    prices: 'Цены на недвижимость по районам',
+    rentPrices: 'Цены аренды на Бали',
+    methodology: 'Как мы считаем',
+    living: 'Жизнь на Бали — ВНЖ и налоги',
+    howToBuy: 'Как купить на Бали',
+    trip: 'Поездка на осмотр',
+    reservation: 'Как устроена бронь у застройщика',
+    news: 'Новости',
+    knowledge: 'Знания',
+    agents: 'Агенты',
+    listProject: 'Разместить проект',
+    reportError: 'Сообщить об ошибке в данных',
+    about: 'О нас',
+    devPartner: 'Сотрудничество с застройщиками',
+    agencyPartner: 'Сотрудничество с агентствами',
+    privacy: 'Политика конфиденциальности',
+    terms: 'Условия использования',
+    cookie: 'Cookie',
+    contact: 'Связаться',
+  },
+  en: {
+    developers: 'Bali property developers',
+    events: 'Events',
+    promo: 'Promotions',
+    complexes: 'Residential complexes',
+    villas: 'Villas',
+    apartments: 'Apartments',
+    rental: 'Long-term rental',
+    investment: 'Bali property investment',
+    prices: 'Property prices by area',
+    rentPrices: 'Rent prices in Bali',
+    methodology: 'How we calculate',
+    living: 'Living in Bali — visas & taxes',
+    howToBuy: 'How to buy in Bali',
+    trip: 'Viewing trip',
+    reservation: 'How developer reservations work',
+    news: 'News',
+    knowledge: 'Knowledge',
+    agents: 'Agents',
+    listProject: 'List your project',
+    reportError: 'Report a data error',
+    about: 'About',
+    devPartner: 'Developer partnerships',
+    agencyPartner: 'Agency partnerships',
+    privacy: 'Privacy policy',
+    terms: 'Terms of use',
+    cookie: 'Cookie',
+    contact: 'Contact',
+  },
+  id: {
+    developers: 'Pengembang properti Bali',
+    events: 'Acara',
+    promo: 'Promo',
+    complexes: 'Kompleks hunian',
+    villas: 'Vila',
+    apartments: 'Apartemen',
+    rental: 'Sewa jangka panjang',
+    investment: 'Investasi properti Bali',
+    prices: 'Harga properti per kawasan',
+    rentPrices: 'Harga sewa di Bali',
+    methodology: 'Cara kami menghitung',
+    living: 'Tinggal di Bali — visa & pajak',
+    howToBuy: 'Cara membeli di Bali',
+    trip: 'Perjalanan peninjauan',
+    reservation: 'Cara kerja reservasi pengembang',
+    news: 'Berita',
+    knowledge: 'Pengetahuan',
+    agents: 'Agen',
+    listProject: 'Pasang proyek Anda',
+    reportError: 'Laporkan kekeliruan data',
+    about: 'Tentang kami',
+    advertising: 'Periklanan',
+    devPartner: 'Kemitraan dengan pengembang',
+    agencyPartner: 'Kemitraan dengan agensi',
+    privacy: 'Kebijakan privasi',
+    terms: 'Ketentuan penggunaan',
+    cookie: 'Cookie',
+    contact: 'Kontak',
+  },
+  fr: {
+    developers: 'Promoteurs immobiliers à Bali',
+    events: 'Événements',
+    promo: 'Promotions',
+    complexes: 'Complexes résidentiels',
+    villas: 'Villas',
+    apartments: 'Appartements',
+    rental: 'Location longue durée',
+    investment: 'Investissement immobilier à Bali',
+    prices: 'Prix de l’immobilier par quartier',
+    rentPrices: 'Prix des locations à Bali',
+    methodology: 'Notre méthode',
+    living: 'Vivre à Bali — visas & impôts',
+    howToBuy: 'Comment acheter à Bali',
+    trip: 'Voyage de visite',
+    reservation: 'Comment fonctionne la réservation',
+    news: 'Actualités',
+    knowledge: 'Savoir',
+    agents: 'Agents',
+    listProject: 'Référencer votre projet',
+    reportError: 'Signaler une erreur de données',
+    about: 'À propos',
+    devPartner: 'Partenariats avec les promoteurs',
+    agencyPartner: 'Partenariats avec les agences',
+    privacy: 'Politique de confidentialité',
+    terms: "Conditions d'utilisation",
+    cookie: 'Cookies',
+    contact: 'Contact',
+  },
+  de: {
+    developers: 'Verzeichnis',
+    events: 'Veranstaltungen',
+    promo: 'Aktionen',
+    complexes: 'Wohnanlagen',
+    villas: 'Villen',
+    apartments: 'Apartments',
+    rental: 'Langzeitmiete',
+    investment: 'Immobilieninvestment auf Bali',
+    prices: 'Immobilienpreise nach Gegend',
+    rentPrices: 'Mietpreise auf Bali',
+    methodology: 'So rechnen wir',
+    living: 'Leben auf Bali — Visa & Steuern',
+    howToBuy: 'Kaufen auf Bali',
+    trip: 'Besichtigungsreise',
+    reservation: 'So funktioniert die Reservierung',
+    news: 'Neuigkeiten',
+    knowledge: 'Wissen',
+    agents: 'Makler',
+    listProject: 'Projekt eintragen',
+    reportError: 'Datenfehler melden',
+    about: 'Über uns',
+    devPartner: 'Partnerschaft mit Bauträgern',
+    agencyPartner: 'Partnerschaft mit Agenturen',
+    privacy: 'Datenschutzerklärung',
+    terms: 'Nutzungsbedingungen',
+    cookie: 'Cookies',
+    contact: 'Kontakt',
+  },
+  zh: {
+    developers: '开发商目录',
+    events: '活动',
+    promo: '促销优惠',
+    complexes: '住宅综合体',
+    villas: '别墅',
+    apartments: '公寓',
+    rental: '长期租赁',
+    investment: '巴厘岛房产投资',
+    prices: '各区域房产价格',
+    rentPrices: '巴厘岛租金价格',
+    methodology: '我们如何计算',
+    living: '在巴厘岛生活 — 签证与税务',
+    howToBuy: '如何在巴厘岛购房',
+    trip: '看房之行',
+    reservation: '开发商预订如何运作',
+    news: '新闻',
+    knowledge: '知识库',
+    agents: '经纪人',
+    listProject: '刊登您的项目',
+    reportError: '报告数据错误',
+    about: '关于我们',
+    advertising: '广告合作',
+    devPartner: '开发商合作',
+    agencyPartner: '代理机构合作',
+    privacy: '隐私政策',
+    terms: '使用条款',
+    cookie: 'Cookie',
+    contact: '联系我们',
+  },
+  nl: {
+    developers: 'Overzicht',
+    events: 'Evenementen',
+    promo: 'Acties',
+    complexes: 'Wooncomplexen',
+    villas: "Villa's",
+    apartments: 'Appartementen',
+    rental: 'Langlopende verhuur',
+    investment: 'Investeren in vastgoed op Bali',
+    prices: 'Vastgoedprijzen per gebied',
+    rentPrices: 'Huurprijzen op Bali',
+    methodology: 'Hoe we rekenen',
+    living: 'Wonen op Bali — visa & belastingen',
+    howToBuy: 'Kopen op Bali',
+    trip: 'Bezichtigingsreis',
+    reservation: 'Hoe een reservering werkt',
+    news: 'Nieuws',
+    knowledge: 'Kennisbank',
+    agents: 'Makelaars',
+    listProject: 'Uw project plaatsen',
+    reportError: 'Een fout in de gegevens melden',
+    about: 'Over ons',
+    devPartner: 'Samenwerking met ontwikkelaars',
+    agencyPartner: 'Samenwerking met bureaus',
+    privacy: 'Privacybeleid',
+    terms: 'Gebruiksvoorwaarden',
+    cookie: 'Cookies',
+    contact: 'Contact',
+  },
+  ban: {
+    developers: 'Direktori',
+    events: 'Acara',
+    promo: 'Promo',
+    complexes: 'Kompleks hunian',
+    villas: 'Vila',
+    apartments: 'Apartemen',
+    rental: 'Sewa jangka panjang',
+    investment: 'Investasi properti Bali',
+    prices: 'Harga properti per kawasan',
+    rentPrices: 'Harga sewa di Bali',
+    methodology: 'Cara kami menghitung',
+    living: 'Tinggal di Bali — visa & pajak',
+    howToBuy: 'Cara meli di Bali',
+    trip: 'Palancaran nyingakin',
+    reservation: 'Cara kerja reservasi pengembang',
+    news: 'Berita',
+    knowledge: 'Kaweruh',
+    agents: 'Agen',
+    listProject: 'Ngedaftarang proyek Ragane',
+    reportError: 'Nguningayang iwang data',
+    about: 'Indik kami',
+    advertising: 'Periklanan',
+    devPartner: 'Kemitraan sareng pengembang',
+    agencyPartner: 'Kemitraan sareng agensi',
+    privacy: 'Kebijakan privasi',
+    terms: 'Ketentuan panganggo',
+    cookie: 'Cookie',
+    contact: 'Kontak',
+  },
+  pl: {
+    developers: 'Katalog',
+    events: 'Wydarzenia',
+    promo: 'Promocje',
+    complexes: 'Kompleksy mieszkaniowe',
+    villas: 'Wille',
+    apartments: 'Apartamenty',
+    rental: 'Wynajem długoterminowy',
+    investment: 'Inwestycje w nieruchomości na Bali',
+    prices: 'Ceny nieruchomości według rejonów',
+    rentPrices: 'Ceny najmu na Bali',
+    methodology: 'Jak liczymy',
+    living: 'Życie na Bali — wizy i podatki',
+    howToBuy: 'Jak kupić na Bali',
+    trip: 'Wyjazd na oglądanie',
+    reservation: 'Jak działa rezerwacja',
+    news: 'Aktualności',
+    knowledge: 'Wiedza',
+    agents: 'Agenci',
+    listProject: 'Dodaj swój projekt',
+    reportError: 'Zgłoś błąd w danych',
+    about: 'O nas',
+    devPartner: 'Współpraca z deweloperami',
+    agencyPartner: 'Współpraca z agencjami',
+    privacy: 'Polityka prywatności',
+    terms: 'Warunki korzystania',
+    cookie: 'Cookie',
+    contact: 'Kontakt',
+  },
+  uk: {
+    developers: 'Каталог',
+    events: 'Заходи',
+    promo: 'Акції',
+    complexes: 'Житлові комплекси',
+    villas: 'Вілли',
+    apartments: 'Апартаменти',
+    rental: 'Довгострокова оренда',
+    investment: 'Інвестиції в нерухомість Балі',
+    prices: 'Ціни на нерухомість за районами',
+    rentPrices: 'Ціни оренди на Балі',
+    methodology: 'Як ми рахуємо',
+    living: 'Життя на Балі — візи та податки',
+    howToBuy: 'Як купити на Балі',
+    trip: 'Поїздка на огляд',
+    reservation: 'Як влаштована бронь у забудовника',
+    news: 'Новини',
+    knowledge: 'Знання',
+    agents: 'Агенти',
+    listProject: 'Розмістити проєкт',
+    reportError: 'Повідомити про помилку в даних',
+    about: 'Про нас',
+    devPartner: 'Співпраця із забудовниками',
+    agencyPartner: 'Співпраця з агентствами',
+    privacy: 'Політика конфіденційності',
+    terms: 'Умови використання',
+    cookie: 'Cookie',
+    contact: 'Контакти',
+  },
+}
+
+type ColId = 'realty' | 'developers' | 'buying' | 'data' | 'journal' | 'partnership'
+
+const COLS: { id: ColId; links: LinkId[] }[] = [
+  { id: 'realty', links: ['villas', 'apartments', 'complexes', 'resale', 'rental'] },
+  { id: 'developers', links: ['developers', 'agents', 'events', 'promo'] },
+  { id: 'buying', links: ['howToBuy', 'reservation', 'trip', 'living'] },
+  { id: 'data', links: ['prices', 'rentPrices', 'investment', 'methodology'] },
+  { id: 'journal', links: ['news', 'knowledge', 'about', 'contact'] },
+  { id: 'partnership', links: ['listProject', 'devPartner', 'agencyPartner', 'advertising', 'reportError'] },
+]
+
+const LEGAL: LinkId[] = ['privacy', 'terms', 'cookie']
+
+const COL_TITLE: Record<ColId, Record<Lang, string>> = {
+  realty: { ru: 'Недвижимость', en: 'Real estate', id: 'Properti', fr: 'Immobilier', de: 'Immobilien', zh: '房产', nl: 'Vastgoed', ban: 'Properti', pl: 'Nieruchomości', uk: 'Нерухомість' },
+  developers: { ru: 'Застройщики', en: 'Developers', id: 'Pengembang', fr: 'Promoteurs', de: 'Bauträger', zh: '开发商', nl: 'Ontwikkelaars', ban: 'Pengembang', pl: 'Deweloperzy', uk: 'Забудовники' },
+  buying: { ru: 'Покупка', en: 'Buying', id: 'Pembelian', fr: 'Achat', de: 'Kauf', zh: '购房', nl: 'Kopen', ban: 'Numbas', pl: 'Zakup', uk: 'Купівля' },
+  data: { ru: 'Цены и данные', en: 'Prices & data', id: 'Harga & data', fr: 'Prix et données', de: 'Preise & Daten', zh: '价格与数据', nl: 'Prijzen & data', ban: 'Harga & data', pl: 'Ceny i dane', uk: 'Ціни та дані' },
+  journal: { ru: 'Журнал', en: 'Journal', id: 'Jurnal', fr: 'Journal', de: 'Magazin', zh: '资讯', nl: 'Magazine', ban: 'Jurnal', pl: 'Magazyn', uk: 'Журнал' },
+  partnership: { ru: 'Сотрудничество', en: 'Partnership', id: 'Kerja sama', fr: 'Partenariat', de: 'Zusammenarbeit', zh: '合作', nl: 'Samenwerking', ban: 'Kerja sama', pl: 'Współpraca', uk: 'Співпраця' },
+}
+
+// Неразрывные пробелы ( ) после коротких слов и перед тире —
+// чтобы строки не кончались предлогом и не начинались с «—».
+const TAGLINE: Record<Lang, string> = {
+  ru: 'Недвижимость Бали в лизхолде для иностранцев. Цены, документы и доход — по каждому объекту.',
+  en: 'Bali leasehold property for foreigners. Prices, documents and income — for every listing.',
+  id: 'Properti leasehold di Bali untuk warga asing. Harga, dokumen, dan pendapatan — untuk setiap objek.',
+  fr: 'L’immobilier en leasehold à Bali pour les étrangers. Prix, documents et revenus — pour chaque bien.',
+  de: 'Leasehold-Immobilien auf Bali für Ausländer. Preise, Dokumente und Ertrag — für jedes Objekt.',
+  zh: '面向外国人的巴厘岛租赁产权房产。每套房源的价格、文件与收益，一目了然。',
+  nl: 'Leasehold-vastgoed op Bali voor buitenlanders. Prijzen, documenten en rendement — per object.',
+  ban: 'Properti leasehold ring Bali majeng wong dura negara. Harga, dokumen, miwah pikolih — ring sabilang objek.',
+  pl: 'Nieruchomości na Bali w leasehold dla cudzoziemców. Ceny, dokumenty i dochód — dla każdego obiektu.',
+  uk: 'Нерухомість Балі в лізхолді для іноземців. Ціни, документи й дохід — по кожному об’єкту.',
+}
+
+const FOLLOW: Record<Lang, string> = {
+  ru: 'Следить за рынком', en: 'Follow the market', id: 'Ikuti pasar', fr: 'Suivre le marché', de: 'Markt verfolgen',
+  zh: '关注市场', nl: 'Volg de markt', ban: 'Ngiringin pasar', pl: 'Śledź rynek', uk: 'Стежити за ринком',
+}
+
+const LANGS_LABEL: Record<Lang, string> = {
+  ru: 'Языки сайта', en: 'Site languages', id: 'Bahasa situs', fr: 'Langues du site',
+  de: 'Sprachen der Website', zh: '网站语言', nl: 'Talen van de site',
+  ban: 'Basa ring situs', pl: 'Języki serwisu', uk: 'Мови сайту',
+}
+
+// Роль площадки. Персональные данные оператора здесь не публикуются по
+// требованию владельца сайта; для связи есть страница контактов.
+// Утверждений о доходе сайта тоже нет — только то, чем площадка не является.
+const NOT_AGENCY: Record<Lang, string> = {
+  ru: 'Balinsky.info — информационный каталог. Сайт не является агентством недвижимости: мы не продаём объекты, не участвуем в сделках и не берём комиссию.',
+  en: 'Balinsky.info is an information catalogue. The site is not a real-estate agency: we do not sell properties, take no part in transactions and charge no commission.',
+  id: 'Balinsky.info adalah katalog informasi. Situs ini bukan agen properti: kami tidak menjual objek, tidak ikut dalam transaksi, dan tidak memungut komisi.',
+  fr: 'Balinsky.info est un catalogue d’information. Le site n’est pas une agence immobilière : nous ne vendons pas de biens, ne participons pas aux transactions et ne percevons aucune commission.',
+  de: 'Balinsky.info ist ein Informationskatalog. Die Website ist keine Immobilienagentur: Wir verkaufen keine Objekte, sind an Transaktionen nicht beteiligt und nehmen keine Provision.',
+  zh: 'Balinsky.info 是信息目录。本站不是房地产中介：我们不销售房产、不参与交易，也不收取佣金。',
+  nl: 'Balinsky.info is een informatiecatalogus. De site is geen makelaar: wij verkopen geen objecten, nemen geen deel aan transacties en rekenen geen commissie.',
+  ban: 'Balinsky.info inggih punika katalog informasi. Situs puniki nénten agen properti: tiang nénten ngadol objek, nénten milu ring transaksi, tur nénten nerima komisi.',
+  pl: 'Balinsky.info to katalog informacyjny. Serwis nie jest agencją nieruchomości: nie sprzedajemy obiektów, nie uczestniczymy w transakcjach i nie pobieramy prowizji.',
+  uk: 'Balinsky.info — інформаційний каталог. Сайт не є агентством нерухомості: ми не продаємо обʼєкти, не беремо участі в угодах і не беремо комісію.',
 }
 
 const LICENSE_BY_LANG: Record<Lang, string> = {
@@ -626,76 +442,57 @@ const LICENSE_BY_LANG: Record<Lang, string> = {
   uk: 'Усі матеріали сайту доступні за ліцензією Creative Commons Attribution 4.0 International. Ви повинні належним чином зазначити автора твору, позначити ліцензію відповідним повідомленням і надати посилання на матеріал, якщо вони надані разом з оригіналом.',
 }
 
+const CAP = 'text-[12px] uppercase tracking-[0.08em] text-[#6B7570]'
+const LINK = 'rounded-sm no-underline transition-colors duration-[120ms] hover:text-[var(--color-primary-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]'
+
+function href(id: LinkId, lang: Lang): string {
+  return NON_LOCALIZED.has(id) ? HREF[id] : switchLangPath(HREF[id], lang)
+}
+
 export function Footer({ lang = 'ru' }: { lang?: Lang }) {
-  const cols = pickCopy(COLS_BY_LANG, lang)
-  const bottom = pickCopy(BOTTOM_BY_LANG, lang)
-  const license = pickCopy(LICENSE_BY_LANG, lang)
+  const labels = LABELS[lang] ?? LABELS.en
+  const cols = COLS.map(c => ({ ...c, links: c.links.filter(id => labels[id]) }))
   return (
-    <footer className="mt-auto bg-[var(--color-header-bg)] border-t border-[var(--color-border)]">
-      <div className="max-w-[1280px] mx-auto px-6 pt-12 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-          <div className="md:col-span-4 lg:col-span-4">
-            <Link href={`/${langToSegment(lang)}`} aria-label="Balinsky" className="inline-block mb-5">
-              <Image src="/logo.svg" alt="Balinsky" width={40} height={40} className="h-10 w-10" />
-            </Link>
-            <p className="text-[13px] leading-[1.6] text-[var(--color-text-muted)] max-w-[380px]">
-              {license}
-            </p>
-            <div className="mt-6 flex items-center gap-4">
-              <a
-                href="https://t.me/itrealtor"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Telegram"
-                className="text-[#229ED9] hover:opacity-80"
-              >
-                <Send size={22} />
-              </a>
-              <a
-                href="https://www.youtube.com/@balinsky_info"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-                className="inline-flex items-center justify-center w-9 h-6 rounded-md bg-[#FF0000] text-white hover:opacity-80"
-              >
-                <Play size={14} fill="currentColor" />
-              </a>
+    <footer className="mt-auto bg-white">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+        <div className="flex flex-col gap-8 border-t-2 border-[#0F1A15] pt-8 pb-8 md:gap-12 md:pt-12">
+
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12">
+            <div className="flex max-w-[640px] flex-col gap-4">
+              <Link href={`/${langToSegment(lang)}`} className={`inline-flex items-center gap-3 self-start ${LINK} text-[#0F1A15]`}>
+                <Image src="/logo.svg" alt="" width={36} height={36} className="h-9 w-9" />
+                <span className="text-[20px] font-semibold tracking-[-0.02em]">Balinsky</span>
+              </Link>
+              <p className="text-[20px] font-semibold leading-[1.25] tracking-[-0.02em] [text-wrap:balance] md:text-[28px] md:leading-[1.2]">
+                {pickCopy(TAGLINE, lang)}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className={CAP}>{pickCopy(FOLLOW, lang)}</span>
+              <div className="flex gap-6 text-[16px] font-medium">
+                <a href="https://t.me/itrealtor" target="_blank" rel="noopener noreferrer" className={`${LINK} text-[#0F1A15] underline underline-offset-4`}>Telegram&nbsp;↗</a>
+                <a href="https://www.youtube.com/@balinsky_info" target="_blank" rel="noopener noreferrer" className={`${LINK} text-[#0F1A15] underline underline-offset-4`}>YouTube&nbsp;↗</a>
+              </div>
             </div>
           </div>
 
-          <div className="md:col-span-8 lg:col-span-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 lg:gap-4">
-            {cols.map(col => (
-              <div key={col.title}>
-                <div className="text-[12px] uppercase tracking-wide font-semibold text-[var(--color-text-muted)] mb-4">
-                  {col.title}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-8 lg:grid-cols-6">
+            {cols.map((col, i) => (
+              <div key={col.id} className="flex flex-col gap-4">
+                <div className={CAP}>
+                  <span className="tabular-nums">{String(i + 1).padStart(2, '0')}</span>{'  '}{COL_TITLE[col.id][lang]}
                 </div>
-                <ul className="space-y-3">
-                  {col.links.map(l => (
-                    <li key={l.label}>
-                      <Link
-                        href={switchLangPath(l.href, lang)}
-                        className="text-[14px] text-[var(--color-text)] hover:text-[var(--color-primary-pressed)] no-underline"
-                      >
-                        {l.label}
-                      </Link>
+                <ul className="flex flex-col gap-3">
+                  {col.links.map(id => (
+                    <li key={id}>
+                      <Link href={href(id, lang)} className={`text-[15px] leading-[1.4] ${LINK} text-[#0F1A15]`}>{labels[id]}</Link>
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="mt-12 pt-6 border-t border-[var(--color-border)]">
-          <ul className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-[13px] text-[var(--color-text)]">
-            {bottom.map(l => (
-              <li key={l.label}>
-                <Link href={switchLangPath(l.href, lang)} className="hover:text-[var(--color-primary-pressed)] no-underline">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
           {/*
             Единственный краулимый путь между языковыми деревьями сайта.
             Переключатель в шапке (components/LangSwitch.tsx) — это <select>
@@ -711,22 +508,17 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
             достаточно связать главные страницы локалей. Ссылки видимые:
             прятать их нельзя, скрытая навигация это спам-паттерн.
           */}
-          <nav
-            aria-label={pickCopy({
-              ru: 'Языки сайта', en: 'Site languages', id: 'Bahasa situs', fr: 'Langues du site',
-              de: 'Sprachen der Website', zh: '网站语言', nl: 'Talen van de site',
-              ban: 'Basa ring situs', pl: 'Języki serwisu', uk: 'Мови сайту',
-            }, lang)}
-            className="mt-6"
-          >
-            <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] text-[var(--color-text-muted)]">
+          <nav aria-label={LANGS_LABEL[lang]} className="flex flex-col gap-3 border-y border-[#ECEFED] py-4 lg:flex-row lg:items-center lg:gap-6">
+            <span className={`${CAP} shrink-0 whitespace-nowrap`} aria-hidden>{LANGS_LABEL[lang]}</span>
+            <ul className="flex flex-wrap gap-x-4 gap-y-2 text-[14px] md:gap-x-6">
               {LANGS.map(l => (
                 <li key={l}>
                   <Link
                     href={l === 'ru' ? '/' : `/${langToSegment(l)}`}
                     hrefLang={l}
+                    lang={l}
                     aria-current={l === lang ? 'true' : undefined}
-                    className={`no-underline hover:text-[var(--color-primary-pressed)] ${l === lang ? 'font-medium text-[var(--color-text)]' : ''}`}
+                    className={`${LINK} text-[#0F1A15] ${l === lang ? 'font-semibold' : ''}`}
                   >
                     {LANG_NATIVE_NAME[l]}
                   </Link>
@@ -735,26 +527,21 @@ export function Footer({ lang = 'ru' }: { lang?: Lang }) {
             </ul>
           </nav>
 
-          {/* Роль площадки. Персональные данные оператора здесь не
-              публикуются по требованию владельца сайта; для связи есть
-              страница контактов. Утверждений о доходе сайта тоже нет —
-              только то, чем площадка не является. */}
-          <div className="mt-6 mx-auto max-w-[68ch] text-center text-[12px] leading-[1.7] text-[var(--color-text-muted)]">
-            <p>
-              {pickCopy({
-                ru: 'Balinsky.info — информационный каталог. Сайт не является агентством недвижимости: мы не продаём объекты, не участвуем в сделках и не берём комиссию.',
-                en: 'Balinsky.info is an information catalogue. The site is not a real-estate agency: we do not sell properties, take no part in transactions and charge no commission.',
-                id: 'Balinsky.info adalah katalog informasi. Situs ini bukan agen properti: kami tidak menjual objek, tidak ikut dalam transaksi, dan tidak memungut komisi.',
-                fr: 'Balinsky.info est un catalogue d’information. Le site n’est pas une agence immobilière : nous ne vendons pas de biens, ne participons pas aux transactions et ne percevons aucune commission.',
-                de: 'Balinsky.info ist ein Informationskatalog. Die Website ist keine Immobilienagentur: Wir verkaufen keine Objekte, sind an Transaktionen nicht beteiligt und nehmen keine Provision.',
-                zh: 'Balinsky.info 是信息目录。本站不是房地产中介：我们不销售房产、不参与交易，也不收取佣金。',
-                nl: 'Balinsky.info is een informatiecatalogus. De site is geen makelaar: wij verkopen geen objecten, nemen geen deel aan transacties en rekenen geen commissie.',
-                ban: 'Balinsky.info inggih punika katalog informasi. Situs puniki nénten agen properti: tiang nénten ngadol objek, nénten milu ring transaksi, tur nénten nerima komisi.',
-                pl: 'Balinsky.info to katalog informacyjny. Serwis nie jest agencją nieruchomości: nie sprzedajemy obiektów, nie uczestniczymy w transakcjach i nie pobieramy prowizji.',
-                uk: 'Balinsky.info — інформаційний каталог. Сайт не є агентством нерухомості: ми не продаємо обʼєкти, не беремо участі в угодах і не беремо комісію.',
-              }, lang)}
-            </p>
-            <p className="mt-3">Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>
+          <div className="grid grid-cols-1 gap-6 text-[13px] leading-[1.6] text-[#4A5550] lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-16">
+            <div className="flex max-w-[68ch] flex-col gap-3">
+              <p className="text-[#0F1A15]">{pickCopy(NOT_AGENCY, lang)}</p>
+              <p>{pickCopy(LICENSE_BY_LANG, lang)}</p>
+            </div>
+            <div className="flex flex-col gap-3 lg:items-end lg:text-right">
+              <ul className="flex flex-wrap gap-x-6 gap-y-2 lg:justify-end">
+                {LEGAL.filter(id => labels[id]).map(id => (
+                  <li key={id}>
+                    <Link href={href(id, lang)} className={`${LINK} text-[#4A5550]`}>{labels[id]}</Link>
+                  </li>
+                ))}
+              </ul>
+              <p>Copyright © 2022–2026 Balinsky.info. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </div>
