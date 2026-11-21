@@ -22,6 +22,8 @@ export function useComplexFilterUrl(currentState: ComplexFilterState, view: Filt
   const apply = useCallback(
     (patch: Partial<ComplexFilterState>) => {
       const next: ComplexFilterState = { ...currentState, ...patch }
+      // Другой район — область на карте уже не про него, иначе список пустой.
+      if ('district' in patch) next.area = null
       const href = view === 'map' ? buildMapHref(next, lang) : buildListHref(next, lang)
       router.push(href, { scroll: false })
     },

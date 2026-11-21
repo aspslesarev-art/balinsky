@@ -1,6 +1,7 @@
 import type { VillaFilterState } from '@/app/ru/villy/_lib'
 import { buildCanonicalPath } from './villa-seo-routes'
 import { switchLangPath, type Lang } from './i18n'
+import { areaParam } from './catalog-area'
 
 const RU_LIST_BASE = '/ru/villy'
 const RU_MAP_BASE = '/ru/villy/karta'
@@ -25,13 +26,17 @@ function toQueryString(f: VillaFilterState): string {
 
 export function buildListHref(f: VillaFilterState, lang: Lang = 'ru'): string {
   const base = switchLangPath(RU_LIST_BASE, lang)
-  if (lang === 'ru' && (!f.q || !f.q.trim())) {
+  // Выбранная на карте область (?area) переживает смену фильтров и
+  // сортировки — раньше любой клик по фильтру молча сбрасывал её.
+  // Красивые адреса районов области не знают, поэтому с ней — общий адрес.
+  if (lang === 'ru' && (!f.q || !f.q.trim()) && !f.area) {
     const canonical = buildCanonicalPath(f)
     if (canonical) return canonical
   }
   // Сортировка нужна только списку — карта её не знает.
   const sp = new URLSearchParams(toQueryString(f))
   if (f.sort) sp.set('sort', f.sort)
+  if (f.area) sp.set('area', areaParam(f.area)!)
   const qs = sp.toString()
   return qs ? `${base}?${qs}` : base
 }
