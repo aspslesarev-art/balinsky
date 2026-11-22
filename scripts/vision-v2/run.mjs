@@ -9,7 +9,7 @@ const CLAUDE = process.env.CLAUDE_BIN || 'claude'
 const all = fs.readdirSync(WORK).map(f => /^batch_(\d+)\.json$/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a, b) => a - b)
 const todo = all.filter(n => (!ONLY || ONLY.includes(n)) && !fs.existsSync(`${WORK}/out/batch_${n}.jsonl`))
 console.log('пачек к разбору', todo.length)
-const run = p => new Promise(res => { const c = spawn(CLAUDE, ['-p', p, '--allowedTools', 'Read,Write', '--permission-mode', 'acceptEdits', '--add-dir', WORK], { cwd: WORK, stdio: ['ignore', 'pipe', 'pipe'] }); let o = ''; c.stdout.on('data', d => o += d); c.stderr.on('data', d => o += d); const t = setTimeout(() => c.kill('SIGTERM'), 40 * 60e3); c.on('close', code => { clearTimeout(t); res({ code, out: o.slice(-400) }) }) })
+const run = p => new Promise(res => { const c = spawn(CLAUDE, ['-p', p, '--allowedTools', 'Read,Write', '--permission-mode', 'acceptEdits', '--add-dir', WORK], { cwd: WORK, stdio: ['ignore', 'pipe', 'pipe'] }); let o = ''; c.stdout.on('data', d => o += d); c.stderr.on('data', d => o += d); const t = setTimeout(() => c.kill('SIGTERM'), 40 * 60e3); c.on('error', e => { clearTimeout(t); res({ code: -1, out: 'spawn error ' + e.message }) }); c.on('close', code => { clearTimeout(t); res({ code, out: o.slice(-400) }) }) })
 let i = 0, stop = false, done = 0
 await Promise.all(Array.from({ length: PAR }, async () => {
   while (!stop && i < todo.length) {
@@ -22,6 +22,8 @@ await Promise.all(Array.from({ length: PAR }, async () => {
 4. Write all objects as JSON Lines (one per line, nothing else) to ${WORK}/out/batch_${n}.jsonl.
 5. Do the work yourself, do not start sub-agents. Reply with only the number of objects rated.`)
       // лимит подписки: ждём и повторяем ту же пачку, а не бросаем ночь
+      // claude обновился и бинарник пропал на минуту — ждём и повторяем
+      if (/spawn error/.test(r.out)) { console.error(new Date().toISOString().slice(11, 19), r.out, '— жду 2 мин'); await new Promise(z => setTimeout(z, 120e3)); continue }
       if (!fs.existsSync(`${WORK}/out/batch_${n}.jsonl`) && /usage limit|rate limit|limit reached|hit your|usage credits|overloaded|529|429/i.test(r.out)) { console.error(new Date().toISOString().slice(11, 19), 'лимит, жду 15 мин:', r.out.slice(-150)); await new Promise(z => setTimeout(z, 15 * 60e3)); continue }
       break }
     const ok = fs.existsSync(`${WORK}/out/batch_${n}.jsonl`)
