@@ -104,6 +104,10 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   // верхний слой гаснет перед сменой.
   const [show, setShow] = useState<{ from: number; k: number } | null>(null)
   const [fading, setFading] = useState(false)
+  // Слои, у которых кадр уже нарисован. Пока картинки нет, её «наезд» стоит на
+  // паузе: иначе он начинался до появления фото, и при запуске слайд-шоу
+  // кадр появлялся уже приближенным — рывок (владелец 24.11.2026).
+  const [painted, setPainted] = useState<Set<string>>(() => new Set())
   const showing = show !== null
   // Звук места (владелец 19.11.2026): «как будто смотрим видео». Web Audio —
   // петля без щелчка на стыке, плавное нарастание; звук стартует только по
@@ -165,9 +169,13 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   // раскодировал 2560-px кадр только в момент, когда верхний слой начинал
   // гаснуть, и смена кадра подтормаживала.
   const loaded = useRef(new Set<string>())
-  const markLoaded = (src: string, img?: HTMLImageElement) => {
-    if (!img?.decode) { loaded.current.add(src); return }
-    img.decode().catch(() => {}).finally(() => loaded.current.add(src))
+  const markLoaded = (src: string, img?: HTMLImageElement, layerKey?: string) => {
+    const done = () => {
+      loaded.current.add(src)
+      if (layerKey) setPainted(p => p.has(layerKey) ? p : new Set(p).add(layerKey))
+    }
+    if (!img?.decode) { done(); return }
+    img.decode().catch(() => {}).finally(done)
   }
   // Пока вкладка скрыта или фото ушло с экрана — не листаем: иначе каждые 2 с
   // качался и раскодировался новый кадр, которого никто не видит.
@@ -218,6 +226,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
     // Заранее грузится только следующее фото (нижний слой, ужатая копия).
     // Раньше тут качались все оригиналы разом — на телефоне они забивали
     // канал, и нужный кадр не успевал.
+    setPainted(new Set())
     setShow({ from: Math.min(cur, n - 1), k: 0 })
     if (!muted) void soundOn()
   }
@@ -234,12 +243,21 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
   const aIdx = aTop ? topIdx : nextIdx, bIdx = aTop ? nextIdx : topIdx
   // Ключ — по физическому слою (как в PhotoSlider): слой, ставший верхним, не
   // пересоздаётся, иначе на смене кадра фото грузится заново — белая вспышка.
-  const layer = (name: 'a' | 'b', idx: number, top: boolean) => (
-    <Image key={`${name}-${idx}`} src={slides[idx]} alt="" aria-hidden fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'}
-      className={`object-cover photo-motion-${idx % PRESETS} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
+  // Первый кадр слайд-шоу начинает движение с исходного вида фото (scale 1):
+  // наборы 2 и 3 стартуют с приближения 110% — при нажатии Play фото прыгало.
+  const motionOf = (idx: number) => {
+    const m = idx % PRESETS
+    return show && show.k === 0 && idx === show.from % n && (m === 2 || m === 3) ? m - 2 : m
+  }
+  const layer = (name: 'a' | 'b', idx: number, top: boolean) => {
+    const key = `${name}-${idx}`
+    return (
+    <Image key={key} src={slides[idx]} alt="" aria-hidden fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'}
+      className={`object-cover photo-motion-${motionOf(idx)} ${painted.has(key) ? '' : '[animation-play-state:paused]'} ${top ? `z-[2] transition-opacity duration-[600ms] ease-in-out ${fading ? 'opacity-0' : 'opacity-100'}` : 'z-[1]'}`}
       style={{ animationDuration: `${2 * ADVANCE_MS}ms`, animationTimingFunction: 'linear', animationFillMode: 'forwards' }}
-      onLoad={e => markLoaded(slides[idx], e.currentTarget)} onError={() => loaded.current.add(slides[idx])} />
-  )
+      onLoad={e => markLoaded(slides[idx], e.currentTarget, key)} onError={() => { loaded.current.add(slides[idx]); setPainted(p => new Set(p).add(key)) }} />
+    )
+  }
   const heroH = bleed ? `h-[260px] sm:h-[360px] md:h-[440px] ${overHero ? 'lg:h-[640px]' : 'lg:h-[480px]'}` : 'h-[300px] sm:h-[400px] md:h-[480px]'
   const round = bleed ? '' : 'rounded-xl'
   const hasTiles = planCount > 0 || !!masterplan || videos.length > 0 || !!tourUrl || !!extraTiles || !!promo || viewerTabs.some(v => !v.hideTile)
@@ -344,7 +362,7 @@ export function VillaGallery({ photos, alts, plans, plan3dUrl, videos, title, la
           <button type="button" onClick={n > 1 ? (showing ? stop : play) : openAt} aria-label={n > 1 ? (showing ? c.pause : c.play) : c.open}
             className={`absolute inset-0 block ${n > 1 ? 'cursor-pointer' : 'cursor-zoom-in'} overflow-hidden ${round} focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white`}>
             <Image key={shown} src={shown} alt={alts?.[Math.min(cur, n - 1)] ?? title} fill sizes={bleed ? '100vw' : '(min-width: 1024px) 720px, 100vw'} priority={cur === 0}
-              className={`object-cover transition-opacity duration-[600ms] ${showing ? 'opacity-0' : 'opacity-100'}`} draggable={false} />
+              className="object-cover" draggable={false} />
             {showing && <>{layer('a', aIdx, aTop)}{layer('b', bIdx, !aTop)}</>}
           </button>
         )}
