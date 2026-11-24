@@ -1127,6 +1127,11 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
       '@type': 'Offer',
       price: Math.round(priceNum),
       priceCurrency: 'USD',
+      // Google просит availability у Offer (SEO-аудит 24.11.2026). Продано —
+      // только по явной отметке застройщика, иначе объект в продаже.
+      availability: d['Продано'] === true || d['Продано'] === 'true' || firstString(d['Статус продаж']) === 'Продано'
+        ? 'https://schema.org/SoldOut'
+        : 'https://schema.org/InStock',
       url: `${SITE_URL}${switchLangPath(`/ru/apartamenty/o/${slug}`, lang)}`,
       // Продавец — застройщик, если известен. Balinsky объекты не продаёт:
       // ни бренда, ни продавца «Balinsky», ни доставки с возвратом.

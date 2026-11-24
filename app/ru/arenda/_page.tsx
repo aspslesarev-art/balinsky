@@ -5,7 +5,7 @@ import { Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { PageContainer } from '@/components/PageContainer'
 import { loadFreshRental } from '@/lib/rental'
-import { RentalCatalog } from './_catalog'
+import { RentalCatalog, RentalCatalogStatic } from './_catalog'
 import { RentalSeoContent } from '@/components/RentalSeoContent'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 import { hreflangMap } from '@/lib/hreflang'
@@ -135,7 +135,7 @@ export async function RentalListShell({ initial, lang }: {
         </h1>
         <div className="text-[14px] text-[var(--color-text-muted)] mb-6">{c.sub}</div>
 
-        <Suspense fallback={<div className="text-[14px] text-[var(--color-text-muted)]">{c.loading}</div>}>
+        <Suspense fallback={<RentalCatalogStatic items={items} initial={initial} lang={lang} />}>
           <RentalCatalog items={items} initial={initial} lang={lang} />
         </Suspense>
 

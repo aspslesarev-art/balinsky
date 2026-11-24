@@ -56,6 +56,9 @@ export function MarketShell({ pageKey, lang, crumb, h1, lead, updated, children,
     '@type': 'Article',
     headline: h1,
     inLanguage: lang,
+    // Дата появления раздела на сайте (первый коммит MarketShell) —
+    // Google требует datePublished у Article (SEO-аудит 24.11.2026).
+    datePublished: '2026-09-25',
     dateModified: MARKET.generatedAt,
     mainEntityOfPage: url,
     author: { '@type': 'Organization', name: 'Balinsky', url: SITE_ORIGIN },

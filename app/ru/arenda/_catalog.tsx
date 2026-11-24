@@ -169,9 +169,26 @@ function isSortKey(v: string | null): v is SortKey {
   return v != null && (v === 'newest' || v === 'price-asc' || v === 'price-desc' || v === 'br-asc' || v === 'br-desc')
 }
 
-export function RentalCatalog({ items, initial, lang = 'ru' }: { items: RentalItem[]; initial?: Initial; lang?: Lang }) {
-  const router = useCatalogRouter()
+type CatalogProps = { items: RentalItem[]; initial?: Initial; lang?: Lang }
+type SearchParamsLike = Pick<URLSearchParams, 'get' | 'toString'>
+const NO_PARAMS: SearchParamsLike = new URLSearchParams()
+
+// useSearchParams на ISR-странице уводит весь список в отрисовку только в
+// браузере: в HTML был один «Загрузка…», карточки появлялись позже и сдвигали
+// текст ниже (CLS 0.6, SEO-аудит 24.11.2026), а поисковик получал пустой
+// каталог. Поэтому _page.tsx кладёт в fallback Suspense этот же список без
+// параметров URL — он попадает в HTML; на голом /arenda параметров и так нет.
+export function RentalCatalog(props: CatalogProps) {
   const searchParams = useSearchParams()
+  return <RentalCatalogView {...props} searchParams={searchParams} />
+}
+
+export function RentalCatalogStatic(props: CatalogProps) {
+  return <RentalCatalogView {...props} searchParams={NO_PARAMS} />
+}
+
+function RentalCatalogView({ items, initial, lang = 'ru', searchParams }: CatalogProps & { searchParams: SearchParamsLike }) {
+  const router = useCatalogRouter()
   const COPY_L = pickCopy(COPY, lang)
   const SORT_LABELS = COPY_L.sort
   const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
