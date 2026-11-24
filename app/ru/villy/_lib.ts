@@ -795,7 +795,9 @@ export function buildAllCards(
     c.bestCapRate = s?.goodCapRate ?? null
     const cap = capRateOf.get(c.id)
     c.yieldPct = cap != null && Number.isFinite(cap) ? cap * 100 : null
-    c.yieldRange = s?.range ?? null
+    // Вилка дохода — Pro-аналитика; на карточке не показывается, а в код
+    // страницы уходила бы целиком (сборщики). Не отдаём (владелец 24.11.2026).
+    c.yieldRange = null
   }
   let sorted: VillaCard[]
   if (isSearch) sorted = mapped

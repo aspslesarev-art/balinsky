@@ -79,6 +79,7 @@ import { ManagerContactButtons } from '@/components/ManagerContactButtons'
 import { LocationView } from '@/components/LocationView'
 import { ZoningMap } from '@/components/ZoningMap'
 import { RDTR_BASE, loadRdtr } from '@/lib/rdtr-zones'
+import { ProLazy } from '@/components/ProLazy'
 import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
 import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
 import { loadSurroundings } from '@/lib/surroundings'
@@ -1408,7 +1409,7 @@ export async function generateComplexMetadata(slug: string, lang: Lang) {
   }
 }
 
-export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }) {
+export async function ComplexDetail({ slug, lang, proPart }: { slug: string; lang: Lang; /** Только Pro-панель — отдаёт lib/pro-parts.tsx после проверки сессии. */ proPart?: 'panel' }) {
   const copy = pickCopy(COPY, lang)
   const c = await loadComplexBySlug(slug)
   if (!c) notFound()
@@ -2080,6 +2081,13 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
   )
   const leftChapters = () => [kompleksChapter(), unitsChapter(), planChapter()]
 
+  if (proPart === 'panel') return analyses.length > 0 ? (
+          <VillaChapter id="analitika" no={no('analitika')} plain eyebrow={CH.analitika}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${complexesRoot}/o/${slug}`)}`} no={no('analitika')}
+              heading={pickCopy(CX_AI_HEADING, lang)} />
+          </VillaChapter>
+  ) : <></>
+
   return (
     <>
       <Header active="zhilye-kompleksy" />
@@ -2138,13 +2146,9 @@ export async function ComplexDetail({ slug, lang }: { slug: string; lang: Lang }
 
         {/* Аналитика — одна глава «Проверьте комплекс с ИИ», как у виллы. */}
         {analyses.length > 0 && (
-          // Только Pro (владелец 21.11.2026): аналитика ещё не готова для всех.
-          <div className="bx-pro-only">
-          <VillaChapter id="analitika" no={no('analitika')} plain eyebrow={CH.analitika}>
-            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${complexesRoot}/o/${slug}`)}`} no={no('analitika')}
-              heading={pickCopy(CX_AI_HEADING, lang)} />
-          </VillaChapter>
-          </div>
+          // Только Pro (владелец 21.11.2026). С 24.11.2026 в общей копии
+          // страницы панели нет — её отдаёт сервер только Pro (ProLazy).
+          <ProLazy kind="complex" slug={slug} lang={lang} part="panel" minHeight={480} />
         )}
 
         {/* Застройщик и вопросы — рядом на компьютере, как у виллы. */}

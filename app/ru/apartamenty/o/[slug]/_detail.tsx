@@ -47,6 +47,7 @@ import { LazyMount } from '@/components/LazyMount'
 import { ManagerContactButtons } from '@/components/ManagerContactButtons'
 import { VillaActions } from '@/components/VillaActions'
 import { VillaChapter, ProNo } from '@/components/VillaChapter'
+import { ProLazy } from '@/components/ProLazy'
 import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
 import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
 import { loadSurroundings } from '@/lib/surroundings'
@@ -931,7 +932,7 @@ export async function generateApartmentMetadata(slug: string, lang: Lang) {
   }
 }
 
-export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean }) {
+export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false, proPart }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean; /** Только Pro-панель — отдаёт lib/pro-parts.tsx после проверки сессии. */ proPart?: 'panel' }) {
   const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). Resolve resolves either form and
@@ -1427,7 +1428,7 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
         lang={lang}
       />
     </section>
-  ) : null
+  ) : <></>
 
   // «Локация» в окне медиа — как у вилл (владелец 20.11.2026, макет LocA).
   if (lat != null && lng != null) {
@@ -1690,6 +1691,14 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
   const noDev = hasDevChapter ? <ProNo pro={nn(2 + ai)} guest="02" /> : null
   const noFaq = <ProNo pro={nn((hasDevChapter ? 3 : 2) + ai)} guest={nn(hasDevChapter ? 3 : 2)} />
 
+  if (proPart === 'panel') return analyses.length > 0 ? (
+          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${apartmentsRoot}/o/${slug}`)}`} no="02"
+              heading={pickCopy(APT.aiHeading, lang)}
+              extras={{ daily: calcBlock }} />
+          </VillaChapter>
+  ) : <></>
+
   return (
     <>
       <Header active="apartamenty" />
@@ -1751,14 +1760,9 @@ export async function ApartmentDetail({ slug, lang, pdf, analyticsOnly = false }
 
         {/* Аналитика — одна глава «02 Проверьте апартаменты с ИИ», как у виллы. */}
         {analyses.length > 0 && (
-          // Только Pro (владелец 21.11.2026): аналитика ещё не готова для всех.
-          <div className="bx-pro-only">
-          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika}>
-            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${apartmentsRoot}/o/${slug}`)}`} no="02"
-              heading={pickCopy(APT.aiHeading, lang)}
-              extras={{ daily: calcBlock }} />
-          </VillaChapter>
-          </div>
+          // Только Pro (владелец 21.11.2026). С 24.11.2026 в общей копии
+          // страницы панели нет — её отдаёт сервер только Pro (ProLazy).
+          <ProLazy kind="apartment" slug={slug} lang={lang} part="panel" minHeight={480} />
         )}
 
         {/* Застройщик и вопросы — рядом на компьютере, как у виллы. */}

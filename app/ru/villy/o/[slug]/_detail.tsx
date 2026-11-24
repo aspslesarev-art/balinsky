@@ -137,6 +137,7 @@ import { hreflangMap } from '@/lib/hreflang'
 import { loadVilla3DPlanUrl } from '@/lib/villa-3d-plans'
 import { VillaGallery, type ViewerTab } from '@/components/VillaGallery'
 import { metaSnippet } from '@/lib/seo'
+import { ProLazy } from '@/components/ProLazy'
 import { AnalyticsPanel } from '@/components/analytics-panel/AnalyticsPanel'
 import { buildVillaAnalyses } from '@/lib/analytics-panel/villa'
 import { AddToCollection } from '@/components/collections/AddToCollection'
@@ -1195,7 +1196,7 @@ export async function generateVillaMetadata(slug: string, lang: Lang) {
   }
 }
 
-export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, report }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean; report?: { ids: string[]; autoPrint: boolean } }) {
+export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, report, proPart }: { slug: string; lang: Lang; pdf?: PdfRequest; analyticsOnly?: boolean; report?: { ids: string[]; autoPrint: boolean }; /** Только Pro-блок — отдаёт lib/pro-parts.tsx после проверки сессии. */ proPart?: 'panel' | 'legal' }) {
   const c = pickCopy(COPY, lang)
   // Canonical-slug redirect: legacy GSC links carry dirty slugs
   // (cyrillic look-alikes, parens). resolveVilla finds either form
@@ -1906,9 +1907,12 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
         )
 
   // Вынесены, чтобы те же блоки показать под итогом анализа в «Аналитике».
-  const legalBlock = (<>
+  // Юрпроверка — Pro: в общей копии страницы только место под неё (ProLazy),
+  // сам блок отдаёт сервер после проверки Pro (владелец 24.11.2026).
+  const hasLegal = !!(villaLegal && complexMedia.slug && (villaLegal.ok.length > 0 || villaLegalQuestions > 0))
+  const legalBlock = !proPart && !report ? (hasLegal ? <ProLazy kind="villa" slug={slug} lang={lang} part="legal" /> : null) : (<>
         {villaLegal && complexMedia.slug && (villaLegal.ok.length > 0 || villaLegalQuestions > 0) && (
-          <div className="bx-auth-block">
+          <div>
             <LegalAudit
               lang={lang}
               slug={complexMedia.slug}
@@ -2210,6 +2214,14 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
           </VillaChapter>
         ))
 
+  if (proPart === 'legal') return <>{legalBlock}</>
+  if (proPart === 'panel') return analyses.length > 0 ? (
+          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika[0]}>
+            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`} no="02"
+              extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
+          </VillaChapter>
+  ) : <></>
+
   return (
     <>
       <Header active="villy" />
@@ -2286,13 +2298,9 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
 
         {/* Аналитика — заголовок «02 Проверьте виллу с ИИ» рисует сама панель. */}
         {analyses.length > 0 ? (
-          // Только Pro (владелец 21.11.2026): аналитика ещё не готова для всех.
-          <div className="bx-pro-only">
-          <VillaChapter id="analitika" no="02" plain eyebrow={CH.analitika[0]}>
-            <AnalyticsPanel analyses={analyses} lang={lang} signInHref={`/pro?next=${encodeURIComponent(`${villasRoot}/o/${slug}`)}`} reportPath={`/ru/villy/o/${slug}/otchet`} no="02"
-              extras={{ daily: calcBlock, price: saleBlock, docs: legalBlock }} />
-          </VillaChapter>
-          </div>
+          // Только Pro (владелец 21.11.2026). С 24.11.2026 в общей копии
+          // страницы панели нет — её отдаёт сервер только Pro (ProLazy).
+          <ProLazy kind="villa" slug={slug} lang={lang} part="panel" minHeight={480} />
         ) : (<>{mestoChapter}{analytics}</>)}
 
         {/* Застройщик и вопросы — рядом на компьютере, как в макете. */}

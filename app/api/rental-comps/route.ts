@@ -1,5 +1,6 @@
 import { airbnbPhoto } from '@/lib/photo-cdn'
 import { NextResponse } from 'next/server'
+import { isProSession } from '@/lib/site-auth'
 import { createClient } from '@supabase/supabase-js'
 
 // «Что рядом сдают за эти же деньги» — выдача под ползунок ADR в
@@ -85,6 +86,10 @@ function num(v: string | null): number | null {
 }
 
 export async function GET(req: Request) {
+  // Соседи по аренде — Pro-аналитика (владелец 24.11.2026): только сессии с Pro.
+  if (!(await isProSession())) {
+    return NextResponse.json({ ok: false, error: 'pro_only' }, { status: 403 })
+  }
   if (!SUPABASE_URL || !SERVICE_KEY) {
     return NextResponse.json({ ok: false, error: 'not_configured' }, { status: 503 })
   }
@@ -224,7 +229,7 @@ export async function GET(req: Request) {
     // radius — что спросили, usedRadius — где на самом деле нашлось.
     const res = NextResponse.json({ ok: true, priceMin, priceMax, radius, usedRadius, items })
     // Данные обновляются раз в сутки — держим на краю час.
-    res.headers.set('cache-control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+    res.headers.set('cache-control', 'private, max-age=3600')
     return res
   } catch (e) {
     console.error('[rental-comps]', e instanceof Error ? e.message : e)

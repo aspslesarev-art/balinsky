@@ -4,6 +4,7 @@
 //   GET /api/yields?v=slug,slug&a=slug  (или airtable id вместо slug)
 
 import { NextResponse } from 'next/server'
+import { isProSession } from '@/lib/site-auth'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
@@ -43,10 +44,16 @@ async function forKind(kind: 'villa' | 'apartment', wanted: string[]): Promise<R
 }
 
 export async function GET(req: Request) {
+  // Доходность — Pro-аналитика (владелец 24.11.2026): без Pro пусто, иначе
+  // по 100 объектов за запрос она выкачивалась бы целиком. Ответ зависит
+  // от сессии — только приватный кеш.
+  if (!(await isProSession())) {
+    return NextResponse.json({ villa: {}, apartment: {} }, { headers: { 'Cache-Control': 'private, no-store' } })
+  }
   const u = new URL(req.url)
   try {
     const [villa, apartment] = await Promise.all([forKind('villa', keys(u.searchParams.get('v'))), forKind('apartment', keys(u.searchParams.get('a')))])
-    return NextResponse.json({ villa, apartment }, { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } })
+    return NextResponse.json({ villa, apartment }, { headers: { 'Cache-Control': 'private, max-age=3600' } })
   } catch (e) {
     console.error('[api/yields]', e)
     return NextResponse.json({ error: 'unavailable' }, { status: 503 })

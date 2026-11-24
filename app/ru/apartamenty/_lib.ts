@@ -688,7 +688,9 @@ export function buildAllCards(
     const s = scores.get(c.id)
     const cap = s && !s.rentalRestricted ? s.capRate : null
     c.yieldPct = cap != null && Number.isFinite(cap) ? cap * 100 : null
-    c.yieldRange = s?.range ?? null
+    // Вилка дохода — Pro-аналитика; на карточке не показывается, а в код
+    // страницы уходила бы целиком (сборщики). Не отдаём (владелец 24.11.2026).
+    c.yieldRange = null
   }
   // «Для жизни»: на карточке — школа и пляж вместо доходности, порядок — по
   // удобству жизни (listing_living), пока человек не выбрал сортировку сам.

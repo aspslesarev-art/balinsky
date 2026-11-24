@@ -430,7 +430,7 @@ export function toCard(
   e: EnrichedRow,
   manifest: Record<string, string[]>,
   prices?: Map<string, ComplexPrices>,
-  yields?: Map<string, ComplexYieldRange>,
+  _yields?: Map<string, ComplexYieldRange>,
 ): ComplexCard | null {
   if (!e.slug || !e.name) return null
   const photos = manifest[e.id] ?? []
@@ -454,7 +454,9 @@ export function toCard(
     aptPriceFrom: p?.apartments?.from ?? null,
     aptPriceTo: p?.apartments?.to ?? null,
     isSold: e.salesStatus === 'Продано',
-    yieldRange: yields?.get(e.id) ?? null,
+    // Вилка дохода юнитов — Pro-аналитика, на карточке не показывается;
+    // в код страницы не отдаём (владелец 24.11.2026).
+    yieldRange: null,
     isTop: e.isTop,
     topRank: e.topRank,
     views: e.views ?? 0,

@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server'
+import { isProSession } from '@/lib/site-auth'
 import { isRecordId } from '@/lib/record-id'
 import { buildSnapshot } from '@/lib/investment/snapshot'
 import { computeYieldFacts } from '@/lib/listing-verdict'
 
-// isr-ttl-ok: вызывается только при сборке презентации по юниту, не
-// краулится — путей мало, а редакторские параметры модели (полосы
-// загрузки, порог cap-rate) должны доезжать за минуты, не за сутки.
-export const revalidate = 3600
+// Pro-аналитика (модель дохода объекта): отвечает только сессии с Pro
+// (владелец 24.11.2026) — раньше любой сборщик забирал её по id. Ответ
+// зависит от сессии, поэтому не кешируется на CDN.
+export const dynamic = 'force-dynamic'
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!(await isProSession())) {
+    return NextResponse.json({ error: 'pro_only' }, { status: 403 })
+  }
   const { id } = await params
   if (!isRecordId(id)) {
     return NextResponse.json({ error: 'invalid_id' }, { status: 400 })
@@ -22,7 +26,7 @@ export async function GET(
     // Та же доходность, что на странице объекта, — презентация показывает её.
     return NextResponse.json({ ...snap, yieldFacts: computeYieldFacts(snap) }, {
       headers: {
-        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=86400',
+        'Cache-Control': 'private, max-age=600',
       },
     })
   } catch (err) {
