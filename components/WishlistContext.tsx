@@ -92,13 +92,19 @@ function write(items: WishlistItem[]): void {
   } catch { /* quota / private mode — ignore */ }
 }
 
+const noopSubscribe = () => () => {}
+const isClient = () => true
+const isServer = () => false
+
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   // After mount we have a real snapshot from localStorage. Before mount
   // (SSR) items === EMPTY by getServerSnapshot. We expose `ready` so the
   // heart button doesn't render its filled state during the initial paint
-  // and trigger hydration mismatches.
-  const ready = typeof window !== 'undefined'
+  // and trigger hydration mismatches. `typeof window` is already true during
+  // hydration, so it can't be the flag: useSyncExternalStore returns the
+  // server value (false) while hydrating and the client value right after.
+  const ready = useSyncExternalStore(noopSubscribe, isClient, isServer)
 
   const has = useCallback(
     (kind: WishlistKind, slug: string) => items.some(i => i.kind === kind && i.slug === slug),
