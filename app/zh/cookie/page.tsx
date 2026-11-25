@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '2026年5月15日'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. 如何禁用 Cookie</h2>
+
+      <p><CookieSettingsButton lang="zh" /></p>
       <p>
         分析类和营销类 Cookie 可在您的浏览器设置中关闭。严格必要类 Cookie 无法禁用 —
         收藏列表和语言切换器需要它们。

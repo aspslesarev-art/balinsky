@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15. Mai 2026'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. So deaktivieren Sie Cookies</h2>
+
+      <p><CookieSettingsButton lang="de" /></p>
       <p>
         Analyse- und Marketing-Cookies können Sie in Ihren Browsereinstellungen deaktivieren. Unbedingt erforderliche Cookies können nicht deaktiviert werden —
         die Favoritenliste und der Sprachumschalter benötigen sie.

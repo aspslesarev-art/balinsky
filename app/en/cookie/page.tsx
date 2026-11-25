@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = 'May 15, 2026'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. How to disable cookies</h2>
+
+      <p><CookieSettingsButton lang="en" /></p>
       <p>
         Analytics and marketing cookies can be turned off in your browser settings. Strictly necessary cookies can&apos;t be disabled —
         the favourites list and language switcher need them.
