@@ -4,6 +4,23 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 import { GA4_ID, GTM_ID, YM_ID, trackEvent } from "@/lib/analytics";
 import { contactChannelOf, reportContactClick } from "@/lib/contact-click";
+import { CONSENT_EVENT, consentRequired, readConsent, type ConsentChoice } from "@/lib/consent";
+import { CookieConsent } from "@/components/CookieConsent";
+
+/** Отказ после согласия: стираем уже поставленные cookie GA и Метрики. */
+function clearAnalyticsCookies() {
+  try {
+    const host = window.location.hostname;
+    const domains = ["", host, "." + host.replace(/^www\./, "")];
+    for (const part of document.cookie.split(";")) {
+      const name = part.split("=")[0].trim();
+      if (!/^(_ga|_gid|_gat|_ym|yandexuid|yabs)/.test(name)) continue;
+      for (const d of domains) {
+        document.cookie = `${name}=; Max-Age=0; path=/${d ? "; domain=" + d : ""}`;
+      }
+    }
+  } catch { /* cookie недоступны — нечего стирать */ }
+}
 
 // localStorage flag that keeps this browser out of the analytics numbers.
 // Set automatically the first time the browser opens /admin/*, and manually
@@ -50,9 +67,55 @@ function shouldTrack(): boolean {
  */
 export function Analytics() {
   const [enabled, setEnabled] = useState(false);
+  const [askConsent, setAskConsent] = useState(false);
 
+  // Согласие на cookie: явный выбор посетителя действует везде; без выбора —
+  // в ЕЭЗ/UK/CH спрашиваем и до «Принять» не грузим теги, в остальных
+  // странах всё как раньше (lib/consent.ts).
   useEffect(() => {
-    setEnabled(shouldTrack());
+    if (!shouldTrack()) return;
+    let alive = true;
+    let loaded = false;
+    const apply = (choice: ConsentChoice | null, required: boolean) => {
+      if (!alive) return;
+      const on = choice ? choice === "granted" : !required;
+      setAskConsent(!choice && required);
+      if (on) loaded = true;
+      setEnabled(on);
+    };
+    const stored = readConsent();
+    // GA успевает дописать свою cookie, пока страница уходит на перезагрузку
+    // после «Отклонить», — добиваем её при следующем открытии.
+    if (stored === "denied") clearAnalyticsCookies();
+    if (stored) apply(stored, true);
+    else consentRequired().then((required) => apply(readConsent(), required));
+
+    const onChange = (event: Event) => {
+      const choice = (event as CustomEvent<ConsentChoice | null>).detail;
+      if (choice === null) {
+        // Кнопка «Изменить выбор» на /cookie — спрашиваем снова, где бы ни был человек.
+        setAskConsent(true);
+        return;
+      }
+      setAskConsent(false);
+      if (choice === "denied") {
+        try {
+          (window as Window & { gtag?: (...args: unknown[]) => void }).gtag?.("consent", "update", { analytics_storage: "denied", ad_storage: "denied" });
+        } catch { /* GA не загружен */ }
+        clearAnalyticsCookies();
+        // Уже загруженные теги из памяти не выгрузить — перезагрузка их снимает.
+        if (loaded) window.location.reload();
+        setEnabled(false);
+        return;
+      }
+      loaded = true;
+      setEnabled(true);
+    };
+    window.addEventListener(CONSENT_EVENT, onChange);
+    return () => {
+      alive = false;
+      window.removeEventListener(CONSENT_EVENT, onChange);
+    };
   }, []);
 
   // Уход в Telegram или WhatsApp — канал связи с застройщиком, и он размазан по
@@ -88,10 +151,11 @@ export function Analytics() {
     };
   }, [enabled]);
 
-  if (!enabled) return null;
+  if (!enabled) return askConsent ? <CookieConsent /> : null;
 
   return (
     <>
+      {askConsent && <CookieConsent />}
       {/* Both analytics tags pushed to lazyOnload — they don't need to
           run before the page is interactive. Cuts main-thread JS work
           during FCP / LCP, which is what mobile PSI scores hate most. */}

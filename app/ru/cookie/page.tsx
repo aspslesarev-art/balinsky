@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 мая 2026 г.'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. Как отключить cookie</h2>
+
+      <p><CookieSettingsButton lang="ru" /></p>
       <p>
         Аналитические и маркетинговые cookie можно отключить в настройках вашего браузера. Технические cookie отключать нельзя —
         без них корзина избранного и переключение языка работать не будут.

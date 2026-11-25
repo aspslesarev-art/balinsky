@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 maja 2026'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. Jak wyłączyć pliki cookie</h2>
+
+      <p><CookieSettingsButton lang="pl" /></p>
       <p>
         Analityczne i marketingowe pliki cookie można wyłączyć w ustawieniach przeglądarki. Ściśle niezbędnych plików cookie nie da się wyłączyć —
         są potrzebne liście ulubionych i przełącznikowi języka.

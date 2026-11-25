@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 травня 2026'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. Як вимкнути файли cookie</h2>
+
+      <p><CookieSettingsButton lang="uk" /></p>
       <p>
         Аналітичні та маркетингові файли cookie можна вимкнути в налаштуваннях браузера. Суворо необхідні файли cookie вимкнути не можна —
         вони потрібні списку обраного та перемикачу мови.

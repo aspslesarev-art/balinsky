@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 Mei 2026'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. Cara menonaktifkan cookie</h2>
+
+      <p><CookieSettingsButton lang="id" /></p>
       <p>
         Cookie analitik dan pemasaran dapat dimatikan di pengaturan browser Anda. Cookie yang benar-benar diperlukan tidak dapat dinonaktifkan —
         daftar favorit dan pengalih bahasa membutuhkannya.

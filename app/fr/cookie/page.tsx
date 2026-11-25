@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 mai 2026'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. Comment désactiver les cookies</h2>
+
+      <p><CookieSettingsButton lang="fr" /></p>
       <p>
         Les cookies analytiques et marketing peuvent être désactivés dans les paramètres de votre navigateur. Les cookies strictement nécessaires ne peuvent pas l&apos;être —
         la liste de favoris et le sélecteur de langue en ont besoin.

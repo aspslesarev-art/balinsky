@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/LegalLayout'
+import { CookieSettingsButton } from '@/components/CookieConsent'
 import { hreflangMap } from '@/lib/hreflang'
 
 const UPDATED = '15 mei 2026'
@@ -41,6 +42,8 @@ export default function Page() {
       </p>
 
       <h2>2. Hoe je cookies uitschakelt</h2>
+
+      <p><CookieSettingsButton lang="nl" /></p>
       <p>
         Analytics- en marketingcookies kun je uitschakelen in je browserinstellingen. Strikt noodzakelijke cookies kunnen niet worden uitgeschakeld —
         de favorietenlijst en de taalwisselaar hebben ze nodig.
