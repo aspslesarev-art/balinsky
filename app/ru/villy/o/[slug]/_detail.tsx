@@ -2,6 +2,7 @@
 // /en/villas/o/[slug]. Layout, data fetching and section order live
 // here; locale-specific copy is in the COPY table below.
 
+import { glueNumbers } from '@/lib/glue-numbers'
 import { TouristHeatMap } from '@/components/TouristHeatMap'
 import { ProPendingNote } from '@/components/ProPendingNote'
 import { isHiddenDeveloper } from '@/lib/hidden-developers'
@@ -2193,11 +2194,11 @@ export async function VillaDetail({ slug, lang, pdf, analyticsOnly = false, repo
             )}
             {seoText && (
               <section>
-                <p className="m-0 max-w-[68ch] text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">{seoText.split('\n')[0]}</p>
+                <p className="m-0 max-w-[68ch] text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">{glueNumbers(seoText.split('\n')[0])}</p>
                 {seoText.includes('\n') && (
                   <ExpandableText className="max-w-[68ch] mt-2" more={c.readMore} less={pickCopy({ ru: 'Свернуть', en: 'Show less', id: 'Tutup', fr: 'Réduire', de: 'Weniger', zh: '收起', nl: 'Minder', ban: 'Tutup', pl: 'Zwiń', uk: 'Згорнути' }, lang)}>
                     <div className="prose-balinsky whitespace-pre-line text-[16px] leading-[1.65] text-[#26302B] md:text-[18px] md:leading-[1.7]">
-                      {seoText.split('\n').slice(1).join('\n')}
+                      {glueNumbers(seoText.split('\n').slice(1).join('\n'))}
                     </div>
                   </ExpandableText>
                 )}

@@ -31,6 +31,8 @@ export async function POST() {
     for (const kind of kinds) {
       const tag = KIND_TO_TAGS[kind]
       if (tag) revalidateTag(tag, 'max')
+      // Переводы описаний — fixTextPrices переписал в них цену.
+      revalidateTag(`translations:${kind}`, 'max')
       for (const route of KIND_TO_PATHS[kind] ?? []) revalidatePath(route.path, route.type)
     }
 

@@ -9,6 +9,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { bumpContentRev } from '@/lib/content-version'
+import { fixTextPrices } from '@/lib/market/text-price'
 
 // Насколько цена может уехать за раз, чтобы автомат применил её молча.
 // Скидка в четверть цены — уже не рутина: либо застройщик объявил акцию,
@@ -317,6 +318,22 @@ export async function applySiteSync(sb: SupabaseClient, plan: SyncPlan): Promise
 
   for (const c of applied) {
     await writePrice(sb, c)
+  }
+
+  // Цена внутри описаний, FAQ, базы знаний и переводов — иначе на странице
+  // остаётся «стоимость 750 000 долларов» при карточке $650 000. Сбой здесь
+  // не должен откатывать уже записанные цены: пишем в лог и идём дальше.
+  if (applied.length) {
+    try {
+      await fixTextPrices(sb, applied.map(c => ({
+        kind: c.kind,
+        id: c.listingId,
+        price: c.newPrice,
+        oldPrices: c.oldPrice ? [c.oldPrice] : [],
+      })), { log: s => console.log('[site-sync] текст:', s) })
+    } catch (e) {
+      console.error('[site-sync] цена в текстах не обновлена:', e)
+    }
   }
 
   const confirmed = await touchCheckedDates(sb, plan.confirmed)
