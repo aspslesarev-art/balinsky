@@ -14,6 +14,25 @@ import {
 } from 'lucide-react'
 import { pickCopy, switchLangPath, type Lang } from '@/lib/i18n'
 
+// Byline + freshness. The guide is hand-maintained in this file, so the date
+// is the last real content edit — bump it whenever the copy below changes.
+const GUIDE_PUBLISHED = '2026-05-05'
+const GUIDE_UPDATED = '2026-09-27'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://balinsky.info'
+
+const BYLINE: Record<Lang, { name: string; role: string; updated: string; locale: string }> = {
+  ru:  { name: 'Андрей Балинский', role: 'Основатель Balinsky', updated: 'Обновлено', locale: 'ru-RU' },
+  en:  { name: 'Andrei Balinsky', role: 'Founder of Balinsky', updated: 'Updated', locale: 'en-GB' },
+  id:  { name: 'Andrei Balinsky', role: 'Pendiri Balinsky', updated: 'Diperbarui', locale: 'id-ID' },
+  fr:  { name: 'Andrei Balinsky', role: 'Fondateur de Balinsky', updated: 'Mis à jour', locale: 'fr-FR' },
+  de:  { name: 'Andrei Balinsky', role: 'Gründer von Balinsky', updated: 'Aktualisiert', locale: 'de-DE' },
+  zh:  { name: 'Andrei Balinsky', role: 'Balinsky 创始人', updated: '更新于', locale: 'zh-CN' },
+  nl:  { name: 'Andrei Balinsky', role: 'Oprichter van Balinsky', updated: 'Bijgewerkt', locale: 'nl-NL' },
+  ban: { name: 'Andrei Balinsky', role: 'Pangripta Balinsky', updated: 'Kaanyarin', locale: 'id-ID' },
+  pl:  { name: 'Andrei Balinsky', role: 'Założyciel Balinsky', updated: 'Zaktualizowano', locale: 'pl-PL' },
+  uk:  { name: 'Андрій Балінський', role: 'Засновник Balinsky', updated: 'Оновлено', locale: 'uk-UA' },
+}
+
 const COPY = {
   ru: {
     home: 'Главная',
@@ -1144,6 +1163,22 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
     })),
   }
 
+  const by = BYLINE[lang] ?? BYLINE.en
+  const aboutHref = switchLangPath('/ru/o-balinsky', lang)
+  const updatedLabel = new Date(GUIDE_UPDATED).toLocaleDateString(by.locale, { day: 'numeric', month: 'long', year: 'numeric' })
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: c.h1,
+    description: c.intro,
+    inLanguage: lang,
+    datePublished: GUIDE_PUBLISHED,
+    dateModified: GUIDE_UPDATED,
+    author: { '@type': 'Person', name: by.name, jobTitle: by.role, url: `${SITE_URL}${aboutHref}` },
+    publisher: { '@id': `${SITE_URL}/#organization` },
+    mainEntityOfPage: `${SITE_URL}${switchLangPath('/ru/kak-kupit', lang)}`,
+  }
+
   return (
     <>
       <Header />
@@ -1157,6 +1192,12 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
           <h1 className="text-[28px] md:text-[40px] font-semibold tracking-tight text-[var(--color-text)] leading-[1.1] mb-5">
             {c.h1}
           </h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--color-text-muted)] mb-6">
+            <Link href={aboutHref} className="font-medium text-[var(--color-text)] hover:text-[var(--color-primary-pressed)] no-underline">{by.name}</Link>
+            <span>{by.role}</span>
+            <span aria-hidden="true">·</span>
+            <time dateTime={GUIDE_UPDATED}>{by.updated} {updatedLabel}</time>
+          </div>
           <p className="text-[16px] md:text-[17px] leading-[1.7] text-[var(--color-text)] mb-8">
             {c.intro}
           </p>
@@ -1296,6 +1337,7 @@ export function BuyingGuide({ lang }: { lang: Lang }) {
         </article>
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd).replace(/</g, '\\u003c') }} />
 
         <div className="h-16" />
       </PageContainer>
