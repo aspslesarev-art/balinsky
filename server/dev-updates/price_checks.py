@@ -90,6 +90,7 @@ def complexes(dev_name):
             continue
         out.append({"id": cx["id"], "name": (cx["name"] or "").strip(), "slug": cx["slug"],
                     "stage": d.get("Статус"), "ready": _ready(d.get("Готовность")),
+                    "sales": d.get("Статус продаж"),
                     "year": d.get("Year of completion ") or d.get("Year of completion"),
                     "chess": chess_of(cx["id"])})
     return [c for c in out if c["name"]]
@@ -199,9 +200,32 @@ def ask_text(snap):
 
 # --- разговор -----------------------------------------------------------------------
 
+TASK_CHECK = """Задача — сверить данные о его комплексах на сайте: что в продаже, этап стройки, процент
+готовности, срок сдачи, где шахматка и актуальна ли она, верны ли цены, что продано."""
+
+# Владелец 26.11.2026: просьбы «удалите/уберите» — не удалять, а сохранить объект с
+# актуальным статусом. Удаление — только если застройщик настаивает, и решает владелец.
+TASK_REQUEST = """Застройщик попросил что-то изменить на сайте: убрать комплекс или юнит, скрыть цену и т.п.
+Интерес сайта — ничего не удалять, а держать объекты с актуальным статусом и актуальными ценами:
+сданные и распроданные проекты показывают покупателю опыт застройщика, а страницы нужны для поиска.
+Отвечай по схеме «переспроси → согласись → добавь», одним сообщением:
+1. Переспроси причину, не принимай на веру: начни с «Правильно понимаю, что … распродан(ы) и вы его больше
+   не продаёте?» (или: цена изменилась? проект передан другому?).
+2. Согласись, в чём он прав (например: цены на распроданный объект показывать не нужно).
+3. Предложи сохранить объект с пометкой «Продано» и без цен — покупатели видят его реализованные проекты.
+Пример: «Правильно понимаю, что ERA by OXO распродан и вы его больше не продаёте? Если да — согласен,
+цены показывать не нужно. Предлагаю оставить его на сайте с пометкой «Продано», без цен: покупатели будут
+видеть ваши проекты и что они уже распроданы. Так подойдёт?»
+- Проект больше не их (передан, продан другому застройщику) — тоже предложи пометку «Продано» без цен.
+- Скрыть цену — уточни: цена изменилась (тогда какая новая) или продано.
+- Согласился на «Продано» — sold_out=true у комплекса, agreed=true, ready=true, reply пустой.
+- После предложения всё равно настаивает на полном удалении — не спорь: reply — «Хорошо, передам
+  команде» только на языке собеседника (не дублируй на втором языке), remove_insist=true, ready=true.
+- На вопросы не про эту просьбу (сотрудничество, проверка документов, вопросы Андрею) не отвечай.
+- Не обещай ничего, кроме пометки «Продано», правки цены или передачи вопроса команде."""
+
 TALK = """Ты бот сайта balinsky.info (информационный каталог недвижимости Бали) в рабочем чате с менеджером
-застройщика. Задача — сверить данные о его комплексах на сайте: что в продаже, этап стройки, процент
-готовности, срок сдачи, где шахматка и актуальна ли она, верны ли цены, что продано.
+застройщика. {task}
 
 Ниже — что сейчас на сайте, разговор до этого, уже собранные факты и новые сообщения из чата (текст,
 расшифровки голосовых, файлы — пути к ним даны, открой их инструментом Read).
@@ -216,16 +240,19 @@ TALK = """Ты бот сайта balinsky.info (информационный к�
 - Чего-то не хватает и это важно — задай ОДИН короткий вопрос (не повторяй уже отвеченное). Если
   собеседник занят или просит позже — коротко ответь «хорошо» и ready=false.
 - ready=true, когда по всем комплексам ясны продажи, этап/готовность/срок, шахматка и цены — или когда
-  собеседник ясно дал понять, что больше добавить нечего. Тогда reply пустой (бот сам перечислит изменения).
+  собеседник ясно дал понять, что больше добавить нечего (при просьбе — когда она решена). Тогда reply
+  пустой, если не сказано иначе (бот сам перечислит изменения).
+- agreed=true, только если собеседник прямо согласился на изменения, которые ты сам ему предложил.
 - Сейчас вопросов бота в разговоре: {turns} из {max_turns}. Если лимит исчерпан — ready=true.
 
 Верни только JSON:
 {{"reply": "",
   "ready": false,
+  "agreed": false,
   "facts": {{
     "complexes": {{"<точное название с сайта>": {{"on_sale": true|false|null, "stage": "Строится"|"Построен"|null,
         "readiness_pct": число|null, "completion_year": число|null, "chess_url": "ссылка"|null, "chess_ok": true|false|null,
-        "prices_ok": true|false|null}}}},
+        "prices_ok": true|false|null, "sold_out": true|false|null, "remove_insist": true|false|null}}}},
     "new_complexes": ["название — что известно"],
     "prices": [{{"g": "G3", "new_price": 195000|null, "sold_out": false, "sold_count": null}}],
     "other": ""}}}}
@@ -297,7 +324,8 @@ def talk(chk, msgs):
         text = msg_lines(msgs, tmp)
         if not text:
             return None, text
-        out = W.claude(TALK.format(site=site_for_prompt(chk["snapshot"]),
+        task = TASK_REQUEST if (chk.get("result") or {}).get("mode") == "request" else TASK_CHECK
+        out = W.claude(TALK.format(task=task, site=site_for_prompt(chk["snapshot"]),
                                    log="\n".join(f"{'бот' if l['who'] == 'bot' else 'менеджер'}: {l['text']}" for l in log_[-30:]) or "(пусто)",
                                    facts=json.dumps(chk.get("proposal") or {}, ensure_ascii=False),
                                    messages=text, turns=turns, max_turns=MAX_BOT_TURNS), tmp, tools="Read")
@@ -349,7 +377,12 @@ def build_changes(snap, facts):
         st = f.get("stage")
         if st in ("Строится", "Построен") and st != c["stage"]:
             apply.append({**base, "action": "stage", "old": c["stage"], "new": st})
-        if f.get("on_sale") is False:
+        if f.get("sold_out") is True and c.get("sales") != "Продано":
+            units = [(r["kind"], i) for r in snap["rows"] if r["complex"] == name for i in r["ids"]]
+            apply.append({**base, "action": "cx_sold", "units": units})
+        if f.get("remove_insist") is True:
+            held.append({**base, "action": "remove"})
+        elif f.get("on_sale") is False and f.get("sold_out") is not True:
             held.append({**base, "action": "off_sale"})
         url = f.get("chess_url")
         if url and url != c["chess"]:
@@ -373,6 +406,9 @@ def change_line(a, lang):
     if act == "year":
         was = f"{a['old']} → " if a["old"] else ""
         return f"• {a['complex']}: " + (f"handover {was}{a['new']}" if en else f"сдача {was}{a['new']}")
+    if act == "cx_sold":
+        return f"• {a['complex']}: " + ("stays on the site marked \"Sold out\", prices removed" if en
+                                        else "остаётся на сайте с пометкой «Продано», цены убираем")
     if act == "stage":
         new = {"Строится": "under construction", "Построен": "completed"}[a["new"]] if en else a["new"].lower()
         return f"• {a['complex']}: " + (f"stage → {new}" if en else f"этап → {new}")
@@ -419,6 +455,16 @@ def apply_changes(ch):
                 d["Year of completion "] = a["new"]
             elif a["action"] == "stage":
                 d["Статус"] = a["new"]
+            elif a["action"] == "cx_sold":
+                d["Статус продаж"] = "Продано"
+                # Юниты с ценами снимаем (не удаляем): Продано + не публиковать, как у sold_out.
+                for kind, lid in a.get("units") or []:
+                    table = "raw_villas" if kind == "villa" else "raw_apartments"
+                    ur = sb_get(table, {"select": "data", "airtable_id": f"eq.{lid}"})
+                    if ur:
+                        ud = ur[0]["data"]
+                        ud["Опубликовать"], ud["Продано"] = False, True
+                        sb_update(table, {"airtable_id": lid}, {"data": ud})
             sb_update("raw_complexes", {"airtable_id": a["cid"]}, {"data": d})
             kinds.update(("complexes", "villas", "apartments"))
         done.append(a)
@@ -464,7 +510,7 @@ def last_msg_id(chat_id):
     return r[0]["id"] if r else 0
 
 
-def open_check(chat, first_text=None, start_after=None):
+def open_check(chat, first_text=None, start_after=None, mode=None):
     snap = snapshot(chat["developer_name"], chat.get("lang") or "ru")
     if not snap["complexes"]:
         log("skip: у застройщика нет комплексов на сайте", chat["chat_id"], chat["developer_name"])
@@ -478,7 +524,19 @@ def open_check(chat, first_text=None, start_after=None):
     row = sb_insert("dev_price_checks", {
         "chat_id": chat["chat_id"], "developer_name": chat["developer_name"], "snapshot": snap,
         "last_msg_id": start_after if start_after is not None else last_msg_id(chat["chat_id"]),
-        "state": "asked", "result": {"log": log_}, "proposal": {}})
+        "state": "asked", "result": {"log": log_, **({"mode": mode} if mode else {})}, "proposal": {}})
+    return row
+
+
+def open_request(chat_id, dev_name, lang, start_after, what=""):
+    """Застройщик попросил убрать/скрыть/поправить — бот ведёт разговор (зовёт worker.py)."""
+    busy = sb_get("dev_price_checks", {"select": "id", "chat_id": f"eq.{chat_id}", "state": f"in.({','.join(OPEN)})"})
+    if busy:
+        return None  # уже идёт разговор — новое сообщение он и так прочитает
+    row = open_check({"chat_id": chat_id, "developer_name": dev_name, "lang": lang}, start_after=start_after, mode="request")
+    if row:
+        tell_owner(f"Просьба · {dev_name}: {what or 'изменить данные на сайте'}. Веду разговор в чате сам.")
+        log("request", chat_id, dev_name)
     return row
 
 
@@ -567,6 +625,16 @@ def step(chk):
         save(chk, **base, msg_ids=eaten, proposal=facts, state="no_change",
              result={**res, "changes": ch, "log": log_ + [{"who": "bot", "text": reply}]})
         return
+    if out.get("agreed") and res.get("mode") == "request":
+        done = apply_changes(ch)
+        reply = ("Done, thank you! On the site now:\n" if lang == "en" else "Сделали, спасибо! На сайте теперь:\n") + \
+            "\n".join(change_line(a, lang) for a in done)
+        say(chk["chat_id"], reply)
+        owner_summary(chk, done, ch)
+        save(chk, **base, msg_ids=eaten, proposal=facts, state="applied",
+             result={**res, "changes": ch, "applied": done, "log": log_ + [{"who": "bot", "text": reply}]})
+        log("applied", chk["id"], len(done))
+        return
     head = "Did I get it right? We'll change on the site:" if lang == "en" else "Правильно понял? Меняем на сайте:"
     tail = ("Reply \"yes\" and we'll update it. If something is off, just correct me."
             if lang == "en" else "Ответьте «да» — и обновим. Если что-то не так, поправьте сообщением.")
@@ -591,6 +659,8 @@ def owner_held(chk, ch):
             lines.append(f"• {h['complex']}, {h['label']}: {money(h['old'])} → {money(h['new'])} (скачок больше 25%)")
         elif act == "sold_some":
             lines.append(f"• {h['complex']}, {h['label']}: продано {h['count']} из {len(h['ids'])}")
+        elif act == "remove":
+            lines.append(f"• {h['complex']}: просят убрать с сайта целиком, на «Продано» не согласились")
         elif act == "off_sale":
             lines.append(f"• {h['complex']}: говорят, больше не продаётся")
         elif act == "chess":
