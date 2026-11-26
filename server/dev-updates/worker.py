@@ -265,7 +265,10 @@ kind:
  "locationUrl": "ссылка на карту из сообщения или null", "registerUrl": "ссылка регистрации или null",
  "readinessPct": "целое 0–100, только если застройщик прямо назвал процент готовности, иначе null",
  "photoOrder": [номера фото для статьи, лучшее первым; без скриншотов чата, мемов, дублей],
- "skipHint": "если лучше не публиковать, хотя это не none — почему (одна фраза), иначе null"}}
+ "skipHint": "если лучше не публиковать, хотя это не none — почему (одна фраза), иначе null",
+ "pageFacts": "если в сообщениях есть конкретные данные для страницы застройщика на сайте — новая цена юнита,
+   продано/распродано/осталось N юнитов, получен PBG/SLF, новый срок сдачи, процент готовности, новая
+   рассрочка — перечисли их одной строкой; иначе null"}}
 Для kind = none и request остальные поля можно оставить пустыми; для request в reason — что именно просят.
 """
 
@@ -608,12 +611,12 @@ def handle_burst(chat_id, dev, msgs, dry):
     kind = d.get("kind")
     base = {"chat_id": chat_id, "developer_slug": dev["slug"], "developer_name": dev["name"],
             "msg_ids": ids, "last_msg_id": ids[-1]}
-    if kind == "request" and chat_id != OWNER and dev["name"] and not dry:
+    if (kind == "request" or d.get("pageFacts")) and chat_id != OWNER and dev["name"] and not dry:
         # Просьбу ведёт разговор в чате (price_checks.py): переспросить, согласиться, предложить «Продано».
         import price_checks as P
         text = " ".join(m.get("text") or "" for m in msgs)
         lang = "ru" if re.search(r"[а-яё]", text, re.I) or not re.search(r"[a-z]", text, re.I) else "en"
-        P.open_request(chat_id, dev["name"], lang, ids[0] - 1, d.get("reason") or "")
+        P.open_request(chat_id, dev["name"], lang, ids[0] - 1, d.get("pageFacts") or d.get("reason") or "")
     if kind not in KIND:
         log("noise", dev["name"], ids[0], "-", d.get("reason"))
         if not dry:
