@@ -636,8 +636,15 @@ def open_check(chat, first_text=None, start_after=None, mode=None):
     return row
 
 
+PAUSE = os.path.join(W.DIR, "PAUSE_CHATS")  # есть файл — бот в чаты застройщиков не пишет (владелец 26.11)
+
+
 def open_request(chat_id, dev_name, lang, start_after, what=""):
     """Застройщик попросил убрать/скрыть/поправить — бот ведёт разговор (зовёт worker.py)."""
+    if os.path.exists(PAUSE):
+        tell_owner(f"Чат · {dev_name}: {what or 'изменить данные на сайте'}. Бот на паузе, в чат не пишу.")
+        log("paused request", chat_id, dev_name)
+        return None
     busy = sb_get("dev_price_checks", {"select": "id", "chat_id": f"eq.{chat_id}", "state": f"in.({','.join(OPEN)})"})
     if busy:
         return None  # уже идёт разговор — новое сообщение он и так прочитает
@@ -808,6 +815,8 @@ def main():
     except BlockingIOError:
         return
     args = sys.argv[1:]
+    if os.path.exists(PAUSE) and "--ask" not in args:
+        return  # пауза: ни сверок, ни ответов в чатах
     if args[:1] in (["--preview"], ["--ask"]):
         cid = int(args[1])
         chat = (sb_get("dev_price_chats", {"select": "*", "chat_id": f"eq.{cid}"}) or [None])[0]
