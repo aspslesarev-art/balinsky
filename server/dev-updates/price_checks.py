@@ -81,6 +81,47 @@ def chess_of(cid):
     return None
 
 
+# подпись → (ключ data, тип). Названия, публикация, фото и логотип — не здесь: их решает владелец.
+CX_FIELDS = {
+    "Рассрочка": ("Payment plan,%", "text"),
+    "Лизхолд, лет": ("Leasehold", "number"),
+    "Продление лизхолда": ("Leashold продление", "text"),
+    "Разрешение на стройку": ("Разрешительные документы", "permit"),
+    "Номер PBG": ("PBG", "text"),
+    "Всего юнитов": ("Total quantity of units", "number"),
+    "Посёлок или улица": ("Location 2", "text"),
+    "Описание комплекса": ("Описание ЖК", "textarea"),
+}
+DEV_FIELDS = {
+    "Описание компании": ("Описание застройщика", "textarea"),
+    "Проекты и стройка": ("Строительство и недвижимость", "list"),
+    "Репутация и опыт": ("Репутация и опыт", "list"),
+    "Команда": ("Команда", "list"),
+    "Управляющая компания": ("Управляющая компания", "list"),
+    "Бизнес и сервисы": ("Бизнес и сервисы", "list"),
+}
+PERMITS = ["нет", "Заявка PBG", "PBG", "Заявка SLF", "SLF"]
+FIELD_EN = {"Рассрочка": "Payment plan", "Лизхолд, лет": "Leasehold, years", "Продление лизхолда": "Leasehold extension",
+            "Разрешение на стройку": "Building permit", "Номер PBG": "PBG number", "Всего юнитов": "Total units",
+            "Посёлок или улица": "Area", "Описание комплекса": "Project description", "Описание компании": "Company description",
+            "Проекты и стройка": "Projects", "Репутация и опыт": "Track record", "Команда": "Team",
+            "Управляющая компания": "Management company", "Бизнес и сервисы": "Business and services"}
+
+
+def _cur(d, key):
+    v = d.get(key)
+    return "\n".join(map(str, v)) if isinstance(v, list) else v
+
+
+def developer_of(dev_name):
+    rows = sb_get("raw_developers", {"select": "airtable_id,data", "data->>Developer": f"ilike.{(dev_name or '').strip()}"})
+    if not rows:
+        return None
+    d = rows[0]["data"] or {}
+    return {"id": rows[0]["airtable_id"], "name": d.get("Developer"),
+            "fields": {lbl: _cur(d, k) for lbl, (k, _) in DEV_FIELDS.items()}}
+
+
 def complexes(dev_name):
     out = []
     for cx in W.complexes_of(dev_name):
@@ -92,7 +133,8 @@ def complexes(dev_name):
                     "stage": d.get("Статус"), "ready": _ready(d.get("Готовность")),
                     "sales": d.get("Статус продаж"),
                     "year": d.get("Year of completion ") or d.get("Year of completion"),
-                    "chess": chess_of(cx["id"])})
+                    "chess": chess_of(cx["id"]),
+                    "fields": {lbl: _cur(d, k) for lbl, (k, _) in CX_FIELDS.items()}})
     return [c for c in out if c["name"]]
 
 
@@ -132,7 +174,7 @@ def groups_of(items):
 
 def snapshot(dev_name, lang):
     cxs = complexes(dev_name)
-    return {"complexes": cxs, "rows": groups_of(listings(cxs)), "lang": lang}
+    return {"complexes": cxs, "rows": groups_of(listings(cxs)), "lang": lang, "developer": developer_of(dev_name)}
 
 
 # --- тексты --------------------------------------------------------------------------
@@ -205,8 +247,19 @@ TASK_CHECK = """Задача — сверить данные о его комп�
 
 # Владелец 26.11.2026: просьбы «удалите/уберите» — не удалять, а сохранить объект с
 # актуальным статусом. Удаление — только если застройщик настаивает, и решает владелец.
-TASK_REQUEST = """Застройщик попросил что-то изменить на сайте: убрать комплекс или юнит, скрыть цену и т.п.
-Интерес сайта — ничего не удалять, а держать объекты с актуальным статусом и актуальными ценами:
+TASK_REQUEST = """Ты администратор страницы этого застройщика на сайте. Он пишет в чат, что поменять: цены,
+что продано, этап, готовность, срок сдачи, рассрочку, описание и т.п. Сам ты меняешь только то, что есть
+в данных ниже: цены и «продано» по юнитам (prices), этап/готовность/срок/«всё продано» по комплексу
+(complexes), остальные поля комплекса и компании — через edits (подпись поля ровно как в данных ниже).
+Описание пиши на русском, по фактам застройщика, без рекламных превосходных степеней, 2–5 предложений;
+если он прислал готовый текст — перескажи его по-русски без потери фактов.
+Не можешь сам: добавить новый комплекс или юнит, заменить фото, рендеры или логотип, переименовать,
+удалить. На такое отвечай «Передам команде, сделаем» (на его языке) и опиши просьбу в other —
+файлы и ссылки укажи. Цифр не придумывай: нет цифры — спроси.
+Это не полная сверка: не спрашивай о том, о чём он не писал. Как только ясно, что менять, — ready=true и
+reply пустой: бот сам перечислит изменения и спросит «Правильно понял?».
+Если он просит убрать или удалить объект:
+интерес сайта — ничего не удалять, а держать объекты с актуальным статусом и актуальными ценами:
 сданные и распроданные проекты показывают покупателю опыт застройщика, а страницы нужны для поиска.
 Отвечай по схеме «переспроси → согласись → добавь», одним сообщением:
 1. Переспроси причину, не принимай на веру: начни с «Правильно понимаю, что … распродан(ы) и вы его больше
@@ -254,6 +307,7 @@ TALK = """Ты бот сайта balinsky.info (информационный к�
         "readiness_pct": число|null, "completion_year": число|null, "chess_url": "ссылка"|null, "chess_ok": true|false|null,
         "prices_ok": true|false|null, "sold_out": true|false|null, "remove_insist": true|false|null}}}},
     "new_complexes": ["название — что известно"],
+    "edits": [{{"target": "complex"|"developer", "name": "<комплекс; для developer — пусто>", "field": "<подпись>", "value": "..."}}],
     "prices": [{{"g": "G3", "new_price": 195000|null, "sold_out": false, "sold_count": null}}],
     "other": ""}}}}
 В facts верни ВСЕ собранные факты (старые плюс новые), а не только новые.
@@ -311,7 +365,15 @@ def msg_lines(msgs, tmp):
 def site_for_prompt(snap):
     lines = []
     for c in snap["complexes"]:
-        lines.append(f"[{c['name']}] этап: {c['stage']}; готовность: {c['ready']}; сдача: {c['year']}; шахматка: {c['chess'] or 'нет'}")
+        lines.append(f"[{c['name']}] этап: {c['stage']}; готовность: {c['ready']}; сдача: {c['year']}; шахматка: {c['chess'] or 'нет'}"
+                     + ("; продажи: ВСЁ ПРОДАНО" if c.get("sales") == "Продано" else ""))
+        for lbl, v in (c.get("fields") or {}).items():
+            lines.append(f"    {lbl}: {(str(v)[:400] if v not in (None, '') else 'пусто')}")
+    dv = snap.get("developer")
+    if dv:
+        lines.append(f"[Компания {dv['name']}]")
+        for lbl, v in dv["fields"].items():
+            lines.append(f"    {lbl}: {(str(v)[:400] if v not in (None, '') else 'пусто')}")
     for r in snap["rows"]:
         lines.append(f"{r['g']}: {r['complex']} · {label(r, 'ru')} · {money(r['price'])} · {len(r['ids'])} шт.")
     return "\n".join(lines)
@@ -389,6 +451,31 @@ def build_changes(snap, facts):
             held.append({**base, "action": "chess", "new": url})
         elif f.get("chess_ok") is False and not url:
             held.append({**base, "action": "chess_stale"})
+    dv = snap.get("developer")
+    for e in facts.get("edits") or []:
+        if e.get("target") == "developer" and dv:
+            spec, cur, base = DEV_FIELDS.get(e.get("field")), dv["fields"].get(e.get("field")), {"complex": dv["name"], "dev_id": dv["id"]}
+        else:
+            c = by_cx.get(e.get("name"))
+            if not c:
+                continue
+            spec, cur, base = CX_FIELDS.get(e.get("field")), (c.get("fields") or {}).get(e.get("field")), {"complex": c["name"], "cid": c["id"]}
+        if not spec:
+            continue
+        key, typ = spec
+        v = e.get("value")
+        if typ == "number":
+            v = _num(v)
+            v = int(v) if v is not None and float(v).is_integer() else v
+        elif typ == "permit":
+            v = v if v in PERMITS else None
+        elif typ == "list":
+            v = [x.strip(" •-") for x in (v if isinstance(v, list) else str(v or "").split("\n")) if str(x).strip(" •-")]
+        else:
+            v = str(v or "").strip() or None
+        if v in (None, "", []) or str(v) == str(cur):
+            continue
+        apply.append({**base, "action": "field", "field": e["field"], "key": key, "type": typ, "old": cur, "new": v})
     return {"apply": apply, "held": held, "new_complexes": facts.get("new_complexes") or [],
             "other": facts.get("other") or ""}
 
@@ -406,6 +493,14 @@ def change_line(a, lang):
     if act == "year":
         was = f"{a['old']} → " if a["old"] else ""
         return f"• {a['complex']}: " + (f"handover {was}{a['new']}" if en else f"сдача {was}{a['new']}")
+    if act == "field":
+        new = a["new"]
+        fld = FIELD_EN.get(a["field"], a["field"]) if en else a["field"]
+        if a["type"] in ("textarea", "list"):
+            txt = "; ".join(new) if isinstance(new, list) else new
+            return f"• {a['complex']}, {fld}: " + (f"new text — «{txt[:300]}»" if en else f"новый текст — «{txt[:300]}»")
+        was = f"{a['old']} → " if a.get("old") not in (None, "") else ""
+        return f"• {a['complex']}, {fld}: {was}{new}"
     if act == "cx_sold":
         return f"• {a['complex']}: " + ("stays on the site marked \"Sold out\", prices removed" if en
                                         else "остаётся на сайте с пометкой «Продано», цены убираем")
@@ -444,6 +539,14 @@ def apply_changes(ch):
                     d["Продано"] = True
                 sb_update(table, {"airtable_id": lid}, {"data": d})
             kinds.add("villas" if a["kind"] == "villa" else "apartments")
+        elif a["action"] == "field" and a.get("dev_id"):
+            rows = sb_get("raw_developers", {"select": "data", "airtable_id": f"eq.{a['dev_id']}"})
+            if not rows:
+                continue
+            d = rows[0]["data"]
+            d[a["key"]] = a["new"]
+            sb_update("raw_developers", {"airtable_id": a["dev_id"]}, {"data": d})
+            kinds.add("developers")
         else:
             rows = sb_get("raw_complexes", {"select": "data", "airtable_id": f"eq.{a['cid']}"})
             if not rows:
@@ -452,7 +555,9 @@ def apply_changes(ch):
             if a["action"] == "ready":
                 d["Готовность"] = a["new"] / 100
             elif a["action"] == "year":
-                d["Year of completion "] = a["new"]
+                d["Year of completion "] = d["Year of completion"] = a["new"]
+            elif a["action"] == "field":
+                d[a["key"]] = a["new"]
             elif a["action"] == "stage":
                 d["Статус"] = a["new"]
             elif a["action"] == "cx_sold":
