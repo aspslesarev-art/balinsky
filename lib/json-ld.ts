@@ -22,7 +22,7 @@ export function organizationLd() {
       'Bali property data: villas, apartments and residential complexes from dozens of developers, compared with thousands of Bali holiday rentals — price per m², nearby rental rates, lease terms and permit status, with the method and sources published.',
     email: 'i@balinsky.info',
     areaServed: { '@type': 'Place', name: 'Bali, Indonesia' },
-    sameAs: ['https://t.me/BalinskyBot'],
+    sameAs: ['https://www.youtube.com/@balinsky_info', 'https://t.me/BalinskyBot'],
   }
 }
 
@@ -33,7 +33,7 @@ export function websiteLd() {
     '@id': WEBSITE_ID,
     url: SITE,
     name: 'Balinsky',
-    inLanguage: ['ru', 'en'],
+    inLanguage: ['en', 'ru', 'id', 'fr', 'de', 'zh', 'nl', 'pl', 'uk', 'ban'],
     publisher: { '@id': ORG_ID },
     potentialAction: {
       '@type': 'SearchAction',

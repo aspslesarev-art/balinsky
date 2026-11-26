@@ -3,7 +3,8 @@
 // Bodies are plain text (whitespace-pre-wrap). The long buyer guides add a
 // minimal markup on top: «## » starts a section heading, «[text](/path)» is an
 // internal link, «**text**» is bold, lines starting «- » / «1. » are lists, and
-// bare https:// URLs (the sources lists) are clickable. Articles without
+// bare https:// URLs (the sources lists) are clickable, and «| a | b |» rows
+// (first row = header, optional «|---|» separator) render as a table. Articles without
 // headings or internal links render exactly as before — one pre-wrapped block.
 
 import Link from 'next/link'
@@ -16,9 +17,15 @@ const LINK = /\[([^\]]+)\]\((\/[^)\s]*)\)/g
 const INLINE = /\[([^\]]+)\]\((\/[^)\s]*)\)|\*\*([^*\n]+)\*\*|(https?:\/\/[^\s)<>"']+)/g
 const BULLET = /^- (.+)$/
 const NUMBERED = /^\d+\. (.+)$/
+const TABLE_ROW = /^\|.*\|\s*$/
+const TABLE_SEP = /^\|[\s:|-]+\|\s*$/
+
+function cells(line: string): string[] {
+  return line.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim())
+}
 
 export function hasArticleMarkup(body: string): boolean {
-  return /^## /m.test(body) || /\]\(\//.test(body)
+  return /^## /m.test(body) || /\]\(\//.test(body) || /^\|.*\|\s*$/m.test(body)
 }
 
 /** Body without markup — for the meta description and previews. */
@@ -26,6 +33,8 @@ export function plainArticleText(body: string): string {
   return body
     .replace(/^## /gm, '')
     .replace(/^- /gm, '')
+    .replace(/^\|[\s:|-]+\|\s*$/gm, '')
+    .replace(/\|/g, ' ')
     .replace(LINK, '$1')
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/\s+/g, ' ')
@@ -71,9 +80,9 @@ function markParagraphs(body: string) {
 
 /** A section's text as paragraphs and lists; other lines keep pre-wrap. */
 function SectionText({ text }: { text: string }) {
-  const groups: { kind: 'ul' | 'ol' | 'p'; lines: string[] }[] = []
+  const groups: { kind: 'ul' | 'ol' | 'p' | 'table'; lines: string[] }[] = []
   for (const line of text.split('\n')) {
-    const kind = BULLET.test(line) ? 'ul' : NUMBERED.test(line) ? 'ol' : 'p'
+    const kind = TABLE_ROW.test(line) ? 'table' : BULLET.test(line) ? 'ul' : NUMBERED.test(line) ? 'ol' : 'p'
     const prev = groups[groups.length - 1]
     if (prev && prev.kind === kind && !(kind === 'p' && line.trim() === '' && prev.lines.at(-1)?.trim() === '')) prev.lines.push(line)
     else groups.push({ kind, lines: [line] })
@@ -81,6 +90,40 @@ function SectionText({ text }: { text: string }) {
   return (
     <>
       {groups.map((g, i) => {
+        if (g.kind === 'table') {
+          const rows = g.lines.filter(l => !TABLE_SEP.test(l)).map(cells)
+          const [head, ...bodyRows] = rows
+          // Numbers right-aligned: a cell is numeric when it starts with a
+          // digit, a currency sign or a minus.
+          const num = (c: string) => /^[-−~≈$€£¥Rp₽]*\s?\d/.test(c)
+          return (
+            <div key={i} className="my-5 overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[520px] max-w-none border-separate border-spacing-0 rounded-xl border border-[var(--color-border)] text-[14px] leading-[1.5]">
+                <thead>
+                  <tr className="bg-[var(--color-search-bg)]">
+                    {head.map((h, j) => (
+                      <th key={j} scope="col" className={`px-3 py-2.5 font-semibold text-[var(--color-text)] border-b border-[var(--color-border)] ${j === 0 ? 'text-left sticky left-0 z-[1] bg-[var(--color-search-bg)] min-w-[136px] max-w-[200px] rounded-tl-xl' : 'text-right whitespace-nowrap'} ${j === head.length - 1 ? 'rounded-tr-xl' : ''}`}>
+                        {withLinks(h)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {bodyRows.map((r, k) => (
+                    <tr key={k} className="bg-white">
+                      {r.map((c, j) => (
+                        <td key={j} className={`px-3 py-2.5 text-[var(--color-text)] ${k < bodyRows.length - 1 ? 'border-b border-[var(--color-border)]' : j === 0 ? 'rounded-bl-xl' : j === r.length - 1 ? 'rounded-br-xl' : ''} ${j === 0 ? 'sticky left-0 z-[1] bg-white min-w-[136px] max-w-[200px] border-r border-[var(--color-border)] md:border-r-0' : num(c) ? 'text-right tabular-nums whitespace-nowrap' : 'text-right'}`}>
+                          {withLinks(c)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <SourceMark />
+            </div>
+          )
+        }
         if (g.kind === 'ul') {
           return (
             <ul key={i} className="my-3 list-disc pl-6 space-y-1.5">
