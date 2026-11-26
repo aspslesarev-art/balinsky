@@ -21,7 +21,7 @@ type FaqItem = { q: string; a: string }
 const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ru: [
     { q: 'Какие застройщики работают на Бали?',
-      a: 'На острове активно более 80 застройщиков. Среди заметных — Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Большинство специализируется на 1–2 районах Бали.' },
+      a: 'В каталоге Balinsky — {N} застройщиков, работающих на острове. Среди заметных — Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Большинство специализируется на 1–2 районах Бали.' },
     { q: 'Как проверить надёжность застройщика?',
       a: 'Стандартные сигналы: количество сданных проектов, наличие управляющей компании, действующее разрешение PBG/SLF на текущей стройке, прозрачная схема владения (лизхолд / freehold), отзывы прошлых покупателей. На карточке каждого застройщика мы агрегируем эти параметры.' },
     { q: 'Где больше новых проектов?',
@@ -33,7 +33,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   en: [
     { q: 'Which developers are active in Bali?',
-      a: 'There are 80+ active developers on the island. Notable names: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Most specialise in 1–2 districts.' },
+      a: 'The Balinsky catalogue lists {N} developers working on the island. Notable names: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Most specialise in 1–2 districts.' },
     { q: 'How do I verify a developer is reliable?',
       a: 'Standard signals: number of completed projects, presence of a real management company, an active PBG/SLF permit on the current build, transparent ownership (leasehold / freehold), and reviews from past buyers. We aggregate these on each developer card.' },
     { q: 'Where are most new projects being built?',
@@ -45,7 +45,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   id: [
     { q: 'Pengembang mana saja yang aktif di Bali?',
-      a: 'Ada 80+ pengembang aktif di pulau ini. Nama-nama terkemuka: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Sebagian besar berfokus pada 1–2 wilayah.' },
+      a: 'Katalog Balinsky memuat {N} pengembang yang bekerja di pulau ini. Nama-nama terkemuka: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Sebagian besar berfokus pada 1–2 wilayah.' },
     { q: 'Bagaimana cara memverifikasi keandalan pengembang?',
       a: 'Sinyal standar: jumlah proyek yang telah selesai, keberadaan perusahaan pengelola yang nyata, izin PBG/SLF yang aktif pada pembangunan saat ini, kepemilikan yang transparan (leasehold / freehold), dan ulasan dari pembeli sebelumnya. Kami mengagregasi semua ini pada setiap kartu pengembang.' },
     { q: 'Di mana sebagian besar proyek baru dibangun?',
@@ -57,7 +57,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   fr: [
     { q: 'Quels promoteurs sont actifs à Bali ?',
-      a: 'Il y a plus de 80 promoteurs actifs sur l’île. Noms notables : Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. La plupart se spécialisent dans 1 à 2 quartiers.' },
+      a: 'Le catalogue Balinsky recense {N} promoteurs actifs sur l’île. Noms notables : Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. La plupart se spécialisent dans 1 à 2 quartiers.' },
     { q: 'Comment vérifier qu’un promoteur est fiable ?',
       a: 'Signaux standards : nombre de projets livrés, présence d’une véritable société de gestion, permis PBG/SLF actif sur le chantier en cours, propriété transparente (leasehold / freehold) et avis d’anciens acheteurs. Nous agrégeons ces éléments sur chaque fiche promoteur.' },
     { q: 'Où se construisent la plupart des nouveaux projets ?',
@@ -69,7 +69,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   de: [
     { q: 'Welche Bauträger sind auf Bali aktiv?',
-      a: 'Auf der Insel sind über 80 Bauträger aktiv. Bekannte Namen: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Die meisten sind auf 1–2 Lagen spezialisiert.' },
+      a: 'Der Balinsky-Katalog führt {N} Bauträger auf der Insel. Bekannte Namen: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Die meisten sind auf 1–2 Lagen spezialisiert.' },
     { q: 'Wie prüfe ich die Zuverlässigkeit eines Bauträgers?',
       a: 'Übliche Signale: Anzahl fertiggestellter Projekte, Vorhandensein einer echten Verwaltungsgesellschaft, eine gültige PBG/SLF-Genehmigung für den laufenden Bau, transparente Eigentumsform (Leasehold / Freehold) und Bewertungen früherer Käufer. Diese Angaben bündeln wir auf jeder Bauträger-Karte.' },
     { q: 'Wo werden die meisten neuen Projekte gebaut?',
@@ -81,7 +81,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   zh: [
     { q: '哪些开发商在巴厘岛活跃?',
-      a: '岛上有 80 多家活跃的开发商。知名的有:Alex Villas、Magnum Estate、BREIG、Bali Capital Group、Anta Group、Taryan Group、Oceaniq、Sunny Development。大多数专注于 1–2 个区域。' },
+      a: 'Balinsky 目录收录了岛上 {N} 家开发商。知名的有:Alex Villas、Magnum Estate、BREIG、Bali Capital Group、Anta Group、Taryan Group、Oceaniq、Sunny Development。大多数专注于 1–2 个区域。' },
     { q: '如何核实开发商是否可靠?',
       a: '常规信号:已完工项目的数量、是否有真正的管理公司、当前工程上有效的 PBG/SLF 许可、透明的产权结构(租赁产权 / 永久产权),以及过往买家的评价。我们在每张开发商卡片上汇总这些信息。' },
     { q: '大多数新项目建在哪里?',
@@ -93,7 +93,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   nl: [
     { q: 'Welke ontwikkelaars zijn actief op Bali?',
-      a: 'Er zijn meer dan 80 actieve ontwikkelaars op het eiland. Bekende namen: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. De meeste zijn gespecialiseerd in 1–2 wijken.' },
+      a: 'De Balinsky-catalogus telt {N} ontwikkelaars op het eiland. Bekende namen: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. De meeste zijn gespecialiseerd in 1–2 wijken.' },
     { q: 'Hoe controleer ik of een ontwikkelaar betrouwbaar is?',
       a: 'Standaardsignalen: aantal opgeleverde projecten, aanwezigheid van een echte beheermaatschappij, een geldige PBG/SLF-vergunning voor de huidige bouw, transparant eigendom (leasehold / freehold) en beoordelingen van eerdere kopers. Wij bundelen deze op elke ontwikkelaarskaart.' },
     { q: 'Waar worden de meeste nieuwe projecten gebouwd?',
@@ -105,7 +105,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   ban: [
     { q: 'Pangwangun sane encen sane aktif ring Bali?',
-      a: 'Ring pulo puniki wenten langkung saking 80 pangwangun sane aktif. Wasta sane kaloktah: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Akehan mespesialisasi ring 1–2 wewidangan.' },
+      a: 'Katalog Balinsky madaging {N} pangwangun ring pulo puniki. Wasta sane kaloktah: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Akehan mespesialisasi ring 1–2 wewidangan.' },
     { q: 'Sapunapi carane ngecek kapercayan pangwangun?',
       a: 'Tanda-tanda umum: akeh proyek sane sampun puput, wentennyane perusahaan pangelola sane nyata, izin PBG/SLF sane kantun aktif ring wewangunan mangkin, kepemilikan sane terang (leasehold / freehold), miwah ulasan saking sane numbas dumun. Puniki kaagregasi ring soang-soang kartu pangwangun.' },
     { q: 'Ring dija akehan proyek anyar kawangun?',
@@ -117,7 +117,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   pl: [
     { q: 'Którzy deweloperzy działają na Bali?',
-      a: 'Na wyspie działa ponad 80 deweloperów. Znane nazwy: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Większość specjalizuje się w 1–2 dzielnicach.' },
+      a: 'Katalog Balinsky obejmuje {N} deweloperów działających na wyspie. Znane nazwy: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Większość specjalizuje się w 1–2 dzielnicach.' },
     { q: 'Jak sprawdzić wiarygodność dewelopera?',
       a: 'Standardowe sygnały: liczba ukończonych projektów, obecność prawdziwej firmy zarządzającej, ważne pozwolenie PBG/SLF na bieżącej budowie, przejrzysta forma własności (leasehold / freehold) oraz opinie wcześniejszych nabywców. Zbieramy te dane na karcie każdego dewelopera.' },
     { q: 'Gdzie powstaje najwięcej nowych projektów?',
@@ -129,7 +129,7 @@ const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
   ],
   uk: [
     { q: 'Які забудовники працюють на Балі?',
-      a: 'На острові активно працює понад 80 забудовників. Помітні імена: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Більшість спеціалізується на 1–2 районах.' },
+      a: 'У каталозі Balinsky — {N} забудовників, що працюють на острові. Помітні імена: Alex Villas, Magnum Estate, BREIG, Bali Capital Group, Anta Group, Taryan Group, Oceaniq, Sunny Development. Більшість спеціалізується на 1–2 районах.' },
     { q: 'Як перевірити надійність забудовника?',
       a: 'Стандартні сигнали: кількість зданих проєктів, наявність справжньої керуючої компанії, чинний дозвіл PBG/SLF на поточному будівництві, прозора форма власності (leasehold / freehold) та відгуки попередніх покупців. Ми агрегуємо ці дані на картці кожного забудовника.' },
     { q: 'Де будується найбільше нових проєктів?',
@@ -364,9 +364,12 @@ const COPY = {
   },
 } as const
 
-export function DevelopersSeoContent({ lang = 'ru' }: { lang?: Lang }) {
+export function DevelopersSeoContent({ lang = 'ru', developerCount }: { lang?: Lang; developerCount?: number }) {
   const c = pickCopy(COPY, lang)
-  const items = pickCopy(FAQ_ITEMS, lang)
+  // «{N}» in the FAQ is the live catalogue size — a hard-coded «80+» went
+  // stale once the catalogue passed 200 and contradicted the page title.
+  const n = developerCount && developerCount > 80 ? String(developerCount) : '80'
+  const items = pickCopy(FAQ_ITEMS, lang).map(f => ({ q: f.q, a: f.a.replace('{N}', n) }))
   const districtRoot = switchLangPath('/ru/apartamenty', lang)
 
   const districtLinks = POPULAR_DISTRICTS.map(d => ({

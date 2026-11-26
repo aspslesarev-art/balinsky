@@ -902,6 +902,15 @@ export async function DeveloperDetail({ slug, lang }: { slug: string; lang: Lang
                   ))}
                 </div>
               )}
+              {/* Hub link with a descriptive anchor: 200+ developer pages all
+                  pointing at the catalogue tells search engines which page
+                  answers the generic «Bali property developer» query. */}
+              <p className="mt-6 max-w-[68ch] text-[15px] leading-[1.6] text-[#26302B] md:text-[16px]">
+                {pickCopy({ ru: 'Сравните с другими компаниями: ', en: 'Compare with the others: ', id: 'Bandingkan dengan yang lain: ', fr: 'Comparez avec les autres : ', de: 'Vergleichen Sie mit anderen: ', zh: '与其他公司比较：', nl: 'Vergelijk met de rest: ', ban: 'Bandingang sareng sane lianan: ', pl: 'Porównaj z innymi: ', uk: 'Порівняйте з іншими: ' }, lang)}
+                <Link href={devsRoot} className="font-medium text-[#0F1A15] underline underline-offset-2 hover:no-underline">
+                  {pickCopy({ ru: 'все застройщики Бали', en: 'all Bali property developers', id: 'semua pengembang properti Bali', fr: 'tous les promoteurs immobiliers de Bali', de: 'alle Bauträger auf Bali', zh: '全部巴厘岛开发商', nl: 'alle vastgoedontwikkelaars op Bali', ban: 'sami pangwangun properti Bali', pl: 'wszyscy deweloperzy na Bali', uk: 'усі забудовники Балі' }, lang)}
+                </Link>
+              </p>
             </VillaChapter>
 
             {managerRows.length > 0 && managers[0] && (
