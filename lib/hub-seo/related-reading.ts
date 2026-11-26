@@ -47,6 +47,11 @@ const ARTICLES: Record<ReadingKind, Article[]> = {
       en: 'How much a Bali villa costs: prices by area',
     },
     {
+      slug: 'dohodnost-vill-na-bali-po-rayonam-dannye',
+      ru: 'Доходность вилл на Бали по районам: данные',
+      en: 'Bali villa rental yield by area: the data',
+    },
+    {
       slug: 'leasehold-ili-freehold-na-bali-chto-dostupno-inostrantsu-v-2026',
       ru: 'Leasehold или freehold: что доступно иностранцу',
       en: 'Leasehold or freehold: what a foreigner can hold',
@@ -120,6 +125,9 @@ const ARTICLES: Record<ReadingKind, Article[]> = {
 
 // Article labels in the other languages, keyed by RU slug.
 const INTL: Record<string, Record<IntlLang, string>> = {
+  'dohodnost-vill-na-bali-po-rayonam-dannye': {
+    id: 'Imbal hasil sewa vila di Bali per kawasan: datanya', fr: 'Rendement locatif des villas à Bali par quartier : les données', de: 'Mietrendite von Villen auf Bali nach Gegend: die Daten', zh: '巴厘岛各区域别墅租金回报率：数据', nl: 'Huurrendement van villa’s op Bali per gebied: de data', pl: 'Rentowność najmu willi na Bali według rejonów: dane', uk: 'Дохідність вілл на Балі за районами: дані',
+  },
   'skolko-stoit-villa-na-bali-tseny-po-rayonam-v-2026-godu': {
     id: 'Berapa harga vila di Bali: harga per kawasan', fr: 'Combien coûte une villa à Bali : prix par quartier', de: 'Was eine Villa auf Bali kostet: Preise nach Gegend', zh: '巴厘岛别墅多少钱：各区域价格', nl: 'Wat een villa op Bali kost: prijzen per gebied', pl: 'Ile kosztuje willa na Bali: ceny według rejonów', uk: 'Скільки коштує вілла на Балі: ціни за районами',
   },
