@@ -6,6 +6,7 @@ import {
   buildScenario, type ObjType, type Stage,
 } from '@/lib/syomka/scenario'
 import { Sketch } from './_sketch'
+import { CameraFlow } from './_camera'
 import styles from '../syomka.module.css'
 
 type Done = Record<string, boolean>
@@ -19,16 +20,20 @@ function save(k: string, v: Done) {
   try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* приватный режим */ }
 }
 
-function setUrl(t: ObjType | null, s: Stage | null) {
+function setUrl(t: ObjType | null, s: Stage | null, cam = false) {
   const u = new URL(window.location.href)
   u.search = ''
+  if (cam) u.searchParams.set('cam', '1')
   if (t) u.searchParams.set('t', t)
   if (t && s) u.searchParams.set('s', s)
   window.history.pushState(null, '', u)
   window.scrollTo({ top: 0 })
 }
 
-export function SyomkaClient({ initialType, initialStage }: { initialType: ObjType | null; initialStage: Stage | null }) {
+export function SyomkaClient({ apiKey, initialCam, initialType, initialStage }: {
+  apiKey: string; initialCam: boolean; initialType: ObjType | null; initialStage: Stage | null
+}) {
+  const [cam, setCam] = useState(initialCam)
   const [t, setT] = useState<ObjType | null>(initialType)
   const [s, setS] = useState<Stage | null>(initialStage)
 
@@ -37,6 +42,7 @@ export function SyomkaClient({ initialType, initialStage }: { initialType: ObjTy
     const onPop = () => {
       const p = new URLSearchParams(window.location.search)
       const pt = p.get('t'); const ps = p.get('s')
+      setCam(p.get('cam') === '1')
       setT(TYPES.some((x) => x.id === pt) ? pt as ObjType : null)
       setS(pt && STAGES.some((x) => x.id === ps) ? ps as Stage : null)
     }
@@ -46,21 +52,23 @@ export function SyomkaClient({ initialType, initialStage }: { initialType: ObjTy
 
   const pickType = (v: ObjType) => { setT(v); setS(null); setUrl(v, null) }
   const pickStage = (v: Stage) => { setS(v); setUrl(t, v) }
-  const toStart = () => { setT(null); setS(null); setUrl(null, null) }
+  const toStart = () => { setCam(false); setT(null); setS(null); setUrl(null, null) }
+  const toCam = () => { setCam(true); setT(null); setS(null); setUrl(null, null, true) }
   const toStage = () => { setS(null); setUrl(t, null) }
 
   return (
     <main className={styles.page}>
       <div className={styles.wrap}>
-        {!t && <ChooseType onPick={pickType} />}
-        {t && !s && <ChooseStage type={t} onPick={pickStage} onBack={toStart} />}
-        {t && s && <Shoot type={t} stage={s} onBack={toStage} onHome={toStart} />}
+        {cam && <CameraFlow apiKey={apiKey} onBack={toStart} />}
+        {!cam && !t && <ChooseType onPick={pickType} onCam={toCam} />}
+        {!cam && t && !s && <ChooseStage type={t} onPick={pickStage} onBack={toStart} />}
+        {!cam && t && s && <Shoot type={t} stage={s} onBack={toStage} onHome={toStart} />}
       </div>
     </main>
   )
 }
 
-function ChooseType({ onPick }: { onPick: (v: ObjType) => void }) {
+function ChooseType({ onPick, onCam }: { onPick: (v: ObjType) => void; onCam: () => void }) {
   return (
     <>
       <header className={styles.head}>
@@ -75,6 +83,10 @@ function ChooseType({ onPick }: { onPick: (v: ObjType) => void }) {
           </button>
         ))}
       </div>
+      <button type="button" className={`${styles.choice} ${styles.choiceCam}`} onClick={onCam}>
+        <span className={styles.choiceName}>Камера по фото</span>
+        <span className={styles.choiceHint}>Выбери объект с сайта — его фото будет поверх камеры, снимешь с тех же точек</span>
+      </button>
       <Guide />
     </>
   )

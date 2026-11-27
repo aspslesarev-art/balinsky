@@ -162,3 +162,83 @@
 .more summary { display: list-item; padding: 12px 0; cursor: pointer; font-size: .875rem; font-weight: 600; color: var(--dim); }
 .more summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .more .rows { margin-top: 8px; }
+
+/* ── Камера по фото ─────────────────────────────────────────── */
+.choiceCam { border-color: var(--accent); background: var(--accent-soft); }
+.choiceCam .choiceName { color: var(--accent-ink); }
+
+.search {
+  width: 100%; min-height: 48px; padding: 8px 16px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit;
+}
+.search:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+.objList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.objRow {
+  display: flex; flex-direction: column; gap: 2px; width: 100%; min-height: 56px; padding: 8px 16px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer; transition: border-color 120ms cubic-bezier(.2,.8,.2,1);
+}
+.objRow:hover { border-color: var(--accent); }
+.objRow:disabled { opacity: .5; cursor: progress; }
+.objRow:focus-visible, .photoBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.objName { font-weight: 700; }
+
+.photoGrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.photoBtn {
+  position: relative; display: block; width: 100%; padding: 0; border: 2px solid transparent;
+  border-radius: 8px; overflow: hidden; background: var(--line); cursor: pointer; aspect-ratio: 4 / 3;
+}
+.photoBtn img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photoOn { border-color: var(--accent); }
+.photoTick {
+  position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 8px;
+  background: var(--accent); color: #fff; font-size: .8125rem; font-weight: 600;
+}
+@media (min-width: 768px) { .photoGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.cam {
+  position: fixed; inset: 0; z-index: 100; background: #0B0B0A; color: #fff;
+  display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.camStage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px; }
+.camFrame { position: relative; width: 100%; max-height: 100%; max-width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
+@media (orientation: landscape) { .camFrame { width: auto; height: 100%; } }
+.camVideo, .camGhost { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.camGhost { pointer-events: none; transition: opacity 120ms cubic-bezier(.2,.8,.2,1); }
+.camRec {
+  position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: 8px;
+  background: #C8322B; color: #fff; font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.camHint { margin: 0; font-size: .8125rem; color: rgb(255 255 255 / .7); }
+@media (orientation: landscape) { .camHint { display: none; } }
+.camErr { margin: 0 16px 8px; padding: 12px 16px; border-radius: 8px; background: #3A1D1B; color: #FFD9D5; font-size: .875rem; }
+.camBar { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; width: 100%; max-width: 560px; margin: 0 auto; }
+.camRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.camTitle { margin: 0; font-weight: 700; text-align: center; }
+.camCount { white-space: nowrap; font-size: .875rem; color: rgb(255 255 255 / .7); font-variant-numeric: tabular-nums; }
+.camBtn {
+  min-height: 44px; min-width: 44px; padding: 8px 16px; border-radius: 8px; flex: 0 1 auto;
+  border: 1px solid rgb(255 255 255 / .25); background: rgb(255 255 255 / .08); color: #fff;
+  font: inherit; font-size: .875rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.camRow > .camBtn:only-child, .camRow:has(> .camBtn + .camBtn:last-child) .camBtn { flex: 1; }
+.camBtn:disabled { opacity: .35; cursor: default; }
+.camMain {
+  flex: 1; min-height: 56px; border-radius: 12px; border: 0; background: var(--accent); color: #fff;
+  font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+}
+.camShutter {
+  width: 72px; height: 72px; border-radius: 50%; border: 4px solid #fff; background: transparent;
+  display: grid; place-items: center; cursor: pointer; flex: none;
+}
+.camShutter span { display: block; width: 56px; height: 56px; border-radius: 50%; background: #C8322B; transition: transform 120ms cubic-bezier(.2,.8,.2,1), border-radius 120ms cubic-bezier(.2,.8,.2,1); }
+.camShutterOn span { transform: scale(.5); border-radius: 8px; }
+.camShutter:disabled { opacity: .35; }
+.camBtn:focus-visible, .camMain:focus-visible, .camShutter:focus-visible, .camSlider input:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.camSlider { display: flex; align-items: center; gap: 12px; font-size: .8125rem; color: rgb(255 255 255 / .7); }
+.camSlider input { flex: 1; accent-color: #fff; min-height: 32px; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .cam { flex-direction: row; }
+  .camBar { width: 340px; flex: none; justify-content: center; margin: 0; }
+}

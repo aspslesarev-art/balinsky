@@ -22,12 +22,12 @@ export default async function SyomkaPage({
   searchParams,
 }: {
   params: Promise<{ key: string }>
-  searchParams: Promise<{ t?: string; s?: string }>
+  searchParams: Promise<{ t?: string; s?: string; cam?: string }>
 }) {
   const { key } = await params
   if (!isSyomkaKey(key)) notFound()
   const sp = await searchParams
   const t = sp.t && isType(sp.t) ? sp.t : null
   const s = sp.s && isStage(sp.s) ? sp.s : null
-  return <SyomkaClient initialType={t} initialStage={t ? s : null} />
+  return <SyomkaClient apiKey={key} initialCam={sp.cam === '1'} initialType={t} initialStage={t ? s : null} />
 }
